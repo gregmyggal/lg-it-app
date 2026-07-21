@@ -1,8 +1,11 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import CheckboxGroup from '../../components/CheckboxGroup';
 import ClasseLiensManager from '../../components/ClasseLiensManager';
+import AdminModal from '../../components/AdminModal';
+import AdminButton, { AdminIconButton } from '../../components/AdminButton';
+import { AdminFormField, AdminInput, AdminTextarea, AdminSelect } from '../../components/AdminFormField';
 
 const emptyForm = {
   titre: '',
@@ -20,13 +23,23 @@ export default function CoursAdminPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     client.get('/cours').then((res) => setCours(res.data));
     client.get('/types-cours').then((res) => setTypesCours(res.data));
   }, []);
+
+  function startCreate() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setError(null);
+    setIsModalOpen(true);
+  }
 
   function startEdit(c) {
     setEditingId(c.id);
@@ -38,20 +51,22 @@ export default function CoursAdminPage() {
       statut: c.statut,
       types_cours: c.types_cours.map((t) => t.id),
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setError(null);
+    setIsModalOpen(true);
   }
 
-  function resetForm() {
+  function closeModal() {
+    setIsModalOpen(false);
     setEditingId(null);
     setForm(emptyForm);
     setError(null);
-    setSuccess(null);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
+    setIsSubmitting(true);
+
     try {
       if (editingId) {
         const res = await client.put(`/cours/${editingId}`, form);
@@ -62,209 +77,219 @@ export default function CoursAdminPage() {
         setCours((prev) => [...prev, { ...res.data, ressources: [] }]);
         setSuccess('Cours créé avec succès !');
       }
-      setTimeout(resetForm, 2000);
+      setTimeout(closeModal, 1500);
+      setTimeout(() => setSuccess(null), 2500);
     } catch {
       setError('Formulaire invalide (slug déjà utilisé ?).');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   async function handleDelete(id) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce cours ?')) {
+    try {
+      setIsSubmitting(true);
       await client.delete(`/cours/${id}`);
       setCours((prev) => prev.filter((c) => c.id !== id));
+      setDeleteConfirm(null);
+      setSuccess('Cours supprimé');
+      setTimeout(() => setSuccess(null), 2000);
+    } catch {
+      setError('Erreur lors de la suppression');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   if (cours === null) return <LoadingState />;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%)' }}>
-      {/* Header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '32px 24px', marginBottom: '32px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 700 }}>Gestion des Cours</h1>
-          <p style={{ margin: 0, fontSize: '15px', color: '#6b7280' }}>Créez, modifiez et organisez vos cours</p>
+    <>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%)' }}>
+        {/* Header */}
+        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '32px 24px', marginBottom: '32px' }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 700 }}>Gestion des Cours</h1>
+              <p style={{ margin: 0, fontSize: '15px', color: '#6b7280' }}>Créez, modifiez et organisez vos cours</p>
+            </div>
+            <AdminButton
+              variant="primary"
+              icon="➕"
+              onClick={startCreate}
+            >
+              Nouveau cours
+            </AdminButton>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px 32px 24px' }}>
-        {/* Messages */}
-        {success && <SuccessMessage message={success} onClose={resetForm} />}
-        {error && <ErrorMessage message={error} />}
+        {/* Main Content */}
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px 32px 24px' }}>
+          {/* Messages */}
+          {success && <SuccessMessage message={success} />}
+          {error && <ErrorMessage message={error} />}
 
-        {/* Courses Grid */}
-        <div style={{ marginBottom: '48px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#111827' }}>Cours existants</h2>
-            {cours.length > 0 && (
-              <span style={{ background: '#dbeafe', color: '#1e40af', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
-                {cours.length} cours
-              </span>
+          {/* Courses Grid */}
+          <div style={{ marginBottom: '48px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#111827' }}>Cours existants</h2>
+              {cours.length > 0 && (
+                <span style={{ background: '#dbeafe', color: '#1e40af', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
+                  {cours.length} cours
+                </span>
+              )}
+            </div>
+
+            {cours.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                {cours.map((c) => (
+                  <CourseCard
+                    key={c.id}
+                    course={c}
+                    onEdit={startEdit}
+                    onDelete={() => setDeleteConfirm(c.id)}
+                    onNavigateContent={() => navigate(`/admin/cours/${c.id}/contenu`)}
+                    onToggleResources={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    isExpanded={expandedId === c.id}
+                  />
+                ))}
+              </div>
             )}
           </div>
 
-          {cours.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-              {cours.map((c) => (
-                <CourseCard
-                  key={c.id}
-                  course={c}
-                  onEdit={startEdit}
-                  onDelete={handleDelete}
-                  onNavigateContent={() => navigate(`/admin/cours/${c.id}/contenu`)}
-                  onToggleResources={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                  isExpanded={expandedId === c.id}
-                />
-              ))}
+          {/* Ressources Section */}
+          {expandedId && (
+            <div style={{ background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '48px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <RessourcesPanel
+                cours={cours.find((c) => c.id === expandedId)}
+                onClose={() => setExpandedId(null)}
+              />
+              <ClasseLiensManager parentType="cours" parentId={expandedId} />
             </div>
           )}
         </div>
-
-        {/* Ressources Section */}
-        {expandedId && (
-          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '48px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <RessourcesPanel
-              cours={cours.find((c) => c.id === expandedId)}
-              onClose={() => setExpandedId(null)}
-            />
-            <ClasseLiensManager parentType="cours" parentId={expandedId} />
-          </div>
-        )}
-
-        {/* Form Section */}
-        <div style={{ background: 'white', borderRadius: '12px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ marginBottom: '32px' }}>
-            <h2 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: 600, color: '#111827' }}>
-              {editingId ? '✏️ Modifier le cours' : '➕ Créer un nouveau cours'}
-            </h2>
-            <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>
-              {editingId ? 'Modifiez les informations du cours' : 'Ajoutez un nouveau cours à votre catalogue'}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '24px' }}>
-            {/* Row 1: Titre et Slug */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <FormField label="Titre" required>
-                <input
-                  type="text"
-                  value={form.titre}
-                  onChange={(e) => setForm({ ...form, titre: e.target.value })}
-                  placeholder="Ex: Scratch Junior"
-                  required
-                  style={inputStyle}
-                />
-              </FormField>
-              <FormField label="Slug" required>
-                <input
-                  type="text"
-                  value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  placeholder="Ex: scratch-junior"
-                  required
-                  style={inputStyle}
-                />
-              </FormField>
-            </div>
-
-            {/* Extrait */}
-            <FormField label="Extrait" description="Courte description du cours">
-              <input
-                type="text"
-                value={form.extrait}
-                onChange={(e) => setForm({ ...form, extrait: e.target.value })}
-                placeholder="Résumé du cours..."
-                style={inputStyle}
-              />
-            </FormField>
-
-            {/* Contenu */}
-            <FormField label="Contenu" description="Description complète du cours">
-              <textarea
-                value={form.contenu}
-                onChange={(e) => setForm({ ...form, contenu: e.target.value })}
-                rows={5}
-                placeholder="Décrivez le contenu du cours..."
-                style={{ ...inputStyle, fontFamily: 'inherit', resize: 'vertical' }}
-              />
-            </FormField>
-
-            {/* Row 2: Statut et Types */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <FormField label="Statut" required>
-                <select value={form.statut} onChange={(e) => setForm({ ...form, statut: e.target.value })} style={inputStyle}>
-                  <option value="draft">🔒 Brouillon</option>
-                  <option value="publish">✓ Publié</option>
-                </select>
-              </FormField>
-              <div />
-            </div>
-
-            {/* Types de cours */}
-            <FormField label="Types de cours">
-              <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <CheckboxGroup
-                  options={typesCours}
-                  selected={form.types_cours}
-                  onChange={(types_cours) => setForm({ ...form, types_cours })}
-                />
-              </div>
-            </FormField>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
-              <button
-                type="submit"
-                style={{
-                  padding: '12px 24px',
-                  background: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  fontSize: '14px',
-                }}
-                onMouseEnter={(e) => (e.target.style.background = '#1d4ed8')}
-                onMouseLeave={(e) => (e.target.style.background = '#2563eb')}
-              >
-                {editingId ? '💾 Enregistrer les modifications' : '✓ Créer le cours'}
-              </button>
-              {editingId && (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{
-                    padding: '12px 24px',
-                    background: 'white',
-                    color: '#6b7280',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    fontSize: '14px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = '#f9fafb';
-                    e.target.style.borderColor = '#d1d5db';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'white';
-                    e.target.style.borderColor = '#e5e7eb';
-                  }}
-                >
-                  Annuler
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
       </div>
+
+      {/* Modal Create/Edit */}
+      <AdminModal
+        isOpen={isModalOpen}
+        title={editingId ? '✏️ Modifier le cours' : '➕ Créer un nouveau cours'}
+        onClose={closeModal}
+        size="lg"
+        footer={
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <AdminButton
+              variant="secondary"
+              onClick={closeModal}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </AdminButton>
+            <AdminButton
+              variant="primary"
+              icon={isSubmitting ? '⏳' : '✓'}
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {editingId ? 'Enregistrer' : 'Créer'}
+            </AdminButton>
+          </div>
+        }
+      >
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <AdminFormField label="Titre" required>
+              <AdminInput
+                value={form.titre}
+                onChange={(e) => setForm({ ...form, titre: e.target.value })}
+                placeholder="Ex: Scratch Junior"
+                required
+              />
+            </AdminFormField>
+            <AdminFormField label="Slug" required>
+              <AdminInput
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                placeholder="Ex: scratch-junior"
+                required
+              />
+            </AdminFormField>
+          </div>
+
+          <AdminFormField label="Extrait">
+            <AdminInput
+              value={form.extrait}
+              onChange={(e) => setForm({ ...form, extrait: e.target.value })}
+              placeholder="Courte description du cours"
+            />
+          </AdminFormField>
+
+          <AdminFormField label="Contenu">
+            <AdminTextarea
+              value={form.contenu}
+              onChange={(e) => setForm({ ...form, contenu: e.target.value })}
+              placeholder="Description complète du cours..."
+              rows={4}
+            />
+          </AdminFormField>
+
+          <AdminFormField label="Statut">
+            <AdminSelect
+              value={form.statut}
+              onChange={(e) => setForm({ ...form, statut: e.target.value })}
+              options={[
+                { value: 'draft', label: '🔒 Brouillon' },
+                { value: 'publish', label: '✓ Publié' },
+              ]}
+            />
+          </AdminFormField>
+
+          <AdminFormField label="Types de cours">
+            <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <CheckboxGroup
+                options={typesCours}
+                selected={form.types_cours}
+                onChange={(types_cours) => setForm({ ...form, types_cours })}
+              />
+            </div>
+          </AdminFormField>
+        </form>
+      </AdminModal>
+
+      {/* Delete Confirmation Modal */}
+      <AdminModal
+        isOpen={deleteConfirm !== null}
+        title="Supprimer le cours"
+        onClose={() => setDeleteConfirm(null)}
+        size="sm"
+        footer={
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <AdminButton
+              variant="secondary"
+              onClick={() => setDeleteConfirm(null)}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </AdminButton>
+            <AdminButton
+              variant="danger"
+              onClick={() => handleDelete(deleteConfirm)}
+              disabled={isSubmitting}
+              icon={isSubmitting ? '⏳' : '🗑️'}
+            >
+              Supprimer
+            </AdminButton>
+          </div>
+        }
+      >
+        <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+          Êtes-vous sûr de vouloir supprimer ce cours ? Cette action ne peut pas être annulée.
+        </p>
+      </AdminModal>
+    </>
+  );
 
       <style>{`
         @keyframes slideDown {
