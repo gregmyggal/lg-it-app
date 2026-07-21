@@ -288,8 +288,6 @@ export default function CoursAdminPage() {
           Êtes-vous sûr de vouloir supprimer ce cours ? Cette action ne peut pas être annulée.
         </p>
       </AdminModal>
-    </>
-  );
 
       <style>{`
         @keyframes slideDown {
@@ -301,7 +299,7 @@ export default function CoursAdminPage() {
           50% { opacity: 0.5; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
 
