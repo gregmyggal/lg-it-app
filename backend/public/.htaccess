@@ -1,3 +1,6 @@
+# index.html (build React) prioritaire sur index.php pour "/"
+DirectoryIndex index.html index.php
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -17,6 +20,16 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
+
+    # API Laravel (+ Sanctum, health check, assistant d'installation) → front controller
+    RewriteRule ^(api|sanctum|up|install)(/.*)?$ index.php [L]
+
+    # SPA React : build déployé dans public/ par scripts/deploy.sh.
+    # Sans index.html (dev local Docker), on retombe sur Laravel.
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{DOCUMENT_ROOT}/index.html -f
+    RewriteRule ^ index.html [L]
 
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d

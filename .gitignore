@@ -5,3 +5,7 @@ backend/database/database.sqlite
 backend/node_modules/
 frontend/node_modules/
 frontend/dist/
+
+# Config de déploiement (scripts/deploy.sh)
+.env.deploy.*
+!.env.deploy.*.example

@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Build React copié par scripts/deploy.sh (serveur uniquement)
+/public/index.html
+/public/assets
+/public/favicon.svg
+/public/icons.svg
