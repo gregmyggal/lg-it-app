@@ -43,12 +43,21 @@ class InstallController extends Controller
         'url' => 'URL invalide (ex. https://lgit.be).',
         'email' => 'Adresse e-mail invalide.',
         'in' => 'Valeur non autorisée.',
+        'regex' => 'Format invalide.',
+        'db_prefix.regex' => 'Minuscules, chiffres et _ uniquement, en commençant par une lettre (ex. lgit_).',
         'timezone' => 'Fuseau horaire inconnu.',
         'confirmed' => 'La confirmation ne correspond pas.',
         'password.letters' => 'Doit contenir des lettres.',
         'password.mixed' => 'Doit contenir majuscules et minuscules.',
         'password.numbers' => 'Doit contenir au moins un chiffre.',
     ];
+
+    /**
+     * Identifiants MySQL limités à 64 caractères : l'index le plus long généré
+     * par les migrations (personal_access_tokens_tokenable_type_tokenable_id_index)
+     * en fait 56, préfixe compris dans le nom avec prefix_indexes.
+     */
+    private const DB_PREFIX_MAX = 8;
 
     public function show(Request $request)
     {
@@ -78,6 +87,8 @@ class InstallController extends Controller
                 'db_port' => $value('DB_PORT', '3306'),
                 'db_database' => $value('DB_DATABASE', ''),
                 'db_username' => $value('DB_USERNAME', ''),
+                // .env existant sans DB_PREFIX = tables déjà créées sans préfixe : ne rien proposer d'autre.
+                'db_prefix' => $hasEnv ? (string) $env->get('DB_PREFIX') : 'lgit_',
                 'has_db_password' => $hasEnv && (string) $env->get('DB_PASSWORD') !== '',
                 'mail_mailer' => $value('MAIL_MAILER', 'smtp') === 'log' ? 'log' : 'smtp',
                 'mail_host' => $value('MAIL_HOST', 'ssl0.ovh.net') === '127.0.0.1' ? 'ssl0.ovh.net' : $value('MAIL_HOST', 'ssl0.ovh.net'),
@@ -98,18 +109,29 @@ class InstallController extends Controller
         try {
             $pdo = $this->connect($data);
             $version = $pdo->query('SELECT VERSION()')->fetchColumn();
-            $tables = (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn();
-            $hasMigrations = (bool) $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'migrations'")->fetchColumn();
+            $prefix = $data['db_prefix'];
+            $count = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE ? ESCAPE '!'");
+            $count->execute([strtr($prefix, ['!' => '!!', '_' => '!_', '%' => '!%']).'%']);
+            $tables = (int) $count->fetchColumn();
+            $exists = $pdo->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?');
+            $exists->execute([$prefix.'migrations']);
+            $hasMigrations = (bool) $exists->fetchColumn();
+            $others = $prefix === '' ? 0 : (int) $pdo->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn() - $tables;
         } catch (Throwable $e) {
             return $this->fail('Connexion impossible : '.$e->getMessage(), 422);
         }
 
+        $scope = $prefix === '' ? '' : " préfixées « {$prefix} »";
         $message = "Connexion réussie (MySQL {$version}). ";
         $message .= match (true) {
-            $tables === 0 => 'Base vide : les tables seront créées.',
-            $hasMigrations => "{$tables} tables existantes : seules les migrations manquantes seront appliquées.",
-            default => "Attention : {$tables} tables d'une autre application sont présentes dans cette base.",
+            $tables === 0 => ($prefix === '' ? 'Base vide' : "Aucune table{$scope}").' : les tables seront créées.',
+            $hasMigrations => "{$tables} tables{$scope} existantes : seules les migrations manquantes seront appliquées.",
+            $prefix === '' => "Attention : {$tables} tables d'une autre application sont présentes dans cette base. Définissez un préfixe.",
+            default => "Attention : {$tables} tables{$scope} appartiennent à une autre application. Choisissez un autre préfixe.",
         };
+        if ($others > 0) {
+            $message .= " {$others} autre(s) table(s) de la base ne seront pas modifiées.";
+        }
 
         return response()->json(['ok' => true, 'message' => $message, 'warning' => $tables > 0 && ! $hasMigrations]);
     }
@@ -218,6 +240,7 @@ class InstallController extends Controller
             'DB_DATABASE' => $db['db_database'],
             'DB_USERNAME' => $db['db_username'],
             'DB_PASSWORD' => $db['db_password'],
+            'DB_PREFIX' => $db['db_prefix'],
             'SESSION_DRIVER' => 'database',
             'SESSION_SECURE_COOKIE' => str_starts_with($data['app_url'], 'https://') ? 'true' : 'false',
             'CACHE_STORE' => 'database',
@@ -366,7 +389,7 @@ class InstallController extends Controller
     }
 
     /**
-     * @return array{db_host: string, db_port: int, db_database: string, db_username: string, db_password: string}
+     * @return array{db_host: string, db_port: int, db_database: string, db_username: string, db_password: string, db_prefix: string}
      */
     private function validateDatabase(Request $request): array
     {
@@ -376,9 +399,11 @@ class InstallController extends Controller
             'db_database' => ['required', 'string', 'max:64'],
             'db_username' => ['required', 'string', 'max:64'],
             'db_password' => ['nullable', 'string', 'max:255'],
+            'db_prefix' => ['nullable', 'string', 'max:'.self::DB_PREFIX_MAX, 'regex:/^[a-z][a-z0-9_]*$/'],
         ]);
 
         $data['db_password'] = (string) $this->keepExisting($data['db_password'] ?? null, 'DB_PASSWORD');
+        $data['db_prefix'] = (string) ($data['db_prefix'] ?? '');
 
         return $data;
     }

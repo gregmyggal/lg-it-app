@@ -171,6 +171,12 @@
                     <input id="db_password" name="db_password" type="password" autocomplete="new-password">
                     <span class="hint" id="db_password_hint" hidden>Laisser vide pour conserver le mot de passe actuel.</span>
                 </div>
+                <div class="full">
+                    <label for="db_prefix">Préfixe des tables</label>
+                    <input id="db_prefix" name="db_prefix" maxlength="8" placeholder="lgit_" autocomplete="off" spellcheck="false">
+                    <span class="hint">Base partagée entre plusieurs applications : toutes les tables de LG-IT seront nommées <code>préfixe + nom</code> (ex. <code>lgit_users</code>). Laisser vide pour une base dédiée.</span>
+                    <span class="hint" id="db_prefix_hint" hidden>Application déjà installée : changer le préfixe crée un nouveau jeu de tables vide, les données actuelles ne seraient plus utilisées.</span>
+                </div>
             </div>
             <div id="db-notice"></div>
             <div class="actions">
@@ -278,7 +284,7 @@
     // Champs validés à chaque étape avant de passer à la suivante.
     const STEP_FIELDS = {
         1: ['app_name', 'app_url', 'app_env', 'app_timezone'],
-        2: ['db_host', 'db_port', 'db_database', 'db_username', 'db_password'],
+        2: ['db_host', 'db_port', 'db_database', 'db_username', 'db_password', 'db_prefix'],
         3: ['mail_mailer', 'mail_host', 'mail_port', 'mail_scheme', 'mail_username', 'mail_password', 'mail_from_address', 'mail_from_name'],
         4: ['admin_name', 'admin_email', 'admin_password', 'admin_password_confirmation'],
     };
@@ -362,6 +368,7 @@
         if (i === 2) {
             need('db_host'); need('db_port'); need('db_database'); need('db_username');
             if (!v.db_password && !state.has_db_password) errors.db_password = ['Mot de passe requis.'];
+            if (v.db_prefix && !/^[a-z][a-z0-9_]{0,7}$/.test(v.db_prefix)) errors.db_prefix = ['8 caractères max. : minuscules, chiffres et _, en commençant par une lettre (ex. lgit_).'];
         }
         if (i === 3) {
             need('mail_from_address');
@@ -427,6 +434,7 @@
                 el.value = v;
             }
             document.getElementById('db_password_hint').hidden = !state.has_db_password;
+            document.getElementById('db_prefix_hint').hidden = data.mode !== 'reconfigure';
             document.getElementById('mail_password_hint').hidden = !state.has_mail_password;
             document.getElementById('admin-choice').hidden = !state.admin_exists;
             if (data.mode === 'reconfigure') {
@@ -478,6 +486,7 @@
             ['Environnement', v.app_env === 'production' ? 'Production (APP_DEBUG=false)' : 'Staging (APP_DEBUG=false)'],
             ['Fuseau horaire', v.app_timezone],
             ['Base de données', `${v.db_username}@${v.db_host}:${v.db_port} / ${v.db_database}`],
+            ['Préfixe des tables', v.db_prefix || '(aucun)'],
             ['E-mails', v.mail_mailer === 'smtp' ? `${v.mail_username || '(sans auth)'} via ${v.mail_host}:${v.mail_port}` : 'Désactivés (logs)'],
             ['Expéditeur', `${v.mail_from_name || v.app_name} <${v.mail_from_address}>`],
             ['Administrateur', adminMode() === 'skip' ? 'Comptes existants conservés' : `${v.admin_name} <${v.admin_email}>`],
