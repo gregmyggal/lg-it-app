@@ -11,8 +11,9 @@ Principe :
   poste, puis envoyé par `rsync` dans `backend/public/`.
 - **Configuration** (`backend/.env`, migrations, compte admin) : assistant web
   `/install`, ouvert par un lien à usage unique.
-- **Accès GitHub du serveur** : une clé SSH **protégée par passphrase**. Aucun
-  accès automatique : la passphrase est demandée à chaque déploiement.
+- **Accès GitHub du serveur** : la clé SSH déjà présente sur le serveur (celle
+  des autres projets), idéalement protégée par passphrase. Elle est alors
+  demandée à chaque déploiement.
 
 Dans la suite, remplace `<login>`, `<cluster>` et `<XXX>` par tes valeurs
 (visibles dans le Manager OVH).
@@ -68,47 +69,84 @@ Si `php -v` affiche une version inférieure à 8.2, repère le binaire versionn�
 cd ~ && php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && php composer-setup.php && rm composer-setup.php && php ~/composer.phar --version
 ```
 
-### 4. Créer la clé GitHub du serveur, avec passphrase
+### 4. Accès GitHub du serveur
 
-Ne pas passer `-N ""` : `ssh-keygen` demande alors une passphrase.
+Le serveur doit pouvoir lire le repo `lg-it-app` avec une clé SSH. **Si
+d'autres projets sont déjà récupérés depuis GitHub sur ce serveur, réutilise
+leur clé** : il n'y a rien à créer, et surtout rien à modifier dans
+`~/.ssh/config` (ça casserait l'accès des autres projets).
+
+Tester la clé existante :
+
+```bash
+ssh -T git@github.com
+```
+
+| Réponse | Signification | Suite |
+|---|---|---|
+| `Hi gregmyggal! …` | clé de ton **compte** GitHub : elle lit tous tes repos, dont `lg-it-app` | rien à faire, passer à l'étape 5 |
+| `Hi gregmyggal/<autre-repo>! …` | **deploy key** d'un autre repo : GitHub interdit de la réutiliser pour `lg-it-app` | créer une clé dédiée (repli ci-dessous) |
+| `Permission denied (publickey)` | aucune clé GitHub sur le serveur | créer une clé dédiée (repli ci-dessous) |
+
+La passphrase demandée à chaque déploiement est celle de la clé utilisée. Si
+la clé existante n'en a pas, le `git fetch` passe sans rien demander. Pour en
+ajouter une (tes autres projets la demanderont aussi à chaque `git pull`) :
+
+```bash
+ssh-keygen -p -f ~/.ssh/id_rsa
+```
+
+Remplace `id_rsa` par le nom réel de la clé (`ls ~/.ssh`).
+
+Si SSH affiche `Offending key for IP in …/known_hosts`, c'est une ancienne
+empreinte de GitHub enregistrée pour son adresse IP. Supprime-la (adapte l'IP
+à celle affichée) :
+
+```bash
+ssh-keygen -R 140.82.121.4
+```
+
+#### Repli : clé dédiée à `lg-it-app`, sans toucher aux autres projets
+
+On crée une clé avec passphrase et un **alias** `github-lgit`. Seul ce repo
+utilise l'alias ; les autres projets continuent d'utiliser `github.com` avec
+leur clé habituelle.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/github_lgit -C "ovh-lgit"
 ```
 
 ```bash
-printf 'Host github.com\n  IdentityFile ~/.ssh/github_lgit\n  IdentitiesOnly yes\n' >> ~/.ssh/config && chmod 600 ~/.ssh/config
+printf '\nHost github-lgit\n  HostName github.com\n  IdentityFile ~/.ssh/github_lgit\n  IdentitiesOnly yes\n' >> ~/.ssh/config && chmod 600 ~/.ssh/config
 ```
 
 ```bash
 cat ~/.ssh/github_lgit.pub
 ```
 
-Déclarer cette clé publique sur GitHub. Deux possibilités ; dans les deux cas
-la passphrase reste demandée :
+Déclarer cette clé publique dans le repo `lg-it-app` → Settings →
+**Deploy keys**, sans cocher « Allow write access » (lecture seule, ce repo
+uniquement). Puis tester :
 
-| Où la déclarer | Portée | Avis |
-|---|---|---|
-| Repo `lg-it-app` → Settings → **Deploy keys**, sans « Allow write access » | lecture seule, ce repo uniquement | **recommandé** |
-| Ton compte → Settings → SSH and GPG keys | écriture sur **tous** tes repos | à éviter sur un mutualisé |
+```bash
+ssh -T git@github-lgit
+```
 
-À éviter aussi : faire passer la clé de ton Mac jusqu'au serveur (redirection
+Réponse attendue : `Hi gregmyggal/lg-it-app! …`. À l'étape 5, cloner avec
+`git@github-lgit:gregmyggal/lg-it-app.git` au lieu de `git@github.com:…`. Pour
+un clone déjà fait :
+
+```bash
+cd ~/lg-it-app && git remote set-url origin git@github-lgit:gregmyggal/lg-it-app.git
+```
+
+Si le port 22 sortant est bloqué (timeout), ajouter `Port 443` et remplacer
+`HostName github.com` par `HostName ssh.github.com` **dans le bloc
+`github-lgit` uniquement**.
+
+À éviter : faire passer la clé de ton Mac jusqu'au serveur (redirection
 d'agent, `ssh -A`). Pendant la connexion, n'importe quel processus disposant
 d'un accès suffisant au serveur mutualisé peut l'utiliser.
-
-Tester l'accès (la passphrase est demandée) :
-
-```bash
-ssh -T git@github.com
-```
-
-Réponse attendue : `Hi gregmyggal/lg-it-app! …` (deploy key) ou `Hi gregmyggal! …` (clé de compte).
-
-Si le port 22 sortant est bloqué (timeout), passer par le port 443 :
-
-```bash
-printf 'Host github.com\n  HostName ssh.github.com\n  Port 443\n  IdentityFile ~/.ssh/github_lgit\n  IdentitiesOnly yes\n' > ~/.ssh/config
-```
 
 ### 5. Cloner le repo en dehors de `www/`
 
@@ -157,7 +195,7 @@ ce qui permet de vérifier que le réglage a pris.
    ```
 
    Le script :
-   - **1/5** — lance `git fetch` sur le serveur et **demande la passphrase** ;
+   - **1/5** — lance `git fetch` sur le serveur et **demande la passphrase** de la clé GitHub du serveur (si elle en a une) ;
    - **2/5** — construit le frontend React en local ;
    - **3/5** — `git merge`, puis `composer install`. Comme `backend/.env`
      n'existe pas encore, il **affiche un lien `https://…/install?token=…`
@@ -212,7 +250,7 @@ cd ~/lg-it-app/backend && php artisan app:installer --url=https://lgit.be
 git push && ./scripts/deploy.sh prod
 ```
 
-Le script demande la passphrase (étape 1/5), puis :
+Le script demande la passphrase de la clé du serveur (étape 1/5), puis :
 - met le site en maintenance ;
 - `git merge`, `composer install`, migrations, reconstruction des caches ;
 - envoie le build React ;
