@@ -71,7 +71,7 @@ body {
 }
 
 h1, h2, h3 {
-  font-weight: 700;
+  font-weight: 800;
   text-wrap: balance;
 }
 
@@ -122,9 +122,15 @@ h1, h2, h3 {
 
 .app-main {
   padding: 24px;
-  max-width: 1100px;
+  max-width: 100%;
   width: 100%;
   margin: 0 auto;
+}
+
+@media (min-width: 1200px) {
+  .app-main {
+    max-width: 1600px;
+  }
 }
 
 .card {
@@ -735,4 +741,32 @@ button[type='submit']:hover {
   .catalog-brick__label {
     font-size: 16px;
   }
+}
+
+/* FOOTER */
+.app-footer {
+  background: #0b3550;
+  padding: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13.5px;
+  margin-top: auto;
+}
+
+.app-footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.app-footer__logo .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d9531e;
+  display: inline-block;
 }

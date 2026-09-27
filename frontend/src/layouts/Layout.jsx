@@ -1,12 +1,14 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   return (
     <div className="app-shell">
-      <header className="app-nav">
+      {!isHomePage && <header className="app-nav">
         <Link to="/" className="brand-mark">
           <span className="dot"></span>LG-IT
         </Link>
@@ -32,10 +34,18 @@ export default function Layout() {
             </Link>
           )}
         </div>
-      </header>
+      </header>}
       <main className="app-main">
         <Outlet />
       </main>
+      <footer className="app-footer">
+        <div className="app-footer__logo">
+          <span className="dot"></span>LG-IT
+        </div>
+        <div className="app-footer__copyright">
+          © 2026 Logiscool Pays Vert — Ath, Belgique
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,37 +1,25 @@
 import './HomePage.css';
+import heroImg from '../assets/images/Hero.png';
+import kidsImg from '../assets/images/Enfant&ado.jpg';
+import adultsImg from '../assets/images/adulte.png'
+import businessImg from '../assets/images/entreprise.png';
+import coursImg from '../assets/images/cours.png';
+import birthdayImg from '../assets/images/anniversaires.png';
+import campsImg from '../assets/images/stages.png';
+import formationsImg from '../assets/images/formations.png';
+import catalogImg from '../assets/images/catalog.png';
+import ctaBannerImg from '../assets/images/footer.png';
 
-// Images — Placeholder URLs (remplacez avec vos images locales)
-// Pour utiliser vos propres images:
-// 1. Placez les fichiers dans src/assets/images/
-// 2. Importez-les: import heroImg from '../assets/images/hero.jpg'
-// 3. Remplacez les URLs ci-dessous
 const IMAGES = {
-  // Placeholder: kids/teens coding, bright workshop, hands on keyboard, engaged
-  hero: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1920&q=80',
-
-  // Placeholder: teens at computer, coding/Scratch visible, close-up hands
-  kids: 'https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=1200&q=80',
-
-  // Placeholder: adult learner at laptop, small group, relaxed daytime light
-  adults: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80',
-
-  // Placeholder: team collaborating around screen/whiteboard, business-casual
-  business: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1400&q=80',
-
-  // Placeholder: classroom wide shot
-  coursCard: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=900&q=80',
-
-  // Placeholder: outdoor-summer energy, kids
-  stagesCard: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=900&q=80',
-
-  // Placeholder: professional training room
-  formationsCard: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=900&q=80',
-
-  // Placeholder: kids celebrating with laptop
-  annivCard: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=80',
-
-  // Placeholder: group of smiling students
-  ctaBanner: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80',
+  hero: heroImg,
+  kids: kidsImg,
+  adults: adultsImg,
+  business: businessImg,
+  coursCard: coursImg,
+  stagesCard: campsImg,
+  formationsCard: formationsImg,
+  annivCard: birthdayImg,
+  ctaBanner: ctaBannerImg,
 };
 
 export default function HomePage() {
@@ -70,7 +58,7 @@ export default function HomePage() {
 
           <div style={{ paddingBottom: '10px' }}>
             <p className="lede">
-              Du premier scratch à l'autonomie complète — des parcours structurés pour enfants, ados, adultes et entreprises.
+              Du premier algorithme à l'autonomie complète — des parcours structurés pour enfants, ados, adultes et entreprises.
             </p>
             <div className="hero-actions">
               <a href="#catalogue" className="btn btn-primary">Voir nos offres</a>
@@ -90,7 +78,7 @@ export default function HomePage() {
             <div className="stat-strip__label">ans d'expérience Logiscool</div>
           </div>
           <div className="stat-strip__item">
-            <div className="stat-strip__number">500+</div>
+            <div className="stat-strip__number">75+</div>
             <div className="stat-strip__label">élèves & adultes formés / an</div>
           </div>
           <div className="stat-strip__item">
@@ -112,7 +100,7 @@ export default function HomePage() {
           <div className="asymmetric-content">
             <div className="ghost-number ghost-number--left">01</div>
             <div className="asymmetric-eyebrow asymmetric-eyebrow--kids">Enfants & Ados</div>
-            <h2>Du premier jeu Scratch aux vrais projets en Python.</h2>
+            <h2>Du premier jeu aux vrais projets en Python.</h2>
             <p>Une progression pensée pour chaque âge — cours à l'année ou stages intensifs, toujours en petit groupe.</p>
             <div className="asymmetric-tags">
               <span className="tag tag--teal">7–11 ans · Scratch & jeux</span>
