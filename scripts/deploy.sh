@@ -15,12 +15,14 @@
 #
 # Pré-requis (une seule fois, voir .env.deploy.prod.example) :
 #   - Offre OVH Pro/Performance (accès SSH), clé SSH configurée
-#   - Repo cloné sur le serveur dans REMOTE_PATH, avec une deploy key
-#     permettant au serveur de faire `git fetch` sur origin
+#   - Repo cloné sur le serveur dans REMOTE_PATH, avec une clé SSH du
+#     serveur autorisée sur GitHub. Elle peut (et devrait) avoir une
+#     passphrase : le `git fetch` tourne dans un terminal interactif
+#     (ssh -t) et la demande à chaque déploiement.
 #   - backend/.env : créé par l'assistant web /install au 1er déploiement
 #     (le script affiche le lien), ou à la main
 #   - composer.phar uploadé sur le serveur (COMPOSER_CMD)
-#   - .ovhconfig à la racine de l'hébergement (PHP >= 8.2)
+#   - .ovhconfig (PHP >= 8.2) dans backend/public, cf. docs/DEPLOIEMENT_OVH.md
 #   - Multisite OVH : dossier racine = <REMOTE_PATH>/backend/public
 # =============================================================
 set -euo pipefail
@@ -126,8 +128,18 @@ echo "  Commit : ${LOCAL_SHA:0:7} ($(git -C "${ROOT_DIR}" log -1 --format=%s))"
 echo "  API    : ${VITE_API_URL}"
 echo ""
 
-# --- 1. Build frontend (local) ---
-echo "  1/4 — Build du frontend React (local)..."
+# --- 1. Récupération du code sur le serveur (interactif) ---
+# Seule étape qui contacte GitHub : ssh -t fournit un terminal pour que git
+# demande la passphrase de la clé du serveur. Un fetch ne modifie pas les
+# fichiers en ligne, donc un échec ici ne touche pas au site.
+echo "  1/5 — git fetch sur le serveur (passphrase de la clé GitHub du serveur)..."
+if ! ssh -t "${SSH_TARGET}" "cd '${REMOTE_PATH}' && git fetch origin '${GIT_BRANCH}'"; then
+  echo "❌ git fetch échoué sur le serveur (passphrase, accès GitHub ou REMOTE_PATH) — site inchangé."
+  exit 1
+fi
+
+# --- 2. Build frontend (local) ---
+echo "  2/5 — Build du frontend React (local)..."
 (
   cd "${ROOT_DIR}/frontend"
   npm ci --no-audit --no-fund --loglevel=error
@@ -140,8 +152,8 @@ if [ ! -f "${ROOT_DIR}/frontend/dist/index.html" ]; then
   exit 1
 fi
 
-# --- 2. Backend (serveur) ---
-echo "  2/4 — Mise à jour du backend sur le serveur..."
+# --- 3. Backend (serveur) ---
+echo "  3/5 — Mise à jour du backend sur le serveur..."
 ssh "${SSH_TARGET}" bash -s <<EOF
   set -euo pipefail
   cd "${REMOTE_PATH}"
@@ -168,8 +180,8 @@ ssh "${SSH_TARGET}" bash -s <<EOF
     ${PHP_BIN} artisan down --retry=60 2>/dev/null && echo "        Mode maintenance activé" || true
   fi
 
-  echo "        git pull origin ${GIT_BRANCH}..."
-  git fetch --quiet origin "${GIT_BRANCH}"
+  # Code déjà récupéré à l'étape 1 : merge local, sans accès réseau.
+  echo "        git merge origin/${GIT_BRANCH}..."
   git merge --ff-only --quiet "origin/${GIT_BRANCH}"
   DEPLOYED_SHA="\$(git rev-parse HEAD)"
   if [ "\${DEPLOYED_SHA}" != "${LOCAL_SHA}" ]; then
@@ -197,22 +209,22 @@ ssh "${SSH_TARGET}" bash -s <<EOF
   ${PHP_BIN} artisan storage:link --quiet 2>/dev/null || true
 EOF
 
-# --- 3. Frontend (rsync dans backend/public) ---
-echo "  3/4 — Envoi du build frontend dans backend/public/..."
+# --- 4. Frontend (rsync dans backend/public) ---
+echo "  4/5 — Envoi du build frontend dans backend/public/..."
 # D'abord tout le build (nouveaux assets + index.html), sans rien supprimer :
 # index.php, .htaccess, robots.txt… de Laravel restent en place.
 rsync -az "${ROOT_DIR}/frontend/dist/" "${SSH_TARGET}:${REMOTE_PATH}/backend/public/"
 # Puis purge des anciens assets hashés devenus inutiles.
 rsync -az --delete "${ROOT_DIR}/frontend/dist/assets/" "${SSH_TARGET}:${REMOTE_PATH}/backend/public/assets/"
 
-# --- 4. Remise en ligne + vérification ---
-echo "  4/4 — Sortie du mode maintenance..."
+# --- 5. Remise en ligne + vérification ---
+echo "  5/5 — Sortie du mode maintenance..."
 ssh "${SSH_TARGET}" "cd '${REMOTE_PATH}/backend' && ${PHP_BIN} artisan up 2>/dev/null || true"
 
 if ! ssh "${SSH_TARGET}" "test -f '${REMOTE_PATH}/backend/.env'"; then
   echo ""
   echo "🧩 Code déployé. Terminez l'installation dans le navigateur avec le lien affiché"
-  echo "   à l'étape 2/4 (valable 24 h). Pour en générer un nouveau :"
+  echo "   à l'étape 3/5 (valable 24 h). Pour en générer un nouveau :"
   echo "   ssh ${SSH_TARGET} \"cd ${REMOTE_PATH}/backend && ${PHP_BIN} artisan app:installer --url=${SITE_URL%/}\""
   exit 0
 fi

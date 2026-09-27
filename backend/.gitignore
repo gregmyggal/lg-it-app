@@ -27,3 +27,6 @@ yarn-error.log
 /public/assets
 /public/favicon.svg
 /public/icons.svg
+
+# Version PHP OVH, propre à chaque serveur (cf. docs/DEPLOIEMENT_OVH.md)
+/public/.ovhconfig
