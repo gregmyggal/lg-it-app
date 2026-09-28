@@ -9,3 +9,6 @@ frontend/dist/
 # Config de déploiement (scripts/deploy.sh)
 .env.deploy.*
 !.env.deploy.*.example
+
+# macOS
+.DS_Store
