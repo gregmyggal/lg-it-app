@@ -74,7 +74,9 @@ done
 
 PHP_BIN="${PHP_BIN:-php}"
 COMPOSER_CMD="${COMPOSER_CMD:-${PHP_BIN} ~/composer.phar}"
-VITE_API_URL="${VITE_API_URL:-${SITE_URL%/}/api}"
+# Relatif par défaut : front et API sont servis par le même domaine, le build
+# ne dépend donc pas de SITE_URL (une erreur de domaine ne casse pas l'API).
+VITE_API_URL="${VITE_API_URL:-/api}"
 SSH_TARGET="${SSH_USER}@${SSH_HOST}"
 
 # --- Vérifications git locales ---
