@@ -41,6 +41,18 @@ if [ -z "${TARGET}" ] || { [ "${TARGET}" != "staging" ] && [ "${TARGET}" != "pro
   exit 1
 fi
 
+# --- Outils locaux ---
+# Le script se lance depuis le poste de dev : il builde le frontend (Node,
+# absent d'OVH mutualisé) puis pilote le serveur en SSH.
+for cmd in git npm ssh rsync curl; do
+  if ! command -v "${cmd}" >/dev/null 2>&1; then
+    echo "❌ Commande '${cmd}' introuvable sur cette machine."
+    echo "   Ce script se lance depuis votre poste de développement, pas sur le serveur OVH."
+    [ "${cmd}" = "npm" ] && echo "   Si vous êtes bien sur votre poste : installez Node (brew install node) ou ajoutez-le au PATH."
+    exit 1
+  fi
+done
+
 # --- Charger la configuration de l'environnement ---
 ENV_FILE="${ROOT_DIR}/.env.deploy.${TARGET}"
 
