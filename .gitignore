@@ -15,3 +15,6 @@ frontend/dist/
 
 # Claude Code (réglages locaux)
 .claude/
+
+# Environnement de test local de l'assistant /install
+docker/install-test/
