@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Hardcoded for local development - backend runs on port 8000
-const apiUrl = 'http://localhost:8000/api';
+// Use environment variable, fallback to Docker port 8090
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8090/api';
 console.log('[DEBUG] API URL:', apiUrl);
 
 const client = axios.create({

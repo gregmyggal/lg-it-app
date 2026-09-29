@@ -23,7 +23,7 @@ export default function SharePage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/share/${code}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/share/${code}`, {
         headers: {
           'X-Share-Code': code,
           'Content-Type': 'application/json',
