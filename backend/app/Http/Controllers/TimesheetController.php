@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Timesheet;
 use App\Services\TimesheetLissingService;
 use App\Services\TimesheetSignatureService;
+use App\Services\TimesheetPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class TimesheetController extends Controller
 {
@@ -251,5 +253,58 @@ class TimesheetController extends Controller
             'success' => true,
             'message' => 'Mois signé avec succès',
         ]);
+    }
+
+    // Phase 2: Génère le PDF de défraiement pour un mois entier
+    public function generatePdf(Request $request)
+    {
+        Gate::authorize('viewAny', Timesheet::class);
+
+        $data = $request->validate([
+            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        // Vérification: directeur ne peut générer que pour ses propres professeurs
+        $user = $request->user();
+        if (!$user->isAdmin()) {
+            // TODO: vérifier que le directeur gère ce professeur
+        }
+
+        $service = new TimesheetPdfService(new TimesheetLissingService());
+        $result = $service->generateMonthlyPdf(
+            $data['professeur_id'],
+            $data['year'],
+            $data['month'],
+            $user->id
+        );
+
+        return response()->json($result);
+    }
+
+    // Phase 2: Télécharge le PDF généré
+    public function downloadPdf(Request $request)
+    {
+        $data = $request->validate([
+            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        Gate::authorize('viewAny', Timesheet::class);
+
+        $service = new TimesheetPdfService(new TimesheetLissingService());
+        $pdfPath = $service->getPdfPath(
+            $data['professeur_id'],
+            $data['year'],
+            $data['month']
+        );
+
+        if (!$pdfPath || !Storage::disk('local')->exists($pdfPath)) {
+            return response()->json(['error' => 'PDF non trouvé'], 404);
+        }
+
+        return Storage::disk('local')->download($pdfPath);
     }
 }

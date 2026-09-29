@@ -94,6 +94,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/timesheets/sign-month', [TimesheetController::class, 'signMonth']);
     Route::get('/timesheets/can-sign-month', [TimesheetController::class, 'canSignMonth']);
 
+    // Phase 2: Génération et téléchargement PDF
+    Route::post('/timesheets/generate-pdf', [TimesheetController::class, 'generatePdf']);
+    Route::get('/timesheets/download-pdf', [TimesheetController::class, 'downloadPdf']);
+
     // Liens de classe / réglages — polymorphes, {parentType} ∈ cours|stages|formations|anniversaires.
     Route::get('/{parentType}/{parentId}/liens', [ClasseLienController::class, 'index']);
     Route::post('/{parentType}/{parentId}/liens', [ClasseLienController::class, 'store']);

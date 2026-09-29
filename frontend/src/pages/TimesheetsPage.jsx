@@ -12,6 +12,7 @@ import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
 import TimesheetMontantDisplay from '../components/TimesheetMontantDisplay';
 import TimesheetLissingModal from '../components/TimesheetLissingModal';
 import TimesheetConfirmationPage from '../components/TimesheetConfirmationPage';
+import TimesheetPdfGenerator from '../components/TimesheetPdfGenerator';
 
 const STATUT_LABELS = {
   brouillon: 'Brouillon',
@@ -452,6 +453,26 @@ export default function TimesheetsPage() {
             </div>
           )}
         </div>
+
+        {/* Phase 2: Générateur PDF (pour directeur) */}
+        {isStaff && (
+          <div style={{
+            marginTop: '32px',
+            paddingTop: '24px',
+            borderTop: `1px solid ${ADMIN_COLORS.border}`,
+          }}>
+            <TimesheetPdfGenerator
+              professeurId={user.professeur?.id || user.id}
+              year={year}
+              month={month}
+              professeurName={user.prenom || 'defraiement'}
+              onGenerateSuccess={() => {
+                setSuccess('PDF généré avec succès');
+                setTimeout(() => setSuccess(null), 3000);
+              }}
+            />
+          </div>
+        )}
 
         {/* Phase 1B: Modal lissage */}
         {selectedTimesheet && (
