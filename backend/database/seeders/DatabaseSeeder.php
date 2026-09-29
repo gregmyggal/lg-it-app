@@ -8,27 +8,27 @@ use App\Models\TypeCours;
 use App\Models\User;
 use App\Support\ContentDefaults;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Jeu de données minimal pour vérifier le RBAC (isolation par professeur,
-     * verrouillage des timesheets) : 1 admin, 1 directeur, 2 professeurs sur
-     * des types_cours distincts, 2 cours correspondants.
+     * Test data: 1 admin, 1 directeur, 2 professeurs on different cours types.
+     * All test passwords: 'password'
      */
     public function run(): void
     {
         $admin = User::create([
             'name' => 'Admin',
-            'email' => 'admin@lgit.test',
-            'password' => 'password',
+            'email' => 'admin@test.com',
+            'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         $directeur = User::create([
             'name' => 'Directrice',
-            'email' => 'directeur@lgit.test',
-            'password' => 'password',
+            'email' => 'directeur@test.com',
+            'password' => Hash::make('password'),
             'role' => 'directeur',
         ]);
 
@@ -37,15 +37,15 @@ class DatabaseSeeder extends Seeder
 
         $userA = User::create([
             'name' => 'Alice Prof',
-            'email' => 'alice@lgit.test',
-            'password' => 'password',
+            'email' => 'alice@test.com',
+            'password' => Hash::make('password'),
             'role' => 'professeur',
         ]);
         $profA = Professeur::create([
             'user_id' => $userA->id,
             'prenom' => 'Alice',
             'nom' => 'Prof',
-            'email' => 'alice@lgit.test',
+            'email' => 'alice@test.com',
             'statut' => 'actif',
             'date_entree' => '2025-09-01',
         ]);
@@ -53,15 +53,15 @@ class DatabaseSeeder extends Seeder
 
         $userB = User::create([
             'name' => 'Bob Prof',
-            'email' => 'bob@lgit.test',
-            'password' => 'password',
+            'email' => 'bob@test.com',
+            'password' => Hash::make('password'),
             'role' => 'professeur',
         ]);
         $profB = Professeur::create([
             'user_id' => $userB->id,
             'prenom' => 'Bob',
             'nom' => 'Prof',
-            'email' => 'bob@lgit.test',
+            'email' => 'bob@test.com',
             'statut' => 'actif',
             'date_entree' => '2025-09-01',
         ]);
