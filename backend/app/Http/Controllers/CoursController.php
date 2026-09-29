@@ -8,22 +8,6 @@ use Illuminate\Support\Facades\Gate;
 
 class CoursController extends Controller
 {
-    // Catalogue public (non authentifié) — uniquement les cours publiés, sans données privées.
-    public function publicIndex()
-    {
-        return Cours::with('typesCours')
-            ->where('statut', 'publish')
-            ->orderBy('menu_order')
-            ->get();
-    }
-
-    public function publicShow(Cours $cours)
-    {
-        abort_unless($cours->statut === 'publish', 404);
-
-        return $cours->load(['typesCours', 'ressources']);
-    }
-
     // Isolation par professeur (US-401/406) : chaque profil ne voit que les cours dont
     // un type_cours correspond à ses types assignés ; le staff voit tout, tout statut.
     public function index(Request $request)

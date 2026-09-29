@@ -8,18 +8,6 @@ use Illuminate\Support\Facades\Gate;
 
 class AnniversaireController extends Controller
 {
-    public function publicIndex()
-    {
-        return Anniversaire::where('statut', 'publish')->orderBy('menu_order')->get();
-    }
-
-    public function publicShow(Anniversaire $anniversaire)
-    {
-        abort_unless($anniversaire->statut === 'publish', 404);
-
-        return $anniversaire;
-    }
-
     public function index()
     {
         Gate::authorize('viewAny', Anniversaire::class);

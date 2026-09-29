@@ -9,6 +9,7 @@ use App\Http\Controllers\CoursRessourceController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\ProfesseurTarifController;
+use App\Http\Controllers\ShareCodeController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
@@ -17,18 +18,11 @@ use App\Http\Controllers\TypeFormationController;
 use Illuminate\Support\Facades\Route;
 
 // ---------------------------------------------------------------------------
-// Catalogue public — non authentifié, lecture seule, statut=publish uniquement.
-// Pour les pages marketing (accueil, catalogue cours/stages/formations/anniversaires).
+// Accès par codes d'accès — non authentifié, lecture seule, statut=publish.
+// Pour que les élèves accèdent aux ressources de leurs cours via un code unique.
 // ---------------------------------------------------------------------------
-Route::prefix('public')->group(function () {
-    Route::get('/cours', [CoursController::class, 'publicIndex']);
-    Route::get('/cours/{cours:slug}', [CoursController::class, 'publicShow']);
-    Route::get('/stages', [StageController::class, 'publicIndex']);
-    Route::get('/stages/{stage:slug}', [StageController::class, 'publicShow']);
-    Route::get('/formations', [FormationController::class, 'publicIndex']);
-    Route::get('/formations/{formation:slug}', [FormationController::class, 'publicShow']);
-    Route::get('/anniversaires', [AnniversaireController::class, 'publicIndex']);
-    Route::get('/anniversaires/{anniversaire:slug}', [AnniversaireController::class, 'publicShow']);
+Route::middleware('validate.share.code')->group(function () {
+    Route::get('/share/{code}', [ShareCodeController::class, 'show']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);

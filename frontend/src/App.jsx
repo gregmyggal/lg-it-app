@@ -1,20 +1,8 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
-import Layout from './layouts/Layout';
 import PortalLayout from './layouts/PortalLayout';
-import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import CoursListPage from './pages/CoursListPage';
-import CoursDetailPage from './pages/CoursDetailPage';
-import StagesListPage from './pages/StagesListPage';
-import StagesDetailPage from './pages/StagesDetailPage';
-import FormationsListPage from './pages/FormationsListPage';
-import FormationsDetailPage from './pages/FormationsDetailPage';
-import AnniversairesDetailPage from './pages/AnniversairesDetailPage';
-import ContactPage from './pages/ContactPage';
-import FondersPage from './pages/FondersPage';
-import AboutPage from './pages/AboutPage';
 import MesCoursPage from './pages/MesCoursPage';
 import TimesheetsPage from './pages/TimesheetsPage';
 import AnniversairesAdminPage from './pages/admin/AnniversairesAdminPage';
@@ -31,6 +19,7 @@ import ProfesseurTariffPage from './pages/ProfesseurTariffPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesCoursAdminPage from './pages/admin/TypesCoursAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
+import SharePage from './pages/SharePage';
 
 const STAFF = ['admin', 'directeur'];
 const PORTAL = ['professeur', 'directeur', 'admin'];
@@ -40,20 +29,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route element={<Layout />}>
-            <Route index element={<HomePage />} />
-            <Route path="connexion" element={<LoginPage />} />
-            <Route path="cours" element={<CoursListPage />} />
-            <Route path="cours/:slug" element={<CoursDetailPage />} />
-            <Route path="stages" element={<StagesListPage />} />
-            <Route path="stages/:slug" element={<StagesDetailPage />} />
-            <Route path="formations" element={<FormationsListPage />} />
-            <Route path="formations/:slug" element={<FormationsDetailPage />} />
-            <Route path="anniversaires/:slug" element={<AnniversairesDetailPage />} />
-            <Route path="contact" element={<ContactPage />} />
-            <Route path="fondateurs" element={<FondersPage />} />
-            <Route path="apropos" element={<AboutPage />} />
-          </Route>
+          <Route path="connexion" element={<LoginPage />} />
+          <Route path="/share/:code" element={<SharePage />} />
 
           <Route element={<PortalLayout />}>
             <Route

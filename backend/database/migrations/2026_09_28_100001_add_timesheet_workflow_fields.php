@@ -11,45 +11,46 @@ return new class extends Migration
     {
         Schema::table('timesheets', function (Blueprint $table) {
             // Ajouter le type d'activité après nombre_heures
-            $table->enum('type_activite', ['preparation', 'animation'])->default('animation')->after('nombre_heures');
+            if (!Schema::hasColumn('timesheets', 'type_activite')) {
+                $table->enum('type_activite', ['preparation', 'animation'])->default('animation')->after('nombre_heures');
+            }
         });
 
-        // Modifier l'enum pour y ajouter les nouveaux statuts ET garder les anciens le temps de migrer
-        DB::statement("ALTER TABLE timesheets MODIFY statut_validation ENUM('brouillon', 'soumis', 'valide', 'confirmé', 'généré') NOT NULL DEFAULT 'brouillon'");
+        // SQLite ne supporte pas ALTER TABLE MODIFY; utiliser le schéma builder
+        if (!Schema::hasColumn('timesheets', 'lissage_applique')) {
+            Schema::table('timesheets', function (Blueprint $table) {
+                $table->boolean('lissage_applique')->default(false)->after('commentaire');
+            });
+        }
 
-        // Migrer les données: valide → généré
-        DB::statement("UPDATE timesheets SET statut_validation = 'généré' WHERE statut_validation = 'valide'");
+        if (!Schema::hasColumn('timesheets', 'signature_professeur')) {
+            Schema::table('timesheets', function (Blueprint $table) {
+                $table->timestamp('signature_professeur')->nullable()->after('validated_at');
+            });
+        }
 
-        // Maintenant qu'il n'y a plus de 'valide' nulle part, nettoyer l'enum (optionnel pour la déco, mais propre)
-        DB::statement("ALTER TABLE timesheets MODIFY statut_validation ENUM('brouillon', 'soumis', 'confirmé', 'généré') NOT NULL DEFAULT 'brouillon'");
+        if (!Schema::hasColumn('timesheets', 'pdf_generated_at')) {
+            Schema::table('timesheets', function (Blueprint $table) {
+                $table->timestamp('pdf_generated_at')->nullable()->after('signature_professeur');
+            });
+        }
 
-        // Ajouter les champs pour lissage et signature
-        Schema::table('timesheets', function (Blueprint $table) {
-            $table->boolean('lissage_applique')->default(false)->after('commentaire');
-            $table->timestamp('signature_professeur')->nullable()->after('validated_at');
-            $table->timestamp('pdf_generated_at')->nullable()->after('signature_professeur');
-            $table->foreignId('pdf_generated_by')->nullable()->constrained('users')->nullOnDelete()->after('pdf_generated_at');
-        });
+        if (!Schema::hasColumn('timesheets', 'pdf_generated_by')) {
+            Schema::table('timesheets', function (Blueprint $table) {
+                $table->foreignId('pdf_generated_by')->nullable()->constrained('users')->nullOnDelete()->after('pdf_generated_at');
+            });
+        }
     }
 
     public function down(): void
     {
         Schema::table('timesheets', function (Blueprint $table) {
-            $table->dropColumn([
-                'type_activite',
-                'lissage_applique',
-                'signature_professeur',
-                'pdf_generated_at',
-                'pdf_generated_by',
-            ]);
-        });
-
-        // Remigrer les données: généré → valide
-        DB::statement("UPDATE timesheets SET statut_validation = 'valide' WHERE statut_validation = 'généré'");
-
-        // Restaurer l'enum original
-        Schema::table('timesheets', function (Blueprint $table) {
-            $table->enum('statut_validation', ['brouillon', 'soumis', 'valide'])->change();
+            $columns = ['type_activite', 'lissage_applique', 'signature_professeur', 'pdf_generated_at', 'pdf_generated_by'];
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('timesheets', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };

@@ -8,18 +8,6 @@ use Illuminate\Support\Facades\Gate;
 
 class StageController extends Controller
 {
-    public function publicIndex()
-    {
-        return Stage::with('dates')->where('statut', 'publish')->orderBy('menu_order')->get();
-    }
-
-    public function publicShow(Stage $stage)
-    {
-        abort_unless($stage->statut === 'publish', 404);
-
-        return $stage->load('dates');
-    }
-
     public function index()
     {
         Gate::authorize('viewAny', Stage::class);

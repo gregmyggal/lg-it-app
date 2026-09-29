@@ -8,18 +8,6 @@ use Illuminate\Support\Facades\Gate;
 
 class FormationController extends Controller
 {
-    public function publicIndex()
-    {
-        return Formation::with('typesFormation')->where('statut', 'publish')->orderBy('menu_order')->get();
-    }
-
-    public function publicShow(Formation $formation)
-    {
-        abort_unless($formation->statut === 'publish', 404);
-
-        return $formation->load('typesFormation');
-    }
-
     public function index()
     {
         Gate::authorize('viewAny', Formation::class);
