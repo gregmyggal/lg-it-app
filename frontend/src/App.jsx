@@ -25,6 +25,8 @@ import FormationsAdminPage from './pages/admin/FormationsAdminPage';
 import FormationsEditContentPage from './pages/admin/FormationsEditContentPage';
 import StagesEditContentPage from './pages/admin/StagesEditContentPage';
 import ProfesseursAdminPage from './pages/admin/ProfesseursAdminPage';
+import AdminProfesseursPage from './pages/AdminProfesseursPage';
+import AdminTimesheetsPage from './pages/AdminTimesheetsPage';
 import ProfesseurTariffPage from './pages/ProfesseurTariffPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesCoursAdminPage from './pages/admin/TypesCoursAdminPage';
@@ -136,10 +138,18 @@ export default function App() {
               }
             />
             <Route
+              path="admin/timesheets"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AdminTimesheetsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="admin/professeurs"
               element={
                 <ProtectedRoute roles={STAFF}>
-                  <ProfesseursAdminPage />
+                  <AdminProfesseursPage />
                 </ProtectedRoute>
               }
             />

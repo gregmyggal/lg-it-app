@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Hardcoded for local development - backend runs on port 8000
+const apiUrl = 'http://localhost:8000/api';
+console.log('[DEBUG] API URL:', apiUrl);
+
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: apiUrl,
 });
 
 client.interceptors.request.use((config) => {

@@ -24,7 +24,15 @@ export default function PortalLayout() {
 
           {isStaff && (
             <>
-              <div className="portal-side__group-label">Administration</div>
+              <div className="portal-side__group-label">Gestion Opérationnelle</div>
+              <NavLink to="/admin/timesheets" className={navClass}>
+                📊 Timesheets
+              </NavLink>
+              <NavLink to="/admin/professeurs" className={navClass}>
+                👨‍🏫 Professeurs & Tarifs
+              </NavLink>
+
+              <div className="portal-side__group-label">Contenu</div>
               <NavLink to="/admin/cours" className={navClass}>
                 Cours
               </NavLink>
@@ -42,9 +50,6 @@ export default function PortalLayout() {
               </NavLink>
               <NavLink to="/admin/types-formation" className={navClass}>
                 Types de formation
-              </NavLink>
-              <NavLink to="/admin/professeurs" className={navClass}>
-                Professeurs
               </NavLink>
             </>
           )}

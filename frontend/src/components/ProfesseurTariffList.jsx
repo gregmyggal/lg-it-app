@@ -151,7 +151,7 @@ export default function ProfesseurTariffList({
                   fontWeight: '600',
                   color: effective ? '#059669' : ADMIN_COLORS.textPrimary,
                 }}>
-                  {tariff.tarif_horaire_eur.toFixed(2)}€/h
+                  {parseFloat(tariff.tarif_horaire_eur).toFixed(2)}€/h
                   {effective && (
                     <span style={{
                       marginLeft: '8px',
