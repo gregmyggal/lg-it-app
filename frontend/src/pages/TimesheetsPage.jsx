@@ -17,13 +17,15 @@ import TimesheetPdfGenerator from '../components/TimesheetPdfGenerator';
 const STATUT_LABELS = {
   brouillon: 'Brouillon',
   soumis: 'Soumis',
-  valide: 'Validé',
+  confirmé: 'Confirmé',
+  généré: 'Généré',
 };
 
 const STATUT_COLORS = {
   brouillon: 'amber',
   soumis: 'blue',
-  valide: 'green',
+  confirmé: 'indigo',
+  généré: 'green',
 };
 
 function NewTimesheetForm({ professeurId, onCreated }) {
@@ -187,17 +189,32 @@ export default function TimesheetsPage() {
       />
 
       <AdminPageContent>
-        {/* Phase 1B: Montants et lissage (visible pour directeur) */}
+        {/* DIRECTEUR: Section Validation & Gestion */}
         {isStaff && (
-          <div style={{ marginBottom: '24px' }}>
+          <>
+            <div style={{
+              background: '#eff6ff',
+              border: '2px solid #3b82f6',
+              padding: '16px',
+              borderRadius: '8px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', color: '#1e40af', fontSize: '1.05em' }}>
+                👨‍💼 Section Directeur - Validation et Gestion
+              </h3>
+              <p style={{ margin: 0, color: '#1e40af', fontSize: '0.95em' }}>
+                Validez les heures, appliquez les lissages et générez les PDF de défraiement.
+              </p>
+            </div>
+
             <div style={{
               display: 'flex',
               gap: '12px',
               alignItems: 'center',
-              marginBottom: '16px',
+              marginBottom: '20px',
             }}>
-              <label style={{ fontWeight: '500', color: '#374151' }}>
-                Sélectionner mois:
+              <label style={{ fontWeight: '500', color: '#374151', whiteSpace: 'nowrap' }}>
+                Mois à traiter:
               </label>
               <input
                 type="month"
@@ -208,46 +225,69 @@ export default function TimesheetsPage() {
                   border: '1px solid #d1d5db',
                   borderRadius: '6px',
                   fontSize: '1em',
+                  minWidth: '150px',
                 }}
               />
             </div>
+
             <TimesheetMontantDisplay
               timesheets={timesheets}
               professeurId={user.professeur?.id}
               year={year}
               month={month}
             />
-          </div>
+          </>
         )}
 
-        {/* Phase 1B: Page de confirmation (visible pour professeur) */}
-        {!isStaff && showConfirmation && (
-          <div style={{ marginBottom: '24px' }}>
-            <AdminButton
-              onClick={() => setShowConfirmation(false)}
-              variant="secondary"
-              style={{ marginBottom: '16px' }}
-            >
-              ← Retour aux heures
-            </AdminButton>
-            <TimesheetConfirmationPage
-              professeurId={user.professeur?.id}
-              year={year}
-              month={month}
-            />
-          </div>
-        )}
+        {/* PROFESSEUR: Section Confirmation & Signature */}
+        {!isStaff && (
+          <>
+            {!showConfirmation && (
+              <div style={{
+                background: '#f0fdf4',
+                border: '2px solid #10b981',
+                padding: '16px',
+                borderRadius: '8px',
+                marginBottom: '24px',
+              }}>
+                <h3 style={{ margin: '0 0 12px 0', color: '#047857', fontSize: '1.05em' }}>
+                  ✍️ Section Professeur - Vos Heures
+                </h3>
+                <p style={{ margin: 0, color: '#047857', fontSize: '0.95em' }}>
+                  Encodez vos heures, soumettez-les et signez votre feuille de temps chaque mois.
+                </p>
+              </div>
+            )}
 
-        {/* Bouton confirmation pour professeur */}
-        {!isStaff && !showConfirmation && timesheets.length > 0 && (
-          <AdminButton
-            variant="primary"
-            icon="✍️"
-            onClick={() => setShowConfirmation(true)}
-            style={{ marginBottom: '24px', width: '100%' }}
-          >
-            Confirmer et signer ce mois
-          </AdminButton>
+            {showConfirmation && (
+              <div style={{ marginBottom: '24px' }}>
+                <AdminButton
+                  onClick={() => setShowConfirmation(false)}
+                  variant="secondary"
+                  icon="←"
+                  style={{ marginBottom: '16px' }}
+                >
+                  Retour à mes heures
+                </AdminButton>
+                <TimesheetConfirmationPage
+                  professeurId={user.professeur?.id}
+                  year={year}
+                  month={month}
+                />
+              </div>
+            )}
+
+            {!showConfirmation && timesheets.length > 0 && (
+              <AdminButton
+                variant="primary"
+                icon="✍️"
+                onClick={() => setShowConfirmation(true)}
+                style={{ marginBottom: '24px', width: '100%', padding: '14px' }}
+              >
+                Confirmer et signer ce mois
+              </AdminButton>
+            )}
+          </>
         )}
         {error && (
           <div style={{
@@ -418,7 +458,7 @@ export default function TimesheetsPage() {
                       </AdminButton>
                     )}
                     {isStaff && t.statut_validation === 'soumis' && (
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         <AdminButton
                           variant="success"
                           size="sm"
@@ -427,6 +467,19 @@ export default function TimesheetsPage() {
                           disabled={isSubmitting}
                         >
                           Valider
+                        </AdminButton>
+                      </div>
+                    )}
+                    {isStaff && t.statut_validation === 'confirmé' && (
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <AdminButton
+                          variant="secondary"
+                          size="sm"
+                          icon="🔄"
+                          onClick={() => openLissingModal(t, t.nombre_heures * 7.5)}
+                          title="Appliquer lissage pour ce jour"
+                        >
+                          Lissage
                         </AdminButton>
                       </div>
                     )}

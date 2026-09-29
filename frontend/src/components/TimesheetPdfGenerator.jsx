@@ -16,6 +16,14 @@ export default function TimesheetPdfGenerator({
   const [pdfGenerated, setPdfGenerated] = useState(false);
 
   async function handleGeneratePdf() {
+    const confirmed = window.confirm(
+      'Êtes-vous sûr de vouloir générer le PDF?\n\n' +
+      'Tous les timesheets signés seront marqués comme "généré".\n' +
+      'Cette action ne peut pas être annulée.'
+    );
+
+    if (!confirmed) return;
+
     try {
       setGenerating(true);
       setError(null);
