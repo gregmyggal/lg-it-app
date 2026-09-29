@@ -80,5 +80,12 @@ class DatabaseSeeder extends Seeder
             'statut' => 'publish',
         ], ContentDefaults::coursDefaults()));
         $coursPython->typesCours()->attach($python->id);
+
+        // Sprint 2: Create recurrences, sessions, and assignments for testing
+        $this->call([
+            CourseRecurrenceSeeder::class,
+            CourseSessionSeeder::class,
+            SessionProfessorSeeder::class,
+        ]);
     }
 }
