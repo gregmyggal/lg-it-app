@@ -17,6 +17,8 @@ import AdminProfesseursPage from './pages/AdminProfesseursPage';
 import AdminProfesseurDetail from './components/AdminProfesseurDetail';
 import AdminTimesheetsPage from './pages/AdminTimesheetsPage';
 import ProfesseurTariffPage from './pages/ProfesseurTariffPage';
+import AdminCalendarPage from './pages/AdminCalendarPage';
+import AdminCoursSessionsPage from './pages/AdminCoursSessionsPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesCoursAdminPage from './pages/admin/TypesCoursAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
@@ -65,6 +67,22 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <CoursEditContentPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/cours/:coursId/sessions"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AdminCoursSessionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/calendar"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AdminCalendarPage />
                 </ProtectedRoute>
               }
             />
