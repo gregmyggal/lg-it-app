@@ -11,11 +11,16 @@ class Timesheet extends Model
         'professeur_id',
         'date_prestation',
         'nombre_heures',
+        'type_activite',
         'cours_id',
         'commentaire',
         'statut_validation',
+        'lissage_applique',
         'validated_at',
         'validated_by',
+        'signature_professeur',
+        'pdf_generated_at',
+        'pdf_generated_by',
     ];
 
     protected $casts = [

@@ -43,6 +43,24 @@ class Professeur extends Model
         return $this->hasMany(Timesheet::class);
     }
 
+    public function tarifs(): HasMany
+    {
+        return $this->hasMany(ProfesseurTarif::class);
+    }
+
+    // Récupère le tarif horaire actuel (le plus récent)
+    public function tarifCourant(): ?ProfesseurTarif
+    {
+        return $this->tarifs()
+            ->where('date_debut', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('date_fin')
+                    ->orWhere('date_fin', '>', now());
+            })
+            ->latest('date_debut')
+            ->first();
+    }
+
     // Accès accordé si au moins un type_cours du cours correspond à un type assigné au professeur
     // (portage de LGIT_Professor_Isolation::user_can_access_cours).
     public function canAccessCours(Cours $cours): bool

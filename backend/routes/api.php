@@ -8,6 +8,7 @@ use App\Http\Controllers\CoursController;
 use App\Http\Controllers\CoursRessourceController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ProfesseurController;
+use App\Http\Controllers\ProfesseurTarifController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
@@ -68,6 +69,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/types-formation/{typeFormation}', [TypeFormationController::class, 'update']);
     Route::delete('/types-formation/{typeFormation}', [TypeFormationController::class, 'destroy']);
     Route::apiResource('professeurs', ProfesseurController::class);
+
+    // Tarifs horaires des professeurs (admin seulement)
+    Route::get('/professeurs/{professeur}/tarifs', [ProfesseurTarifController::class, 'index']);
+    Route::post('/professeurs/{professeur}/tarifs', [ProfesseurTarifController::class, 'store']);
+    Route::put('/professeurs/{professeur}/tarifs/{professeurTarif}', [ProfesseurTarifController::class, 'update']);
+    Route::delete('/professeurs/{professeur}/tarifs/{professeurTarif}', [ProfesseurTarifController::class, 'destroy']);
+    Route::post('/professeurs/{professeur}/tarifs/{professeurTarif}/terminate', [ProfesseurTarifController::class, 'terminate']);
+    Route::get('/professeurs/{professeur}/tarif-effectif', [ProfesseurTarifController::class, 'effectiveAt']);
 
     Route::get('/timesheets', [TimesheetController::class, 'index']);
     Route::post('/timesheets', [TimesheetController::class, 'store']);
