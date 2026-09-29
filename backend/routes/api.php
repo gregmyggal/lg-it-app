@@ -2,14 +2,18 @@
 
 use App\Http\Controllers\AnniversaireController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClasseLienController;
 use App\Http\Controllers\ClasseSettingController;
 use App\Http\Controllers\CoursController;
 use App\Http\Controllers\CoursRessourceController;
+use App\Http\Controllers\CourseRecurrenceController;
+use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\ProfesseurCoursController;
 use App\Http\Controllers\ProfesseurTarifController;
+use App\Http\Controllers\SessionProfessorController;
 use App\Http\Controllers\ShareCodeController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
@@ -75,6 +79,44 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/cours/{cours}/professeurs', [ProfesseurCoursController::class, 'assignProfesseursToCours']);
     Route::put('/cours/{cours}/professeurs/{professeur}', [ProfesseurCoursController::class, 'updateCoursProf']);
     Route::delete('/cours/{cours}/professeurs/{professeur}', [ProfesseurCoursController::class, 'removeCourseProf']);
+
+    // Sprint 2: Récurrences de cours
+    Route::get('/cours/{cours}/recurrences', [CourseRecurrenceController::class, 'index']);
+    Route::post('/cours/{cours}/recurrences', [CourseRecurrenceController::class, 'store']);
+    Route::get('/cours/{cours}/recurrences/{recurrence}', [CourseRecurrenceController::class, 'show']);
+    Route::put('/cours/{cours}/recurrences/{recurrence}', [CourseRecurrenceController::class, 'update']);
+    Route::delete('/cours/{cours}/recurrences/{recurrence}', [CourseRecurrenceController::class, 'destroy']);
+    Route::post('/cours/{cours}/recurrences/{recurrence}/generate-sessions', [CourseRecurrenceController::class, 'generateSessions']);
+
+    // Sprint 2: Sessions de cours
+    Route::get('/sessions', [CourseSessionController::class, 'index']);
+    Route::post('/sessions', [CourseSessionController::class, 'store']);
+    Route::get('/sessions/{session}', [CourseSessionController::class, 'show']);
+    Route::put('/sessions/{session}', [CourseSessionController::class, 'update']);
+    Route::delete('/sessions/{session}', [CourseSessionController::class, 'destroy']);
+    Route::post('/sessions/{session}/cancel', [CourseSessionController::class, 'cancel']);
+    Route::post('/sessions/{session}/in-progress', [CourseSessionController::class, 'markInProgress']);
+    Route::post('/sessions/{session}/complete', [CourseSessionController::class, 'markCompleted']);
+    Route::get('/cours/{cours}/sessions', [CourseSessionController::class, 'indexByCourse']);
+
+    // Sprint 2: Assignation de professeurs aux sessions
+    Route::get('/sessions/{session}/professors', [SessionProfessorController::class, 'indexBySession']);
+    Route::post('/sessions/{session}/professors', [SessionProfessorController::class, 'store']);
+    Route::put('/sessions/{session}/professors/{assignment}', [SessionProfessorController::class, 'update']);
+    Route::delete('/sessions/{session}/professors/{assignment}', [SessionProfessorController::class, 'destroy']);
+    Route::post('/sessions/{session}/professors/bulk', [SessionProfessorController::class, 'bulk']);
+    Route::post('/sessions/{session}/professors/{assignment}/present', [SessionProfessorController::class, 'markPresent']);
+    Route::post('/sessions/{session}/professors/{assignment}/absent', [SessionProfessorController::class, 'markAbsent']);
+
+    // Sprint 2: Calendrier
+    Route::get('/calendar/month', [CalendarController::class, 'month']);
+    Route::get('/calendar/week', [CalendarController::class, 'week']);
+    Route::get('/calendar/year', [CalendarController::class, 'year']);
+    Route::get('/calendar/agenda', [CalendarController::class, 'agenda']);
+    Route::get('/calendar/professor/{professeur}', [CalendarController::class, 'professorCalendar']);
+    Route::get('/calendar/views', [CalendarController::class, 'getViews']);
+    Route::post('/calendar/views', [CalendarController::class, 'saveView']);
+    Route::delete('/calendar/views/{view}', [CalendarController::class, 'deleteView']);
 
     // Tarifs horaires des professeurs (admin seulement)
     Route::get('/professeurs/{professeur}/tarifs', [ProfesseurTarifController::class, 'index']);
