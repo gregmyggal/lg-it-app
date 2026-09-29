@@ -29,7 +29,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="connexion" element={<LoginPage />} />
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/connexion" element={<LoginPage />} />
           <Route path="/share/:code" element={<SharePage />} />
 
           <Route element={<PortalLayout />}>
