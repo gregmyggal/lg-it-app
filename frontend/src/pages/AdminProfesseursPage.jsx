@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import AdminButton from '../components/AdminButton';
 import {
@@ -9,6 +10,7 @@ import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
 import ProfesseurTariffForm from '../components/ProfesseurTariffForm';
 
 export default function AdminProfesseursPage() {
+  const navigate = useNavigate();
   const [professeurs, setProfesseurs] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -141,8 +143,9 @@ export default function AdminProfesseursPage() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
+                  gap: '20px',
                 }}>
-                  <div>
+                  <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate(`/admin/professeurs/${prof.id}`)}>
                     <h3 style={{ margin: '0 0 8px 0' }}>
                       {prof.prenom} {prof.nom}
                     </h3>
@@ -150,26 +153,36 @@ export default function AdminProfesseursPage() {
                       {prof.email}
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: '#6b7280',
-                      marginBottom: '4px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}>
-                      Tarif Actif
-                    </div>
-                    <div style={{
-                      fontSize: '20px',
-                      fontWeight: 'bold',
-                      color: stats.activeTariff ? '#059669' : '#9ca3af',
-                    }}>
-                      {stats.activeTariff
-                        ? `${parseFloat(stats.activeTariff).toFixed(2)}€/h`
-                        : '—'
-                      }
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                    <AdminButton
+                      variant="primary"
+                      size="sm"
+                      icon="👁️"
+                      onClick={() => navigate(`/admin/professeurs/${prof.id}`)}
+                    >
+                      Voir détails
+                    </AdminButton>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: '#6b7280',
+                        marginBottom: '4px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}>
+                        Tarif Actif
+                      </div>
+                      <div style={{
+                        fontSize: '20px',
+                        fontWeight: 'bold',
+                        color: stats.activeTariff ? '#059669' : '#9ca3af',
+                      }}>
+                        {stats.activeTariff
+                          ? `${parseFloat(stats.activeTariff).toFixed(2)}€/h`
+                          : '—'
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>

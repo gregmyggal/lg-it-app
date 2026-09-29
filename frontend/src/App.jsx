@@ -14,6 +14,7 @@ import FormationsEditContentPage from './pages/admin/FormationsEditContentPage';
 import StagesEditContentPage from './pages/admin/StagesEditContentPage';
 import ProfesseursAdminPage from './pages/admin/ProfesseursAdminPage';
 import AdminProfesseursPage from './pages/AdminProfesseursPage';
+import AdminProfesseurDetail from './components/AdminProfesseurDetail';
 import AdminTimesheetsPage from './pages/AdminTimesheetsPage';
 import ProfesseurTariffPage from './pages/ProfesseurTariffPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
@@ -128,6 +129,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <AdminProfesseursPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/professeurs/:id"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AdminProfesseurDetail />
                 </ProtectedRoute>
               }
             />

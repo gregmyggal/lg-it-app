@@ -8,6 +8,7 @@ use App\Http\Controllers\CoursController;
 use App\Http\Controllers\CoursRessourceController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\ProfesseurController;
+use App\Http\Controllers\ProfesseurCoursController;
 use App\Http\Controllers\ProfesseurTarifController;
 use App\Http\Controllers\ShareCodeController;
 use App\Http\Controllers\StageController;
@@ -63,6 +64,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/types-formation/{typeFormation}', [TypeFormationController::class, 'update']);
     Route::delete('/types-formation/{typeFormation}', [TypeFormationController::class, 'destroy']);
     Route::apiResource('professeurs', ProfesseurController::class);
+
+    // Assignation de cours aux professeurs (professeur-cours pivot)
+    Route::post('/professeurs/{professeur}/cours', [ProfesseurCoursController::class, 'assignCoursesToProfesseur']);
+    Route::put('/professeurs/{professeur}/cours/{cours}', [ProfesseurCoursController::class, 'updateProfesseurCours']);
+    Route::delete('/professeurs/{professeur}/cours/{cours}', [ProfesseurCoursController::class, 'removeProfesseurFromCours']);
+
+    // Gestion des professeurs par cours
+    Route::get('/cours/{cours}/professeurs', [ProfesseurCoursController::class, 'listProfesseursByCours']);
+    Route::post('/cours/{cours}/professeurs', [ProfesseurCoursController::class, 'assignProfesseursToCours']);
+    Route::put('/cours/{cours}/professeurs/{professeur}', [ProfesseurCoursController::class, 'updateCoursProf']);
+    Route::delete('/cours/{cours}/professeurs/{professeur}', [ProfesseurCoursController::class, 'removeCourseProf']);
 
     // Tarifs horaires des professeurs (admin seulement)
     Route::get('/professeurs/{professeur}/tarifs', [ProfesseurTarifController::class, 'index']);

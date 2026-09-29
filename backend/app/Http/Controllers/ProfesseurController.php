@@ -14,14 +14,17 @@ class ProfesseurController extends Controller
     {
         Gate::authorize('viewAny', Professeur::class);
 
-        return Professeur::with('typesCours')->orderBy('nom')->get();
+        return Professeur::with('cours', 'typesCours')
+            ->withCount('cours')
+            ->orderBy('nom')
+            ->get();
     }
 
     public function show(Professeur $professeur)
     {
         Gate::authorize('view', $professeur);
 
-        return $professeur->load('typesCours');
+        return $professeur->load('cours', 'typesCours', 'tarifs');
     }
 
     // Crée le compte de connexion (User, role=professeur) et le profil (Professeur) ensemble.

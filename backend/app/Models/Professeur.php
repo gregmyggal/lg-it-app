@@ -32,7 +32,36 @@ class Professeur extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Cours actuellement assignés à ce professeur (assignments actives).
+     *
+     * Un cours est "actif" si:
+     * - date_fin est NULL (pas de fin), OU
+     * - date_fin est dans le futur (pas encore révolu)
+     */
+    public function cours(): BelongsToMany
+    {
+        return $this->belongsToMany(Cours::class, 'professeur_cours')
+            ->withPivot('role', 'date_debut', 'date_fin')
+            ->where(function ($query) {
+                $query->whereNull('professeur_cours.date_fin')
+                    ->orWhere('professeur_cours.date_fin', '>', now());
+            })
+            ->orderByPivot('role'); // principal en premier
+    }
+
+    /**
+     * Historique complet de tous les cours assignés à ce professeur (y compris archivés).
+     */
+    public function coursHistorique(): BelongsToMany
+    {
+        return $this->belongsToMany(Cours::class, 'professeur_cours')
+            ->withPivot('role', 'date_debut', 'date_fin')
+            ->orderByPivot('date_debut', 'desc');
+    }
+
     // Détermine les cours que le professeur est habilité à voir/modifier (isolation).
+    // LEGACY: Peut être remplacé par cours() pour isolation fine, mais garder pour sécurité en double
     public function typesCours(): BelongsToMany
     {
         return $this->belongsToMany(TypeCours::class, 'professeur_type_cours');
@@ -61,9 +90,24 @@ class Professeur extends Model
             ->first();
     }
 
-    // Accès accordé si au moins un type_cours du cours correspond à un type assigné au professeur
-    // (portage de LGIT_Professor_Isolation::user_can_access_cours).
+    /**
+     * Accès accordé si le professeur est actuellement assigné à ce cours.
+     *
+     * NEW (v2): Vérification fine au niveau du cours spécifique (pas juste par type).
+     * Remplace l'ancienne logique typesCours pour isolation plus granulaire.
+     */
     public function canAccessCours(Cours $cours): bool
+    {
+        return $this->cours()
+            ->where('cours.id', $cours->id)
+            ->exists();
+    }
+
+    /**
+     * LEGACY: Accès selon les types de cours (pour sécurité en double ou compatibilité).
+     * À court terme, les deux logiques coexistent (cours + typesCours).
+     */
+    public function canAccessCoursByType(Cours $cours): bool
     {
         $allowedIds = $this->typesCours()->pluck('types_cours.id');
 

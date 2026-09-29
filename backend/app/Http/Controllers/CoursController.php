@@ -16,7 +16,7 @@ class CoursController extends Controller
 
         $user = $request->user();
 
-        $query = Cours::with('typesCours', 'ressources');
+        $query = Cours::with('typesCours', 'ressources', 'professeurs');
 
         if (! $user->isStaff()) {
             $typeIds = $user->professeur?->typesCours()->pluck('types_cours.id') ?? collect();
@@ -32,7 +32,7 @@ class CoursController extends Controller
     {
         Gate::authorize('view', $cours);
 
-        return $cours->load(['typesCours', 'ressources']);
+        return $cours->load(['typesCours', 'ressources', 'professeurs']);
     }
 
     // Réservé staff (CoursPolicy) : un professeur ne modifie jamais la structure d'un cours.
