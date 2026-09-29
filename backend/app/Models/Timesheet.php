@@ -13,6 +13,7 @@ class Timesheet extends Model
         'nombre_heures',
         'type_activite',
         'cours_id',
+        'course_session_id',
         'commentaire',
         'statut_validation',
         'lissage_applique',
@@ -37,6 +38,11 @@ class Timesheet extends Model
     public function cours(): BelongsTo
     {
         return $this->belongsTo(Cours::class);
+    }
+
+    public function session(): BelongsTo
+    {
+        return $this->belongsTo(CourseSession::class, 'course_session_id');
     }
 
     public function validateur(): BelongsTo

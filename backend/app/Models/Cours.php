@@ -100,6 +100,22 @@ class Cours extends Model
         return $this->hasMany(Timesheet::class);
     }
 
+    /**
+     * Sessions concrètes (occurrences) de ce cours.
+     */
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(CourseSession::class);
+    }
+
+    /**
+     * Récurrences définissant les sessions automatiques.
+     */
+    public function recurrences(): HasMany
+    {
+        return $this->hasMany(CourseRecurrence::class);
+    }
+
     public function liensClasse(): MorphMany
     {
         return $this->morphMany(ClasseLien::class, 'parent')->orderBy('ordre');
