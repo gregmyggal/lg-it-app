@@ -9,6 +9,9 @@ import {
   AdminBadge,
 } from '../components/AdminPageLayout';
 import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
+import TimesheetMontantDisplay from '../components/TimesheetMontantDisplay';
+import TimesheetLissingModal from '../components/TimesheetLissingModal';
+import TimesheetConfirmationPage from '../components/TimesheetConfirmationPage';
 
 const STATUT_LABELS = {
   brouillon: 'Brouillon',
@@ -98,8 +101,13 @@ export default function TimesheetsPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLissingModal, setShowLissingModal] = useState(false);
+  const [selectedTimesheet, setSelectedTimesheet] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const isStaff = user.role === 'admin' || user.role === 'directeur';
+  const [year, month] = selectedMonth.split('-').map(Number);
 
   useEffect(() => {
     client
@@ -140,6 +148,18 @@ export default function TimesheetsPage() {
     }
   }
 
+  function openLissingModal(timesheet, montant) {
+    setSelectedTimesheet({ ...timesheet, montantActuel: montant });
+    setShowLissingModal(true);
+  }
+
+  function handleLissingSuccess() {
+    setShowLissingModal(false);
+    setError(null);
+    setSuccess('Lissage appliqué avec succès');
+    setTimeout(() => setSuccess(null), 2000);
+  }
+
   if (error && !success) {
     return (
       <div style={{ padding: '24px' }}>
@@ -166,6 +186,68 @@ export default function TimesheetsPage() {
       />
 
       <AdminPageContent>
+        {/* Phase 1B: Montants et lissage (visible pour directeur) */}
+        {isStaff && (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}>
+              <label style={{ fontWeight: '500', color: '#374151' }}>
+                Sélectionner mois:
+              </label>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '1em',
+                }}
+              />
+            </div>
+            <TimesheetMontantDisplay
+              timesheets={timesheets}
+              professeurId={user.professeur?.id}
+              year={year}
+              month={month}
+            />
+          </div>
+        )}
+
+        {/* Phase 1B: Page de confirmation (visible pour professeur) */}
+        {!isStaff && showConfirmation && (
+          <div style={{ marginBottom: '24px' }}>
+            <AdminButton
+              onClick={() => setShowConfirmation(false)}
+              variant="secondary"
+              style={{ marginBottom: '16px' }}
+            >
+              ← Retour aux heures
+            </AdminButton>
+            <TimesheetConfirmationPage
+              professeurId={user.professeur?.id}
+              year={year}
+              month={month}
+            />
+          </div>
+        )}
+
+        {/* Bouton confirmation pour professeur */}
+        {!isStaff && !showConfirmation && timesheets.length > 0 && (
+          <AdminButton
+            variant="primary"
+            icon="✍️"
+            onClick={() => setShowConfirmation(true)}
+            style={{ marginBottom: '24px', width: '100%' }}
+          >
+            Confirmer et signer ce mois
+          </AdminButton>
+        )}
         {error && (
           <div style={{
             background: '#fee2e2',
@@ -335,19 +417,22 @@ export default function TimesheetsPage() {
                       </AdminButton>
                     )}
                     {isStaff && t.statut_validation === 'soumis' && (
-                      <AdminButton
-                        variant="success"
-                        size="sm"
-                        icon="✓"
-                        onClick={() => handleValidate(t.id)}
-                        disabled={isSubmitting}
-                      >
-                        Valider
-                      </AdminButton>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <AdminButton
+                          variant="success"
+                          size="sm"
+                          icon="✓"
+                          onClick={() => handleValidate(t.id)}
+                          disabled={isSubmitting}
+                        >
+                          Valider
+                        </AdminButton>
+                      </div>
                     )}
                     {(
                       (t.statut_validation === 'soumis' && !isStaff) ||
-                      (t.statut_validation === 'valide')
+                      (t.statut_validation === 'confirmé') ||
+                      (t.statut_validation === 'généré')
                     ) && (
                       <span style={{ fontSize: '13px', color: '#9ca3af' }}>—</span>
                     )}
@@ -367,6 +452,20 @@ export default function TimesheetsPage() {
             </div>
           )}
         </div>
+
+        {/* Phase 1B: Modal lissage */}
+        {selectedTimesheet && (
+          <TimesheetLissingModal
+            timesheetId={selectedTimesheet.id}
+            datePrestation={selectedTimesheet.date_prestation}
+            montantActuel={selectedTimesheet.montantActuel}
+            isOpen={showLissingModal}
+            onClose={() => setShowLissingModal(false)}
+            onSuccess={handleLissingSuccess}
+            year={year}
+            month={month}
+          />
+        )}
       </AdminPageContent>
     </>
   );
