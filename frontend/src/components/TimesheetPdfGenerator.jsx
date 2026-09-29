@@ -65,7 +65,8 @@ export default function TimesheetPdfGenerator({
       );
       document.body.appendChild(link);
       link.click();
-      link.parentChild.removeChild(link);
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors du téléchargement');
       console.error(err);

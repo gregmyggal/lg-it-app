@@ -102,7 +102,7 @@ class TimesheetPdfService
             'periode' => [
                 'annee' => $year,
                 'mois' => $month,
-                'mois_label' => $dateDebut->translatedFormat('F Y', 'fr_FR'),
+                'mois_label' => $dateDebut->locale('fr')->translatedFormat('F Y'),
                 'date_debut' => $dateDebut->format('Y-m-d'),
                 'date_fin' => $dateFin->format('Y-m-d'),
             ],
@@ -132,11 +132,16 @@ class TimesheetPdfService
         $heuresHtml = '';
         foreach ($pdfData['heures_par_jour'] as $date => $day) {
             $montantTotal = $day['montant_total'] ?? 0;
+            $totalHeures = 0;
+            foreach ($day['activites'] ?? [] as $activite) {
+                $totalHeures += $activite['heures'] ?? 0;
+            }
+            $tarif = isset($day['activites'][0]['tarif']) ? $day['activites'][0]['tarif'] : 0;
             $heuresHtml .= "
                 <tr>
                     <td>{$date}</td>
-                    <td style='text-align: right;'>{$day['total_heures']}h</td>
-                    <td style='text-align: right;'>{$day['tarif_applique']}€</td>
+                    <td style='text-align: right;'>{$totalHeures}h</td>
+                    <td style='text-align: right;'>{$tarif}€</td>
                     <td style='text-align: right;'>" . number_format($montantTotal, 2, ',', '') . "€</td>
                 </tr>
             ";
