@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Timesheet;
+use App\Services\TimesheetLissingService;
+use App\Services\TimesheetSignatureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -84,17 +86,170 @@ class TimesheetController extends Controller
         return $timesheet;
     }
 
-    // Transition soumis → validé (US-311), réservée au directeur/admin.
+    // Transition soumis → confirmé (US-311), réservée au directeur/admin.
     public function validateEntry(Request $request, Timesheet $timesheet)
     {
         Gate::authorize('validateEntry', $timesheet);
 
+        $data = $request->validate([
+            'lissage_applique' => ['sometimes', 'boolean'],
+        ]);
+
         $timesheet->update([
-            'statut_validation' => 'valide',
+            'statut_validation' => 'confirmé',
             'validated_at' => now(),
             'validated_by' => $request->user()->id,
+            'lissage_applique' => $data['lissage_applique'] ?? false,
         ]);
 
         return $timesheet;
+    }
+
+    // Récupère la suggestion de lissage pour un jour en dépassement
+    public function proposeLissage(Request $request, Timesheet $timesheet)
+    {
+        Gate::authorize('viewAny', Timesheet::class);
+
+        $request->validate([
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $service = new TimesheetLissingService();
+        $proposal = $service->proposeLissage(
+            $timesheet->professeur_id,
+            $timesheet->date_prestation->format('Y-m-d'),
+            $request->input('year'),
+            $request->input('month')
+        );
+
+        return response()->json($proposal);
+    }
+
+    // Effectue un lissage: déplace des heures d'un jour à l'autre
+    public function applyLissage(Request $request, Timesheet $timesheet)
+    {
+        Gate::authorize('validateEntry', $timesheet);
+
+        $data = $request->validate([
+            'date_to' => ['required', 'date'],
+            'montant_to_move' => ['required', 'numeric', 'min:0.01', 'max:44.02'],
+        ]);
+
+        $service = new TimesheetLissingService();
+        $success = $service->executeLissage(
+            $timesheet->id,
+            $timesheet->date_prestation->format('Y-m-d'),
+            $data['date_to'],
+            $data['montant_to_move']
+        );
+
+        if (!$success) {
+            return response()->json(['error' => 'Lissage impossible'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lissage effectué',
+            'timesheet' => $timesheet->fresh(),
+        ]);
+    }
+
+    // Aperçu des données pour le PDF de défraiement
+    public function previewPdf(Request $request)
+    {
+        Gate::authorize('viewAny', Timesheet::class);
+
+        $request->validate([
+            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $service = new TimesheetSignatureService();
+        $pdfData = $service->preparePdfData(
+            $request->input('professeur_id'),
+            $request->input('year'),
+            $request->input('month')
+        );
+
+        return response()->json($pdfData);
+    }
+
+    // Signature d'un timesheet par le professeur
+    public function sign(Request $request, Timesheet $timesheet)
+    {
+        Gate::authorize('view', $timesheet);
+
+        $user = $request->user();
+        if (!$user->isProfesseur()) {
+            abort(403, 'Seul un professeur peut signer');
+        }
+
+        $service = new TimesheetSignatureService();
+        if (!$service->signTimesheet($timesheet, $user)) {
+            return response()->json(['error' => 'Impossible de signer ce timesheet'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Timesheet signé',
+            'timesheet' => $timesheet->fresh(),
+        ]);
+    }
+
+    // Vérifie si un mois entier peut être signé
+    public function canSignMonth(Request $request)
+    {
+        Gate::authorize('viewAny', Timesheet::class);
+
+        $request->validate([
+            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $service = new TimesheetSignatureService();
+        $result = $service->canSignMonth(
+            $request->input('professeur_id'),
+            $request->input('year'),
+            $request->input('month')
+        );
+
+        return response()->json($result);
+    }
+
+    // Signe tous les timesheets d'un mois
+    public function signMonth(Request $request)
+    {
+        Gate::authorize('viewAny', Timesheet::class);
+
+        $request->validate([
+            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+        ]);
+
+        $user = $request->user();
+
+        // Vérification: prof ne peut signer que ses propres heures
+        if ($user->isProfesseur() && $user->professeur?->id !== $request->input('professeur_id')) {
+            abort(403);
+        }
+
+        $service = new TimesheetSignatureService();
+        if (!$service->signMonth(
+            $request->input('professeur_id'),
+            $request->input('year'),
+            $request->input('month'),
+            $user
+        )) {
+            return response()->json(['error' => 'Impossible de signer ce mois'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mois signé avec succès',
+        ]);
     }
 }

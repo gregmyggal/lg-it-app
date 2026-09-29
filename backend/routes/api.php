@@ -86,6 +86,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/timesheets/{timesheet}/submit', [TimesheetController::class, 'submit']);
     Route::post('/timesheets/{timesheet}/validate', [TimesheetController::class, 'validateEntry']);
 
+    // Phase 1B: Lissage, Signature, Aperçu PDF
+    Route::get('/timesheets/{timesheet}/propose-lissage', [TimesheetController::class, 'proposeLissage']);
+    Route::post('/timesheets/{timesheet}/apply-lissage', [TimesheetController::class, 'applyLissage']);
+    Route::post('/timesheets/{timesheet}/sign', [TimesheetController::class, 'sign']);
+    Route::get('/timesheets/preview-pdf', [TimesheetController::class, 'previewPdf']);
+    Route::post('/timesheets/sign-month', [TimesheetController::class, 'signMonth']);
+    Route::get('/timesheets/can-sign-month', [TimesheetController::class, 'canSignMonth']);
+
     // Liens de classe / réglages — polymorphes, {parentType} ∈ cours|stages|formations|anniversaires.
     Route::get('/{parentType}/{parentId}/liens', [ClasseLienController::class, 'index']);
     Route::post('/{parentType}/{parentId}/liens', [ClasseLienController::class, 'store']);
