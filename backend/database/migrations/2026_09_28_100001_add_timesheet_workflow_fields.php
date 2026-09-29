@@ -14,14 +14,14 @@ return new class extends Migration
             $table->enum('type_activite', ['preparation', 'animation'])->default('animation')->after('nombre_heures');
         });
 
-        // Changer l'enum statut_validation → statut_workflow (3 états → 4 états)
-        // Migration des données: valide → généré (signifie "traité par directeur")
+        // Modifier l'enum pour y ajouter les nouveaux statuts ET garder les anciens le temps de migrer
+        DB::statement("ALTER TABLE timesheets MODIFY statut_validation ENUM('brouillon', 'soumis', 'valide', 'confirmé', 'généré') NOT NULL DEFAULT 'brouillon'");
+
+        // Migrer les données: valide → généré
         DB::statement("UPDATE timesheets SET statut_validation = 'généré' WHERE statut_validation = 'valide'");
 
-        // Modifier le type de colonne pour le nouvel enum
-        Schema::table('timesheets', function (Blueprint $table) {
-            $table->enum('statut_validation', ['brouillon', 'soumis', 'confirmé', 'généré'])->change();
-        });
+        // Maintenant qu'il n'y a plus de 'valide' nulle part, nettoyer l'enum (optionnel pour la déco, mais propre)
+        DB::statement("ALTER TABLE timesheets MODIFY statut_validation ENUM('brouillon', 'soumis', 'confirmé', 'généré') NOT NULL DEFAULT 'brouillon'");
 
         // Ajouter les champs pour lissage et signature
         Schema::table('timesheets', function (Blueprint $table) {
