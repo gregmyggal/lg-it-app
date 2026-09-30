@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import PortalLayout from './layouts/PortalLayout';
@@ -18,7 +18,11 @@ import AdminProfesseurDetail from './components/AdminProfesseurDetail';
 import AdminTimesheetsPage from './pages/AdminTimesheetsPage';
 import ProfesseurTariffPage from './pages/ProfesseurTariffPage';
 import AdminCalendarPage from './pages/AdminCalendarPage';
-import AdminCoursSessionsPage from './pages/AdminCoursSessionsPage';
+import ToastProvider from './components/toast/ToastProvider';
+import ClassesAdminPage from './pages/admin/ClassesAdminPage';
+import ClasseCreatePage from './pages/admin/ClasseCreatePage';
+import ClasseDetailPage from './pages/admin/ClasseDetailPage';
+import CalendrierScolaireAdminPage from './pages/admin/CalendrierScolaireAdminPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesCoursAdminPage from './pages/admin/TypesCoursAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
@@ -27,10 +31,17 @@ import SharePage from './pages/SharePage';
 const STAFF = ['admin', 'directeur'];
 const PORTAL = ['professeur', 'directeur', 'admin'];
 
+/** Ancienne route Sprint 2 « sessions d'un cours » → liste des classes filtrée par cours. */
+function RedirectCoursSessions() {
+  const { coursId } = useParams();
+  return <Navigate to={`/admin/classes?cours_id=${encodeURIComponent(coursId)}`} replace />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/connexion" element={<LoginPage />} />
@@ -70,22 +81,48 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="admin/cours/:coursId/sessions" element={<RedirectCoursSessions />} />
             <Route
-              path="admin/cours/:coursId/sessions"
+              path="admin/classes"
               element={
                 <ProtectedRoute roles={STAFF}>
-                  <AdminCoursSessionsPage />
+                  <ClassesAdminPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="admin/calendar"
+              path="admin/classes/nouvelle"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <ClasseCreatePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/classes/:id"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <ClasseDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/calendrier-scolaire"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <CalendrierScolaireAdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/calendrier"
               element={
                 <ProtectedRoute roles={STAFF}>
                   <AdminCalendarPage />
                 </ProtectedRoute>
               }
             />
+            <Route path="admin/calendar" element={<Navigate to="/admin/calendrier" replace />} />
             <Route
               path="admin/stages"
               element={
@@ -184,6 +221,7 @@ export default function App() {
             />
           </Route>
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

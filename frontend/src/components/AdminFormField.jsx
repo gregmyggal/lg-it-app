@@ -45,6 +45,7 @@ export function AdminFormField({
 
       {error && (
         <div
+          role="alert"
           style={{
             marginTop: ADMIN_SPACING.sm,
             fontSize: '12px',
@@ -233,6 +234,7 @@ export function AdminCheckbox({
       />
       {label && (
         <label
+          htmlFor={props.id}
           style={{
             fontSize: '14px',
             color: ADMIN_COLORS.textPrimary,

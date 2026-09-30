@@ -3,16 +3,14 @@
  * Standardized layout for all admin pages with header, content, and messaging
  */
 
-export function AdminPageHeader({ icon, title, description, badge, action }) {
+export function AdminPageHeader({ icon, title, description, badge, action, breadcrumb }) {
   return (
     <div
       style={{
         background: 'white',
         borderBottom: '1px solid #e5e7eb',
-        padding: '32px 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
+        padding: '24px 24px',
+        position: 'relative',
       }}
     >
       <div
@@ -22,36 +20,45 @@ export function AdminPageHeader({ icon, title, description, badge, action }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: '16px',
         }}
       >
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: '1 1 420px', minWidth: 0 }}>
+          {breadcrumb && (
+            <nav aria-label="Fil d'Ariane" style={{ fontSize: '13px', color: '#4b5563', marginBottom: '8px' }}>
+              {breadcrumb}
+            </nav>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            {icon && <span style={{ fontSize: '28px' }}>{icon}</span>}
-            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: '#111827' }}>
-              {title}
-            </h1>
-            {badge && (
-              <div
-                style={{
-                  background: '#dbeafe',
-                  color: '#2563eb',
-                  padding: '4px 12px',
-                  borderRadius: '9999px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                }}
-              >
-                {badge}
-              </div>
-            )}
+            {icon && <span aria-hidden="true" style={{ fontSize: '28px', flex: '0 0 auto' }}>{icon}</span>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 12px', flex: 1, minWidth: 0 }}>
+              <h1 style={{ margin: 0, fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: 700, color: '#111827' }}>
+                {title}
+              </h1>
+              {badge && (
+                <div
+                  style={{
+                    background: '#dbeafe',
+                    color: '#1d4ed8',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                  }}
+                >
+                  {badge}
+                </div>
+              )}
+            </div>
           </div>
           {description && (
-            <p style={{ margin: '0 0 0 40px', fontSize: '14px', color: '#6b7280' }}>
+            <p style={{ margin: icon ? '0 0 0 40px' : 0, fontSize: '14px', color: '#4b5563' }}>
               {description}
             </p>
           )}
         </div>
-        {action && <div>{action}</div>}
+        {action && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{action}</div>}
       </div>
     </div>
   );

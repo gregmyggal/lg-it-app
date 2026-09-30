@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import axios from 'axios';
+import client from '../api/client';
 
 /**
  * useAdminCRUD - Hook for managing CRUD operations in admin pages
@@ -20,7 +20,7 @@ export function useAdminCRUD(endpoint, initialForm = {}) {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(endpoint);
+      const response = await client.get(endpoint);
       setItems(response.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors du chargement');
@@ -63,7 +63,7 @@ export function useAdminCRUD(endpoint, initialForm = {}) {
     try {
       setFormLoading(true);
       setError(null);
-      const response = await axios.post(endpoint, formData);
+      const response = await client.post(endpoint, formData);
       setItems((prev) => [...prev, response.data]);
       resetForm();
       setSuccess('Créé avec succès');
@@ -95,7 +95,7 @@ export function useAdminCRUD(endpoint, initialForm = {}) {
     try {
       setFormLoading(true);
       setError(null);
-      const response = await axios.patch(`${endpoint}/${id}`, formData);
+      const response = await client.patch(`${endpoint}/${id}`, formData);
       setItems((prev) =>
         prev.map((item) => (item.id === id ? response.data : item))
       );
@@ -117,7 +117,7 @@ export function useAdminCRUD(endpoint, initialForm = {}) {
     try {
       setLoading(true);
       setError(null);
-      await axios.delete(`${endpoint}/${id}`);
+      await client.delete(`${endpoint}/${id}`);
       setItems((prev) => prev.filter((item) => item.id !== id));
       setDeleteConfirm(null);
       setSuccess('Supprimé avec succès');

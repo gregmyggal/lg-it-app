@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Cours;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Cours>
+ * @extends Factory<Cours>
  */
 class CoursFactory extends Factory
 {
@@ -20,7 +21,7 @@ class CoursFactory extends Factory
 
         return [
             'titre' => ucfirst($titre),
-            'slug' => $this->faker->slug(),
+            'slug' => $this->faker->unique()->slug(),
             'contenu' => $this->faker->paragraph(),
             'extrait' => $this->faker->sentence(),
             'image_path' => null,

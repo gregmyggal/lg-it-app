@@ -81,11 +81,10 @@ class DatabaseSeeder extends Seeder
         ], ContentDefaults::coursDefaults()));
         $coursPython->typesCours()->attach($python->id);
 
-        // Sprint 2: Create recurrences, sessions, and assignments for testing
+        // CLS-01 T1 : année scolaire 2026-2027 (+ calendrier FWB) puis classes React (14 sessions chacune)
         $this->call([
-            CourseRecurrenceSeeder::class,
-            CourseSessionSeeder::class,
-            SessionProfessorSeeder::class,
+            AnneeScolaireSeeder::class,
+            ClasseSeeder::class,
         ]);
     }
 }

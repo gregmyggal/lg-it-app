@@ -1,0 +1,26 @@
+{
+    "annee_scolaire": "2026-2027",
+    "source_url": "https://www.enseignement.be/calendrier-scolaire",
+    "sources_complementaires": [
+        "https://www.rtbf.be/article/calendrier-scolaire-quelles-seront-les-dates-de-rentree-et-des-vacances-jusqu-en-2032-10761315"
+    ],
+    "verifie": false,
+    "date_import": "2026-09-30",
+    "notes": "Vacances et congés scolaires relevés sur enseignement.be (calendrier scolaire 2026-2027, enseignement obligatoire FWB) ; jours fériés légaux belges calculés (Pâques 2027 = 28 mars). À confirmer par la direction avant passage de 'verifie' à true. La rentrée est le lundi 24 août 2026 ; les vacances d'été débutent le samedi 3 juillet 2027 (hors année modélisée).",
+    "entrees": [
+        {"cle": "ferie-fete-fwb-2026", "type": "ferie", "libelle": "Fête de la Communauté française", "date_debut": "2026-09-27", "date_fin": "2026-09-27"},
+        {"cle": "vacances-automne-2026", "type": "vacances", "libelle": "Vacances d'automne (Toussaint)", "date_debut": "2026-10-19", "date_fin": "2026-11-01"},
+        {"cle": "ferie-toussaint-2026", "type": "ferie", "libelle": "Toussaint", "date_debut": "2026-11-01", "date_fin": "2026-11-01"},
+        {"cle": "conge-fete-des-morts-2026", "type": "ferie", "libelle": "Congé de la Commémoration des défunts", "date_debut": "2026-11-02", "date_fin": "2026-11-02"},
+        {"cle": "ferie-armistice-2026", "type": "ferie", "libelle": "Armistice", "date_debut": "2026-11-11", "date_fin": "2026-11-11"},
+        {"cle": "vacances-hiver-2026", "type": "vacances", "libelle": "Vacances d'hiver (Noël)", "date_debut": "2026-12-21", "date_fin": "2027-01-03"},
+        {"cle": "ferie-noel-2026", "type": "ferie", "libelle": "Noël", "date_debut": "2026-12-25", "date_fin": "2026-12-25"},
+        {"cle": "ferie-nouvel-an-2027", "type": "ferie", "libelle": "Nouvel An", "date_debut": "2027-01-01", "date_fin": "2027-01-01"},
+        {"cle": "vacances-detente-2027", "type": "vacances", "libelle": "Congé de détente (Carnaval)", "date_debut": "2027-02-22", "date_fin": "2027-03-07"},
+        {"cle": "ferie-lundi-paques-2027", "type": "ferie", "libelle": "Lundi de Pâques", "date_debut": "2027-03-29", "date_fin": "2027-03-29"},
+        {"cle": "vacances-printemps-2027", "type": "vacances", "libelle": "Vacances de printemps", "date_debut": "2027-04-26", "date_fin": "2027-05-09"},
+        {"cle": "ferie-fete-travail-2027", "type": "ferie", "libelle": "Fête du Travail", "date_debut": "2027-05-01", "date_fin": "2027-05-01"},
+        {"cle": "ferie-ascension-2027", "type": "ferie", "libelle": "Ascension", "date_debut": "2027-05-06", "date_fin": "2027-05-06"},
+        {"cle": "ferie-lundi-pentecote-2027", "type": "ferie", "libelle": "Lundi de Pentecôte", "date_debut": "2027-05-17", "date_fin": "2027-05-17"}
+    ]
+}

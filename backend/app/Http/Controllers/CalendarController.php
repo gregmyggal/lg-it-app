@@ -2,53 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CourseSessionResource;
 use App\Models\CourseSession;
-use App\Models\Professeur;
 use App\Models\SessionCalendarView;
+use App\Services\CalendrierScolaireService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 
+/**
+ * Calendrier des sessions (T1 : admin/directeur). Filtres : classe_id, cours_id, annee_scolaire_id.
+ * La vue « calendrier d'un professeur » reviendra en T2 (professeur_classe).
+ */
 class CalendarController extends Controller
 {
-    /**
-     * Get sessions for a specific month.
-     */
+    private const FILTRES = [
+        'classe_id' => ['nullable', 'integer', 'exists:classes,id'],
+        'cours_id' => ['nullable', 'integer', 'exists:cours,id'],
+        'annee_scolaire_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+    ];
+
+    public function __construct(private readonly CalendrierScolaireService $calendrier) {}
+
     public function month(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', CourseSession::class);
+
         $validated = $request->validate([
             'year' => 'required|integer|min:2020|max:2100',
             'month' => 'required|integer|min:1|max:12',
-            'professeur_id' => 'nullable|exists:professeurs,id',
-        ]);
+        ] + self::FILTRES);
 
-        $startDate = Carbon::create($validated['year'], $validated['month'], 1)->startOfDay();
-        $endDate = $startDate->clone()->endOfMonth();
-
-        $query = CourseSession::query()
-            ->with(['cours', 'professeurs', 'sessionProfessors'])
-            ->whereBetween('date_debut', [$startDate, $endDate]);
-
-        // Filter by professor if requested
-        if ($request->filled('professeur_id')) {
-            $query->whereHas('professeurs', function ($q) {
-                $q->where('professeur_id', request('professeur_id'));
-            });
-        }
-
-        $sessions = $query->orderBy('date_debut')->get();
-
-        // Group by date for calendar view
-        $calendar = $sessions->groupBy(function ($session) {
-            return $session->date_debut->format('Y-m-d');
-        });
+        $debut = Carbon::create($validated['year'], $validated['month'], 1)->startOfDay();
+        $fin = $debut->clone()->endOfMonth();
+        $sessions = $this->sessions($validated, $debut, $fin);
 
         return response()->json([
             'year' => $validated['year'],
             'month' => $validated['month'],
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'data' => $calendar,
+            'start_date' => $debut->toDateString(),
+            'end_date' => $fin->toDateString(),
+            'data' => $this->groupe($sessions, fn ($s) => $s->date->format('Y-m-d'), $request),
             'summary' => [
                 'total_sessions' => $sessions->count(),
                 'by_status' => $sessions->groupBy('statut')->map->count(),
@@ -56,139 +53,90 @@ class CalendarController extends Controller
         ]);
     }
 
-    /**
-     * Get sessions for a specific week.
-     */
     public function week(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', CourseSession::class);
+
         $validated = $request->validate([
             'year' => 'required|integer|min:2020|max:2100',
             'week' => 'required|integer|min:1|max:53',
-            'professeur_id' => 'nullable|exists:professeurs,id',
-        ]);
+        ] + self::FILTRES);
 
-        $date = Carbon::now()
-            ->setISODate($validated['year'], $validated['week'], 1)
-            ->startOfDay();
-
-        $startDate = $date->clone();
-        $endDate = $date->clone()->addDays(6)->endOfDay();
-
-        $query = CourseSession::query()
-            ->with(['cours', 'professeurs', 'sessionProfessors'])
-            ->whereBetween('date_debut', [$startDate, $endDate]);
-
-        if ($request->filled('professeur_id')) {
-            $query->whereHas('professeurs', function ($q) {
-                $q->where('professeur_id', request('professeur_id'));
-            });
-        }
-
-        $sessions = $query->orderBy('date_debut')->get();
+        $debut = Carbon::now()->setISODate($validated['year'], $validated['week'], 1)->startOfDay();
+        $fin = $debut->clone()->addDays(6)->endOfDay();
+        $sessions = $this->sessions($validated, $debut, $fin);
 
         return response()->json([
             'year' => $validated['year'],
             'week' => $validated['week'],
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'data' => $sessions,
+            'start_date' => $debut->toDateString(),
+            'end_date' => $fin->toDateString(),
+            'data' => CourseSessionResource::collection($sessions)->resolve($request),
             'summary' => [
                 'total_sessions' => $sessions->count(),
-                'by_day' => $sessions->groupBy(fn($s) => $s->date_debut->dayName)->map->count(),
+                'by_day' => $sessions->groupBy(fn ($s) => $s->date->format('Y-m-d'))->map->count(),
             ],
         ]);
     }
 
-    /**
-     * Get sessions for a full year.
-     */
     public function year(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', CourseSession::class);
+
         $validated = $request->validate([
             'year' => 'required|integer|min:2020|max:2100',
-            'professeur_id' => 'nullable|exists:professeurs,id',
-        ]);
+        ] + self::FILTRES);
 
-        $startDate = Carbon::create($validated['year'], 1, 1)->startOfDay();
-        $endDate = Carbon::create($validated['year'], 12, 31)->endOfDay();
-
-        $query = CourseSession::query()
-            ->with(['cours', 'professeurs', 'sessionProfessors'])
-            ->whereBetween('date_debut', [$startDate, $endDate]);
-
-        if ($request->filled('professeur_id')) {
-            $query->whereHas('professeurs', function ($q) {
-                $q->where('professeur_id', request('professeur_id'));
-            });
-        }
-
-        $sessions = $query->orderBy('date_debut')->get();
-
-        // Group by month
-        $byMonth = $sessions->groupBy(function ($session) {
-            return $session->date_debut->format('Y-m');
-        });
+        $debut = Carbon::create($validated['year'], 1, 1)->startOfDay();
+        $fin = Carbon::create($validated['year'], 12, 31)->endOfDay();
+        $sessions = $this->sessions($validated, $debut, $fin);
 
         return response()->json([
             'year' => $validated['year'],
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'data' => $byMonth,
+            'start_date' => $debut->toDateString(),
+            'end_date' => $fin->toDateString(),
+            'data' => $this->groupe($sessions, fn ($s) => $s->date->format('Y-m'), $request),
             'summary' => [
                 'total_sessions' => $sessions->count(),
                 'by_status' => $sessions->groupBy('statut')->map->count(),
-                'by_month' => $byMonth->map->count(),
+                'by_month' => $sessions->groupBy(fn ($s) => $s->date->format('Y-m'))->map->count(),
             ],
         ]);
     }
 
-    /**
-     * Get professor's personal calendar.
-     */
-    public function professorCalendar(Professeur $professeur, Request $request): JsonResponse
+    public function agenda(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', CourseSession::class);
+
         $validated = $request->validate([
-            'year' => 'required|integer|min:2020|max:2100',
-            'month' => 'nullable|integer|min:1|max:12',
-        ]);
+            'from_date' => 'required|date_format:Y-m-d',
+            'to_date' => 'required|date_format:Y-m-d|after:from_date',
+            'statut' => 'nullable|array',
+            'statut.*' => 'in:'.implode(',', CourseSession::STATUTS),
+        ] + self::FILTRES);
 
-        $startDate = Carbon::create($validated['year'], $validated['month'] ?? 1, 1)->startOfDay();
-        $endDate = $validated['month']
-            ? $startDate->clone()->endOfMonth()
-            : Carbon::create($validated['year'], 12, 31)->endOfDay();
-
-        $sessions = $professeur->sessions()
-            ->with(['cours', 'sessionProfessors'])
-            ->whereBetween('date_debut', [$startDate, $endDate])
-            ->orderBy('date_debut')
-            ->get();
-
-        // Group by date for calendar view
-        $calendar = $sessions->groupBy(function ($session) {
-            return $session->date_debut->format('Y-m-d');
-        });
+        $sessions = $this->sessions(
+            $validated,
+            Carbon::parse($validated['from_date'])->startOfDay(),
+            Carbon::parse($validated['to_date'])->endOfDay(),
+            fn (Builder $q) => $q->when(
+                ! empty($validated['statut']),
+                fn (Builder $q) => $q->whereIn('statut', $validated['statut'])
+            )
+        );
 
         return response()->json([
-            'professeur_id' => $professeur->id,
-            'professeur_name' => "{$professeur->prenom} {$professeur->nom}",
-            'year' => $validated['year'],
-            'month' => $validated['month'] ?? null,
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-            'data' => $calendar,
+            'from_date' => $validated['from_date'],
+            'to_date' => $validated['to_date'],
+            'data' => CourseSessionResource::collection($sessions)->resolve($request),
             'summary' => [
-                'total_sessions' => $sessions->count(),
+                'total' => $sessions->count(),
                 'by_status' => $sessions->groupBy('statut')->map->count(),
-                'by_role' => $sessions->map(function ($s) {
-                    return $s->pivot->role ?? 'unknown';
-                })->groupBy(fn($r) => $r)->map->count(),
             ],
         ]);
     }
 
-    /**
-     * Save calendar view preference.
-     */
+    /** Préférences de vue (par utilisateur) — inchangées par CLS-01. */
     public function saveView(Request $request): JsonResponse
     {
         $user = auth()->user();
@@ -200,14 +148,8 @@ class CalendarController extends Controller
         ]);
 
         $view = SessionCalendarView::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'nom' => $validated['nom'],
-            ],
-            [
-                'vue_defaut' => $validated['vue_defaut'],
-                'filtres' => $validated['filtres'] ?? null,
-            ]
+            ['user_id' => $user->id, 'nom' => $validated['nom']],
+            ['vue_defaut' => $validated['vue_defaut'], 'filtres' => $validated['filtres'] ?? null]
         );
 
         return response()->json([
@@ -216,78 +158,48 @@ class CalendarController extends Controller
         ], 201);
     }
 
-    /**
-     * Get calendar view preferences for current user.
-     */
     public function getViews(): JsonResponse
     {
-        $user = auth()->user();
+        $views = SessionCalendarView::where('user_id', auth()->id())->orderBy('nom')->get();
 
-        $views = SessionCalendarView::where('user_id', $user->id)
-            ->orderBy('nom')
-            ->get();
-
-        return response()->json([
-            'data' => $views,
-            'count' => $views->count(),
-        ]);
+        return response()->json(['data' => $views, 'count' => $views->count()]);
     }
 
-    /**
-     * Delete calendar view preference.
-     */
     public function deleteView(SessionCalendarView $view): JsonResponse
     {
         if ($view->user_id !== auth()->id()) {
-            return response()->json([
-                'error' => 'Non autorisé',
-            ], 403);
+            return response()->json(['message' => 'Action non autorisée.'], 403);
         }
 
         $view->delete();
 
-        return response()->json([
-            'message' => 'Vue calendrier supprimée',
-        ]);
+        return response()->json(['message' => 'Vue calendrier supprimée']);
     }
 
-    /**
-     * Get sessions by date range (agenda view).
-     */
-    public function agenda(Request $request): JsonResponse
+    /** @return Collection<int, CourseSession> */
+    private function sessions(array $filtres, Carbon $debut, Carbon $fin, ?callable $extra = null): Collection
     {
-        $validated = $request->validate([
-            'from_date' => 'required|date',
-            'to_date' => 'required|date|after:from_date',
-            'professeur_id' => 'nullable|exists:professeurs,id',
-            'statut' => 'nullable|array',
-            'statut.*' => 'in:scheduled,in_progress,completed,cancelled',
-        ]);
-
         $query = CourseSession::query()
-            ->with(['cours', 'professeurs', 'sessionProfessors'])
-            ->whereBetween('date_debut', [$validated['from_date'], $validated['to_date']]);
+            ->with('classe.cours')
+            ->whereBetween('date', [$debut->toDateString(), $fin->toDateString()])
+            ->when(! empty($filtres['classe_id']), fn (Builder $q) => $q->where('classe_id', $filtres['classe_id']))
+            ->when(! empty($filtres['cours_id']), fn (Builder $q) => $q->whereHas('classe', fn ($c) => $c->where('cours_id', $filtres['cours_id'])))
+            ->when(! empty($filtres['annee_scolaire_id']), fn (Builder $q) => $q->whereHas('classe', fn ($c) => $c->where('annee_scolaire_id', $filtres['annee_scolaire_id'])));
 
-        if ($request->filled('professeur_id')) {
-            $query->whereHas('professeurs', function ($q) {
-                $q->where('professeur_id', request('professeur_id'));
-            });
+        if ($extra) {
+            $extra($query);
         }
 
-        if ($request->filled('statut')) {
-            $query->whereIn('statut', $validated['statut']);
-        }
+        $sessions = $query->orderBy('date')->orderBy('heure_debut')->orderBy('id')->get();
+        $this->calendrier->attachAlerts($sessions);
 
-        $sessions = $query->orderBy('date_debut')->get();
+        return $sessions;
+    }
 
-        return response()->json([
-            'from_date' => $validated['from_date'],
-            'to_date' => $validated['to_date'],
-            'data' => $sessions,
-            'summary' => [
-                'total' => $sessions->count(),
-                'by_status' => $sessions->groupBy('statut')->map->count(),
-            ],
-        ]);
+    private function groupe(Collection $sessions, callable $cle, Request $request): array
+    {
+        return $sessions->groupBy($cle)
+            ->map(fn ($groupe) => CourseSessionResource::collection($groupe)->resolve($request))
+            ->all();
     }
 }

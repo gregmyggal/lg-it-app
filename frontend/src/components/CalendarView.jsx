@@ -1,251 +1,263 @@
-import { useState, useEffect } from 'react';
-import client from '../api/client';
-import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
-import SessionCard from './SessionCard';
-import SessionDetailModal from './SessionDetailModal';
+import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../styles/AdminDesignSystem';
+import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../utils/statuts';
+import {
+  addDays,
+  debutDeSemaine,
+  formatDateCourte,
+  formatHeure,
+  parseDate,
+  toISODate,
+  aujourdhuiISO,
+} from '../utils/dates';
 
-const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-const MONTHS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-];
+const JOURS_ENTETE = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-export default function CalendarView({ year = 2026, month = 10, onSessionClick }) {
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentYear, setCurrentYear] = useState(year);
-  const [currentMonth, setCurrentMonth] = useState(month);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+/** Entrées du calendrier scolaire couvrant un jour donné. */
+function entreesDuJour(entrees, iso) {
+  return entrees.filter((e) => e.date_debut <= iso && iso <= e.date_fin);
+}
 
-  useEffect(() => {
-    loadSessions();
-  }, [currentYear, currentMonth]);
+/** Texte court d'une session pour une pastille du calendrier : « 14h React · Séance 5 ». */
+function texteSession(s) {
+  return `${formatHeure(s.heure_debut)} ${s.classe?.cours?.titre || 'Cours'} · ${s.libelle}`;
+}
 
-  const loadSessions = async () => {
-    setLoading(true);
-    try {
-      const res = await client.get('/calendar/month', {
-        params: {
-          year: currentYear,
-          month: currentMonth,
-        },
-      });
-      setSessions(res.data.data || {});
-    } catch (err) {
-      console.error('Error loading sessions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month - 1, 1).getDay();
-  };
-
-  const handlePrevMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  const handleSessionEdit = (session) => {
-    setSelectedSession(session);
-    setShowModal(true);
-  };
-
-  const handleSave = () => {
-    loadSessions();
-  };
-
-  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-  const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
-  const calendarDays = [];
-
-  // Empty cells for days before month starts
-  for (let i = 0; i < firstDay; i++) {
-    calendarDays.push(null);
-  }
-
-  // Days of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarDays.push(day);
-  }
-
+function SessionChip({ session, onClick }) {
+  const statut = getStatut(STATUTS_SESSION, session.statut);
+  const couleurs = ADMIN_TONES[statut.tone] || ADMIN_TONES.neutral;
+  const alerte = session.alerte_calendrier;
   return (
-    <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: ADMIN_SPACING.lg,
-          background: '#f9fafb',
-          borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-        }}
-      >
-        <button
-          onClick={handlePrevMonth}
-          style={{
-            background: ADMIN_COLORS.primary,
-            color: 'white',
-            border: 'none',
-            padding: `8px 12px`,
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 600,
-          }}
-        >
-          ◀ Mois précédent
-        </button>
-        <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
-          {MONTHS[currentMonth - 1]} {currentYear}
-        </h2>
-        <button
-          onClick={handleNextMonth}
-          style={{
-            background: ADMIN_COLORS.primary,
-            color: 'white',
-            border: 'none',
-            padding: `8px 12px`,
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: 600,
-          }}
-        >
-          Mois suivant ▶
-        </button>
-      </div>
+    <button
+      type="button"
+      onClick={() => onClick(session)}
+      title={`${texteSession(session)} — ${statut.label}${alerte ? ` — ⚠ ${alerte.libelle}` : ''}`}
+      style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        marginBottom: ADMIN_SPACING.xs,
+        padding: '3px 6px',
+        borderRadius: ADMIN_RADIUS.sm,
+        border: `1px solid ${alerte ? ADMIN_TONES.warning.border : couleurs.border}`,
+        background: couleurs.bg,
+        color: couleurs.fg,
+        fontSize: '12px',
+        fontWeight: 600,
+        cursor: 'pointer',
+        textDecoration: estSessionBarree(session.statut) ? 'line-through' : undefined,
+        overflowWrap: 'anywhere',
+        lineHeight: 1.3,
+      }}
+    >
+      {alerte && <span aria-hidden="true">⚠ </span>}
+      {texteSession(session)}
+      <span className="sr-only"> — {statut.label}{alerte ? ` — date en conflit : ${alerte.libelle}` : ''}</span>
+    </button>
+  );
+}
 
-      {/* Day labels */}
+/** Libellé d'une entrée du calendrier scolaire ; `complet = false` : texte réservé aux lecteurs d'écran. */
+function EntreeScolaire({ entree, complet = true }) {
+  const type = getStatut(TYPES_CALENDRIER, entree.type);
+  const couleurs = ADMIN_TONES[type.tone] || ADMIN_TONES.neutral;
+  if (!complet) {
+    return <span className="sr-only">{type.label} — {entree.libelle}</span>;
+  }
+  return (
+    <div
+      style={{
+        marginBottom: ADMIN_SPACING.xs,
+        padding: '2px 6px',
+        borderRadius: ADMIN_RADIUS.sm,
+        background: couleurs.bg,
+        color: couleurs.fg,
+        fontSize: '11px',
+        fontWeight: 600,
+      }}
+    >
+      {type.label} — {entree.libelle}
+    </div>
+  );
+}
+
+function CelluleJour({ iso, sessions, entrees, onSessionClick, estAutreMois, afficherJourSemaine }) {
+  const jour = parseDate(iso);
+  const auj = iso === aujourdhuiISO();
+  const blocages = entreesDuJour(entrees, iso);
+  const fondEntree = blocages[0] ? (ADMIN_TONES[getStatut(TYPES_CALENDRIER, blocages[0].type).tone] || ADMIN_TONES.neutral).bg : null;
+  const lundi = jour.getDay() === 1;
+  return (
+    <div
+      style={{
+        minHeight: '110px',
+        padding: ADMIN_SPACING.sm,
+        borderRight: `1px solid ${ADMIN_COLORS.border}`,
+        borderBottom: `1px solid ${ADMIN_COLORS.border}`,
+        background: fondEntree || (estAutreMois ? ADMIN_COLORS.background : ADMIN_COLORS.cardBg),
+        opacity: estAutreMois ? 0.7 : 1,
+        minWidth: 0,
+      }}
+    >
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          borderBottom: `1px solid ${ADMIN_COLORS.border}`,
+          fontSize: '13px',
+          fontWeight: 700,
+          marginBottom: ADMIN_SPACING.xs,
+          color: auj ? ADMIN_COLORS.primary : ADMIN_COLORS.textPrimary,
         }}
       >
-        {DAYS.map((day) => (
+        {afficherJourSemaine ? `${JOURS_ENTETE[(jour.getDay() + 6) % 7]} ` : ''}
+        {jour.getDate()}
+        {auj && <span className="sr-only"> (aujourd'hui)</span>}
+      </div>
+      {blocages.map((e) => (
+        <EntreeScolaire key={e.id} entree={e} complet={Boolean(e.date_debut === iso || lundi || afficherJourSemaine)} />
+      ))}
+      {sessions.map((s) => (
+        <SessionChip key={s.id} session={s} onClick={onSessionClick} />
+      ))}
+    </div>
+  );
+}
+
+function GrilleSemaines({ jours, parJour, entrees, onSessionClick, moisRef, afficherJourSemaine }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+        border: `1px solid ${ADMIN_COLORS.border}`,
+        borderRight: 0,
+        borderBottom: 0,
+        borderRadius: ADMIN_RADIUS.md,
+        overflow: 'hidden',
+        background: ADMIN_COLORS.cardBg,
+      }}
+    >
+      {!afficherJourSemaine &&
+        JOURS_ENTETE.map((j) => (
           <div
-            key={day}
+            key={j}
             style={{
-              padding: ADMIN_SPACING.md,
+              padding: ADMIN_SPACING.sm,
               textAlign: 'center',
-              fontWeight: 600,
               fontSize: '12px',
-              color: '#6b7280',
-              background: '#fafafa',
-              borderRight: `1px solid ${ADMIN_COLORS.border}`,
-            }}
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          minHeight: '600px',
-        }}
-      >
-        {calendarDays.map((day, idx) => (
-          <div
-            key={idx}
-            style={{
+              fontWeight: 700,
+              color: ADMIN_COLORS.textSecondary,
+              background: ADMIN_COLORS.background,
               borderRight: `1px solid ${ADMIN_COLORS.border}`,
               borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-              padding: ADMIN_SPACING.sm,
-              background: day ? 'white' : '#fafafa',
-              minHeight: '120px',
-              overflow: 'auto',
             }}
           >
-            {day && (
-              <div>
-                <div
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    marginBottom: ADMIN_SPACING.sm,
-                    color: ADMIN_COLORS.textPrimary,
-                  }}
-                >
-                  {day}
-                </div>
-
-                {/* Sessions for this day */}
-                {sessions[`${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`]?.map(
-                  (session) => (
-                    <div
-                      key={session.id}
-                      onClick={() => handleSessionEdit(session)}
-                      style={{
-                        background: '#f0f9ff',
-                        border: `1px solid #bfdbfe`,
-                        borderRadius: '4px',
-                        padding: '4px 6px',
-                        marginBottom: '4px',
-                        fontSize: '11px',
-                        fontWeight: 500,
-                        color: '#0c4a6e',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#0c4a6e';
-                        e.currentTarget.style.color = 'white';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#f0f9ff';
-                        e.currentTarget.style.color = '#0c4a6e';
-                      }}
-                      title={session.titre || session.cours?.titre}
-                    >
-                      {session.heure_debut?.substring(0, 5)} {session.titre || session.cours?.titre}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
+            {j}
           </div>
         ))}
-      </div>
-
-      {/* Session Detail Modal */}
-      <SessionDetailModal
-        session={selectedSession}
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setSelectedSession(null);
-        }}
-        onSave={handleSave}
-      />
+      {jours.map((iso) => (
+        <CelluleJour
+          key={iso}
+          iso={iso}
+          sessions={parJour[iso] || []}
+          entrees={entrees}
+          onSessionClick={onSessionClick}
+          estAutreMois={moisRef !== undefined && parseDate(iso).getMonth() !== moisRef}
+          afficherJourSemaine={afficherJourSemaine}
+        />
+      ))}
     </div>
+  );
+}
+
+/** Liste chronologique (agenda, et vue mobile du mois/semaine) : un bloc par jour ayant du contenu. */
+function ListeAgenda({ jours, parJour, entrees, onSessionClick }) {
+  const utiles = jours.filter((iso) => (parJour[iso] || []).length > 0 || entreesDuJour(entrees, iso).length > 0);
+  if (utiles.length === 0) return null;
+  return (
+    <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: ADMIN_SPACING.md }}>
+      {utiles.map((iso) => (
+        <li
+          key={iso}
+          style={{
+            background: ADMIN_COLORS.cardBg,
+            border: `1px solid ${ADMIN_COLORS.border}`,
+            borderRadius: ADMIN_RADIUS.md,
+            padding: ADMIN_SPACING.md,
+          }}
+        >
+          <h3 style={{ margin: `0 0 ${ADMIN_SPACING.sm}`, fontSize: '14px' }}>{formatDateCourte(iso)}</h3>
+          {entreesDuJour(entrees, iso).map((e) => (
+            <EntreeScolaire key={e.id} entree={e} />
+          ))}
+          {(parJour[iso] || []).map((s) => (
+            <SessionChip key={s.id} session={s} onClick={onSessionClick} />
+          ))}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Liste de jours ISO entre deux dates incluses. */
+function joursEntre(debut, fin) {
+  const liste = [];
+  for (let d = parseDate(debut); toISODate(d) <= fin; d = addDays(d, 1)) liste.push(toISODate(d));
+  return liste;
+}
+
+/**
+ * Calendrier des sessions : vue mensuelle, hebdomadaire ou agenda.
+ * Présentation seule : les données sont chargées par la page (hook `useCalendarSessions`).
+ * Sur écran étroit, le mois et la semaine s'affichent en liste par jour.
+ *
+ * @param {object} props
+ * @param {'mois'|'semaine'|'agenda'} props.vue
+ * @param {string} props.dateRef date de référence (YYYY-MM-DD)
+ * @param {{du: string, au: string}} props.plage plage affichée (agenda)
+ * @param {Record<string, object[]>} props.parJour sessions groupées par date
+ * @param {object[]} props.entreesScolaires vacances/fériés/fermetures à afficher
+ * @param {boolean} props.etroit écran étroit
+ * @param {(session: object) => void} props.onSessionClick
+ */
+export default function CalendarView({ vue, dateRef, plage, parJour, entreesScolaires, etroit, onSessionClick }) {
+  const ref = parseDate(dateRef);
+
+  if (vue === 'agenda') {
+    return (
+      <ListeAgenda
+        jours={joursEntre(plage.du, plage.au)}
+        parJour={parJour}
+        entrees={entreesScolaires}
+        onSessionClick={onSessionClick}
+      />
+    );
+  }
+
+  if (vue === 'semaine') {
+    const lundi = debutDeSemaine(ref);
+    const jours = Array.from({ length: 7 }, (_, i) => toISODate(addDays(lundi, i)));
+    return etroit ? (
+      <ListeAgenda jours={jours} parJour={parJour} entrees={entreesScolaires} onSessionClick={onSessionClick} />
+    ) : (
+      <GrilleSemaines jours={jours} parJour={parJour} entrees={entreesScolaires} onSessionClick={onSessionClick} afficherJourSemaine />
+    );
+  }
+
+  // Mois : semaines complètes (lundi → dimanche) couvrant le mois.
+  const premier = new Date(ref.getFullYear(), ref.getMonth(), 1);
+  const dernier = new Date(ref.getFullYear(), ref.getMonth() + 1, 0);
+  const debut = debutDeSemaine(premier);
+  const fin = addDays(debutDeSemaine(dernier), 6);
+  const jours = joursEntre(toISODate(debut), toISODate(fin));
+  const joursDuMois = jours.filter((iso) => parseDate(iso).getMonth() === ref.getMonth());
+
+  return etroit ? (
+    <ListeAgenda jours={joursDuMois} parJour={parJour} entrees={entreesScolaires} onSessionClick={onSessionClick} />
+  ) : (
+    <GrilleSemaines
+      jours={jours}
+      parJour={parJour}
+      entrees={entreesScolaires}
+      onSessionClick={onSessionClick}
+      moisRef={ref.getMonth()}
+    />
   );
 }

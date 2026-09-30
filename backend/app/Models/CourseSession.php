@@ -2,98 +2,106 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CourseSession extends Model
 {
+    use HasFactory;
+
+    public const STATUT_PLANIFIEE = 'planifiee';
+
+    public const STATUT_EN_COURS = 'en_cours';
+
+    public const STATUT_TERMINEE = 'terminee';
+
+    public const STATUT_ANNULEE = 'annulee';
+
+    public const STATUTS = [
+        self::STATUT_PLANIFIEE,
+        self::STATUT_EN_COURS,
+        self::STATUT_TERMINEE,
+        self::STATUT_ANNULEE,
+    ];
+
+    protected $table = 'course_sessions';
+
     protected $fillable = [
-        'cours_id',
-        'recurrence_id',
-        'date_debut',
+        'classe_id',
+        'seance_numero',
+        'bis_rang',
+        'remplace_session_id',
+        'date',
         'heure_debut',
         'heure_fin',
-        'titre',
         'lieu',
-        'description',
         'statut',
         'motif_annulation',
-        'professor_principal_id',
-        'nb_eleves_attendus',
-        'nb_eleves_presentes',
         'cancelled_at',
     ];
 
-    protected $casts = [
-        'date_debut' => 'date',
-        'heure_debut' => 'datetime:H:i',
-        'heure_fin' => 'datetime:H:i',
-        'cancelled_at' => 'datetime',
-    ];
+    /** Renseignée par CalendrierScolaireService::attachAlerts() (jamais persistée). */
+    public ?array $alerte_calendrier = null;
 
-    public function cours(): BelongsTo
+    protected function casts(): array
     {
-        return $this->belongsTo(Cours::class);
+        return [
+            'seance_numero' => 'integer',
+            'bis_rang' => 'integer',
+            'date' => 'date:Y-m-d',
+            'cancelled_at' => 'datetime',
+        ];
     }
 
-    public function recurrence(): BelongsTo
+    public function classe(): BelongsTo
     {
-        return $this->belongsTo(CourseRecurrence::class);
+        return $this->belongsTo(Classe::class);
     }
 
-    public function professorPrincipal(): BelongsTo
+    public function remplace(): BelongsTo
     {
-        return $this->belongsTo(Professeur::class, 'professor_principal_id');
+        return $this->belongsTo(self::class, 'remplace_session_id');
     }
 
-    public function sessionProfessors(): HasMany
+    public function timesheets(): HasMany
     {
-        return $this->hasMany(SessionProfessor::class, 'course_session_id');
+        return $this->hasMany(Timesheet::class, 'course_session_id');
     }
 
-    public function professeurs(): BelongsToMany
+    public function isAnnulee(): bool
     {
-        return $this->belongsToMany(
-            Professeur::class,
-            'session_professors',
-            'course_session_id',
-            'professeur_id'
-        )->withPivot('role', 'present', 'motif_absence');
+        return $this->statut === self::STATUT_ANNULEE;
     }
 
-    public function isScheduled(): bool
+    /** Une session active compte dans le nombre de sessions de la classe (annulée = non). */
+    public function isActive(): bool
     {
-        return $this->statut === 'scheduled';
+        return ! $this->isAnnulee();
     }
 
-    public function isInProgress(): bool
+    public function isPassee(): bool
     {
-        return $this->statut === 'in_progress';
+        return $this->statut === self::STATUT_TERMINEE
+            || $this->date->toDateString() < now('Europe/Brussels')->toDateString();
     }
 
-    public function isCompleted(): bool
+    /** Déplaçable : ni passée, ni annulée. */
+    public function isMovable(): bool
     {
-        return $this->statut === 'completed';
+        return ! $this->isAnnulee() && ! $this->isPassee();
     }
 
-    public function isCancelled(): bool
+    public function isCancellable(): bool
     {
-        return $this->statut === 'cancelled';
+        return in_array($this->statut, [self::STATUT_PLANIFIEE, self::STATUT_EN_COURS], true);
     }
 
-    public function cancel(string $reason = null): void
+    public function libelle(): string
     {
-        $this->update([
-            'statut' => 'cancelled',
-            'motif_annulation' => $reason,
-            'cancelled_at' => now(),
-        ]);
-    }
-
-    public function getDisplayTitle(): string
-    {
-        return $this->titre ?? $this->cours->titre;
+        return $this->bis_rang > 0
+            ? "Séance {$this->seance_numero} bis".($this->bis_rang > 1 ? " {$this->bis_rang}" : '')
+            : "Séance {$this->seance_numero}";
     }
 }

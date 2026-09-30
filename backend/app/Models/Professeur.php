@@ -77,31 +77,6 @@ class Professeur extends Model
         return $this->hasMany(ProfesseurTarif::class);
     }
 
-    /**
-     * Sessions pour lesquelles ce professeur est assigné en tant que principal.
-     */
-    public function sessionsAsMain(): HasMany
-    {
-        return $this->hasMany(CourseSession::class, 'professor_principal_id');
-    }
-
-    /**
-     * Assignations de ce professeur à des sessions (tous les rôles).
-     */
-    public function sessionAssignments(): HasMany
-    {
-        return $this->hasMany(SessionProfessor::class);
-    }
-
-    /**
-     * Sessions auxquelles ce professeur est assigné (via relation many-to-many).
-     */
-    public function sessions(): BelongsToMany
-    {
-        return $this->belongsToMany(CourseSession::class, 'session_professors')
-            ->withPivot('role', 'present', 'motif_absence');
-    }
-
     // Récupère le tarif horaire actuel (le plus récent)
     public function tarifCourant(): ?ProfesseurTarif
     {

@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 const navClass = ({ isActive }) => (isActive ? 'active' : undefined);
@@ -6,15 +7,33 @@ const navClass = ({ isActive }) => (isActive ? 'active' : undefined);
 export default function PortalLayout() {
   const { user, logout } = useAuth();
   const isStaff = user && (user.role === 'admin' || user.role === 'directeur');
+  const [menuOuvert, setMenuOuvert] = useState(false);
+  const { pathname } = useLocation();
+
+  // Sur mobile, le menu se referme après chaque navigation.
+  useEffect(() => {
+    setMenuOuvert(false);
+  }, [pathname]);
 
   return (
     <div className="portal-shell">
-      <aside className="portal-side">
-        <NavLink to="/" className="brand-mark">
-          <span className="dot"></span>Logiscool Pays Vert
-        </NavLink>
+      <aside className={`portal-side${menuOuvert ? ' portal-side--open' : ''}`}>
+        <div className="portal-side__head">
+          <NavLink to="/" className="brand-mark">
+            <span className="dot"></span>Logiscool Pays Vert
+          </NavLink>
+          <button
+            type="button"
+            className="portal-side__toggle"
+            aria-expanded={menuOuvert}
+            aria-controls="portal-nav"
+            onClick={() => setMenuOuvert((ouvert) => !ouvert)}
+          >
+            {menuOuvert ? 'Fermer le menu' : 'Menu'}
+          </button>
+        </div>
 
-        <nav>
+        <nav id="portal-nav" aria-label="Navigation principale">
           <NavLink to="/mes-cours" className={navClass}>
             Mes cours
           </NavLink>
@@ -30,6 +49,17 @@ export default function PortalLayout() {
               </NavLink>
               <NavLink to="/admin/professeurs" className={navClass}>
                 👨‍🏫 Professeurs & Tarifs
+              </NavLink>
+
+              <div className="portal-side__group-label">Scolarité</div>
+              <NavLink to="/admin/classes" className={navClass}>
+                Classes
+              </NavLink>
+              <NavLink to="/admin/calendrier" className={navClass}>
+                Calendrier
+              </NavLink>
+              <NavLink to="/admin/calendrier-scolaire" className={navClass}>
+                Calendrier scolaire
               </NavLink>
 
               <div className="portal-side__group-label">Contenu</div>

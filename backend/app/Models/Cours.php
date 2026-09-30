@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -70,8 +71,6 @@ class Cours extends Model
 
     /**
      * Le professeur principal actuellement assigné à ce cours.
-     *
-     * @return Professeur|null
      */
     public function professeurPrincipal(): ?Professeur
     {
@@ -83,7 +82,7 @@ class Cours extends Model
     /**
      * Tous les co-professeurs (co-enseignants + remplaçants) assignés à ce cours.
      */
-    public function coProfesseurs(): \Illuminate\Database\Eloquent\Collection
+    public function coProfesseurs(): Collection
     {
         return $this->professeurs()
             ->whereIn('professeur_cours.role', ['co-enseignant', 'remplaçant'])
@@ -101,19 +100,11 @@ class Cours extends Model
     }
 
     /**
-     * Sessions concrètes (occurrences) de ce cours.
+     * Classes (organisations de ce cours pour une année scolaire).
      */
-    public function sessions(): HasMany
+    public function classes(): HasMany
     {
-        return $this->hasMany(CourseSession::class);
-    }
-
-    /**
-     * Récurrences définissant les sessions automatiques.
-     */
-    public function recurrences(): HasMany
-    {
-        return $this->hasMany(CourseRecurrence::class);
+        return $this->hasMany(Classe::class);
     }
 
     public function liensClasse(): MorphMany

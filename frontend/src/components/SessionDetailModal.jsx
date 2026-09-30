@@ -1,304 +1,93 @@
-import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import AdminModal from './AdminModal';
 import AdminButton from './AdminButton';
+import StatutBadge from './ui/StatutBadge';
+import Banner from './ui/Banner';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
-import client from '../api/client';
+import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../utils/statuts';
+import { formatDateLongue, formatHoraire, nomJour } from '../utils/dates';
 
-export default function SessionDetailModal({ session, isOpen, onClose, onSave }) {
-  const [formData, setFormData] = useState({
-    titre: '',
-    lieu: '',
-    date_debut: '',
-    heure_debut: '',
-    heure_fin: '',
-    description: '',
-    statut: 'scheduled',
-    nb_eleves_attendus: 0,
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (session) {
-      setFormData({
-        titre: session.titre || '',
-        lieu: session.lieu || '',
-        date_debut: session.date_debut || '',
-        heure_debut: session.heure_debut || '',
-        heure_fin: session.heure_fin || '',
-        description: session.description || '',
-        statut: session.statut || 'scheduled',
-        nb_eleves_attendus: session.nb_eleves_attendus || 0,
-      });
-    }
-  }, [session]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (session?.id) {
-        await client.put(`/sessions/${session.id}`, formData);
-      } else {
-        await client.post('/sessions', formData);
-      }
-      onSave?.();
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
+/**
+ * Détail d'une session (lecture seule) ouvert depuis le calendrier.
+ * Les ajustements (déplacer, annuler, bis) se font sur la page de la classe.
+ *
+ * @param {object} props
+ * @param {object|null} props.session CourseSessionResource (avec `classe.cours`)
+ * @param {() => void} props.onClose
+ */
+export default function SessionDetailModal({ session, onClose }) {
+  if (!session) return null;
+  const classe = session.classe;
+  const alerte = session.alerte_calendrier;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
+    <AdminModal
+      isOpen
+      size="sm"
+      title={`${classe?.cours?.titre || 'Session'} — ${session.libelle}`}
+      onClose={onClose}
+      footer={
+        <>
+          <AdminButton variant="secondary" onClick={onClose}>
+            Fermer
+          </AdminButton>
+          {classe?.id && (
+            <Link
+              to={`/admin/classes/${classe.id}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.lg}`,
+                borderRadius: '8px',
+                background: ADMIN_COLORS.primary,
+                color: ADMIN_COLORS.cardBg,
+                fontWeight: 600,
+                textDecoration: 'none',
+                fontSize: '14px',
+              }}
+            >
+              Ouvrir la classe
+            </Link>
+          )}
+        </>
+      }
     >
-      <div
-        style={{
-          background: 'white',
-          borderRadius: '8px',
-          padding: ADMIN_SPACING.lg,
-          maxWidth: '600px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', fontWeight: 700 }}>
-          {session?.id ? '📝 Éditer la session' : '➕ Nouvelle session'}
-        </h2>
-
-        {error && (
-          <div
-            style={{
-              background: '#fee2e2',
-              color: ADMIN_COLORS.error,
-              padding: ADMIN_SPACING.md,
-              borderRadius: '6px',
-              marginBottom: ADMIN_SPACING.md,
-              fontSize: '14px',
-            }}
-          >
-            ⚠️ {error}
-          </div>
+      {alerte && (
+        <Banner tone="warning">
+          <strong>Date en conflit avec le calendrier scolaire :</strong> {getStatut(TYPES_CALENDRIER, alerte.type).label} ·{' '}
+          {alerte.libelle}. Ajustez la session depuis la page de la classe.
+        </Banner>
+      )}
+      <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.lg}` }}>
+        <dt style={{ color: ADMIN_COLORS.textSecondary }}>Date</dt>
+        <dd style={{ margin: 0, textDecoration: estSessionBarree(session.statut) ? 'line-through' : undefined }}>
+          {formatDateLongue(session.date)}
+        </dd>
+        <dt style={{ color: ADMIN_COLORS.textSecondary }}>Horaire</dt>
+        <dd style={{ margin: 0 }}>{formatHoraire(session.heure_debut, session.heure_fin)}</dd>
+        {classe?.jour_semaine && (
+          <>
+            <dt style={{ color: ADMIN_COLORS.textSecondary }}>Créneau</dt>
+            <dd style={{ margin: 0 }}>Classe du {nomJour(classe.jour_semaine)}</dd>
+          </>
         )}
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gap: ADMIN_SPACING.md, marginBottom: ADMIN_SPACING.lg }}>
-            {/* Titre */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                Titre
-              </label>
-              <input
-                type="text"
-                name="titre"
-                value={formData.titre}
-                onChange={handleChange}
-                placeholder="Ex: React Avancé - Session 5"
-                style={{
-                  width: '100%',
-                  padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            {/* Date */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                Date
-              </label>
-              <input
-                type="date"
-                name="date_debut"
-                value={formData.date_debut.split('T')[0] || ''}
-                onChange={handleChange}
-                required
-                style={{
-                  width: '100%',
-                  padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                }}
-              />
-            </div>
-
-            {/* Horaires */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: ADMIN_SPACING.md }}>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                  Début
-                </label>
-                <input
-                  type="time"
-                  name="heure_debut"
-                  value={formData.heure_debut.substring(0, 5) || ''}
-                  onChange={handleChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                    border: `1px solid ${ADMIN_COLORS.border}`,
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                  }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                  Fin
-                </label>
-                <input
-                  type="time"
-                  name="heure_fin"
-                  value={formData.heure_fin.substring(0, 5) || ''}
-                  onChange={handleChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                    border: `1px solid ${ADMIN_COLORS.border}`,
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Lieu */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                Lieu
-              </label>
-              <input
-                type="text"
-                name="lieu"
-                value={formData.lieu}
-                onChange={handleChange}
-                placeholder="Ex: Salle 201 ou Visio"
-                style={{
-                  width: '100%',
-                  padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            {/* Statut */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                Statut
-              </label>
-              <select
-                name="statut"
-                value={formData.statut}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                }}
-              >
-                <option value="scheduled">📅 Planifiée</option>
-                <option value="in_progress">⏱️ En cours</option>
-                <option value="completed">✅ Complétée</option>
-                <option value="cancelled">❌ Annulée</option>
-              </select>
-            </div>
-
-            {/* Élèves attendus */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                Élèves attendus
-              </label>
-              <input
-                type="number"
-                name="nb_eleves_attendus"
-                value={formData.nb_eleves_attendus}
-                onChange={handleChange}
-                min="0"
-                style={{
-                  width: '100%',
-                  padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                }}
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '6px', fontSize: '13px' }}>
-                Description / Notes
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="3"
-                placeholder="Notes, agenda détaillé, etc."
-                style={{
-                  width: '100%',
-                  padding: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.md}`,
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontFamily: 'inherit',
-                  resize: 'vertical',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Boutons */}
-          <div style={{ display: 'flex', gap: ADMIN_SPACING.md, justifyContent: 'flex-end' }}>
-            <AdminButton variant="secondary" onClick={onClose}>
-              Annuler
-            </AdminButton>
-            <AdminButton variant="primary" type="submit" disabled={loading}>
-              {loading ? '⏳ Enregistrement...' : '💾 Enregistrer'}
-            </AdminButton>
-          </div>
-        </form>
-      </div>
-    </div>
+        {session.lieu && (
+          <>
+            <dt style={{ color: ADMIN_COLORS.textSecondary }}>Lieu</dt>
+            <dd style={{ margin: 0 }}>{session.lieu}</dd>
+          </>
+        )}
+        <dt style={{ color: ADMIN_COLORS.textSecondary }}>Statut</dt>
+        <dd style={{ margin: 0 }}>
+          <StatutBadge table={STATUTS_SESSION} valeur={session.statut} />
+        </dd>
+        {session.motif_annulation && (
+          <>
+            <dt style={{ color: ADMIN_COLORS.textSecondary }}>Motif</dt>
+            <dd style={{ margin: 0 }}>{session.motif_annulation}</dd>
+          </>
+        )}
+      </dl>
+    </AdminModal>
   );
 }

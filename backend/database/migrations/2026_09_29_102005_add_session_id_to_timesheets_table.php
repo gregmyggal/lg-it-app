@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('timesheets', function (Blueprint $table) {
@@ -16,7 +17,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('timesheets', function (Blueprint $table) {
-            $table->dropForeignIdFor('course_sessions');
+            $table->dropForeign(['course_session_id']);
             $table->dropColumn('course_session_id');
         });
     }

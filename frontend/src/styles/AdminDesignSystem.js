@@ -30,6 +30,22 @@ export const ADMIN_COLORS = {
   borderLight: '#f3f4f6',    // Gray-100
 };
 
+/**
+ * Tons sémantiques (fond + texte foncé, contraste AA) pour badges, bandeaux et toasts.
+ * Toujours associés à un texte : la couleur ne porte jamais seule l'information.
+ */
+export const ADMIN_TONES = {
+  primary: { bg: '#dbeafe', fg: '#1d4ed8', border: '#93c5fd' },
+  success: { bg: '#d1fae5', fg: '#047857', border: '#6ee7b7' },
+  warning: { bg: '#fef3c7', fg: '#92400e', border: '#fcd34d' },
+  error: { bg: '#fee2e2', fg: '#b91c1c', border: '#fca5a5' },
+  info: { bg: '#cffafe', fg: '#0e7490', border: '#67e8f9' },
+  school: { bg: '#ede9fe', fg: '#5b21b6', border: '#c4b5fd' },
+  neutral: { bg: '#f3f4f6', fg: '#4b5563', border: '#d1d5db' },
+};
+
+export const ADMIN_FOCUS_RING = '0 0 0 3px #93c5fd';
+
 export const ADMIN_TYPOGRAPHY = {
   h1: {
     fontSize: '32px',
