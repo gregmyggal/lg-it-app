@@ -162,7 +162,7 @@ export default function SharePage() {
       </div>
 
       <footer className="share-page-footer">
-        <p>LG-IT • Portail d'accès aux ressources</p>
+        <p>Logiscool Pays Vert • Portail d'accès aux ressources</p>
       </footer>
     </div>
   );

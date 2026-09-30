@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Installation — LG-IT</title>
+    <title>Installation — Logiscool Pays Vert</title>
     <style>
         :root {
             --text: #16212e; --muted: #4b5a6b; --bg: #f4f6f8; --surface: #fff; --border: #dee3e8;
@@ -89,7 +89,7 @@
 <body>
 <header>
     <div class="inner">
-        <h1>Installation de LG-IT</h1>
+        <h1>Installation de Logiscool Pays Vert</h1>
         <p id="mode-label">Configuration de l'application après déploiement sur OVH</p>
     </div>
 </header>
@@ -174,7 +174,7 @@
                 <div class="full">
                     <label for="db_prefix">Préfixe des tables</label>
                     <input id="db_prefix" name="db_prefix" maxlength="8" placeholder="lgit_" autocomplete="off" spellcheck="false">
-                    <span class="hint">Base partagée entre plusieurs applications : toutes les tables de LG-IT seront nommées <code>préfixe + nom</code> (ex. <code>lgit_users</code>). Laisser vide pour une base dédiée.</span>
+                    <span class="hint">Base partagée entre plusieurs applications : toutes les tables de Logiscool Pays Vert seront nommées <code>préfixe + nom</code> (ex. <code>lgit_users</code>). Laisser vide pour une base dédiée.</span>
                     <span class="hint" id="db_prefix_hint" hidden>Application déjà installée : changer le préfixe crée un nouveau jeu de tables vide, les données actuelles ne seraient plus utilisées.</span>
                 </div>
             </div>
@@ -438,7 +438,7 @@
             document.getElementById('mail_password_hint').hidden = !state.has_mail_password;
             document.getElementById('admin-choice').hidden = !state.admin_exists;
             if (data.mode === 'reconfigure') {
-                document.querySelector('header h1').textContent = 'Configuration de LG-IT';
+                document.querySelector('header h1').textContent = 'Configuration de Logiscool Pays Vert';
                 document.getElementById('mode-label').textContent = "L'application est déjà installée : modifiez les réglages puis relancez la finalisation.";
             }
             syncMail(); syncAdmin();

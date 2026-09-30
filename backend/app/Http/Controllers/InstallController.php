@@ -77,7 +77,7 @@ class InstallController extends Controller
             'requirements' => $this->requirements($request),
             'admin_exists' => $hasEnv && $this->adminExists(),
             'values' => [
-                'app_name' => $value('APP_NAME', 'LG-IT'),
+                'app_name' => $value('APP_NAME', 'Logiscool Pays Vert'),
                 'app_url' => $value('APP_URL') && $value('APP_URL') !== 'http://localhost'
                     ? $value('APP_URL')
                     : $request->getSchemeAndHttpHost(),

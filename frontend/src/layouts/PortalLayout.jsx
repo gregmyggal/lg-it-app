@@ -11,7 +11,7 @@ export default function PortalLayout() {
     <div className="portal-shell">
       <aside className="portal-side">
         <NavLink to="/" className="brand-mark">
-          <span className="dot"></span>LG-IT
+          <span className="dot"></span>Logiscool Pays Vert
         </NavLink>
 
         <nav>

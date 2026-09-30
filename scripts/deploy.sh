@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================
-# LG-IT App — Déploiement (Laravel + React) sur OVH mutualisé
+# Logiscool Pays Vert — Déploiement (Laravel + React) sur OVH mutualisé
 #
 # Usage :
 #   ./scripts/deploy.sh staging     # déploie sur staging
@@ -134,7 +134,7 @@ if [ "${TARGET}" = "prod" ]; then
 fi
 
 echo ""
-echo "▶ Déploiement LG-IT App → ${TARGET}"
+echo "▶ Déploiement Logiscool Pays Vert → ${TARGET}"
 echo "  Host   : ${SSH_HOST}"
 echo "  Path   : ${REMOTE_PATH}"
 echo "  URL    : ${SITE_URL}"
