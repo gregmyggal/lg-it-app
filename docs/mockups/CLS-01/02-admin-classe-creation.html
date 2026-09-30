@@ -1,0 +1,153 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nouvelle classe — Maquette CLS-01</title><style>
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+.s-loading,.s-empty,.s-error,.s-data,.s-success,.s-ro,.s-refus{}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]):not([data-state=success]):not([data-state=readonly]) .s-data{display:none!important}
+body:not([data-state=success]) .s-success{display:none!important}
+body:not([data-state=readonly]) .s-ro{display:none!important}
+body:not([data-state=refus]) .s-refus{display:none!important}
+body[data-state=readonly] .edit{display:none!important}
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+body:not([data-state=error]) .err-t{display:none!important} body[data-state=error] .s-data-h{display:none} body[data-state=loading] .s-form,body[data-state=empty] .s-form,body[data-state=success] .s-form{display:none} .pv-bl{display:none} body[data-state=blocage] .pv-bl{display:revert} body[data-state=blocage] .pv-ok{display:none!important} body[data-state=blocage] .pv-bl.err-t{display:block!important} body[data-state=blocage] tbody.pv-bl{display:table-row-group}</style></head><body data-state="data"><div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-01</strong><span>État affiché :</span><div class="sw"><button type="button" data-s="loading" aria-pressed="false" onclick="setState('loading')">Chargement</button><button type="button" data-s="empty" aria-pressed="false" onclick="setState('empty')">Vide</button><button type="button" data-s="error" aria-pressed="false" onclick="setState('error')">Erreur</button><button type="button" data-s="data" aria-pressed="true" onclick="setState('data')">Données</button><button type="button" data-s="success" aria-pressed="false" onclick="setState('success')">Confirmation</button><button type="button" data-s="blocage" aria-pressed="false" onclick="setState('blocage')">Blocage fin de période</button></div><a href="index.html">← Sommaire</a></div><div class="shell"><aside class="side"><div class="brand"><i></i>Logiscool Pays Vert</div><nav aria-label="Navigation principale"><a href="#" class="chg">Mes classes</a><a href="#" class="">Timesheets</a><div class="grp">Gestion Opérationnelle</div><a href="#" class="">📊 Timesheets</a><a href="#" class="">👨‍🏫 Professeurs &amp; Tarifs</a><div class="grp">Scolarité</div><a href="#" class="active new">Classes</a><a href="#" class="">Calendrier</a><a href="#" class="new">Calendrier scolaire</a><div class="grp">Contenu</div><a href="#" class="">Cours</a><a href="#" class="">Stages</a><a href="#" class="">Formations</a><a href="#" class="">Anniversaires</a><a href="#" class="">Types de formation</a></nav><div class="acct">Sophie Martin (directeur)</div></aside><main class="main"><div class="phead"><div class="in"><div><div class="crumb"><a href="#">Scolarité</a> › <a href="01-admin-classes-liste.html">Classes</a> › Nouvelle classe</div><h1>Nouvelle classe</h1><p class="d">Un seul formulaire : le cours, le créneau, la première date et les professeurs. Les 14 sessions sont générées à la validation.</p></div><div class="row"></div></div></div><div class="content"><div class="s-loading card" role="status" aria-busy="true"><span class="sr">Chargement du formulaire…</span><span class="sk" style="height:18px;margin:14px 0;width:100%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:93%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:86%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:79%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:72%" aria-hidden="true"></span></div><div class="s-error banner err" role="alert"><div class="tx"><strong>La classe n’a pas pu être créée. Aucune session n’a été générée (l’opération a été annulée en entier).</strong> Corrigez la date de première session puis réessayez.</div></div><div class="s-empty"><div class="banner warn"><div class="tx"><strong>Le calendrier scolaire 2026-2027 est vide.</strong> Sans lui, les sessions ne pourront pas sauter les vacances ni les jours fériés. Importez d’abord le calendrier FWB.</div><a class="btn btn-p btn-sm" href="05-admin-calendrier-scolaire.html">Configurer le calendrier scolaire</a></div><div class="card empty"><div class="ic" aria-hidden="true">📅</div><h2>Aperçu indisponible</h2><p>L’aperçu des 14 dates s’affichera dès que le calendrier scolaire sera renseigné. Le bouton de création est désactivé d’ici là.</p><button class="btn btn-p" disabled>Créer la classe et générer 14 sessions</button></div></div><div class="s-success banner ok" role="status"><div class="tx"><strong>Classe « React — mercredi 14h–17h » créée : 14 sessions générées du 07/10/2026 au 03/02/2027.</strong> Alice Dupont est assignée aux 14 sessions.</div><div class="row"><a class="btn btn-p btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a><a class="btn btn-s btn-sm" href="02-admin-classe-creation.html">Créer une autre classe</a></div></div><div class="s-form"><div class="grid2" style="grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start">
+<form onsubmit="return false" aria-label="Nouvelle classe">
+<div class="sect"><header><h2>1 · Quelle classe ?</h2></header><div class="body" style="display:flex;flex-direction:column;gap:14px">
+<div><label for="c">Cours du catalogue</label><select id="c"><option>React</option><option>Angular</option><option>Python</option></select></div>
+<div class="grid2"><div><label for="a">Année scolaire</label><select id="a"><option>2026-2027</option></select></div>
+<div><span class="lbl" id="pl">Période</span><div class="row" role="radiogroup" aria-labelledby="pl"><label style="text-transform:none;font-weight:500"><input type="radio" name="p" checked> Période 1</label><label style="text-transform:none;font-weight:500"><input type="radio" name="p"> Période 2</label></div></div></div>
+<div class="grid2"><div><label for="j">Jour</label><select id="j"><option>Mercredi</option><option>Samedi</option></select></div>
+<div><label for="l">Lieu</label><input type="text" id="l" value="Salle 3"></div></div>
+<div class="grid2"><div><label for="h1">Début</label><input type="time" id="h1" value="14:00"></div><div><label for="h2">Fin</label><input type="time" id="h2" value="17:00"></div></div>
+<div><label for="d">Date de la première session</label><input class="pv-ok" type="date" id="d" value="2026-10-07"><input class="pv-bl" type="date" id="d2" value="2026-10-14" aria-describedby="bl-msg"><div class="help s-data-h pv-ok">Mercredi 7 octobre 2026 : correspond au jour choisi.</div><div class="err-t pv-bl" id="bl-msg" style="display:block">Cette date est après la fin de la période 1 : la 14e session tomberait le 10/02/2027, or la période 1 se termine le 05/02/2027.</div><div class="err-t">La date du 08/10/2026 est un jeudi. Choisissez un mercredi, ou changez le jour de la classe.</div></div>
+</div></div>
+<div class="sect"><header><div><h2>2 · Professeurs <span class="muted" style="font-weight:400">(facultatif)</span></h2><p>Vous pouvez aussi les ajouter plus tard depuis la classe ou la fiche du professeur.</p></div></header><div class="body" style="display:flex;flex-direction:column;gap:12px">
+<div class="row" style="align-items:flex-end"><div style="flex:2;min-width:150px"><label for="p1">Professeur</label><select id="p1"><option>Alice Dupont</option></select></div><div style="flex:1;min-width:140px"><label for="r1">Rôle (indicatif)</label><select id="r1"><option>Principal</option><option>Co-enseignant</option><option>Remplaçant</option></select></div></div>
+<div class="help">Le rôle est purement indicatif : il n’a aucun effet sur la rémunération.</div>
+<button class="btn btn-g btn-sm" type="button" style="align-self:flex-start">＋ Ajouter un autre professeur</button>
+</div></div>
+</form>
+<div>
+<div class="sect"><header><div><h2>Aperçu des 14 sessions</h2><p>Calculé avec le calendrier scolaire 2026-2027 (FWB + École)</p></div><a class="small" href="05-admin-calendrier-scolaire.html">Voir le calendrier scolaire</a></header>
+<div class="tw" style="max-height:420px;overflow:auto"><table><thead><tr><th scope="col">Séance</th><th scope="col">Date</th></tr></thead><tbody class="pv-ok"><tr><td>1</td><td>mer. 07/10/2026</td></tr><tr><td>2</td><td>mer. 14/10/2026</td></tr><tr><td>3</td><td>mer. 21/10/2026</td></tr><tr style="background:#fffbeb"><td><span class="sr">Sautée</span>—</td><td><span class="strike muted">mer. 28/10/2026</span> <span class="badge b-warn">⏭ Sautée · Congé d’automne (FWB)</span></td></tr><tr><td>4</td><td>mer. 04/11/2026</td></tr><tr style="background:#fffbeb"><td><span class="sr">Sautée</span>—</td><td><span class="strike muted">mer. 11/11/2026</span> <span class="badge b-warn">⏭ Sautée · Armistice (FWB)</span></td></tr><tr><td>5</td><td>mer. 18/11/2026</td></tr><tr><td>6</td><td>mer. 25/11/2026</td></tr><tr><td>7</td><td>mer. 02/12/2026</td></tr><tr><td>8</td><td>mer. 09/12/2026</td></tr><tr class="hl"><td>9</td><td>mer. 16/12/2026 <span class="badge b-school" title="Ajoutée après coup">⚠ Fermeture École le 16/12 (Journée pédagogique)</span></td></tr><tr style="background:#fffbeb"><td><span class="sr">Sautée</span>—</td><td><span class="strike muted">mer. 23/12/2026</span> <span class="badge b-warn">⏭ Sautée · Vacances de Noël (FWB)</span></td></tr><tr style="background:#fffbeb"><td><span class="sr">Sautée</span>—</td><td><span class="strike muted">mer. 30/12/2026</span> <span class="badge b-warn">⏭ Sautée · Vacances de Noël (FWB)</span></td></tr><tr><td>10</td><td>mer. 06/01/2027</td></tr><tr><td>11</td><td>mer. 13/01/2027</td></tr><tr><td>12</td><td>mer. 20/01/2027</td></tr><tr><td>13</td><td>mer. 27/01/2027</td></tr><tr><td>14</td><td>mer. 03/02/2027</td></tr></tbody><tbody class="pv-bl"><tr><td>1</td><td>mer. 14/10/2026</td></tr><tr><td>2</td><td>mer. 21/10/2026</td></tr><tr style="background:#fffbeb"><td>—</td><td><span class="strike muted">mer. 28/10/2026</span> <span class="badge b-warn">⏭ Sautée · Congé d’automne (FWB)</span></td></tr><tr><td>3</td><td>mer. 04/11/2026</td></tr><tr style="background:#fffbeb"><td>—</td><td><span class="strike muted">mer. 11/11/2026</span> <span class="badge b-warn">⏭ Sautée · Armistice (FWB)</span></td></tr><tr><td>4</td><td>mer. 18/11/2026</td></tr><tr><td>5</td><td>mer. 25/11/2026</td></tr><tr><td>6</td><td>mer. 02/12/2026</td></tr><tr><td>7</td><td>mer. 09/12/2026</td></tr><tr class="hl"><td>8</td><td>mer. 16/12/2026 <span class="badge b-school">⚠ Fermeture École (Journée pédagogique) : alerte</span></td></tr><tr style="background:#fffbeb"><td>—</td><td><span class="strike muted">mer. 23/12/2026</span> <span class="badge b-warn">⏭ Sautée · Vacances de Noël (FWB)</span></td></tr><tr style="background:#fffbeb"><td>—</td><td><span class="strike muted">mer. 30/12/2026</span> <span class="badge b-warn">⏭ Sautée · Vacances de Noël (FWB)</span></td></tr><tr><td>9</td><td>mer. 06/01/2027</td></tr><tr><td>10</td><td>mer. 13/01/2027</td></tr><tr><td>11</td><td>mer. 20/01/2027</td></tr><tr><td>12</td><td>mer. 27/01/2027</td></tr><tr><td>13</td><td>mer. 03/02/2027</td></tr><tr style="background:#fee2e2"><td><strong>14</strong></td><td>mer. 10/02/2027 <span class="badge b-err">⛔ Après la fin de la période 1 (05/02/2027)</span></td></tr></tbody></table></div></div>
+<div class="recap pv-ok" role="region" aria-label="Récapitulatif avant génération"><strong>Récapitulatif avant génération</strong><ul>
+<li><strong>14 sessions</strong> hebdomadaires, du 07/10/2026 au 03/02/2027 (mercredi 14h–17h, Salle 3).</li>
+<li><strong>4 dates sautées</strong> : 28/10, 11/11, 23/12, 30/12 (vacances/fériés FWB).</li>
+<li><strong>Alice Dupont</strong> (principale) sera assignée aux 14 sessions.</li>
+<li>Période 1 : jusqu’au 05/02/2027 — la séance 14 (03/02/2027) est dans la période. ✔</li>
+<li>⚠ La séance 9 (16/12) tombe sur une fermeture de l’école : elle sera créée avec une alerte, sans déplacement automatique.</li></ul></div>
+</div></div>
+<div class="recap err pv-bl" role="alert" style="margin-top:12px"><strong>Création bloquée : la 14e session dépasse la période</strong><ul><li>La séance 14 tomberait le <strong>10/02/2027</strong>. Cette date est après la fin de la période 1 (05/02/2027).</li><li>Aucune session ne peut être créée ou déplacée après la fin de la période.</li><li>Pour tenir dans la période : première session <strong>au plus tard le mercredi 07/10/2026</strong>, ou choisissez la période 2.</li></ul></div>
+<div class="row" style="justify-content:flex-end;margin-top:16px"><a class="btn btn-s" href="01-admin-classes-liste.html">Annuler</a><button class="btn btn-p pv-ok" type="button" onclick="setState('success')">Créer la classe et générer 14 sessions</button><button class="btn btn-p dis pv-bl" type="button" disabled aria-describedby="bl-msg">Créer la classe et générer 14 sessions</button></div></div></div></main></div><div class="toast s-success" role="status" aria-live="polite"><span aria-hidden="true">✔</span><span id="toast-txt">Classe créée : 14 sessions générées.</span></div><script>
+function setState(s){document.body.setAttribute('data-state',s);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});}
+var lastFocus=null;
+function openM(id){var m=document.getElementById(id);if(!m)return;lastFocus=document.activeElement;m.classList.add('open');var f=m.querySelector('input,select,button,textarea');if(f)f.focus();}
+function closeM(id){var m=document.getElementById(id);if(m)m.classList.remove('open');if(lastFocus)lastFocus.focus();}
+document.addEventListener('keydown',function(e){
+  var o=document.querySelector('.modal.open');
+  if(e.key==='Escape'&&o){o.classList.remove('open');if(lastFocus)lastFocus.focus();}
+  if(e.key==='Tab'&&o){var els=o.querySelectorAll('input:not([disabled]),select,button:not([disabled]),textarea,a[href]');if(!els.length)return;var a=els[0],z=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
+});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function confirmM(id,toast){closeM(id);setState('success');var t=document.getElementById('toast-txt');if(t&&toast)t.textContent=toast;}
+</script></body></html>

@@ -1,0 +1,128 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portail — Mes classes — Maquette CLS-01</title><style>
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+.s-loading,.s-empty,.s-error,.s-data,.s-success,.s-ro,.s-refus{}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]):not([data-state=success]):not([data-state=readonly]) .s-data{display:none!important}
+body:not([data-state=success]) .s-success{display:none!important}
+body:not([data-state=readonly]) .s-ro{display:none!important}
+body:not([data-state=refus]) .s-refus{display:none!important}
+body[data-state=readonly] .edit{display:none!important}
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+.phone{max-width:375px;margin:16px auto;border:1px solid #9ca3af;border-radius:24px;overflow:hidden;background:var(--bg);box-shadow:0 10px 15px -3px rgba(0,0,0,.15)}.ph-h{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}.ph-b{padding:8px 16px 24px}.pp{display:none}.pp.on{display:block}.card.empty{padding:24px 12px}@media (max-width:420px){.phone{margin:0;border-radius:0;border:0}}</style></head><body data-state="data"><div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-01</strong><span>État affiché :</span><div class="sw"><button type="button" data-s="loading" aria-pressed="false" onclick="setState('loading')">Chargement</button><button type="button" data-s="empty" aria-pressed="false" onclick="setState('empty')">Vide</button><button type="button" data-s="error" aria-pressed="false" onclick="setState('error')">Erreur</button><button type="button" data-s="data" aria-pressed="true" onclick="setState('data')">Données</button><button type="button" data-s="success" aria-pressed="false" onclick="setState('success')">Confirmation</button></div><a href="index.html">← Sommaire</a></div><div class="note-m" style="margin:16px auto;max-width:375px">Écran mobile-first (375 px). Sur ordinateur, il est affiché dans un cadre. Date simulée : 19/11/2026. Boutons de 48 px de haut.</div><div class="phone"><div class="ph-h"><span class="brand" style="margin:0"><i></i>Logiscool Pays Vert</span><span class="small">☰ Menu</span></div><div class="ph-b"><h1 style="font-size:22px">Mes classes</h1><p class="small muted">2026-2027 · Période 1</p><div class="s-loading" role="status" aria-busy="true"><span class="sr">Chargement de vos classes…</span><span class="sk" style="height:22px;margin:14px 0;width:100%" aria-hidden="true"></span><span class="sk" style="height:22px;margin:14px 0;width:93%" aria-hidden="true"></span><span class="sk" style="height:22px;margin:14px 0;width:86%" aria-hidden="true"></span><span class="sk" style="height:22px;margin:14px 0;width:79%" aria-hidden="true"></span><span class="sk" style="height:22px;margin:14px 0;width:72%" aria-hidden="true"></span><span class="sk" style="height:22px;margin:14px 0;width:95%" aria-hidden="true"></span></div><div class="s-error banner err" role="alert" style="margin-top:12px"><div class="tx"><strong>Impossible de charger vos classes.</strong> Vérifiez votre connexion.</div><button class="btn btn-s btn-sm" type="button" onclick="setState('data')">Réessayer</button></div><div class="s-empty card empty" style="margin-top:12px"><div class="ic" aria-hidden="true">🎓</div><h2>Vous n’avez pas encore de classe</h2><p>Dès que la direction vous assignera à une classe, elle apparaîtra ici avec ses sessions. Une question ? Contactez la direction.</p></div><div class="s-data"><div class="row" role="group" aria-label="Simuler un professeur" style="margin-top:8px"><span class="small muted">Vue de :</span><button class="btn btn-p btn-sm" id="pa" type="button" onclick="per('alice')">Alice</button><button class="btn btn-s btn-sm" id="pb" type="button" onclick="per('bob')">Bob</button><button class="btn btn-s btn-sm" id="pc" type="button" onclick="per('carol')">Carol</button></div><div class="pp" data-p="alice"><div class="banner warn" role="status" style="margin:12px 0"><div class="tx"><strong>1 session à compléter</strong></div></div><h2 style="font-size:16px;margin:8px 0 0">À encoder</h2><ul style="list-style:none;padding:0;margin:0"><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React · séance 4</strong><div class="small muted">mercredi 04/11/2026 · heures en brouillon</div></div><span class="badge b-warn">Brouillon</span></div><button class="btn btn-p" type="button" style="min-height:48px;width:100%;font-size:15px" onclick="openM('m-enc')">Soumettre mes heures</button></li><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React · séance 5</strong><div class="small muted">mercredi 18/11/2026 · vous étiez remplacée</div></div><span class="badge b-school">Remplacée par Carol</span></div><p class="small muted">Carol a sa propre saisie ; vos heures déjà encodées ne changent pas.</p></li></ul><h2 style="font-size:16px;margin:16px 0 0">Prochaine session</h2><ul style="list-style:none;padding:0;margin:0"><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React · séance 6</strong><div class="small muted">mercredi 25/11/2026 · 14h–17h · Salle 3</div></div><span class="badge b-blue">À venir</span></div></li><li style="padding:8px 0" class="small">🔗 Liens de cette session : <strong>3 généraux</strong> + <strong>2 de la séance 6</strong> <a class="btn btn-s btn-sm" href="07-liens-cours-historique.html">Voir les liens</a></li></ul><h2 style="font-size:16px;margin:16px 0 8px">Mes classes</h2><div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><h3 style="font-size:16px">React — mercredi 14h–17h</h3><span class="badge b-ok">Active</span></div><p class="small muted">2026-2027 · Période 1 · Salle 3</p><p style="margin:8px 0"><span class="badge b-blue">Vous : principale</span> <span class="badge b-info">Bob Leroy · co-enseignant</span></p><p class="small muted" style="margin-bottom:10px">5 sessions passées · 8 à venir</p><p class="small" style="margin-bottom:10px"><span class="badge b-gray">Annulée</span> <span class="strike muted">mer. 20/01/2027</span> — Salle indisponible. <strong>Séance 12 — Annulée.</strong> La direction programmera un bis (« Séance 12 bis ») ; le numéro de séance ne change jamais.</p><div class="row"><button class="btn btn-s btn-sm" type="button">Toutes les sessions</button><a class="btn btn-s btn-sm" href="07-liens-cours-historique.html">Liens du cours</a></div></div><details class="card" style="margin-top:12px"><summary style="cursor:pointer;font-weight:600">Classes terminées (1)</summary><p class="small" style="margin-top:8px">Python — jeudi · 2025-2026 · terminée le 28/05/2026. <a href="#">Consulter mes heures</a> · Liens du cours en lecture seule.</p></details></div><div class="pp" data-p="bob"><div class="banner warn" role="status" style="margin:12px 0"><div class="tx"><strong>2 sessions à encoder</strong></div></div><h2 style="font-size:16px;margin:8px 0 0">À encoder</h2><ul style="list-style:none;padding:0;margin:0"><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React (mercredi) · séance 5</strong><div class="small muted">mercredi 18/11/2026 · 14h–17h</div></div><span class="badge b-warn">À encoder</span></div><button class="btn btn-p" type="button" style="min-height:48px;width:100%;font-size:15px" onclick="openM('m-enc')">Encoder mes heures</button></li><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React (samedi) · séance 5</strong><div class="small muted">samedi 14/11/2026 · 9h–12h</div></div><span class="badge b-warn">À encoder</span></div><button class="btn btn-p" type="button" style="min-height:48px;width:100%;font-size:15px" onclick="openM('m-enc')">Encoder mes heures</button></li></ul><h2 style="font-size:16px;margin:16px 0 0">Prochaine session</h2><ul style="list-style:none;padding:0;margin:0"><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React · séance 6 (samedi)</strong><div class="small muted">samedi 21/11/2026 · 9h–12h · Salle 1</div></div><span class="badge b-blue">À venir</span></div></li><li style="padding:8px 0" class="small">🔗 Liens de cette session : <strong>3 généraux</strong> + <strong>2 de la séance 6</strong> <a class="btn btn-s btn-sm" href="07-liens-cours-historique.html">Voir les liens</a></li></ul><h2 style="font-size:16px;margin:16px 0 8px">Mes classes</h2><div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><h3 style="font-size:16px">React — mercredi 14h–17h</h3><span class="badge b-ok">Active</span></div><p class="small muted">2026-2027 · Période 1</p><p style="margin:8px 0"><span class="badge b-info">Vous : co-enseignant</span> <span class="badge b-blue">Alice Dupont · principale</span></p><p class="small muted" style="margin-bottom:10px">Vos heures sont indépendantes de celles d’Alice.</p><div class="row"><button class="btn btn-s btn-sm" type="button">Toutes les sessions</button><a class="btn btn-s btn-sm" href="07-liens-cours-historique.html">Liens du cours</a></div></div><div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;gap:8px"><h3 style="font-size:16px">React — samedi 9h–12h</h3><span class="badge b-ok">Active</span></div><p class="small muted">2026-2027 · Période 1</p><p style="margin:8px 0"><span class="badge b-blue">Vous : principal</span></p><div class="row"><button class="btn btn-s btn-sm" type="button">Toutes les sessions</button><a class="btn btn-s btn-sm" href="07-liens-cours-historique.html">Liens du cours</a></div></div></div><div class="pp" data-p="carol"><div class="banner warn" role="status" style="margin:12px 0"><div class="tx"><strong>1 session à encoder</strong></div></div><h2 style="font-size:16px;margin:8px 0 0">À encoder</h2><ul style="list-style:none;padding:0;margin:0"><li style="border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><strong>React · séance 5</strong><div class="small muted">mercredi 18/11/2026 · 14h–17h · Salle 3</div></div><span class="badge b-school">Remplaçante</span></div><button class="btn btn-p" type="button" style="min-height:48px;width:100%;font-size:15px" onclick="openM('m-enc')">Encoder mes heures</button></li></ul><h2 style="font-size:16px;margin:16px 0 0">Prochaine session</h2><ul style="list-style:none;padding:0;margin:0"><li class="small muted" style="padding:12px 0">Aucune session à venir : vous n’êtes assignée qu’à la séance 5.</li></ul><h2 style="font-size:16px;margin:16px 0 8px">Mes classes</h2><div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><h3 style="font-size:16px">React — mercredi 14h–17h</h3><span class="badge b-ok">Active</span></div><p class="small muted">2026-2027 · Période 1</p><p style="margin:8px 0"><span class="badge b-school">Vous : remplaçante sur la séance 5</span></p><p class="small muted" style="margin-bottom:10px">Vous voyez uniquement les sessions qui vous sont assignées.</p><div class="row"><a class="btn btn-s btn-sm" href="07-liens-cours-historique.html">Liens du cours</a></div></div></div></div></div></div><div class="modal" id="m-enc" role="dialog" aria-modal="true" aria-labelledby="m-enc-t"><div class="mbox"><header><h2 id="m-enc-t">Encoder mes heures</h2><button class="x" type="button" aria-label="Fermer la fenêtre" onclick="closeM('m-enc')">×</button></header><div class="mb"><p class="small muted">Écran « Timesheets » existant, ouvert directement sur la session (pré-rempli, aucune ressaisie).</p>
+<div><label for="e0">Session</label><input type="text" id="e0" value="React · mercredi 18/11/2026 · séance 5" readonly></div>
+<div class="grid2"><div><label for="e1">Début</label><input type="time" id="e1" value="14:00"></div><div><label for="e2">Fin</label><input type="time" id="e2" value="17:00"></div></div>
+<p class="small">Durée : <strong>3 h</strong> · Vos heures sont personnelles : elles ne sont jamais partagées avec votre co-professeur.</p></div><footer><button class="btn btn-s" type="button" onclick="closeM('m-enc')">Enregistrer le brouillon</button><button class="btn btn-p" type="button" onclick="confirmM('m-enc','Heures de la séance 5 soumises (3 h). Elles sont visibles par le directeur.')">Soumettre les heures</button></footer></div></div><div class="toast s-success" role="status" aria-live="polite"><span aria-hidden="true">✔</span><span id="toast-txt">Heures soumises.</span></div><script>
+function setState(s){document.body.setAttribute('data-state',s);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});}
+var lastFocus=null;
+function openM(id){var m=document.getElementById(id);if(!m)return;lastFocus=document.activeElement;m.classList.add('open');var f=m.querySelector('input,select,button,textarea');if(f)f.focus();}
+function closeM(id){var m=document.getElementById(id);if(m)m.classList.remove('open');if(lastFocus)lastFocus.focus();}
+document.addEventListener('keydown',function(e){
+  var o=document.querySelector('.modal.open');
+  if(e.key==='Escape'&&o){o.classList.remove('open');if(lastFocus)lastFocus.focus();}
+  if(e.key==='Tab'&&o){var els=o.querySelectorAll('input:not([disabled]),select,button:not([disabled]),textarea,a[href]');if(!els.length)return;var a=els[0],z=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
+});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function confirmM(id,toast){closeM(id);setState('success');var t=document.getElementById('toast-txt');if(t&&toast)t.textContent=toast;}
+function per(p){document.querySelectorAll('.pp').forEach(function(e){e.className='pp'+(e.dataset.p==p?' on':'')});[['alice','pa'],['bob','pb'],['carol','pc']].forEach(function(x){document.getElementById(x[1]).className='btn btn-sm '+(x[0]==p?'btn-p':'btn-s')});}per('alice');</script></body></html>

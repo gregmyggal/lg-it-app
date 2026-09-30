@@ -1,0 +1,131 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Classes — Maquette CLS-01</title><style>
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+.s-loading,.s-empty,.s-error,.s-data,.s-success,.s-ro,.s-refus{}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]):not([data-state=success]):not([data-state=readonly]) .s-data{display:none!important}
+body:not([data-state=success]) .s-success{display:none!important}
+body:not([data-state=readonly]) .s-ro{display:none!important}
+body:not([data-state=refus]) .s-refus{display:none!important}
+body[data-state=readonly] .edit{display:none!important}
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+</style></head><body data-state="data"><div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-01</strong><span>État affiché :</span><div class="sw"><button type="button" data-s="loading" aria-pressed="false" onclick="setState('loading')">Chargement</button><button type="button" data-s="empty" aria-pressed="false" onclick="setState('empty')">Vide</button><button type="button" data-s="error" aria-pressed="false" onclick="setState('error')">Erreur</button><button type="button" data-s="data" aria-pressed="true" onclick="setState('data')">Données</button><button type="button" data-s="success" aria-pressed="false" onclick="setState('success')">Confirmation</button></div><a href="index.html">← Sommaire</a></div><div class="shell"><aside class="side"><div class="brand"><i></i>Logiscool Pays Vert</div><nav aria-label="Navigation principale"><a href="#" class="chg">Mes classes</a><a href="#" class="">Timesheets</a><div class="grp">Gestion Opérationnelle</div><a href="#" class="">📊 Timesheets</a><a href="#" class="">👨‍🏫 Professeurs &amp; Tarifs</a><div class="grp">Scolarité</div><a href="#" class="active new">Classes</a><a href="#" class="">Calendrier</a><a href="#" class="new">Calendrier scolaire</a><div class="grp">Contenu</div><a href="#" class="">Cours</a><a href="#" class="">Stages</a><a href="#" class="">Formations</a><a href="#" class="">Anniversaires</a><a href="#" class="">Types de formation</a></nav><div class="acct">Sophie Martin (directeur)</div></aside><main class="main"><div class="phead"><div class="in"><div><div class="crumb"><a href="#">Scolarité</a> › Classes</div><h1>🏫 Classes <span class="badge b-blue">2026-2027</span></h1><p class="d">Organisation des cours du catalogue par année scolaire, période et créneau hebdomadaire.</p></div><div class="row"><a class="btn btn-p" href="02-admin-classe-creation.html">＋ Nouvelle classe</a></div></div></div><div class="content"><div class="note-m">Date simulée dans les maquettes : jeudi 19/11/2026. Dates FWB indicatives (à remplacer par le fichier officiel).</div><div class="filters" role="search" aria-label="Filtres des classes">
+<div class="f"><label for="an">Année scolaire</label><select id="an"><option>2026-2027</option><option>2025-2026 (archivée)</option><option>＋ Nouvelle année scolaire…</option></select></div>
+<div class="f"><label for="pe">Période</label><select id="pe"><option>Toutes</option><option>Période 1</option><option>Période 2</option></select></div>
+<div class="f"><label for="co">Cours</label><select id="co"><option>Tous les cours</option><option>React</option><option>Angular</option><option>Python</option></select></div>
+<div class="f"><label for="pr">Professeur</label><select id="pr"><option>Tous</option><option>Alice Dupont</option><option>Bob Leroy</option><option>David Petit</option></select></div>
+<div><span class="lbl" id="vl">Regrouper</span><div class="row" role="group" aria-labelledby="vl"><button class="btn btn-p btn-sm" id="v1" type="button" aria-pressed="true" onclick="vue(1)">Par cours</button><button class="btn btn-s btn-sm" id="v2" type="button" aria-pressed="false" onclick="vue(2)">Par jour</button></div></div>
+</div><div class="s-loading card" role="status" aria-busy="true"><span class="sr">Chargement des classes…</span><span class="sk" style="height:18px;margin:14px 0;width:100%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:93%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:86%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:79%" aria-hidden="true"></span><span class="sk" style="height:18px;margin:14px 0;width:72%" aria-hidden="true"></span></div><div class="s-error banner err" role="alert"><div class="tx"><strong>Impossible de charger les classes de 2026-2027. Vérifiez votre connexion puis réessayez.</strong></div><button class="btn btn-s btn-sm" type="button" onclick="setState('data')">Réessayer</button></div><div class="s-empty card empty"><div class="ic" aria-hidden="true">🏫</div><h2>Aucune classe pour 2026-2027</h2><p>L’année démarre sur un état propre : aucune classe n’a été créée. Choisissez un cours du catalogue, un jour et un créneau : les 14 sessions seront générées en respectant le calendrier scolaire.</p><div class="row" style="justify-content:center"><a class="btn btn-p" href="02-admin-classe-creation.html">＋ Créer la première classe</a><a class="btn btn-s" href="05-admin-calendrier-scolaire.html">Voir le calendrier scolaire</a></div></div><div class="s-data"><div class="banner warn"><div class="tx"><strong>1 classe demande votre attention :</strong> « Python — jeudi 17h–20h » n’a aucun professeur. Ouvrez-la pour en assigner un.</div></div><div class="sect" id="vc"><header><div><h2>Par cours</h2><p>4 classes · 3 cours</p></div></header><div class="tw"><table><thead><tr><th scope="col">Cours / créneau</th><th scope="col">Période</th><th scope="col">Lieu</th><th scope="col">Professeurs (rôle indicatif)</th><th scope="col">Sessions</th><th scope="col">Prochaine session</th><th scope="col">Statut</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody><tr><td><strong>React</strong><div class="small muted">Mercredi 14h–17h</div></td><td>Période 1</td><td>Salle 3</td><td><div class="row"><span class="chip"><span class="av" aria-hidden="true">AD</span>Alice Dupont <span class="muted">· principale</span></span><span class="chip"><span class="av" aria-hidden="true">BL</span>Bob Leroy <span class="muted">· co-enseignant</span></span></div></td><td>14 séances · 1 annulée · 5 passées</td><td>mer. 25/11/2026 · 14h</td><td><span class="badge b-ok">Active</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr><tr><td><strong>React</strong><div class="small muted">Samedi 9h–12h</div></td><td>Période 1</td><td>Salle 1</td><td><div class="row"><span class="chip"><span class="av" aria-hidden="true">BL</span>Bob Leroy <span class="muted">· principal</span></span></div></td><td>14 sessions · 5 passées</td><td>sam. 21/11/2026 · 9h</td><td><span class="badge b-ok">Active</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr><tr><td><strong>Angular</strong><div class="small muted">Mercredi 15h–18h</div></td><td>Période 1</td><td>Salle 2</td><td><div class="row"><span class="chip"><span class="av" aria-hidden="true">DP</span>David Petit <span class="muted">· principal</span></span></div></td><td>14 sessions · 5 passées</td><td>mer. 25/11/2026 · 15h</td><td><span class="badge b-ok">Active</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr><tr class="hl"><td><strong>Python</strong><div class="small muted">Jeudi 17h–20h</div></td><td>Période 2</td><td>Salle 3</td><td><div class="row"><span class="badge b-warn">⚠ Aucun professeur</span></div></td><td>Non générées</td><td>—</td><td><span class="badge b-gray">Brouillon</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr></tbody></table></div></div><div class="sect" id="vj" style="display:none"><header><div><h2>Par jour</h2><p>4 classes · 3 jours</p></div></header><div class="tw"><table><thead><tr><th scope="col">Jour / cours</th><th scope="col">Période</th><th scope="col">Lieu</th><th scope="col">Professeurs (rôle indicatif)</th><th scope="col">Sessions</th><th scope="col">Prochaine session</th><th scope="col">Statut</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody><tr><td><strong>Mercredi</strong><div class="small muted">React 14h–17h</div></td><td>Période 1</td><td>Salle 3</td><td><div class="row"><span class="chip"><span class="av" aria-hidden="true">AD</span>Alice Dupont <span class="muted">· principale</span></span><span class="chip"><span class="av" aria-hidden="true">BL</span>Bob Leroy <span class="muted">· co-enseignant</span></span></div></td><td>14 séances · 1 annulée · 5 passées</td><td>25/11 · 14h</td><td><span class="badge b-ok">Active</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr><tr><td><strong>Mercredi</strong><div class="small muted">Angular 15h–18h</div></td><td>Période 1</td><td>Salle 2</td><td><div class="row"><span class="chip"><span class="av" aria-hidden="true">DP</span>David Petit <span class="muted">· principal</span></span></div></td><td>14 · 5 passées</td><td>25/11 · 15h</td><td><span class="badge b-ok">Active</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr><tr class="hl"><td><strong>Jeudi</strong><div class="small muted">Python 17h–20h</div></td><td>Période 2</td><td>Salle 3</td><td><div class="row"><span class="badge b-warn">⚠ Aucun professeur</span></div></td><td>Non générées</td><td>—</td><td><span class="badge b-gray">Brouillon</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr><tr><td><strong>Samedi</strong><div class="small muted">React 9h–12h</div></td><td>Période 1</td><td>Salle 1</td><td><div class="row"><span class="chip"><span class="av" aria-hidden="true">BL</span>Bob Leroy <span class="muted">· principal</span></span></div></td><td>14 · 5 passées</td><td>21/11 · 9h</td><td><span class="badge b-ok">Active</span></td><td><a class="btn btn-s btn-sm" href="03-admin-classe-detail.html">Ouvrir la classe</a></td></tr></tbody></table></div></div></div></div></main></div><div class="toast s-success" role="status" aria-live="polite"><span aria-hidden="true">✔</span><span id="toast-txt">Classe « React — mercredi 14h–17h » créée : 14 sessions générées du 07/10/2026 au 03/02/2027 (4 dates sautées).</span></div><script>
+function setState(s){document.body.setAttribute('data-state',s);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});}
+var lastFocus=null;
+function openM(id){var m=document.getElementById(id);if(!m)return;lastFocus=document.activeElement;m.classList.add('open');var f=m.querySelector('input,select,button,textarea');if(f)f.focus();}
+function closeM(id){var m=document.getElementById(id);if(m)m.classList.remove('open');if(lastFocus)lastFocus.focus();}
+document.addEventListener('keydown',function(e){
+  var o=document.querySelector('.modal.open');
+  if(e.key==='Escape'&&o){o.classList.remove('open');if(lastFocus)lastFocus.focus();}
+  if(e.key==='Tab'&&o){var els=o.querySelectorAll('input:not([disabled]),select,button:not([disabled]),textarea,a[href]');if(!els.length)return;var a=els[0],z=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
+});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function confirmM(id,toast){closeM(id);setState('success');var t=document.getElementById('toast-txt');if(t&&toast)t.textContent=toast;}
+function vue(n){document.getElementById('vc').style.display=n==1?'':'none';document.getElementById('vj').style.display=n==2?'':'none';document.getElementById('v1').className='btn btn-sm '+(n==1?'btn-p':'btn-s');document.getElementById('v2').className='btn btn-sm '+(n==2?'btn-p':'btn-s');document.getElementById('v1').setAttribute('aria-pressed',n==1);document.getElementById('v2').setAttribute('aria-pressed',n==2);}</script></body></html>
