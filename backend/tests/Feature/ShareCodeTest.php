@@ -14,9 +14,10 @@ class ShareCodeTest extends TestCase
     public function test_can_access_content_with_valid_share_code(): void
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
-            'shareable' => $cours,
+            'shareable_type' => $cours::class,
+            'shareable_id' => $cours->id,
         ]);
 
         $response = $this->getJson("/api/share/{$code->code}", [
@@ -43,9 +44,10 @@ class ShareCodeTest extends TestCase
     public function test_cannot_access_expired_code(): void
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
-            'shareable' => $cours,
+            'shareable_type' => $cours::class,
+            'shareable_id' => $cours->id,
             'expires_at' => now()->subDay(),
         ]);
 
@@ -59,9 +61,10 @@ class ShareCodeTest extends TestCase
     public function test_cannot_access_code_with_reached_max_uses(): void
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
-            'shareable' => $cours,
+            'shareable_type' => $cours::class,
+            'shareable_id' => $cours->id,
             'max_uses' => 2,
             'used_count' => 2,
         ]);
@@ -76,9 +79,10 @@ class ShareCodeTest extends TestCase
     public function test_cannot_access_unpublished_content(): void
     {
         $cours = Cours::factory()->create(['statut' => 'draft']);
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
-            'shareable' => $cours,
+            'shareable_type' => $cours::class,
+            'shareable_id' => $cours->id,
         ]);
 
         $response = $this->getJson("/api/share/{$code->code}", [
@@ -91,9 +95,10 @@ class ShareCodeTest extends TestCase
     public function test_used_count_increments_on_access(): void
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
-            'shareable' => $cours,
+            'shareable_type' => $cours::class,
+            'shareable_id' => $cours->id,
             'used_count' => 0,
         ]);
 
@@ -112,9 +117,10 @@ class ShareCodeTest extends TestCase
 
         $code = ShareCode::generateCode();
 
-        ShareCode::create([
+        ShareCode::forceCreate([
             'code' => $code,
-            'shareable' => $cours1,
+            'shareable_type' => $cours1::class,
+            'shareable_id' => $cours1->id,
         ]);
 
         // generateCode() should not return same code twice (statistically)

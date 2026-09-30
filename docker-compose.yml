@@ -36,6 +36,28 @@ services:
       retries: 12
       start_period: 30s
 
+  # Base MySQL dédiée aux tests automatisés (jamais la base de dev).
+  # Données jetables (tmpfs) ; démarrer avec : docker compose up -d db_test
+  db_test:
+    image: mysql:8
+    container_name: lgitapp-db-test
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_TEST_ROOT_PASSWORD:-lgit_test_root}
+      MYSQL_DATABASE: lgit_test
+      MYSQL_USER: ${MYSQL_TEST_USER:-lgit_test}
+      MYSQL_PASSWORD: ${MYSQL_TEST_PASSWORD:-lgit_test}
+    ports:
+      - "${DB_TEST_PORT:-3309}:3306"
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${MYSQL_TEST_ROOT_PASSWORD:-lgit_test_root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: lgitapp-phpmyadmin

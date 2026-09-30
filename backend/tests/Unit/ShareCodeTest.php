@@ -43,7 +43,7 @@ class ShareCodeTest extends TestCase
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
 
-        $validCode = ShareCode::create([
+        $validCode = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
             'shareable_type' => Cours::class,
             'shareable_id' => $cours->id,
@@ -56,7 +56,7 @@ class ShareCodeTest extends TestCase
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
 
-        $expiredCode = ShareCode::create([
+        $expiredCode = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
             'shareable_type' => Cours::class,
             'shareable_id' => $cours->id,
@@ -70,7 +70,7 @@ class ShareCodeTest extends TestCase
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
 
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
             'shareable_type' => Cours::class,
             'shareable_id' => $cours->id,
@@ -85,7 +85,7 @@ class ShareCodeTest extends TestCase
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
 
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
             'shareable_type' => Cours::class,
             'shareable_id' => $cours->id,
@@ -100,7 +100,7 @@ class ShareCodeTest extends TestCase
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
 
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
             'shareable_type' => Cours::class,
             'shareable_id' => $cours->id,
@@ -116,7 +116,7 @@ class ShareCodeTest extends TestCase
     {
         $cours = Cours::factory()->create(['statut' => 'publish']);
 
-        $code = ShareCode::create([
+        $code = ShareCode::forceCreate([
             'code' => ShareCode::generateCode(),
             'shareable_type' => Cours::class,
             'shareable_id' => $cours->id,
