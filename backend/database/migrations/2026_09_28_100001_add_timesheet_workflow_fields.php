@@ -44,8 +44,15 @@ return new class extends Migration
 
     public function down(): void
     {
+        // La clé étrangère doit être retirée avant sa colonne (MySQL 1828).
+        if (Schema::hasColumn('timesheets', 'pdf_generated_by')) {
+            Schema::table('timesheets', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('pdf_generated_by');
+            });
+        }
+
         Schema::table('timesheets', function (Blueprint $table) {
-            $columns = ['type_activite', 'lissage_applique', 'signature_professeur', 'pdf_generated_at', 'pdf_generated_by'];
+            $columns = ['type_activite', 'lissage_applique', 'signature_professeur', 'pdf_generated_at'];
             foreach ($columns as $column) {
                 if (Schema::hasColumn('timesheets', $column)) {
                     $table->dropColumn($column);
