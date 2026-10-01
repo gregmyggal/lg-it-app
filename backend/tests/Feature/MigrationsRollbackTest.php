@@ -28,20 +28,46 @@ class MigrationsRollbackTest extends TestCase
             $this->assertTrue(Schema::hasTable($table), "Table manquante : {$table}");
         }
         $this->assertFalse(Schema::hasTable('course_recurrences'));
-        $this->assertFalse(Schema::hasTable('session_professors'));
         $this->assertTrue(Schema::hasColumn('course_sessions', 'classe_id'));
         $this->assertTrue(Schema::hasColumn('timesheets', 'course_session_id'));
         $this->assertTrue(Schema::hasTable('session_calendar_views'));
+    }
+
+    public function test_migrate_fresh_cree_le_schema_t2(): void
+    {
+        $this->assertSame(0, Artisan::call('migrate:fresh'));
+
+        $this->assertTrue(Schema::hasTable('professeur_classe'));
+        $this->assertTrue(Schema::hasTable('session_professors'));
+        foreach (['origine', 'remplace', 'remplace_par_professeur_id', 'role'] as $colonne) {
+            $this->assertTrue(Schema::hasColumn('session_professors', $colonne), "Colonne manquante : {$colonne}");
+        }
+        $this->assertFalse(Schema::hasTable('professeur_cours'));
+    }
+
+    public function test_rollback_des_migrations_t2_puis_remigration(): void
+    {
+        Artisan::call('migrate:fresh');
+
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 3]), Artisan::output());
+
+        $this->assertFalse(Schema::hasTable('professeur_classe'));
+        $this->assertFalse(Schema::hasTable('session_professors'));
         $this->assertTrue(Schema::hasTable('professeur_cours'));
+        $this->assertTrue(Schema::hasTable('classes'));
+
+        $this->assertSame(0, Artisan::call('migrate'), Artisan::output());
+        $this->assertTrue(Schema::hasTable('professeur_classe'));
+        $this->assertFalse(Schema::hasTable('professeur_cours'));
     }
 
     public function test_rollback_des_migrations_t1_restaure_la_structure_sprint_2_puis_remigration(): void
     {
         Artisan::call('migrate:fresh');
 
-        // On ne revient que sur les 2 migrations T1 (le rollback complet de l'historique
+        // On revient sur les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
         // antérieur à CLS-01 échoue sur des down() plus anciens, hors périmètre).
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 2]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 5]), Artisan::output());
 
         // Structure Sprint 2 recréée (vide), tables T1 supprimées.
         $this->assertFalse(Schema::hasTable('classes'));

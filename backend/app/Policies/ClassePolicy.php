@@ -6,17 +6,24 @@ use App\Models\Classe;
 use App\Models\User;
 
 /**
- * T1 : admin et directeur uniquement (un professeur reçoit 403 ; son accès arrive en T2
- * via professeur_classe).
+ * Écriture : admin et directeur uniquement. Lecture : staff, ou professeur limité (par scope de requête
+ * Classe::visiblePour) aux classes où il a (ou a eu) une assignation.
  */
 class ClassePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isStaff();
+        return $user->isStaff() || ($user->isProfesseur() && $user->professeur !== null);
     }
 
     public function view(User $user, Classe $model): bool
+    {
+        return $user->isStaff()
+            || Classe::visiblePour($user)->whereKey($model->id)->exists();
+    }
+
+    /** Assigner / modifier / terminer un professeur sur la classe (staff). */
+    public function manageProfesseurs(User $user, ?Classe $model = null): bool
     {
         return $user->isStaff();
     }

@@ -49,6 +49,12 @@ class ClasseResource extends JsonResource
                     'date' => $this->prochaineSession->date->toDateString(),
                 ] : null
             ),
+            'professeurs' => $this->whenLoaded('assignationsActives', fn () => $this->assignationsActives
+                ->filter(fn ($a) => $a->relationLoaded('professeur'))
+                ->map(fn ($a) => ProfesseurClasseResource::professeurLeger($a->professeur) + [
+                    'role' => $a->role,
+                    'remplace' => false,
+                ])->values()),
             'can' => [
                 'update' => (bool) $user?->can('update', $this->resource),
                 'delete' => (bool) $user?->can('delete', $this->resource),

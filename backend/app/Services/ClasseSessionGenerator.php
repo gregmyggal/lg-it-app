@@ -23,7 +23,10 @@ class ClasseSessionGenerator
     /** Garde-fou contre une boucle infinie (calendrier anormalement rempli). */
     private const MAX_SEMAINES = 200;
 
-    public function __construct(private readonly CalendrierScolaireService $calendrier) {}
+    public function __construct(
+        private readonly CalendrierScolaireService $calendrier,
+        private readonly ClasseProfesseurAssignmentService $assignations,
+    ) {}
 
     /**
      * Calcul pur (sans écriture) du plan de génération.
@@ -141,13 +144,13 @@ class ClasseSessionGenerator
                 ->pluck('seance_numero')
                 ->all();
 
-            $creees = 0;
+            $creees = [];
             foreach ($plan['seances'] as $seance) {
                 if (in_array($seance['seance_numero'], $existantes, true)) {
                     continue;
                 }
 
-                CourseSession::create([
+                $creees[] = CourseSession::create([
                     'classe_id' => $classe->id,
                     'seance_numero' => $seance['seance_numero'],
                     'bis_rang' => 0,
@@ -157,10 +160,12 @@ class ClasseSessionGenerator
                     'lieu' => $classe->lieu,
                     'statut' => CourseSession::STATUT_PLANIFIEE,
                 ]);
-                $creees++;
             }
 
-            return $creees;
+            // Les professeurs actifs de la classe sont propagés aux séances créées après coup.
+            $this->assignations->propagerAuxSessions($classe, $creees);
+
+            return count($creees);
         });
     }
 

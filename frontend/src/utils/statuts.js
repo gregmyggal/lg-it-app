@@ -83,3 +83,42 @@ export const STATUT_CLASSE_ARCHIVEE = 'archivee';
 export function estSourceMasquable(source) {
   return getStatut(SOURCES_CALENDRIER, source).masquable === true;
 }
+
+/** Rôle d'un professeur dans une classe (indicatif : aucun effet sur la rémunération ni les heures). */
+export const ROLES_PROFESSEUR = {
+  principal: { label: 'Principal', tone: 'primary' },
+  co_enseignant: { label: 'Co-enseignant', tone: 'info' },
+  remplacant: { label: 'Remplaçant', tone: 'warning' },
+};
+
+/** Origine d'une ligne professeur d'une session : héritée de la classe ou remplacement ponctuel. */
+export const ORIGINES_SESSION = {
+  classe: { label: 'Assigné par la classe', tone: 'neutral' },
+  remplacement: { label: 'Remplacement ponctuel', tone: 'warning' },
+};
+
+/** Assignation d'un professeur à une classe : active ou terminée (champ booléen `actif` de l'API). */
+export const STATUTS_ASSIGNATION = {
+  actif: { label: 'Active', tone: 'success' },
+  termine: { label: 'Terminée', tone: 'neutral' },
+};
+
+/** Valeur de STATUTS_ASSIGNATION correspondant au booléen `actif`. */
+export function statutAssignation(actif) {
+  return actif ? 'actif' : 'termine';
+}
+
+/** « Ma situation » d'un professeur sur une session (portail « Mes classes »). */
+export const SITUATIONS_SESSION = {
+  assignee: { label: 'Assigné', tone: 'success' },
+  remplace_par: { label: 'Remplacé', tone: 'warning' },
+  remplacant_de: { label: 'Remplaçant', tone: 'info' },
+};
+
+/** Texte complet de la situation : « Vous êtes remplacé par Bob », « Vous remplacez Alice »… */
+export function phraseSituation(situation) {
+  const nom = situation?.professeur?.nom;
+  if (situation?.type === 'remplace_par') return nom ? `Vous êtes remplacé par ${nom}` : 'Vous êtes remplacé';
+  if (situation?.type === 'remplacant_de') return nom ? `Vous remplacez ${nom}` : 'Vous êtes remplaçant';
+  return 'Vous êtes assigné à cette session';
+}

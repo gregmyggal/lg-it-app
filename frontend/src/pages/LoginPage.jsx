@@ -15,8 +15,8 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
-      navigate('/mes-cours');
+      const connecte = await login(email, password);
+      navigate(connecte?.role === 'professeur' ? '/mes-classes' : '/admin/classes');
     } catch {
       setError('Identifiants invalides.');
     } finally {

@@ -14,8 +14,8 @@ class ProfesseurController extends Controller
     {
         Gate::authorize('viewAny', Professeur::class);
 
-        return Professeur::with('cours', 'typesCours')
-            ->withCount('cours')
+        return Professeur::with('typesCours')
+            ->withCount(['assignations as classes_count' => fn ($q) => $q->actif()])
             ->orderBy('nom')
             ->get();
     }
@@ -24,7 +24,8 @@ class ProfesseurController extends Controller
     {
         Gate::authorize('view', $professeur);
 
-        return $professeur->load('cours', 'typesCours', 'tarifs');
+        return $professeur->load('typesCours', 'tarifs')
+            ->loadCount(['assignations as classes_count' => fn ($q) => $q->actif()]);
     }
 
     // Crée le compte de connexion (User, role=professeur) et le profil (Professeur) ensemble.

@@ -7,15 +7,18 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendrierScolaireController;
 use App\Http\Controllers\ClasseController;
 use App\Http\Controllers\ClasseLienController;
+use App\Http\Controllers\ClasseProfesseurController;
 use App\Http\Controllers\ClasseSessionController;
 use App\Http\Controllers\ClasseSettingController;
 use App\Http\Controllers\CoursController;
 use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\CoursRessourceController;
 use App\Http\Controllers\FormationController;
+use App\Http\Controllers\MesClassesController;
+use App\Http\Controllers\ProfesseurClasseController;
 use App\Http\Controllers\ProfesseurController;
-use App\Http\Controllers\ProfesseurCoursController;
 use App\Http\Controllers\ProfesseurTarifController;
+use App\Http\Controllers\SessionProfesseurController;
 use App\Http\Controllers\ShareCodeController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
@@ -71,16 +74,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/types-formation/{typeFormation}', [TypeFormationController::class, 'destroy']);
     Route::apiResource('professeurs', ProfesseurController::class);
 
-    // Assignation de cours aux professeurs (professeur-cours pivot)
-    Route::post('/professeurs/{professeur}/cours', [ProfesseurCoursController::class, 'assignCoursesToProfesseur']);
-    Route::put('/professeurs/{professeur}/cours/{cours}', [ProfesseurCoursController::class, 'updateProfesseurCours']);
-    Route::delete('/professeurs/{professeur}/cours/{cours}', [ProfesseurCoursController::class, 'removeProfesseurFromCours']);
+    // CLS-01 T2 : assignation des professeurs aux classes (mêmes services dans les deux sens),
+    // remplacement ponctuel sur une session, portail « Mes classes ».
+    Route::get('/classes/{classe}/professeurs', [ClasseProfesseurController::class, 'index']);
+    Route::post('/classes/{classe}/professeurs/apercu', [ClasseProfesseurController::class, 'apercu']);
+    Route::post('/classes/{classe}/professeurs', [ClasseProfesseurController::class, 'store']);
+    Route::put('/classes/{classe}/professeurs/{professeur}', [ClasseProfesseurController::class, 'update']);
+    Route::delete('/classes/{classe}/professeurs/{professeur}', [ClasseProfesseurController::class, 'destroy']);
 
-    // Gestion des professeurs par cours
-    Route::get('/cours/{cours}/professeurs', [ProfesseurCoursController::class, 'listProfesseursByCours']);
-    Route::post('/cours/{cours}/professeurs', [ProfesseurCoursController::class, 'assignProfesseursToCours']);
-    Route::put('/cours/{cours}/professeurs/{professeur}', [ProfesseurCoursController::class, 'updateCoursProf']);
-    Route::delete('/cours/{cours}/professeurs/{professeur}', [ProfesseurCoursController::class, 'removeCourseProf']);
+    Route::get('/professeurs/{professeur}/classes', [ProfesseurClasseController::class, 'index']);
+    Route::post('/professeurs/{professeur}/classes/apercu', [ProfesseurClasseController::class, 'apercu']);
+    Route::post('/professeurs/{professeur}/classes', [ProfesseurClasseController::class, 'store']);
+    Route::put('/professeurs/{professeur}/classes/{classe}', [ProfesseurClasseController::class, 'update']);
+    Route::delete('/professeurs/{professeur}/classes/{classe}', [ProfesseurClasseController::class, 'destroy']);
+
+    Route::get('/sessions/{session}/professeurs', [SessionProfesseurController::class, 'index']);
+    Route::post('/sessions/{session}/remplacer', [SessionProfesseurController::class, 'remplacer']);
+    Route::delete('/sessions/{session}/remplacements/{professeur}', [SessionProfesseurController::class, 'annulerRemplacement']);
+
+    Route::get('/mes-classes', [MesClassesController::class, 'index']);
+    Route::get('/mes-classes/{classe}/sessions', [MesClassesController::class, 'sessions']);
 
     // CLS-01 T1 : années scolaires, calendrier scolaire, classes, sessions (admin/directeur).
     Route::get('/annees-scolaires', [AnneeScolaireController::class, 'index']);

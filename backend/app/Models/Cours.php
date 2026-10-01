@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -41,52 +40,6 @@ class Cours extends Model
     public function typesCours(): BelongsToMany
     {
         return $this->belongsToMany(TypeCours::class, 'cours_type_cours');
-    }
-
-    /**
-     * Professeurs actuellement assignés à ce cours.
-     *
-     * Inclut principal + co-enseignants + remplaçants tant que leur assignation est active.
-     */
-    public function professeurs(): BelongsToMany
-    {
-        return $this->belongsToMany(Professeur::class, 'professeur_cours')
-            ->withPivot('role', 'date_debut', 'date_fin')
-            ->where(function ($query) {
-                $query->whereNull('professeur_cours.date_fin')
-                    ->orWhere('professeur_cours.date_fin', '>', now());
-            })
-            ->orderByPivot('role'); // principal en premier
-    }
-
-    /**
-     * Historique complet de tous les professeurs assignés à ce cours.
-     */
-    public function professeursHistorique(): BelongsToMany
-    {
-        return $this->belongsToMany(Professeur::class, 'professeur_cours')
-            ->withPivot('role', 'date_debut', 'date_fin')
-            ->orderByPivot('date_debut', 'desc');
-    }
-
-    /**
-     * Le professeur principal actuellement assigné à ce cours.
-     */
-    public function professeurPrincipal(): ?Professeur
-    {
-        return $this->professeurs()
-            ->wherePivot('role', 'principal')
-            ->first();
-    }
-
-    /**
-     * Tous les co-professeurs (co-enseignants + remplaçants) assignés à ce cours.
-     */
-    public function coProfesseurs(): Collection
-    {
-        return $this->professeurs()
-            ->whereIn('professeur_cours.role', ['co-enseignant', 'remplaçant'])
-            ->get();
     }
 
     public function ressources(): HasMany

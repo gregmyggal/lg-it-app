@@ -140,7 +140,7 @@ Isolation stricte par `professeur_classe` (tests 403) ; audit des modifications 
 |---|---|
 | **T0** ✅ (2026-09-30) | Base de test MySQL Docker + garde-fou ; tests de caractérisation de l'existant |
 | **T1** | Années scolaires + **périodes** + **calendrier scolaire (import FWB + édition manuelle)** + classes + génération des 14 sessions + ajustement des sessions (numéros de séance fixes, **bis** pour une session annulée, nombre de sessions dépassable, borne fin de période) + écran admin classes |
-| **T2** | `professeur_classe` + assignation **bidirectionnelle avec propagation aux sessions** + **remplacement ponctuel** + Policies + `Mes classes` (prof) |
+| **T2** ✅ (2026-10-01) | `professeur_classe` + assignation **bidirectionnelle avec propagation aux sessions** + **remplacement ponctuel** + Policies + `Mes classes` (prof) |
 | **T3** | Rattachement timesheets ↔ session/prof indépendant ; encodage depuis « Mes classes » |
 | **T4** | Liens du cours **généraux et par séance** édités par les profs de classe (Policy) + **historique versionné (6 mois) avec annulation/restauration par tous les professeurs du cours** |
 | **T5** | Suppression du type de cours et des anciennes tables/routes/écrans ; nettoyage |

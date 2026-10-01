@@ -4,6 +4,8 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import MesCoursPage from './pages/MesCoursPage';
+import MesClassesPage from './pages/MesClassesPage';
+import MesClasseSessionsPage from './pages/MesClasseSessionsPage';
 import TimesheetsPage from './pages/TimesheetsPage';
 import AnniversairesAdminPage from './pages/admin/AnniversairesAdminPage';
 import AnniversairesEditContentPage from './pages/admin/AnniversairesEditContentPage';
@@ -48,8 +50,25 @@ export default function App() {
           <Route path="/share/:code" element={<SharePage />} />
 
           <Route element={<PortalLayout />}>
+            <Route path="mes-cours" element={<Navigate to="/mes-classes" replace />} />
             <Route
-              path="mes-cours"
+              path="mes-classes"
+              element={
+                <ProtectedRoute roles={PORTAL}>
+                  <MesClassesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="mes-classes/:id"
+              element={
+                <ProtectedRoute roles={PORTAL}>
+                  <MesClasseSessionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="mes-ressources"
               element={
                 <ProtectedRoute roles={PORTAL}>
                   <MesCoursPage />

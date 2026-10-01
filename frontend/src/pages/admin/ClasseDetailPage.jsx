@@ -10,6 +10,9 @@ import { Section } from '../../components/ui/Card';
 import { LoadingBlock, ErrorBlock } from '../../components/ui/DataStates';
 import ClasseSessionsTable from '../../components/classes/ClasseSessionsTable';
 import SessionAdjustModal from '../../components/classes/SessionAdjustModal';
+import ProfesseursClasseSection from '../../components/professeurs/ProfesseursClasseSection';
+import RemplacerProfesseurModal from '../../components/professeurs/RemplacerProfesseurModal';
+import { useProfesseursListe } from '../../hooks/useProfesseursClasses';
 import { useClasse, useClasseSessions, modifierClasse, supprimerClasse } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getStatus } from '../../api/errors';
@@ -17,13 +20,15 @@ import { STATUTS_CLASSE, STATUT_CLASSE_ARCHIVEE, estClasseArchivee, estSessionBa
 import { formatDate, formatDateCourte, libelleClasse } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES } from '../../styles/AdminDesignSystem';
 
-/** Écran « Détail d'une classe » : informations, sessions, ajustements (mock-up 03, hors professeurs → T2). */
+/** Écran « Détail d'une classe » : informations, professeurs, sessions, ajustements et remplacements (mock-up 03). */
 export default function ClasseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
   const classe = useClasse(id);
   const sessions = useClasseSessions(id);
+  const professeursListe = useProfesseursListe();
+  const [remplacement, setRemplacement] = useState(null); // session à remplacer
   const [ajustement, setAjustement] = useState(null); // { session, mode }
   const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message }
   const [enCours, setEnCours] = useState(false);
@@ -81,6 +86,13 @@ export default function ClasseDetailPage() {
   function recharger() {
     classe.reload();
     sessions.reload();
+  }
+
+  function apresRemplacement(message, avertissements = []) {
+    setRemplacement(null);
+    toast.success(message);
+    avertissements.forEach((a) => toast.error(a.message));
+    recharger();
   }
 
   function apresAjustement(message) {
@@ -184,6 +196,8 @@ export default function ClasseDetailPage() {
           </Banner>
         )}
 
+        <ProfesseursClasseSection classe={c} titreClasse={titre} onChange={sessions.reload} />
+
         <Section
           title="Sessions"
           subtitle={`${liste.length} session${liste.length > 1 ? 's' : ''} (séances, bis et annulées comprises)`}
@@ -215,7 +229,11 @@ export default function ClasseDetailPage() {
           {liste.length === 0 ? (
             <p style={{ padding: ADMIN_SPACING.xl, margin: 0 }}>Cette classe n'a aucune session.</p>
           ) : (
-            <ClasseSessionsTable sessions={liste} onAjuster={(session, mode) => setAjustement({ session, mode })} />
+            <ClasseSessionsTable
+              sessions={liste}
+              onAjuster={(session, mode) => setAjustement({ session, mode })}
+              onRemplacer={c.can?.update ? setRemplacement : undefined}
+            />
           )}
         </Section>
       </AdminPageContent>
@@ -228,6 +246,15 @@ export default function ClasseDetailPage() {
           modeInitial={ajustement.mode}
           onClose={() => setAjustement(null)}
           onDone={apresAjustement}
+        />
+      )}
+
+      {remplacement && (
+        <RemplacerProfesseurModal
+          session={remplacement}
+          professeurs={(professeursListe.data || []).filter((p) => p.statut !== 'inactif').map((p) => ({ value: String(p.id), label: p.nom }))}
+          onClose={() => setRemplacement(null)}
+          onDone={apresRemplacement}
         />
       )}
 

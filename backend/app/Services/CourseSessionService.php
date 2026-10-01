@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CourseSessionService
 {
+    public function __construct(private readonly ClasseProfesseurAssignmentService $assignations) {}
+
     /** @param array{date?: string, heure_debut?: string, heure_fin?: string, lieu?: ?string} $data */
     public function deplacer(CourseSession $session, array $data): CourseSession
     {
@@ -91,7 +93,7 @@ class CourseSessionService
                 fn (CourseSession $s) => $s->isAnnulee() && ! in_array($s->id, $dejaRemplacees, true)
             );
 
-            return CourseSession::create([
+            $bis = CourseSession::create([
                 'classe_id' => $classe->id,
                 'seance_numero' => $data['seance_numero'],
                 'bis_rang' => $seance->max('bis_rang') + 1,
@@ -102,6 +104,11 @@ class CourseSessionService
                 'lieu' => array_key_exists('lieu', $data) ? $data['lieu'] : $classe->lieu,
                 'statut' => CourseSession::STATUT_PLANIFIEE,
             ])->refresh();
+
+            // Les professeurs actifs de la classe à la date du bis y sont propagés.
+            $this->assignations->propagerAuxSessions($classe, [$bis]);
+
+            return $bis;
         });
     }
 

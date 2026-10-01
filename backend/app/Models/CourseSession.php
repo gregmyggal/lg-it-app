@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,6 +64,41 @@ class CourseSession extends Model
     public function remplace(): BelongsTo
     {
         return $this->belongsTo(self::class, 'remplace_session_id');
+    }
+
+    public function sessionProfesseurs(): HasMany
+    {
+        return $this->hasMany(SessionProfesseur::class, 'course_session_id')->orderBy('id');
+    }
+
+    /**
+     * Isolation (RG-5) : le staff voit tout ; un professeur voit les sessions où il a une ligne non
+     * « remplacée », ou les sessions de sa classe pendant la durée de son assignation ; tout autre rôle rien.
+     */
+    public function scopeVisiblePour(Builder $query, ?User $user): Builder
+    {
+        if ($user?->isStaff()) {
+            return $query;
+        }
+
+        if (! $user?->isProfesseur() || ! $user->professeur) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $professeurId = $user->professeur->id;
+
+        return $query->where(function (Builder $q) use ($professeurId) {
+            $q->whereExists(fn ($sub) => $sub->selectRaw('1')->from('session_professors')
+                ->whereColumn('session_professors.course_session_id', 'course_sessions.id')
+                ->where('session_professors.professeur_id', $professeurId)
+                ->where('session_professors.remplace', false))
+                ->orWhereExists(fn ($sub) => $sub->selectRaw('1')->from('professeur_classe')
+                    ->whereColumn('professeur_classe.classe_id', 'course_sessions.classe_id')
+                    ->where('professeur_classe.professeur_id', $professeurId)
+                    ->whereColumn('professeur_classe.date_debut', '<=', 'course_sessions.date')
+                    ->where(fn ($d) => $d->whereNull('professeur_classe.date_fin')
+                        ->orWhereColumn('professeur_classe.date_fin', '>=', 'course_sessions.date')));
+        });
     }
 
     public function timesheets(): HasMany

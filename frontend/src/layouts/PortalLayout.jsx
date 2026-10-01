@@ -34,9 +34,16 @@ export default function PortalLayout() {
         </div>
 
         <nav id="portal-nav" aria-label="Navigation principale">
-          <NavLink to="/mes-cours" className={navClass}>
-            Mes cours
-          </NavLink>
+          {!isStaff && (
+            <>
+              <NavLink to="/mes-classes" className={navClass}>
+                Mes classes
+              </NavLink>
+              <NavLink to="/mes-ressources" className={navClass}>
+                Ressources de mes cours
+              </NavLink>
+            </>
+          )}
           <NavLink to="/timesheets" className={navClass}>
             Timesheets
           </NavLink>

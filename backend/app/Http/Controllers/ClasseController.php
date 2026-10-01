@@ -22,7 +22,8 @@ class ClasseController extends Controller
 
     public function index(ListClassesRequest $request): AnonymousResourceCollection
     {
-        $query = Classe::query()->with(['cours', 'periode', 'anneeScolaire', 'prochaineSession'])
+        $query = Classe::query()->visiblePour($request->user())
+            ->with(['cours', 'periode', 'anneeScolaire', 'prochaineSession', 'assignationsActives.professeur'])
             ->withCount('sessionsActives');
 
         foreach (['annee_scolaire_id', 'periode_id', 'cours_id', 'jour_semaine', 'statut'] as $champ) {
@@ -73,7 +74,7 @@ class ClasseController extends Controller
 
     private function charger(Classe $classe): Classe
     {
-        return $classe->load(['cours', 'periode', 'anneeScolaire', 'prochaineSession'])
+        return $classe->load(['cours', 'periode', 'anneeScolaire', 'prochaineSession', 'assignationsActives.professeur'])
             ->loadCount('sessionsActives');
     }
 }

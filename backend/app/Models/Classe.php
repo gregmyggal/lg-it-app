@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -77,5 +78,39 @@ class Classe extends Model
                 ->where('date', '>=', now('Europe/Brussels')->toDateString())
                 ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
         );
+    }
+
+    public function assignations(): HasMany
+    {
+        return $this->hasMany(ProfesseurClasse::class);
+    }
+
+    /** Assignations actives (date_fin null ou ≥ aujourd'hui), principal en premier. */
+    public function assignationsActives(): HasMany
+    {
+        return $this->hasMany(ProfesseurClasse::class)->actif()->orderBy('id');
+    }
+
+    /**
+     * Isolation (RG-5) : le staff voit tout ; un professeur ne voit que les classes où il a (ou a eu)
+     * une assignation ; tout autre rôle ne voit rien.
+     */
+    public function scopeVisiblePour(Builder $query, ?User $user): Builder
+    {
+        if ($user?->isStaff()) {
+            return $query;
+        }
+
+        if (! $user?->isProfesseur() || ! $user->professeur) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $professeurId = $user->professeur->id;
+
+        // Assignation (actuelle ou passée) OU remplacement ponctuel sur l'une des sessions de la classe.
+        return $query->where(fn (Builder $q) => $q
+            ->whereHas('assignations', fn (Builder $a) => $a->where('professeur_id', $professeurId))
+            ->orWhereHas('sessions.sessionProfesseurs', fn (Builder $l) => $l
+                ->where('professeur_id', $professeurId)->where('remplace', false)));
     }
 }

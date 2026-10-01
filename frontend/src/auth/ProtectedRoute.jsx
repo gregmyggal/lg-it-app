@@ -15,10 +15,11 @@ export default function ProtectedRoute({ roles, children }) {
 
   // Rôle insuffisant : retour à l'accueil du portail (et non à la page de connexion).
   if (roles && !roles.includes(user.role)) {
-    if (pathname === '/mes-cours') {
+    const accueil = user.role === 'professeur' ? '/mes-classes' : '/admin/classes';
+    if (pathname === accueil) {
       return <p role="alert">Votre rôle ne permet pas d'accéder à cette page.</p>;
     }
-    return <Navigate to="/mes-cours" replace />;
+    return <Navigate to={accueil} replace />;
   }
 
   return children;

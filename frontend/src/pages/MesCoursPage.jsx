@@ -107,8 +107,8 @@ export default function MesCoursPage() {
     <>
       <AdminPageHeader
         icon="📚"
-        title="Mes cours"
-        description="Retrouvez ici tous vos cours assignés et les ressources"
+        title="Ressources de mes cours"
+        description="Les ressources des cours où vous avez une classe active"
         badge={`${cours.length} cours`}
       />
 
@@ -143,7 +143,7 @@ export default function MesCoursPage() {
           </div>
         )}
 
-        <AdminCardGrid emptyMessage="Aucun cours ne vous est assigné.">
+        <AdminCardGrid emptyMessage="Aucun cours : vous n'avez pas encore de classe assignée.">
           {cours.map((c) => (
             <AdminCard key={c.id}>
               <AdminCardHeader

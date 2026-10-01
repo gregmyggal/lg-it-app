@@ -9,6 +9,7 @@ use App\Models\CourseSession;
 use App\Services\CalendrierScolaireService;
 use App\Services\CourseSessionService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -20,12 +21,13 @@ class ClasseSessionController extends Controller
     ) {}
 
     /** Toutes les sessions d'une classe (bis et annulées incluses). */
-    public function index(Classe $classe): AnonymousResourceCollection
+    public function index(Request $request, Classe $classe): AnonymousResourceCollection
     {
         Gate::authorize('view', $classe);
         Gate::authorize('viewAny', CourseSession::class);
 
-        $sessions = $classe->sessions()->get();
+        $classe->load('cours');
+        $sessions = $classe->sessions()->visiblePour($request->user())->with('sessionProfesseurs.professeur')->get();
         $sessions->each->setRelation('classe', $classe);
         $this->calendrier->attachAlerts($sessions);
 

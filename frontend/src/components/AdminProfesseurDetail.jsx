@@ -12,8 +12,7 @@ import {
   AdminCardFooter,
 } from './AdminPageLayout';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
-import CoursAssignmentModal from './CoursAssignmentModal';
-import ProfesseurCoursCard from './ProfesseurCoursCard';
+import ClassesProfesseurSection from './professeurs/ClassesProfesseurSection';
 
 export default function AdminProfesseurDetail() {
   const { id } = useParams();
@@ -23,7 +22,6 @@ export default function AdminProfesseurDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [showCoursModal, setShowCoursModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
@@ -40,22 +38,6 @@ export default function AdminProfesseurDetail() {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleRemoveCours(coursId) {
-    if (!window.confirm('Retirer ce professeur du cours?')) {
-      return;
-    }
-
-    try {
-      await client.delete(`/professeurs/${id}/cours/${coursId}`);
-      setSuccess('Cours retiré');
-      await loadProfesseur();
-      setTimeout(() => setSuccess(null), 2000);
-    } catch (err) {
-      setError('Erreur lors du retrait');
-      console.error(err);
     }
   }
 
@@ -90,11 +72,6 @@ export default function AdminProfesseurDetail() {
   }
 
   const statusColor = professeur.statut === 'actif' ? 'green' : 'red';
-  const roleMap = {
-    principal: '👑 Principal',
-    'co-enseignant': '👥 Co-enseignant',
-    remplaçant: '🔄 Remplaçant',
-  };
 
   return (
     <>
@@ -209,55 +186,10 @@ export default function AdminProfesseurDetail() {
           </AdminCard>
         </div>
 
-        {/* Mes Cours Actuels */}
-        <AdminCard style={{ marginBottom: ADMIN_SPACING.xl }}>
-          <AdminCardHeader
-            title={`🎓 Mes Cours Actuels (${professeur.cours?.length || 0})`}
-            actions={
-              <AdminButton
-                variant="primary"
-                size="sm"
-                icon="➕"
-                onClick={() => setShowCoursModal(true)}
-              >
-                Ajouter
-              </AdminButton>
-            }
-          />
-
-          <AdminCardBody>
-            {!professeur.cours || professeur.cours.length === 0 ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  color: '#9ca3af',
-                  padding: ADMIN_SPACING.xl,
-                  background: '#f9fafb',
-                  borderRadius: '8px',
-                  border: `1px solid ${ADMIN_COLORS.border}`,
-                }}
-              >
-                📭 Aucun cours assigné
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: ADMIN_SPACING.lg,
-                }}
-              >
-                {professeur.cours.map((cours) => (
-                  <ProfesseurCoursCard
-                    key={cours.id}
-                    cours={cours}
-                    onRemove={() => handleRemoveCours(cours.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </AdminCardBody>
-        </AdminCard>
+        {/* Classes (CLS-01 T2 : remplace l'assignation de cours) */}
+        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+          <ClassesProfesseurSection professeur={professeur} />
+        </div>
 
         {/* Tarifs */}
         <AdminCard style={{ marginBottom: ADMIN_SPACING.xl }}>
@@ -376,19 +308,6 @@ export default function AdminProfesseurDetail() {
         </div>
       </AdminPageContent>
 
-      {/* Modal Ajouter Cours */}
-      {showCoursModal && (
-        <CoursAssignmentModal
-          professeurId={id}
-          onSuccess={() => {
-            setShowCoursModal(false);
-            loadProfesseur();
-            setSuccess('Cours assigné avec succès');
-            setTimeout(() => setSuccess(null), 2000);
-          }}
-          onCancel={() => setShowCoursModal(false)}
-        />
-      )}
     </>
   );
 }

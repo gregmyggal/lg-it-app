@@ -8,21 +8,24 @@ use Illuminate\Support\Facades\Gate;
 
 class CoursController extends Controller
 {
-    // Isolation par professeur (US-401/406) : chaque profil ne voit que les cours dont
-    // un type_cours correspond à ses types assignés ; le staff voit tout, tout statut.
+    // Isolation par professeur (CLS-01 T2) : un professeur ne voit que les cours publiés dont il a une classe
+    // active (assignation professeur_classe) ; le staff voit tout, tout statut.
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Cours::class);
 
         $user = $request->user();
 
-        $query = Cours::with('typesCours', 'ressources', 'professeurs');
+        $query = Cours::with('typesCours', 'ressources');
 
         if (! $user->isStaff()) {
-            $typeIds = $user->professeur?->typesCours()->pluck('types_cours.id') ?? collect();
+            $query->where('statut', 'publish');
 
-            $query->whereHas('typesCours', fn ($q) => $q->whereIn('types_cours.id', $typeIds))
-                ->where('statut', 'publish');
+            if ($user->professeur) {
+                $query->whereIn('cours.id', $user->professeur->cours()->select('cours.id'));
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
 
         return $query->orderBy('menu_order')->get();
@@ -32,7 +35,7 @@ class CoursController extends Controller
     {
         Gate::authorize('view', $cours);
 
-        return $cours->load(['typesCours', 'ressources', 'professeurs']);
+        return $cours->load(['typesCours', 'ressources']);
     }
 
     // Réservé staff (CoursPolicy) : un professeur ne modifie jamais la structure d'un cours.

@@ -31,6 +31,7 @@ export function AuthProvider({ children }) {
     const res = await client.post('/login', { email, password });
     localStorage.setItem(TOKEN_KEY, res.data.token);
     setUser(res.data.user);
+    return res.data.user;
   }
 
   async function logout() {

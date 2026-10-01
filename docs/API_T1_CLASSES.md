@@ -2,7 +2,7 @@
 
 Préfixe `/api`, authentification `Authorization: Bearer <token>` (Sanctum), JSON snake_case. Contrat : `docs/requirements/CLS-01-T1-contrat.md`.
 
-**Rôles T1** : `admin` et `directeur` (= « staff ») sur tout ; `professeur` → **403** partout (son accès arrive en T2). Exception : l'import FWB est réservé à `admin`.
+**Rôles** : `admin` et `directeur` (= « staff ») sur tout. Depuis T2, un `professeur` peut **lire** ses classes et ses sessions (listes filtrées côté serveur) ; toute écriture reste réservée au staff (voir `API_T2_PROFESSEURS_CLASSES.md`). Exception : l'import FWB est réservé à `admin`.
 
 ## Conventions
 
@@ -162,7 +162,7 @@ Objet `CourseSessionResource` :
   "alerte_calendrier": { "libelle": "Fermeture exceptionnelle", "type": "fermeture" },
   "can": { "update": true, "cancel": true, "bis": true } }
 ```
-`libelle` : « Séance 5 », « Séance 5 bis », « Séance 5 bis 2 » (bis rang 2). `alerte_calendrier` = `null` ou `{libelle, type}` quand la date de la session (non annulée, non terminée) est couverte par une entrée **non masquée** du calendrier (ajoutée après coup) — la session n'est **jamais déplacée automatiquement**. `classe` n'est présent que dans `GET /sessions` et les réponses `PUT`/`cancel`/calendrier. `can.update` est `false` pour une session passée ou annulée ; `can.cancel` `false` si déjà annulée/terminée.
+`libelle` : « Séance 5 », « Séance 5 bis », « Séance 5 bis 2 » (bis rang 2). `alerte_calendrier` = `null` ou `{libelle, type}` quand la date de la session (non annulée, non terminée) est couverte par une entrée **non masquée** du calendrier (ajoutée après coup) — la session n'est **jamais déplacée automatiquement**. `classe` (avec `cours`) est présent dans `GET /sessions`, `GET /classes/{classe}/sessions` et les réponses `PUT`/`cancel`/calendrier. `can.bis` est `false` pour une session annulée. `can.update` est `false` pour une session passée ou annulée ; `can.cancel` `false` si déjà annulée/terminée.
 
 ### `GET /sessions` — admin, directeur
 Filtres : `classe_id`, `cours_id`, `date_from`, `date_to` (≥ `date_from`), `statut` ; pagination `page`, `per_page` (défaut 50, max 100) ; trié par date puis heure.

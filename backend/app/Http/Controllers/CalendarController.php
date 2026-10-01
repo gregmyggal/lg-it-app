@@ -180,7 +180,8 @@ class CalendarController extends Controller
     private function sessions(array $filtres, Carbon $debut, Carbon $fin, ?callable $extra = null): Collection
     {
         $query = CourseSession::query()
-            ->with('classe.cours')
+            ->visiblePour(auth()->user())
+            ->with(['classe.cours', 'sessionProfesseurs.professeur'])
             ->whereBetween('date', [$debut->toDateString(), $fin->toDateString()])
             ->when(! empty($filtres['classe_id']), fn (Builder $q) => $q->where('classe_id', $filtres['classe_id']))
             ->when(! empty($filtres['cours_id']), fn (Builder $q) => $q->whereHas('classe', fn ($c) => $c->where('cours_id', $filtres['cours_id'])))

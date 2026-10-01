@@ -39,10 +39,16 @@ class CourseSessionResource extends JsonResource
             'motif_annulation' => $this->motif_annulation,
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),
             'alerte_calendrier' => $this->alerte_calendrier,
+            'professeurs' => $this->whenLoaded('sessionProfesseurs', fn () => $this->sessionProfesseurs
+                ->filter(fn ($l) => $l->relationLoaded('professeur'))
+                ->map(fn ($l) => ProfesseurClasseResource::professeurLeger($l->professeur) + [
+                    'role' => $l->role,
+                    'remplace' => $l->remplace,
+                ])->values()),
             'can' => [
                 'update' => $staff && $this->isMovable(),
                 'cancel' => (bool) $user?->can('cancel', $this->resource) && $this->isCancellable(),
-                'bis' => $staff,
+                'bis' => $staff && ! $this->isAnnulee(),
             ],
         ];
     }
