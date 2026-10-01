@@ -13,6 +13,8 @@ import {
 } from './AdminPageLayout';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
 import ClassesProfesseurSection from './professeurs/ClassesProfesseurSection';
+import CompteProfesseurSection from './professeurs/CompteProfesseurSection';
+import { getErrorMessage } from '../api/errors';
 
 export default function AdminProfesseurDetail() {
   const { id } = useParams();
@@ -42,7 +44,7 @@ export default function AdminProfesseurDetail() {
   }
 
   async function handleDeleteProfesseur() {
-    if (!window.confirm('Êtes-vous sûr? Cette action est irréversible.')) {
+    if (!window.confirm('Supprimer définitivement ce professeur ? Possible uniquement s\'il n\'a aucune donnée liée (sinon, désactivez-le).')) {
       return;
     }
 
@@ -50,8 +52,7 @@ export default function AdminProfesseurDetail() {
       await client.delete(`/professeurs/${id}`);
       navigate('/admin/professeurs');
     } catch (err) {
-      setError('Erreur lors de la suppression');
-      console.error(err);
+      setError(getErrorMessage(err, 'Erreur lors de la suppression'));
     }
   }
 
@@ -184,6 +185,17 @@ export default function AdminProfesseurDetail() {
               </div>
             </AdminCardBody>
           </AdminCard>
+        </div>
+
+        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+          <CompteProfesseurSection
+            professeur={professeur}
+            onChange={(message) => {
+              setSuccess(message);
+              loadProfesseur();
+              setTimeout(() => setSuccess(null), 4000);
+            }}
+          />
         </div>
 
         {/* Classes (CLS-01 T2 : remplace l'assignation de cours) */}

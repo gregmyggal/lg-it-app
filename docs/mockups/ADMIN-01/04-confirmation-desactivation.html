@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>04 — Modale de désactivation avec impact</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .page { max-width: 1200px; margin: 0 auto; }
+    .demo-section {
+      margin-bottom: 32px;
+    }
+    .demo-section h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #374151;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .demo-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      min-height: 300px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    /* Modal */
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      animation: slideUp 0.3s ease;
+      border: 2px solid #fee2e2;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Modal Header */
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: #fef2f2;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #7f1d1d;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0 8px;
+      transition: color 0.2s;
+    }
+    .modal-close:hover {
+      color: #111827;
+    }
+
+    /* Modal Body */
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Modal Footer */
+    .modal-footer {
+      padding: 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* Section */
+    .impact-section {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .impact-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+    .impact-section h3 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .impact-section p {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .impact-list {
+      margin: 0;
+      padding: 0 0 0 20px;
+      list-style: disc;
+    }
+    .impact-list li {
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #374151;
+    }
+    .impact-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Info Box */
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #1e40af;
+      margin: 12px 0;
+    }
+
+    /* Warning Box */
+    .warning-box {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 12px 0;
+    }
+
+    /* Danger Box (auto-deactivation) */
+    .danger-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-left: 4px solid #dc2626;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #7f1d1d;
+      margin: 12px 0;
+    }
+
+    /* Empty state in section */
+    .empty-section-message {
+      font-size: 13px;
+      color: #6b7280;
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .btn-secondary {
+      background: white;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #9ca3af;
+    }
+
+    /* States Navigation */
+    .states-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .state-btn {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .state-btn.active {
+      background: #ef4444;
+      color: white;
+      border-color: #ef4444;
+    }
+
+    .icon { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>04 — Modale de désactivation avec impact</h1>
+
+    <div class="states-nav">
+      <button class="state-btn active" onclick="showState('normal')">Désactivation normale</button>
+      <button class="state-btn" onclick="showState('last-director')">Dernier directeur (avertissement)</button>
+      <button class="state-btn" onclick="showState('auto-deactivation')">Auto-désactivation (bloquée)</button>
+    </div>
+
+    <!-- Normal Deactivation -->
+    <div id="state-normal" class="demo-section">
+      <h2>Désactivation normale avec classes assignées</h2>
+      <div class="demo-content">
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2><span class="icon">⚠️</span> Désactiver Jean Martin</h2>
+              <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #374151;">
+                Êtes-vous sûr de vouloir désactiver ce directeur ? Cette action coupera son accès immédiatement.
+              </p>
+
+              <div class="impact-section">
+                <h3><span class="icon">📚</span> Classes assignées</h3>
+                <ul class="impact-list">
+                  <li>6e Français (2 sessions à venir)</li>
+                  <li>5e Mathématiques (4 sessions à venir)</li>
+                  <li>4e Histoire (1 session à venir)</li>
+                </ul>
+                <div class="info-box">
+                  ℹ️ Ces classes perdront ce directeur. Aucune réaffectation automatique.
+                </div>
+              </div>
+
+              <div class="impact-section">
+                <h3><span class="icon">📅</span> Sessions à venir sans remplaçant</h3>
+                <ul class="impact-list">
+                  <li>Jeudi 10 octobre 2026 — 6e Français</li>
+                  <li>Vendredi 11 octobre 2026 — 5e Mathématiques</li>
+                  <li>Mardi 15 octobre 2026 — 4e Histoire</li>
+                  <li>Jeudi 17 octobre 2026 — 5e Mathématiques</li>
+                </ul>
+                <div class="info-box">
+                  ℹ️ Vous devrez les réaffecter manuellement via le calendrier.
+                </div>
+              </div>
+
+              <div class="impact-section">
+                <h3><span class="icon">⏱️</span> Heures en brouillon / à valider</h3>
+                <p class="empty-section-message">Aucune heure en attente de validation.</p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary">Annuler</button>
+              <button class="btn btn-danger">Désactiver</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last Director Warning -->
+    <div id="state-last-director" class="demo-section" style="display:none;">
+      <h2>Désactivation du dernier directeur (avertissement non bloquant)</h2>
+      <div class="demo-content">
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2><span class="icon">⚠️</span> Désactiver Sophie Leclerc</h2>
+              <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #374151;">
+                Êtes-vous sûr de vouloir désactiver ce directeur ? Cette action coupera son accès immédiatement.
+              </p>
+
+              <div class="warning-box">
+                ⚠️ <strong>Attention :</strong> Cette personne est le <strong>dernier directeur actif</strong> du système. Après cette désactivation, aucun directeur n'aura accès à la gestion des professeurs.
+              </div>
+
+              <div class="impact-section">
+                <h3><span class="icon">📚</span> Classes assignées</h3>
+                <ul class="impact-list">
+                  <li>3e Anglais (5 sessions à venir)</li>
+                  <li>2de Sciences (3 sessions à venir)</li>
+                </ul>
+                <div class="info-box">
+                  ℹ️ Ces classes perdront ce directeur. Aucune réaffectation automatique.
+                </div>
+              </div>
+
+              <div class="impact-section">
+                <h3><span class="icon">📅</span> Sessions à venir sans remplaçant</h3>
+                <p class="empty-section-message">Aucune session à venir.</p>
+              </div>
+
+              <div class="impact-section">
+                <h3><span class="icon">⏱️</span> Heures en brouillon / à valider</h3>
+                <p class="empty-section-message">Aucune heure en attente de validation.</p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary">Annuler</button>
+              <button class="btn btn-danger">Désactiver quand même</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-Deactivation (Blocked) -->
+    <div id="state-auto-deactivation" class="demo-section" style="display:none;">
+      <h2>Auto-désactivation bloquée (admin tente de se désactiver lui-même)</h2>
+      <div class="demo-content">
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2><span class="icon">⛔</span> Impossible de désactiver</h2>
+              <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="danger-box">
+                ❌ <strong>Action bloquée :</strong> Vous ne pouvez pas désactiver votre propre compte. Contactez un autre administrateur si vous souhaitez que votre compte soit désactivé.
+              </div>
+
+              <div class="impact-section" style="margin-top: 24px;">
+                <h3>Pourquoi cette restriction ?</h3>
+                <p>
+                  Cette mesure de sécurité empêche les administrateurs d'être accidentellement ou délibérément verrouillés du système.
+                </p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary">Fermer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      document.querySelectorAll('[id^="state-"]').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.querySelectorAll('.state-btn').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      document.getElementById('state-' + state).style.display = 'block';
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

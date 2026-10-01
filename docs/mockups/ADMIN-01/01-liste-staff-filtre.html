@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>01 — Liste du staff avec filtres</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .page { max-width: 1200px; margin: 0 auto; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .filters {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .filter-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .filter-group select {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .search-box {
+      flex: 1;
+      max-width: 300px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px #dbeafe;
+    }
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .stat { display: flex; gap: 4px; }
+    .badge { font-weight: 600; }
+
+    /* States Container */
+    .states-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .state-btn {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .state-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    /* Table */
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead {
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+    .staff-name {
+      font-weight: 600;
+      color: #111827;
+    }
+    .email {
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .role {
+      display: inline-block;
+      background: #f0f9ff;
+      color: #0369a1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .role.admin {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-status.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .badge-status.inactive {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-sm:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    .btn-sm.danger {
+      border-color: #fee2e2;
+      color: #dc2626;
+    }
+    .btn-sm.danger:hover {
+      background: #fee2e2;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 64px 32px;
+      color: #6b7280;
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .empty-state h2 {
+      margin: 0 0 8px 0;
+      color: #374151;
+    }
+    .empty-state p {
+      margin: 0 0 24px 0;
+    }
+
+    /* Loading State */
+    .skeleton {
+      background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .skeleton-row td {
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .skeleton-name {
+      height: 20px;
+      width: 150px;
+      background-color: #e5e7eb;
+      border-radius: 4px;
+    }
+
+    /* Error State */
+    .error-banner {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      color: #7f1d1d;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .error-banner-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .error-banner-content h3 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+    }
+    .error-banner-content p {
+      margin: 0;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>Gestion du staff</h1>
+      <button class="btn btn-primary">+ Créer un directeur</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span>Admin actifs :</span>
+        <span class="badge">2</span>
+      </div>
+      <div class="stat">
+        <span>Directeurs actifs :</span>
+        <span class="badge">5</span>
+      </div>
+      <div class="stat">
+        <span>Inactifs :</span>
+        <span class="badge">1</span>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label>Rôle</label>
+        <select>
+          <option>Tous</option>
+          <option>Admin</option>
+          <option>Directeur</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Statut</label>
+        <select>
+          <option>Actifs</option>
+          <option>Inactifs</option>
+          <option>Tous</option>
+        </select>
+      </div>
+      <div class="search-box">
+        <input type="text" placeholder="Rechercher par nom ou email...">
+      </div>
+    </div>
+
+    <!-- State Navigation -->
+    <div class="states-nav">
+      <button class="state-btn active" onclick="showState('success')">Succès (données)</button>
+      <button class="state-btn" onclick="showState('loading')">Chargement</button>
+      <button class="state-btn" onclick="showState('empty')">Vide</button>
+      <button class="state-btn" onclick="showState('error')">Erreur</button>
+    </div>
+
+    <!-- Success State: Data -->
+    <div id="state-success" class="state-content">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom complet</th>
+              <th>Email de connexion</th>
+              <th>Rôle</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="staff-name">Marie Dupont</div>
+                <div class="email">marie.dupont@logiscool.com</div>
+              </td>
+              <td>marie.dupont@logiscool.com</td>
+              <td><span class="role admin">Admin</span></td>
+              <td><span class="badge-status active">✓ Actif</span></td>
+              <td>
+                <div class="actions">
+                  <button class="btn-sm">Voir</button>
+                  <button class="btn-sm danger">Désactiver</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="staff-name">Jean Martin</div>
+                <div class="email">jean.martin@logiscool.com</div>
+              </td>
+              <td>jean.martin@logiscool.com</td>
+              <td><span class="role">Directeur</span></td>
+              <td><span class="badge-status active">✓ Actif</span></td>
+              <td>
+                <div class="actions">
+                  <button class="btn-sm">Voir</button>
+                  <button class="btn-sm danger">Désactiver</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="staff-name">Sophie Leclerc</div>
+                <div class="email">sophie.leclerc@logiscool.com</div>
+              </td>
+              <td>sophie.leclerc@logiscool.com</td>
+              <td><span class="role">Directeur</span></td>
+              <td><span class="badge-status inactive">Désactivé</span></td>
+              <td>
+                <div class="actions">
+                  <button class="btn-sm">Voir</button>
+                  <button class="btn-sm">Réactiver</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="staff-name">Pierre Rousseau</div>
+                <div class="email">pierre.rousseau@logiscool.com</div>
+              </td>
+              <td>pierre.rousseau@logiscool.com</td>
+              <td><span class="role">Directeur</span></td>
+              <td><span class="badge-status active">✓ Actif</span></td>
+              <td>
+                <div class="actions">
+                  <button class="btn-sm">Voir</button>
+                  <button class="btn-sm danger">Désactiver</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="state-loading" class="state-content" style="display:none;">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom complet</th>
+              <th>Email de connexion</th>
+              <th>Rôle</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="skeleton-row">
+              <td><div class="skeleton" style="height: 20px; width: 150px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 200px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 80px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 100px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 120px;"></div></td>
+            </tr>
+            <tr class="skeleton-row">
+              <td><div class="skeleton" style="height: 20px; width: 150px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 200px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 80px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 100px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 120px;"></div></td>
+            </tr>
+            <tr class="skeleton-row">
+              <td><div class="skeleton" style="height: 20px; width: 150px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 200px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 80px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 100px;"></div></td>
+              <td><div class="skeleton" style="height: 20px; width: 120px;"></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="state-empty" class="state-content" style="display:none;">
+      <div class="table-container">
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <h2>Aucun staff trouvé</h2>
+          <p>Aucun admin ou directeur ne correspond aux filtres appliqués.</p>
+          <button class="btn btn-primary">+ Créer le premier directeur</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="state-error" class="state-content" style="display:none;">
+      <div class="error-banner">
+        <div class="error-banner-icon">⚠️</div>
+        <div class="error-banner-content">
+          <h3>Erreur de chargement</h3>
+          <p>Impossible de charger la liste du staff. Veuillez réessayer dans quelques instants.</p>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="empty-state">
+          <div class="empty-state-icon">❌</div>
+          <h2>Erreur lors du chargement</h2>
+          <p>Une erreur réseau s'est produite. Veuillez vérifier votre connexion et réessayer.</p>
+          <button class="btn btn-primary" onclick="showState('success')">Réessayer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      // Hide all states
+      document.querySelectorAll('.state-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.state-btn').forEach(el => el.classList.remove('active'));
+
+      // Show selected state
+      document.getElementById('state-' + state).style.display = 'block';
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

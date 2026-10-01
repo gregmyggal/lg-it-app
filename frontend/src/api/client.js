@@ -30,7 +30,8 @@ client.interceptors.response.use(
   (error) => {
     const url = error.config?.url || '';
     const estConnexion = url.endsWith('/login');
-    if (error.response?.status === 401 && !estConnexion && localStorage.getItem(TOKEN_KEY)) {
+    const desactive = error.response?.status === 403 && error.response?.data?.code === 'compte_desactive';
+    if ((error.response?.status === 401 || desactive) && !estConnexion && localStorage.getItem(TOKEN_KEY)) {
       localStorage.removeItem(TOKEN_KEY);
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }

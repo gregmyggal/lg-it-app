@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { getStatus } from '../api/errors';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -16,9 +17,14 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const connecte = await login(email, password);
+      if (connecte?.must_change_password) {
+        navigate('/mot-de-passe');
+        return;
+      }
       navigate(connecte?.role === 'professeur' ? '/mes-classes' : '/admin/classes');
-    } catch {
-      setError('Identifiants invalides.');
+    } catch (err) {
+      // 403 : compte désactivé (message du serveur, révélé seulement avec un mot de passe correct).
+      setError(getStatus(err) === 403 && err.response.data?.message ? err.response.data.message : 'Identifiants invalides.');
     } finally {
       setSubmitting(false);
     }

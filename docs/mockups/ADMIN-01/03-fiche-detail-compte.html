@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>03 — Fiche détail : bloc Compte</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .page { max-width: 900px; margin: 0 auto; }
+
+    /* Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #2563eb;
+      padding: 0;
+    }
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+    .header-content h1 {
+      margin: 0 0 4px 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header-content p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    /* Tabs/States Navigation */
+    .states-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .state-btn {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .state-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    /* Form rows */
+    .form-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+      align-items: flex-start;
+    }
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-field {
+      flex: 1;
+    }
+    .form-field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-field-value {
+      font-size: 14px;
+      color: #111827;
+      line-height: 1.5;
+    }
+
+    /* Email field with edit */
+    .email-field {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .email-value {
+      font-size: 14px;
+      color: #111827;
+      flex: 1;
+    }
+    .edit-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .edit-btn:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    /* Status badge */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .badge-status.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .badge-status.inactive {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .btn-secondary {
+      background: white;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #9ca3af;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* Info messages */
+    .info-message {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #1e40af;
+      margin: 16px 0 0 0;
+    }
+
+    /* Warning: Last admin */
+    .warning-message {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 16px 0 0 0;
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 24px 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .form-row { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <button class="back-btn">← Retour à la liste</button>
+      <div class="header-content">
+        <h1>Jean Martin</h1>
+        <p>Directeur • Créé le 15 septembre 2026</p>
+      </div>
+    </div>
+
+    <!-- State Navigation -->
+    <div class="states-nav">
+      <button class="state-btn active" onclick="showState('active')">Staff actif</button>
+      <button class="state-btn" onclick="showState('inactive')">Staff inactif</button>
+      <button class="state-btn" onclick="showState('own-account')">Propre compte (admin)</button>
+    </div>
+
+    <!-- Active Staff State -->
+    <div id="state-active" class="state-content">
+      <!-- Bloc Profil -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Profil</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-field">
+              <span class="form-field-label">Nom complet</span>
+              <div class="form-field-value">Jean Martin</div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Rôle</span>
+              <div class="form-field-value">Directeur</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <span class="form-field-label">Date de création</span>
+              <div class="form-field-value">15 septembre 2026</div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Dernière connexion</span>
+              <div class="form-field-value">Aujourd'hui à 14:32</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc Compte de connexion -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Compte de connexion</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-field" style="flex: 2;">
+              <span class="form-field-label">Email de connexion</span>
+              <div class="email-field">
+                <div class="email-value">jean.martin@logiscool.com</div>
+                <button class="edit-btn">Modifier</button>
+              </div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Statut du compte</span>
+              <div style="margin-top: 8px;">
+                <span class="badge-status active">✓ Actif</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="button-group">
+            <button class="btn btn-primary">Réinitialiser le mot de passe</button>
+            <button class="btn btn-danger">Désactiver ce compte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inactive Staff State -->
+    <div id="state-inactive" class="state-content" style="display:none;">
+      <!-- Bloc Profil -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Profil</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-field">
+              <span class="form-field-label">Nom complet</span>
+              <div class="form-field-value">Sophie Leclerc</div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Rôle</span>
+              <div class="form-field-value">Directeur</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <span class="form-field-label">Date de création</span>
+              <div class="form-field-value">10 septembre 2026</div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Date de sortie</span>
+              <div class="form-field-value">28 septembre 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc Compte de connexion -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Compte de connexion</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-field" style="flex: 2;">
+              <span class="form-field-label">Email de connexion</span>
+              <div class="email-field">
+                <div class="email-value">sophie.leclerc@logiscool.com</div>
+                <button class="edit-btn">Modifier</button>
+              </div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Statut du compte</span>
+              <div style="margin-top: 8px;">
+                <span class="badge-status inactive">Désactivé</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="button-group">
+            <button class="btn btn-secondary">Réinitialiser le mot de passe</button>
+            <button class="btn btn-primary">Réactiver ce compte</button>
+          </div>
+
+          <div class="info-message">
+            ℹ️ Ce compte a été désactivé le 28 septembre 2026. L'accès est complètement bloqué.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Own Account State (admin cannot deactivate self) -->
+    <div id="state-own-account" class="state-content" style="display:none;">
+      <!-- Bloc Profil -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Profil</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-field">
+              <span class="form-field-label">Nom complet</span>
+              <div class="form-field-value">Marie Dupont</div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Rôle</span>
+              <div class="form-field-value">Admin</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <span class="form-field-label">Date de création</span>
+              <div class="form-field-value">01 janvier 2026</div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Dernière connexion</span>
+              <div class="form-field-value">Maintenant</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloc Compte de connexion -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Compte de connexion</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-field" style="flex: 2;">
+              <span class="form-field-label">Email de connexion</span>
+              <div class="email-field">
+                <div class="email-value">marie.dupont@logiscool.com</div>
+                <button class="edit-btn">Modifier</button>
+              </div>
+            </div>
+            <div class="form-field">
+              <span class="form-field-label">Statut du compte</span>
+              <div style="margin-top: 8px;">
+                <span class="badge-status active">✓ Actif</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="button-group">
+            <button class="btn btn-primary">Réinitialiser le mot de passe</button>
+            <button class="btn btn-danger" disabled>Désactiver ce compte</button>
+          </div>
+
+          <div class="warning-message">
+            ⚠️ Vous ne pouvez pas désactiver votre propre compte. Contactez un autre administrateur si nécessaire.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      document.querySelectorAll('[id^="state-"]').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.querySelectorAll('.state-btn').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      document.getElementById('state-' + state).style.display = 'block';
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

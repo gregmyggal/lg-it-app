@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
+import ChangerMotDePassePage from './pages/ChangerMotDePassePage';
 import MesCoursPage from './pages/MesCoursPage';
 import CoursLiensPage from './pages/CoursLiensPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -17,7 +18,6 @@ import CoursEditContentPage from './pages/admin/CoursEditContentPage';
 import FormationsAdminPage from './pages/admin/FormationsAdminPage';
 import FormationsEditContentPage from './pages/admin/FormationsEditContentPage';
 import StagesEditContentPage from './pages/admin/StagesEditContentPage';
-import ProfesseursAdminPage from './pages/admin/ProfesseursAdminPage';
 import AdminProfesseursPage from './pages/AdminProfesseursPage';
 import AdminProfesseurDetail from './components/AdminProfesseurDetail';
 import AdminTimesheetsPage from './pages/AdminTimesheetsPage';
@@ -31,6 +31,7 @@ import CalendrierScolaireAdminPage from './pages/admin/CalendrierScolaireAdminPa
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
 import SharePage from './pages/SharePage';
+import StaffAdminPage from './pages/admin/StaffAdminPage';
 
 const STAFF = ['admin', 'directeur'];
 const PORTAL = ['professeur', 'directeur', 'admin'];
@@ -50,6 +51,14 @@ export default function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/connexion" element={<LoginPage />} />
           <Route path="/share/:code" element={<SharePage />} />
+          <Route
+            path="/mot-de-passe"
+            element={
+              <ProtectedRoute>
+                <ChangerMotDePassePage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route element={<PortalLayout />}>
             <Route path="mes-cours" element={<Navigate to="/mes-classes" replace />} />
@@ -261,6 +270,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <TypesFormationAdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/staff"
+              element={
+                <ProtectedRoute roles={['admin']}>
+                  <StaffAdminPage />
                 </ProtectedRoute>
               }
             />

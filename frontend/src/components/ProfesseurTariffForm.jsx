@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import client from '../api/client';
+import { getErrorMessage } from '../api/errors';
 import AdminButton from './AdminButton';
 import { AdminFormField, AdminInput } from './AdminFormField';
 import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
@@ -24,8 +25,8 @@ export default function ProfesseurTariffForm({
     if (tariff) {
       setFormData({
         tarif_horaire_eur: tariff.tarif_horaire_eur,
-        date_debut: tariff.date_debut,
-        date_fin: tariff.date_fin || '',
+        date_debut: tariff.date_debut?.slice(0, 10) || '',
+        date_fin: tariff.date_fin?.slice(0, 10) || '',
       });
     }
   }, [tariff]);
@@ -64,8 +65,7 @@ export default function ProfesseurTariffForm({
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors de la sauvegarde');
-      console.error(err);
+      setError(getErrorMessage(err, 'Erreur lors de la sauvegarde'));
     } finally {
       setIsSubmitting(false);
     }
@@ -156,7 +156,7 @@ export default function ProfesseurTariffForm({
             fontSize: '0.9em',
           }}>
             ℹ️ Pas de date de fin = ce tarif reste actif indéfiniment
-            (sauf si vous créez un nouveau tarif après)
+            (il sera arrêté automatiquement à la date de début d'un éventuel nouveau tarif)
           </div>
         )}
 

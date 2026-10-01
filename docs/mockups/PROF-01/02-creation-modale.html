@@ -1,0 +1,103 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Création — Maquette PROF-01</title><style>
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+body[data-ver=before] .after-only,body[data-ver=after] .before-only{display:none!important}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]) .s-data{display:none!important}
+.ver-tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:9999px;padding:2px 10px;margin-bottom:8px}
+body[data-ver=before] .ver-tag{background:#fee2e2;color:#b91c1c}
+body[data-ver=after] .ver-tag{background:#d1fae5;color:#047857}
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.gone{outline:2px dashed #fca5a5;outline-offset:-2px;color:#fecaca}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:#f3f4f6;color:#374151}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect .body{padding:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=email],input[type=date],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.muted{color:var(--t3)}.small{font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.info{background:#cffafe;border-color:#67e8f9;color:#155e75}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.modal{background:#fff;border:1px solid var(--bd);border-radius:12px;max-width:560px;box-shadow:0 20px 25px -5px rgba(0,0,0,.15);margin:0 0 24px}
+.modal header{padding:16px 20px;border-bottom:1px solid var(--bd)}.modal header h2{font-size:18px}
+.modal .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.modal footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;background:var(--bg);border-radius:0 0 12px 12px}
+.chk{display:flex;flex-wrap:wrap;gap:8px 16px}.chk label{text-transform:none;font-size:14px;letter-spacing:0;font-weight:500;color:var(--t1);display:flex;gap:6px;align-items:center;margin:0}
+.hl{outline:2px dashed #ef4444;outline-offset:4px;border-radius:8px}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.foot{text-align:center;color:var(--t3);font-size:13px;padding:24px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+.pn{display:none}.pn.on{display:block}.pc h3{font-size:16px;font-weight:600}.pc p{margin:6px 0}.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:700px){.g2{grid-template-columns:1fr}}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;text-transform:uppercase;color:var(--t2);padding:8px;border-bottom:1px solid var(--bd)}td{padding:8px;border-bottom:1px solid var(--bd-l)}
+[hidden]{display:none!important}.tbl-wrap{overflow-x:auto}.row-off{background:#f9fafb;color:#4b5563}.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}.tabs button[aria-pressed=true]{background:var(--primary);color:#fff}
+.btn-d{background:#b91c1c;color:#fff}.btn-d:hover{background:#991b1b}
+.pwd{font-family:ui-monospace,Menlo,monospace;font-size:18px;background:#f3f4f6;border:1px solid var(--bd);border-radius:8px;padding:10px 14px;letter-spacing:.05em;display:inline-block}
+.err-f{color:var(--err-d);font-size:13px;margin-top:4px}input.bad{border-color:#b91c1c}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.imp{list-style:none;margin:0;padding:0;border:1px solid var(--bd);border-radius:8px}.imp li{padding:10px 12px;border-bottom:1px solid var(--bd-l);display:flex;justify-content:space-between;gap:8px}.imp li:last-child{border:0}
+.kv{display:grid;grid-template-columns:180px 1fr;gap:8px 16px}@media(max-width:600px){.kv{grid-template-columns:1fr}}
+</style></head><body data-state="data">
+<div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE PROF-01</strong><a href="index.html">Sommaire</a></div>
+<div class="shell"><aside class="side" aria-label="Menu principal"><div class="brand"><i></i>Logiscool</div><nav><div class="grp">Gestion opérationnelle</div><a href="#" onclick="return false">Timesheets</a><a href="#" onclick="return false" class="active" aria-current="page">Professeurs &amp; Tarifs</a><div class="grp">Scolarité</div><a href="#" onclick="return false">Classes</a><a href="#" onclick="return false">Calendrier</a></nav><div class="acct">Directrice (directeur)</div></aside>
+<main class="main"><div class="phead"><div class="in"><div><h1>Nouveau professeur</h1><p class="d">Compte de connexion + profil créés ensemble</p></div></div></div><div class="content"><div class="tabs" role="group" aria-label="Écran"><button class="btn btn-s btn-sm" id="t1" aria-pressed="true" type="button" onclick="v(1)">1. Formulaire</button><button class="btn btn-s btn-sm" id="t2" aria-pressed="false" type="button" onclick="v(2)">2. Erreur email</button><button class="btn btn-s btn-sm" id="t3" aria-pressed="false" type="button" onclick="v(3)">3. Mot de passe à communiquer</button></div>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" id="m12"><header><h2 id="mt">Nouveau professeur</h2></header><div class="mb">
+<div class="banner err" id="eb" role="alert" hidden><div class="tx"><strong>Cet email de connexion est déjà utilisé.</strong> Il appartient à un compte existant (Alice Prof, actif). Utilisez un autre email ou ouvrez sa fiche.</div></div>
+<fieldset style="border:1px solid var(--bd);border-radius:8px;padding:12px"><legend class="lbl" style="padding:0 6px">Compte de connexion</legend>
+<div><label for="a1">Email de connexion *</label><input id="a1" type="email" value="carole@test.com" aria-describedby="a1e"><div class="err-f" id="a1e" hidden>Email déjà utilisé.</div></div>
+<div style="margin-top:12px"><span class="lbl">Mot de passe initial</span><p class="small">Généré automatiquement (12 caractères), affiché <strong>une seule fois</strong> après la création. Le professeur devra le changer à sa première connexion.</p></div></fieldset>
+<fieldset style="border:1px solid var(--bd);border-radius:8px;padding:12px"><legend class="lbl" style="padding:0 6px">Profil</legend><div class="g2">
+<div><label for="a2">Prénom *</label><input id="a2" type="text" value="Carole"></div><div><label for="a3">Nom *</label><input id="a3" type="text" value="Martin"></div>
+<div><label for="a4">Email de contact *</label><input id="a4" type="email" value="carole@logiscool.example"><div class="help">Pré-rempli avec l’email de connexion, modifiable.</div></div><div><label for="a5">Téléphone</label><input id="a5" type="text"></div>
+<div><label for="a6">Date d’entrée *</label><input id="a6" type="date" value="2026-10-01"></div><div><label for="a7">Type de contrat</label><select id="a7"><option>— Non précisé —</option><option>Salarié</option><option>Freelance</option><option>Prestataire</option></select></div></div></fieldset>
+<div class="note-m" style="margin:0">Statut : <strong>Actif</strong> à la création. Les classes et le tarif s’ajoutent depuis la fiche.</div></div>
+<footer><button class="btn btn-s" type="button">Annuler</button><button class="btn btn-p" type="button" onclick="v(3)">Créer le professeur</button></footer></div>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt3" id="m3" hidden><header><h2 id="mt3">Professeur créé : Carole Martin</h2></header><div class="mb"><div class="banner warn" style="margin:0"><div class="tx"><strong>Notez ce mot de passe maintenant.</strong> Il ne sera plus affichable. Vous pourrez toujours en générer un nouveau depuis la fiche.</div></div>
+<div><span class="lbl">Email de connexion</span>carole@test.com</div><div><span class="lbl">Mot de passe temporaire</span><span class="pwd" id="pw">Kx7-mQ4p-Zt9e</span> <button class="btn btn-s btn-sm" type="button" id="cp" onclick="this.textContent='Copié'">Copier</button><div class="help" role="status">Aucun email n’est envoyé automatiquement (voir questions ouvertes).</div></div></div>
+<footer><button class="btn btn-p" type="button">J’ai noté le mot de passe, ouvrir la fiche</button></footer></div></div></main></div>
+<script>function $(i){return document.getElementById(i)}
+function setState(s){document.body.setAttribute('data-state',s);var w=$('stsw');if(w)[].forEach.call(w.children,function(b){b.setAttribute('aria-pressed',b.dataset.s==s)})}
+var w=$('stsw');if(w){w.innerHTML=[['loading','Chargement'],['empty','Vide'],['error','Erreur'],['data','Données']].map(function(a){return '<button type="button" data-s="'+a[0]+'" aria-pressed="'+(a[0]=='data')+'" onclick="setState(\''+a[0]+'\')">'+a[1]+'</button>'}).join('')}
+function v(n){$('m12').hidden=n==3;$('m3').hidden=n!=3;$('eb').hidden=n!=2;$('a1e').hidden=n!=2;$('a1').className=n==2?'bad':'';$('a1').setAttribute('aria-invalid',n==2);for(var i=1;i<4;i++)$('t'+i).setAttribute('aria-pressed',i==n)}</script></body></html>

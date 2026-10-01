@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../api/errors';
+import { useAuth } from '../auth/AuthContext';
 import AdminButton from '../components/AdminButton';
 import {
   AdminPageHeader,
@@ -8,9 +10,12 @@ import {
 } from '../components/AdminPageLayout';
 import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
 import ProfesseurTariffForm from '../components/ProfesseurTariffForm';
+import CreerProfesseurModal from '../components/professeurs/CreerProfesseurModal';
+import MotDePasseProvisoireModal from '../components/professeurs/MotDePasseProvisoireModal';
 
 export default function AdminProfesseursPage() {
   const navigate = useNavigate();
+  const peutModifierTarifs = ['admin', 'directeur'].includes(useAuth().user?.role);
   const [professeurs, setProfesseurs] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -18,14 +23,17 @@ export default function AdminProfesseursPage() {
   const [showTarifForm, setShowTarifForm] = useState(false);
   const [tariffs, setTariffs] = useState({});
   const [editingTariff, setEditingTariff] = useState(null);
+  const [filtre, setFiltre] = useState('actif');
+  const [showCreer, setShowCreer] = useState(false);
+  const [secret, setSecret] = useState(null);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [filtre]);
 
   async function loadData() {
     try {
-      const profsRes = await client.get('/professeurs');
+      const profsRes = await client.get('/professeurs', { params: filtre === 'tous' ? {} : { statut: filtre } });
       setProfesseurs(profsRes.data);
 
       // Charger les tarifs pour chaque professeur
@@ -59,8 +67,8 @@ export default function AdminProfesseursPage() {
       }));
       setSuccess('Tarif supprimé avec succès');
       setTimeout(() => setSuccess(null), 2000);
-    } catch {
-      setError('Erreur lors de la suppression');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erreur lors de la suppression'));
     }
   }
 
@@ -90,8 +98,13 @@ export default function AdminProfesseursPage() {
       <AdminPageHeader
         icon="👨‍🏫"
         title="Gestion des Professeurs & Tarifs"
-        description="Gérez vos professeurs et leurs tarifs horaires"
+        description="Gérez vos professeurs, leurs comptes et leurs tarifs horaires"
         badge={`${professeurs.length} professeurs`}
+        action={
+          <AdminButton variant="primary" icon="➕" onClick={() => setShowCreer(true)}>
+            Nouveau professeur
+          </AdminButton>
+        }
       />
 
       <AdminPageContent>
@@ -116,6 +129,26 @@ export default function AdminProfesseursPage() {
             marginBottom: '16px',
           }}>
             ✓ {success}
+          </div>
+        )}
+
+        <div role="group" aria-label="Filtrer par statut" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          {[['actif', 'Actifs'], ['inactif', 'Désactivés'], ['tous', 'Tous']].map(([valeur, libelle]) => (
+            <AdminButton
+              key={valeur}
+              size="sm"
+              variant={filtre === valeur ? 'primary' : 'secondary'}
+              aria-pressed={filtre === valeur}
+              onClick={() => setFiltre(valeur)}
+            >
+              {libelle}
+            </AdminButton>
+          ))}
+        </div>
+
+        {professeurs.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#6b7280', padding: '32px' }}>
+            Aucun professeur {filtre === 'inactif' ? 'désactivé' : filtre === 'actif' ? 'actif' : ''}.
           </div>
         )}
 
@@ -147,7 +180,10 @@ export default function AdminProfesseursPage() {
                 }}>
                   <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate(`/admin/professeurs/${prof.id}`)}>
                     <h3 style={{ margin: '0 0 8px 0' }}>
-                      {prof.prenom} {prof.nom}
+                      {prof.prenom} {prof.nom}{' '}
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: prof.statut === 'actif' ? '#047857' : '#6b7280' }}>
+                        {prof.statut === 'actif' ? 'Actif' : 'Désactivé'}
+                      </span>
                     </h3>
                     <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9em' }}>
                       {prof.email}
@@ -198,18 +234,20 @@ export default function AdminProfesseursPage() {
                     <h4 style={{ margin: 0, fontWeight: '600' }}>
                       📊 Tarifs ({profTariffs.length})
                     </h4>
-                    <AdminButton
-                      variant="primary"
-                      size="sm"
-                      icon="➕"
-                      onClick={() => {
-                        setSelectedProf(prof.id);
-                        setShowTarifForm(true);
-                        setEditingTariff(null);
-                      }}
-                    >
-                      Ajouter
-                    </AdminButton>
+                    {peutModifierTarifs && (
+                      <AdminButton
+                        variant="primary"
+                        size="sm"
+                        icon="➕"
+                        onClick={() => {
+                          setSelectedProf(prof.id);
+                          setShowTarifForm(true);
+                          setEditingTariff(null);
+                        }}
+                      >
+                        Ajouter
+                      </AdminButton>
+                    )}
                   </div>
 
                   {profTariffs.length === 0 ? (
@@ -262,11 +300,13 @@ export default function AdminProfesseursPage() {
                                 {!tariff.date_fin && ' → ∞'}
                               </div>
                             </div>
+                            {peutModifierTarifs && (
                             <div style={{ display: 'flex', gap: '8px' }}>
                               <AdminButton
                                 variant="secondary"
                                 size="sm"
                                 icon="✏️"
+                                aria-label="Modifier le tarif"
                                 onClick={() => {
                                   setSelectedProf(prof.id);
                                   setEditingTariff(tariff);
@@ -278,10 +318,12 @@ export default function AdminProfesseursPage() {
                                 variant="danger"
                                 size="sm"
                                 icon="🗑️"
+                                aria-label="Supprimer le tarif"
                                 onClick={() => handleDeleteTariff(prof.id, tariff.id)}
                               >
                               </AdminButton>
                             </div>
+                            )}
                           </div>
                         );
                       })}
@@ -292,6 +334,26 @@ export default function AdminProfesseursPage() {
             );
           })}
         </div>
+
+        {showCreer && (
+          <CreerProfesseurModal
+            onClose={() => setShowCreer(false)}
+            onCreated={({ professeur, motDePasse, mailEnvoye }) => {
+              setShowCreer(false);
+              setSecret({ professeur, motDePasse, mailEnvoye });
+              loadData();
+            }}
+          />
+        )}
+        {secret && (
+          <MotDePasseProvisoireModal
+            titre={`${secret.professeur.prenom} ${secret.professeur.nom} est créé`}
+            loginEmail={secret.professeur.user?.email}
+            motDePasse={secret.motDePasse}
+            mailEnvoye={secret.mailEnvoye}
+            onClose={() => setSecret(null)}
+          />
+        )}
 
         {/* Modal Tarif */}
         {showTarifForm && selectedProf && (

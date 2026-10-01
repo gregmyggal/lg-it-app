@@ -13,6 +13,11 @@ export default function ProtectedRoute({ roles, children }) {
     return <Navigate to="/connexion" replace />;
   }
 
+  // Mot de passe provisoire : changement obligatoire avant toute autre page.
+  if (user.must_change_password && pathname !== '/mot-de-passe') {
+    return <Navigate to="/mot-de-passe" replace />;
+  }
+
   // Rôle insuffisant : retour à l'accueil du portail (et non à la page de connexion).
   if (roles && !roles.includes(user.role)) {
     const accueil = user.role === 'professeur' ? '/mes-classes' : '/admin/classes';

@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>02 — Créer un admin/directeur</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f9fafb;
+      color: #111827;
+    }
+    .page { max-width: 1200px; margin: 0 auto; }
+    .demo-section {
+      margin-bottom: 32px;
+    }
+    .demo-section h2 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #374151;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .demo-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      min-height: 300px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    /* Modal */
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Modal Header */
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 0 8px;
+      transition: color 0.2s;
+    }
+    .modal-close:hover {
+      color: #111827;
+    }
+
+    /* Modal Body */
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Modal Footer */
+    .modal-footer {
+      padding: 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* Form Fields */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group .required {
+      color: #dc2626;
+      margin-left: 4px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px #dbeafe;
+    }
+    .form-group input.error {
+      border-color: #dc2626;
+    }
+    .form-group input.error:focus {
+      box-shadow: 0 0 0 3px #fee2e2;
+    }
+    .form-description {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .form-error {
+      font-size: 12px;
+      color: #dc2626;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .btn-secondary {
+      background: white;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    /* Success State */
+    .success-content {
+      text-align: center;
+      padding: 32px 24px;
+    }
+    .success-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .success-content h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .success-content p {
+      margin: 0 0 24px 0;
+      color: #6b7280;
+    }
+    .password-display {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 24px 0;
+    }
+    .password-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0c4a6e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .password-value {
+      background: white;
+      border: 1px solid #e0f2fe;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .copy-btn {
+      padding: 6px 12px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .copy-btn:hover {
+      background: #0284c7;
+    }
+    .copy-btn.copied {
+      background: #10b981;
+    }
+    .password-note {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 16px 0 0 0;
+    }
+
+    /* States Navigation */
+    .states-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .state-btn {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .state-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>02 — Créer un admin ou directeur</h1>
+
+    <div class="states-nav">
+      <button class="state-btn active" onclick="showState('form')">Formulaire</button>
+      <button class="state-btn" onclick="showState('error')">Erreur (email pris)</button>
+      <button class="state-btn" onclick="showState('success')">Succès (mot de passe affiché)</button>
+    </div>
+
+    <!-- Form State -->
+    <div id="state-form" class="demo-section">
+      <h2>Formulaire de création</h2>
+      <div class="demo-content">
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2>Créer un nouveau staff</h2>
+              <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Rôle <span class="required">*</span></label>
+                <select>
+                  <option value="">Sélectionner un rôle...</option>
+                  <option value="admin">Admin</option>
+                  <option value="directeur">Directeur</option>
+                </select>
+                <p class="form-description">Détermine les permissions d'accès.</p>
+              </div>
+
+              <div class="form-group">
+                <label>Nom complet <span class="required">*</span></label>
+                <input type="text" placeholder="Ex: Marie Dupont">
+              </div>
+
+              <div class="form-group">
+                <label>Email de connexion <span class="required">*</span></label>
+                <input type="email" placeholder="Ex: marie.dupont@logiscool.com">
+                <p class="form-description">Identifiant unique de connexion. Doit être unique dans le système.</p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary">Annuler</button>
+              <button class="btn btn-primary">Créer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State: Email Already Used -->
+    <div id="state-error" class="demo-section" style="display:none;">
+      <h2>Erreur : Email déjà pris</h2>
+      <div class="demo-content">
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2>Créer un nouveau staff</h2>
+              <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Rôle <span class="required">*</span></label>
+                <select>
+                  <option value="">Sélectionner un rôle...</option>
+                  <option value="admin">Admin</option>
+                  <option value="directeur" selected>Directeur</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Nom complet <span class="required">*</span></label>
+                <input type="text" placeholder="Ex: Marie Dupont" value="Jean Martin">
+              </div>
+
+              <div class="form-group">
+                <label>Email de connexion <span class="required">*</span></label>
+                <input type="email" placeholder="Ex: marie.dupont@logiscool.com" value="marie.dupont@logiscool.com" class="error">
+                <p class="form-description">Identifiant unique de connexion. Doit être unique dans le système.</p>
+                <div class="form-error">
+                  <span>⚠️</span>
+                  <span>Cet email de connexion est déjà utilisé. Veuillez en choisir un autre.</span>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary">Annuler</button>
+              <button class="btn btn-primary">Créer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success State: Password Displayed -->
+    <div id="state-success" class="demo-section" style="display:none;">
+      <h2>Succès : Mot de passe généré et affiché</h2>
+      <div class="demo-content">
+        <div class="modal-overlay">
+          <div class="modal">
+            <div class="modal-header">
+              <h2>Compte créé avec succès</h2>
+              <button class="modal-close" aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-body">
+              <div class="success-content">
+                <div class="success-icon">✅</div>
+                <h3>Directeur créé</h3>
+                <p>Jean Martin a été créé en tant que Directeur.</p>
+
+                <div class="password-display">
+                  <div class="password-label">Mot de passe provisoire (à communiquer)</div>
+                  <div class="password-value">
+                    <span id="password-display">Tr9@KqL2mX#z</span>
+                    <button class="copy-btn" onclick="copyPassword()" id="copy-btn">Copier</button>
+                  </div>
+                  <div class="password-note">
+                    ⚠️ Ce mot de passe s'affiche <strong>une seule fois</strong>. Conservez-le pour le communiquer au directeur.
+                    À la première connexion, il devra le changer obligatoirement.
+                  </div>
+                </div>
+
+                <p style="margin-top: 16px; font-size: 13px; color: #6b7280;">
+                  Communiquez ce mot de passe de manière sécurisée. Le directeur devra le changer à sa première connexion.
+                </p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-primary">Fermer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showState(state) {
+      document.querySelectorAll('[id^="state-"]').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.querySelectorAll('.state-btn').forEach(el => {
+        el.classList.remove('active');
+      });
+
+      document.getElementById('state-' + state).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    function copyPassword() {
+      const password = document.getElementById('password-display').textContent;
+      navigator.clipboard.writeText(password).then(() => {
+        const btn = document.getElementById('copy-btn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Copié ✓';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

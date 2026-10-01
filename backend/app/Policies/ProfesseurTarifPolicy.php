@@ -18,19 +18,19 @@ class ProfesseurTarifPolicy
         return $user->isStaff();
     }
 
-    // Seul admin peut créer/modifier des tarifs
+    // Admin et directeur gèrent les tarifs (création, modification, suppression)
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isStaff();
     }
 
     public function update(User $user, ProfesseurTarif $tarif): bool
     {
-        return $user->isAdmin();
+        return $user->isStaff();
     }
 
     public function delete(User $user, ProfesseurTarif $tarif): bool
     {
-        return $user->isAdmin();
+        return $user->isStaff();
     }
 }

@@ -59,6 +59,11 @@ export default function PortalLayout() {
               <NavLink to="/admin/professeurs" className={navClass}>
                 👨‍🏫 Professeurs & Tarifs
               </NavLink>
+              {user?.role === 'admin' && (
+                <NavLink to="/admin/staff" className={navClass}>
+                  👥 Gestion de l'équipe
+                </NavLink>
+              )}
 
               <div className="portal-side__group-label">Scolarité</div>
               <NavLink to="/admin/classes" className={navClass}>

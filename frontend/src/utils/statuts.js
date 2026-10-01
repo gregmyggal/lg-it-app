@@ -146,6 +146,12 @@ export const TYPES_ACTIVITE = {
   preparation: { label: 'Préparation', tone: 'info' },
 };
 
+/** Statuts du staff (admins et directeurs) */
+export const STATUTS_STAFF = {
+  actif: { label: 'Actif', tone: 'success' },
+  inactif: { label: 'Inactif', tone: 'neutral' },
+};
+
 /** Une saisie n'est modifiable par le professeur que tant qu'elle est en brouillon. */
 export function estBrouillon(statut) {
   return statut === 'brouillon';
@@ -173,4 +179,15 @@ export const ACTIONS_VERSION = {
 export function libellePortee(seanceNumero) {
   if (seanceNumero === null || seanceNumero === undefined) return 'Liens généraux';
   return seanceNumero > 14 ? `Hors programme (séance ${seanceNumero})` : `Séance ${seanceNumero}`;
+}
+
+/** Libellé lisible d'un rôle d'utilisateur. */
+export function libelleRole(role) {
+  const ROLES = {
+    admin: 'Administrateur',
+    directeur: 'Directeur',
+    professeur: 'Professeur',
+    eleve: 'Élève',
+  };
+  return ROLES[role] || role;
 }

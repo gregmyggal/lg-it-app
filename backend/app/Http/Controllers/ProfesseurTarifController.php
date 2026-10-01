@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Professeur;
 use App\Models\ProfesseurTarif;
+use App\Services\ProfesseurTarifService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ProfesseurTarifController extends Controller
 {
+    public function __construct(private readonly ProfesseurTarifService $tarifs) {}
+
     // Récupère tous les tarifs pour un professeur
     public function index(Request $request, Professeur $professeur)
     {
@@ -25,63 +28,57 @@ class ProfesseurTarifController extends Controller
         $data = $request->validate([
             'tarif_horaire_eur' => ['required', 'numeric', 'min:0', 'max:999.99'],
             'date_debut' => ['required', 'date'],
-            'date_fin' => ['nullable', 'date', 'after:date_debut'],
+            'date_fin' => ['nullable', 'date'],
         ]);
 
-        $tarif = $professeur->tarifs()->create($data);
-
-        return response()->json($tarif, 201);
+        return response()->json($this->tarifs->creer($professeur, $data), 201);
     }
 
     // Met à jour un tarif existant
-    public function update(Request $request, Professeur $professeur, ProfesseurTarif $tarif)
+    public function update(Request $request, Professeur $professeur, ProfesseurTarif $professeurTarif)
     {
-        Gate::authorize('update', $tarif);
+        Gate::authorize('update', $professeurTarif);
 
         // Vérifier que le tarif appartient bien au professeur
-        if ($tarif->professeur_id !== $professeur->id) {
+        if ($professeurTarif->professeur_id !== $professeur->id) {
             abort(404);
         }
 
         $data = $request->validate([
             'tarif_horaire_eur' => ['sometimes', 'numeric', 'min:0', 'max:999.99'],
             'date_debut' => ['sometimes', 'date'],
-            'date_fin' => ['nullable', 'date', 'after:date_debut'],
+            'date_fin' => ['nullable', 'date'],
         ]);
 
-        $tarif->update($data);
-
-        return $tarif;
+        return $this->tarifs->modifier($professeurTarif, $data);
     }
 
     // Termine un tarif (définit date_fin)
-    public function terminate(Request $request, Professeur $professeur, ProfesseurTarif $tarif)
+    public function terminate(Request $request, Professeur $professeur, ProfesseurTarif $professeurTarif)
     {
-        Gate::authorize('update', $tarif);
+        Gate::authorize('update', $professeurTarif);
 
-        if ($tarif->professeur_id !== $professeur->id) {
+        if ($professeurTarif->professeur_id !== $professeur->id) {
             abort(404);
         }
 
         $data = $request->validate([
-            'date_fin' => ['required', 'date', 'after:date_debut'],
+            'date_fin' => ['required', 'date'],
         ]);
 
-        $tarif->update($data);
-
-        return $tarif;
+        return $this->tarifs->modifier($professeurTarif, $data);
     }
 
     // Supprime un tarif
-    public function destroy(Professeur $professeur, ProfesseurTarif $tarif)
+    public function destroy(Professeur $professeur, ProfesseurTarif $professeurTarif)
     {
-        Gate::authorize('delete', $tarif);
+        Gate::authorize('delete', $professeurTarif);
 
-        if ($tarif->professeur_id !== $professeur->id) {
+        if ($professeurTarif->professeur_id !== $professeur->id) {
             abort(404);
         }
 
-        $tarif->delete();
+        $this->tarifs->supprimer($professeurTarif);
 
         return response()->noContent();
     }

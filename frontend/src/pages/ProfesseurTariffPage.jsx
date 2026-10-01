@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import client from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 import {
   AdminPageHeader,
   AdminPageContent,
@@ -14,6 +15,7 @@ import AdminButton from '../components/AdminButton';
 export default function ProfesseurTariffPage() {
   const { id } = useParams();
   const professeurId = parseInt(id);
+  const peutModifier = ['admin', 'directeur'].includes(useAuth().user?.role);
 
   const [professeur, setProfesseur] = useState(null);
   const [editingTariff, setEditingTariff] = useState(null);
@@ -144,7 +146,7 @@ export default function ProfesseurTariffPage() {
         )}
 
         {/* Bouton ajouter tarif */}
-        {!showForm && (
+        {peutModifier && !showForm && (
           <AdminButton
             variant="primary"
             icon="➕"
@@ -187,7 +189,7 @@ export default function ProfesseurTariffPage() {
             onEdit={handleEdit}
             onTerminate={handleTerminate}
             onDelete={handleDelete}
-            readonly={false}
+            readonly={!peutModifier}
           />
         </div>
 

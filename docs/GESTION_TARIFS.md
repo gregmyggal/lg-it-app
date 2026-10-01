@@ -93,7 +93,7 @@ Permissions: admin, directeur
 POST /api/professeurs/{professeur_id}/tarifs
 Authorization: Bearer {token}
 Content-Type: application/json
-Permissions: admin
+Permissions: admin, directeur
 
 Body:
 {
@@ -124,7 +124,7 @@ Body:
 PUT /api/professeurs/{professeur_id}/tarifs/{tarif_id}
 Authorization: Bearer {token}
 Content-Type: application/json
-Permissions: admin
+Permissions: admin, directeur
 
 Body:
 {
@@ -146,7 +146,7 @@ Body:
 POST /api/professeurs/{professeur_id}/tarifs/{tarif_id}/terminate
 Authorization: Bearer {token}
 Content-Type: application/json
-Permissions: admin
+Permissions: admin, directeur
 
 Body:
 {
@@ -172,7 +172,7 @@ Body:
 ```http
 DELETE /api/professeurs/{professeur_id}/tarifs/{tarif_id}
 Authorization: Bearer {token}
-Permissions: admin
+Permissions: admin, directeur
 ```
 
 **Response:** 204 No Content
@@ -316,16 +316,15 @@ Tarif 2: 8.00€, debut=2026-09-01, fin=NULL
 | Action | Admin | Directeur | Professeur |
 |--------|-------|-----------|-----------|
 | Voir tarifs | ✅ | ✅ | ❌ |
-| Créer tarif | ✅ | ❌ | ❌ |
-| Modifier tarif | ✅ | ❌ | ❌ |
-| Supprimer tarif | ✅ | ❌ | ❌ |
-| Terminer tarif | ✅ | ❌ | ❌ |
+| Créer tarif | ✅ | ✅ | ❌ |
+| Modifier tarif | ✅ | ✅ | ❌ |
+| Supprimer tarif | ✅ | ✅ | ❌ |
+| Terminer tarif | ✅ | ✅ | ❌ |
 | Voir tarif effectif | ✅ | ✅ | ❌ |
 
 **Policy:** `app/Policies/ProfesseurTarifPolicy.php`
-- Seul **admin** peut créer/modifier/supprimer
-- Directeur peut **visu** uniquement
-- Professeur: **aucun accès** (tarif = privé admin)
+- **Admin et directeur** peuvent créer/modifier/supprimer
+- Professeur: **aucun accès** (tarif = privé direction)
 
 ---
 

@@ -41,11 +41,11 @@ class TypesCoursSupprimesTest extends TestCase
 
         $prof = $this->postJson('/api/professeurs', [
             'prenom' => 'Zoé', 'nom' => 'Test', 'email' => 'zoe@test.be', 'login_email' => 'zoe.login@test.be',
-            'password' => 'motdepasse1', 'date_entree' => '2026-01-01', 'types_cours' => [1],
+            'date_entree' => '2026-01-01', 'types_cours' => [1],
         ])->assertCreated();
-        $this->assertArrayNotHasKey('types_cours', $prof->json());
-        $this->putJson("/api/professeurs/{$prof->json('id')}", ['telephone' => '0470', 'types_cours' => [2]])->assertOk()->assertJsonMissingPath('types_cours');
-        $this->getJson("/api/professeurs/{$prof->json('id')}")->assertOk()->assertJsonMissingPath('types_cours');
+        $this->assertArrayNotHasKey('types_cours', $prof->json('data'));
+        $this->putJson("/api/professeurs/{$prof->json('data.id')}", ['telephone' => '0470', 'types_cours' => [2]])->assertOk()->assertJsonMissingPath('types_cours');
+        $this->getJson("/api/professeurs/{$prof->json('data.id')}")->assertOk()->assertJsonMissingPath('types_cours');
         $this->assertArrayNotHasKey('types_cours', $this->getJson('/api/professeurs')->assertOk()->json('0'));
     }
 
