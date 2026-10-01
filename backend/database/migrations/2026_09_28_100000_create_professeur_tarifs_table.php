@@ -17,7 +17,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Index pour recherches: "quel tarif valide pour ce professeur à cette date?"
-            $table->index(['professeur_id', 'date_debut', 'date_fin']);
+            $table->index(['professeur_id', 'date_debut', 'date_fin'], 'professeur_tarifs_prof_periode_index');
         });
     }
 

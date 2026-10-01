@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('remplace_par_professeur_id')->nullable()->constrained('professeurs')->nullOnDelete();
             $table->timestamps();
 
-            $table->unique(['course_session_id', 'professeur_id']);
+            $table->unique(['course_session_id', 'professeur_id'], 'session_professors_session_prof_unique');
             $table->index('professeur_id');
         });
     }

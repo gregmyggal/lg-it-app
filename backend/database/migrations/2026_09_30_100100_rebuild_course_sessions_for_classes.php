@@ -102,7 +102,7 @@ return new class extends Migration
             $table->timestamps();
             $table->index('course_session_id');
             $table->index(['professeur_id', 'created_at']);
-            $table->unique(['course_session_id', 'professeur_id', 'role']);
+            $table->unique(['course_session_id', 'professeur_id', 'role'], 'session_professors_session_prof_role_unique');
         });
 
         Schema::table('timesheets', function (Blueprint $table) {
