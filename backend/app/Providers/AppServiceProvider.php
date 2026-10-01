@@ -6,7 +6,10 @@ use App\Models\Anniversaire;
 use App\Models\Cours;
 use App\Models\Formation;
 use App\Models\Stage;
+use App\Models\User;
+use App\Policies\UserPolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,5 +37,8 @@ class AppServiceProvider extends ServiceProvider
             'formation' => Formation::class,
             'anniversaire' => Anniversaire::class,
         ]);
+
+        // ADMIN-01 : enregistrer la Policy pour User
+        Gate::policy(User::class, UserPolicy::class);
     }
 }

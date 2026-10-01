@@ -3,6 +3,7 @@
 use App\Http\Controllers\AnneeScolaireController;
 use App\Http\Controllers\AnniversaireController;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\EnsureCompteActif;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendrierScolaireController;
 use App\Http\Controllers\ClasseController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\ProfesseurTarifController;
 use App\Http\Controllers\SessionProfesseurController;
 use App\Http\Controllers\ShareCodeController;
+use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
@@ -44,9 +46,10 @@ Route::post('/login', [AuthController::class, 'login']);
 // Back-office — authentifié (Sanctum). Isolation par professeur et verrous
 // appliqués via les Policies (cf. app/Policies).
 // ---------------------------------------------------------------------------
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/me/mot-de-passe', [AuthController::class, 'changerMotDePasse']);
 
     // "cours" est invariable en français : sans ce override, Laravel le singularise
     // (règle anglaise) en "cour" et casse le binding implicite vers Cours $cours.
@@ -70,6 +73,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/types-formation/{typeFormation}', [TypeFormationController::class, 'update']);
     Route::delete('/types-formation/{typeFormation}', [TypeFormationController::class, 'destroy']);
     Route::apiResource('professeurs', ProfesseurController::class);
+    // PROF-01 : cycle de vie du professeur et de son compte.
+    Route::get('/professeurs/{professeur}/impact-desactivation', [ProfesseurController::class, 'impact']);
+    Route::post('/professeurs/{professeur}/desactiver', [ProfesseurController::class, 'desactiver']);
+    Route::post('/professeurs/{professeur}/reactiver', [ProfesseurController::class, 'reactiver']);
+    Route::post('/professeurs/{professeur}/reinitialiser-mot-de-passe', [ProfesseurController::class, 'reinitialiserMotDePasse']);
+    Route::put('/professeurs/{professeur}/compte', [ProfesseurController::class, 'changerEmailConnexion']);
+
+    // ADMIN-01 : gestion des comptes admin/directeur (staff).
+    Route::apiResource('staff', StaffController::class);
+    Route::post('/staff/{staff}/desactiver', [StaffController::class, 'desactiver']);
+    Route::post('/staff/{staff}/reactiver', [StaffController::class, 'reactiver']);
+    Route::post('/staff/{staff}/reinitialiser-mot-de-passe', [StaffController::class, 'reinitialiserMotDePasse']);
 
     // CLS-01 T2 : assignation des professeurs aux classes (mêmes services dans les deux sens),
     // remplacement ponctuel sur une session, portail « Mes classes ».
