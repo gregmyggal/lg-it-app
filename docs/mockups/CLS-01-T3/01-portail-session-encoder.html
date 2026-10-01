@@ -1,0 +1,240 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portail — Session et encodage — Maquette CLS-01 T3</title><style>
+
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+.s-loading,.s-empty,.s-error,.s-data,.s-success,.s-ro,.s-refus{}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]):not([data-state=success]):not([data-state=readonly]) .s-data{display:none!important}
+body:not([data-state=success]) .s-success{display:none!important}
+body:not([data-state=readonly]) .s-ro{display:none!important}
+body:not([data-state=refus]) .s-refus{display:none!important}
+body[data-state=readonly] .edit{display:none!important}
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+.phone{max-width:375px;margin:16px auto;border:1px solid #9ca3af;border-radius:24px;overflow:hidden;background:var(--bg);box-shadow:0 10px 15px -3px rgba(0,0,0,.15)}.ph-h{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}.ph-b{padding:8px 16px 24px}.pp{display:none}.pp.on{display:block}.card.empty{padding:24px 12px}@media (max-width:420px){.phone{margin:0;border-radius:0;border:0}}
+.dot-s{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor}
+.sheet{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sheet .sb{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:420px;max-height:94vh;overflow:auto;padding:16px}
+.sheet .sb footer{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.sess{border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px}
+.sess .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.btn-l{min-height:48px;width:100%;font-size:15px}
+.radio{display:flex;gap:8px}.radio label{flex:1;text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;border:1px solid #d1d5db;border-radius:8px;padding:10px;min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;margin:0}
+.b-ind{background:#e0e7ff;color:#3730a3}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi .card b{font-size:24px;display:block}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}.seg button{border:0;background:#fff;padding:8px 14px;cursor:pointer;font-weight:600}.seg button[aria-pressed=true]{background:var(--primary);color:#fff}
+</style></head>
+<body data-state="data">
+<div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-01 · T3</strong><span>État affiché :</span><div class="sw"><button type="button" data-s="loading" aria-pressed="false" onclick="setState('loading')">Chargement</button><button type="button" data-s="empty" aria-pressed="false" onclick="setState('empty')">Vide</button><button type="button" data-s="error" aria-pressed="false" onclick="setState('error')">Erreur</button><button type="button" data-s="data" aria-pressed="true" onclick="setState('data')">Données</button><button type="button" data-s="success" aria-pressed="false" onclick="setState('success')">Confirmation</button></div><a href="index.html">← Sommaire</a></div>
+<div class="note-m" style="margin:16px auto;max-width:375px">Écran mobile-first (375 px) : « Mes classes › Scratch Junior › sessions » avec statut d’encodage par session. <strong>Raccourci</strong> pour encoder une séance tout de suite ; l’écran principal est « Encoder mon mois » (02). La feuille remplace la fenêtre « illustrative » de 06. Date simulée : <strong>jeudi 03/12/2026</strong>. Changez de professeur avec les boutons « Vue de ». Boutons de 48 px.</div>
+<div class="phone">
+<div class="ph-h"><span class="brand" style="margin:0"><i></i>Logiscool Pays Vert</span><span class="small">☰ Menu</span></div>
+<div class="ph-b">
+<p class="small" style="margin-top:8px"><a href="../CLS-01/06-portail-mes-classes.html">‹ Mes classes</a></p>
+<h1 style="font-size:22px">Scratch Junior</h1>
+<p class="small muted">mercredi 14h–17h · Salle 3 · 2026-2027 · Période 1</p>
+
+<div class="s-loading" role="status" aria-busy="true"><span class="sr">Chargement des sessions…</span><span class="sk" style="height:22px;margin:14px 0;width:100%" aria-hidden="true"></span><span class="sk" style="height:48px;margin:14px 0;width:93%" aria-hidden="true"></span><span class="sk" style="height:22px;margin:14px 0;width:86%" aria-hidden="true"></span><span class="sk" style="height:48px;margin:14px 0;width:95%" aria-hidden="true"></span></div>
+
+<div class="s-error banner err" role="alert" style="margin-top:12px"><div class="tx"><strong>Impossible de charger les sessions de cette classe.</strong> Vérifiez votre connexion puis réessayez.</div><button class="btn btn-s btn-sm" type="button" onclick="setState('data')">Réessayer</button></div>
+
+<div class="s-empty card empty" style="margin-top:12px"><div class="ic" aria-hidden="true">📅</div><h2>Aucune session à afficher</h2><p>Vous n’êtes assigné à aucune session de cette classe pour l’instant. Dès que la direction vous y assignera, vos sessions apparaîtront ici avec leur statut d’encodage.</p><a class="btn btn-s" href="../CLS-01/06-portail-mes-classes.html">Retour à mes classes</a></div>
+
+<div class="s-data">
+<div class="row" role="group" aria-label="Simuler un professeur" style="margin-top:8px"><span class="small muted">Vue de :</span><button class="btn btn-p btn-sm" id="pa" type="button" onclick="per('alice')">Alice (principale)</button><button class="btn btn-s btn-sm" id="pb" type="button" onclick="per('bob')">Bob (co-enseignant)</button><button class="btn btn-s btn-sm" id="pc" type="button" onclick="per('carol')">Carol (remplaçante)</button></div>
+<p id="role" style="margin:10px 0 0"></p>
+<div id="banner" class="banner warn" role="status" style="margin:12px 0 0"></div>
+<h2 style="font-size:16px;margin:14px 0 0">Mes sessions</h2>
+<ul id="list" style="list-style:none;padding:0;margin:0"></ul>
+<p class="small muted" style="margin-top:12px">Vos heures sont personnelles : elles ne sont jamais partagées avec un autre professeur de la classe.</p>
+<p class="small" style="margin-top:8px"><a href="02-portail-mon-mois.html">Encoder tout mon mois (écran principal, avec mes autres heures) →</a></p>
+</div>
+</div>
+</div>
+
+<!-- Feuille d'encodage (bottom sheet) -->
+<div class="modal sheet" id="m-enc" role="dialog" aria-modal="true" aria-labelledby="m-enc-t"><div class="sb">
+<div class="row" style="justify-content:space-between"><h2 id="m-enc-t" style="font-size:18px">Encoder mes heures</h2><button class="x" type="button" aria-label="Fermer la fenêtre" onclick="closeM('m-enc')">×</button></div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+<div><label for="e0">Classe et séance</label><input type="text" id="e0" readonly></div>
+<div class="grid2"><div><label for="e1">Date</label><input type="text" id="e1" readonly></div><div><label for="e2">Durée (heures)</label><input type="text" inputmode="decimal" id="e2" value="3" aria-describedby="e2h" oninput="chk()"></div></div>
+<p class="help" id="e2h" style="margin:-6px 0 0">Durée de la séance : 14h–17h (3 h). Vous pouvez l’ajuster (0,5 h à 24 h).</p>
+<div id="dur-info" class="banner info" style="display:none;margin:0"><div class="tx">Cette durée diffère de celle de la séance (3 h). Ajoutez un commentaire pour la direction.</div></div>
+<fieldset style="border:0;padding:0;margin:0"><legend class="lbl">Type d’activité</legend><div class="radio"><label><input type="radio" name="ta" value="animation" checked onchange="chk()"> Animation</label><label><input type="radio" name="ta" value="preparation" onchange="chk()"> Préparation</label></div><p class="help">Une seule saisie par session et par type d’activité.</p></fieldset>
+<div><label for="e3">Commentaire (facultatif)</label><textarea id="e3" rows="2"></textarea></div>
+<p class="small"><strong>Montant : <span id="e-m">36,00 €</span></strong> (vos heures uniquement)</p><p class="small" id="e-note"></p>
+</div>
+<footer id="f-edit"><button class="btn btn-p btn-l" type="button" onclick="doSubmit()">Soumettre les heures</button><button class="btn btn-s btn-l" type="button" onclick="doDraft()">Enregistrer le brouillon</button></footer>
+<footer id="f-ro" style="display:none"><p class="small muted" id="ro-why"></p><button class="btn btn-s btn-l" type="button" onclick="closeM('m-enc')">Fermer</button></footer>
+</div></div>
+
+<div class="toast s-success" role="status" aria-live="polite"><span aria-hidden="true">✔</span><span id="toast-txt">Heures soumises.</span></div>
+<script>
+
+function setState(s){document.body.setAttribute('data-state',s);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});}
+var lastFocus=null;
+function openM(id){var m=document.getElementById(id);if(!m)return;lastFocus=document.activeElement;m.classList.add('open');var f=m.querySelector('input,select,button,textarea');if(f)f.focus();}
+function closeM(id){var m=document.getElementById(id);if(m)m.classList.remove('open');if(lastFocus)lastFocus.focus();}
+document.addEventListener('keydown',function(e){
+  var o=document.querySelector('.modal.open');
+  if(e.key==='Escape'&&o){o.classList.remove('open');if(lastFocus)lastFocus.focus();}
+  if(e.key==='Tab'&&o){var els=o.querySelectorAll('input:not([disabled]),select,button:not([disabled]),textarea,a[href]');if(!els.length)return;var a=els[0],z=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
+});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function confirmM(id,toast){closeM(id);setState('success');var t=document.getElementById('toast-txt');if(t&&toast)t.textContent=toast;}
+
+
+/* Données d'exemple : classe Scratch Junior, mercredi 14h-17h. Statuts d'encodage = statuts existants (brouillon, soumis, confirmé, généré) + « à encoder » (aucune saisie). */
+var D={1:'mer. 07/10/2026',2:'mer. 14/10/2026',3:'mer. 21/10/2026',4:'mer. 18/11/2026',5:'mer. 25/11/2026',6:'mer. 02/12/2026','6b':'mer. 16/12/2026',7:'mer. 06/01/2027',8:'mer. 13/01/2027'};
+function L(k){return k==='6b'?'Séance 6 bis':'Séance '+k}
+var P={
+ alice:{role:'<span class="badge b-blue">Vous : principale</span> <span class="badge b-ind">Bob Leroy · co-enseignant</span> <span class="badge b-school">Carol Simon · remplaçante séance 5</span>',
+  s:[[1,'genere'],[2,'confirme'],[3,'soumis'],[4,'brouillon'],[5,'remplacee','Carol Simon','soumis'],[6,'annulee'],['6b','avenir'],[7,'avenir']]},
+ bob:{role:'<span class="badge b-ind">Vous : co-enseignant</span> <span class="badge b-blue">Alice Dupont · principale</span>',
+  s:[[1,'soumis'],[2,'soumis'],[3,'soumis'],[4,'a_encoder'],[5,'a_encoder'],[6,'annulee'],['6b','avenir'],[7,'avenir']]},
+ carol:{role:'<span class="badge b-school">Vous : remplaçante sur la séance 5</span>',
+  s:[[5,'a_encoder','Alice Dupont']]}
+};
+var B={genere:['b-ok','Généré · 3 h'],confirme:['b-info','Confirmé · 3 h'],soumis:['b-blue','Soumis · 3 h'],brouillon:['b-warn','Brouillon · 3 h'],a_encoder:['b-warn','À encoder'],avenir:['b-gray','À venir'],annulee:['b-gray','Annulée'],remplacee:['b-school','Remplacée par ']};
+var who='alice',cur=null;
+function per(w){who=w;['a','b','c'].forEach(function(x){var b=document.getElementById('p'+x);var on=(x==='a'&&w==='alice')||(x==='b'&&w==='bob')||(x==='c'&&w==='carol');b.className='btn btn-sm '+(on?'btn-p':'btn-s')});render();}
+function render(){var p=P[who],h='',todo=0;
+ document.getElementById('role').innerHTML=p.role;
+ p.s.forEach(function(r){var n=r[0],t=r[1],lab=L(n),d=D[n],b=B[t],bt=b[1];
+  if(t==='a_encoder'||t==='brouillon')todo++;
+  if(t==='remplacee')bt=b[1]+r[2];
+  var hd='<div class="top"><div><strong>'+lab+'</strong><div class="small muted">'+(t==='annulee'?'<span class="strike">'+d+'</span>':d)+' · 14h–17h'+(r[2]&&t==='a_encoder'&&who==='carol'?' · remplace '+r[2]:'')+'</div></div><span class="badge '+b[0]+'">'+bt+'</span></div>',ac='';
+  if(t==='a_encoder')ac='<button class="btn btn-p btn-l" type="button" onclick="openEnc(\''+n+'\',\''+t+'\')">Encoder mes heures</button>';
+  if(t==='brouillon')ac='<button class="btn btn-p btn-l" type="button" onclick="openEnc(\''+n+'\',\''+t+'\')">Soumettre mes heures</button><p class="small muted">Brouillon : modifiable. Il n’est pas encore visible par la direction.</p>';
+  if(t==='soumis')ac='<button class="btn btn-s btn-l" type="button" onclick="openEnc(\''+n+'\',\'soumis\')">Voir mes heures</button><p class="small muted">🔒 Soumis : en attente de confirmation par la direction.</p>';
+  if(t==='confirme')ac='<button class="btn btn-s btn-l" type="button" onclick="openEnc(\''+n+'\',\'confirme\')">Voir mes heures</button><p class="small muted">🔒 Confirmé par la direction.</p>';
+  if(t==='genere')ac='<button class="btn btn-s btn-l" type="button" onclick="openEnc(\''+n+'\',\'genere\')">Voir mes heures</button><p class="small muted">🔒 Incluses dans votre PDF mensuel.</p>';
+  if(t==='remplacee')ac='<p class="small"><span class="badge b-blue">Vos heures : Soumis · 3 h</span></p><p class="small muted">Vos heures déjà encodées restent inchangées. Vous n’encodez plus de nouvelle saisie pour cette session : '+r[2]+' encode les siennes.</p><button class="btn btn-s btn-l" type="button" onclick="openEnc(\''+n+'\',\'soumis\')">Voir mes heures</button>';
+  if(t==='annulee')ac='<p class="small muted">Salle indisponible. Aucune heure à encoder pour une session annulée. Le bis « Séance 6 bis » (16/12/2026) la remplace ; le numéro de séance ne change pas.</p>';
+  if(t==='avenir')ac='<button class="btn btn-s btn-l" type="button" disabled aria-describedby="av'+n+'">Encoder mes heures</button><p class="small muted" id="av'+n+'">Disponible à partir du début de la séance, le '+d.slice(5)+' à 14 h.</p>';
+  h+='<li class="sess">'+hd+ac+'</li>';});
+ document.getElementById('list').innerHTML=h;
+ var bn=document.getElementById('banner');
+ if(todo){bn.style.display='';bn.innerHTML='<div class="tx"><strong>'+todo+(todo>1?' sessions à encoder':' session à encoder')+'</strong> — 3 h par session, prérempli.</div>';}
+ else{bn.style.display='none';}
+}
+function openEnc(n,t){cur=n;var ro=(t!=='a_encoder'&&t!=='brouillon');
+ document.getElementById('e0').value='Scratch Junior (mercredi) · '+L(n);
+ document.getElementById('e1').value=D[n];
+ document.getElementById('e2').value='3';document.getElementById('e2').readOnly=ro;
+ document.getElementById('e3').readOnly=ro;
+ document.querySelectorAll('input[name=ta]').forEach(function(r){r.disabled=ro});
+ document.getElementById('m-enc-t').textContent=ro?'Mes heures · '+L(n):'Encoder mes heures';
+ var co=who==='alice'?'Bob':'Alice';
+ document.getElementById('e-note').textContent=who==='carol'?'Vous encodez en tant que remplaçante : votre saisie est indépendante de celle d’Alice.':'Vos heures sont indépendantes de celles de '+co+'.';
+ document.getElementById('f-edit').style.display=ro?'none':'';
+ document.getElementById('f-ro').style.display=ro?'':'none';
+ var why={soumis:'Soumises : verrouillées en attente de confirmation par la direction.',confirme:'Confirmées par la direction : modification impossible.',genere:'Incluses dans un PDF généré : modification impossible.'}[t]||'';
+ document.getElementById('ro-why').textContent=why;chk();openM('m-enc');}
+function chk(){var v=parseFloat(String(document.getElementById('e2').value).replace(',','.'));document.getElementById('dur-info').style.display=(v&&v!==3)?'':'none';var pr=document.querySelector('input[name=ta]:checked').value==='preparation'?10:12;document.getElementById('e-m').textContent=((v||0)*pr).toFixed(2).replace('.',',')+' €';}
+function doSubmit(){var v=document.getElementById('e2').value;confirmM('m-enc','Heures de la '+L(cur).toLowerCase()+' soumises ('+v+' h). Elles sont visibles par la direction.');}
+function doDraft(){confirmM('m-enc','Brouillon enregistré pour la '+L(cur).toLowerCase()+'. Pensez à le soumettre.');}
+per('alice');
+</script></body></html>

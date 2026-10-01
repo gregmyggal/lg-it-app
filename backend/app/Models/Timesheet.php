@@ -50,9 +50,19 @@ class Timesheet extends Model
         return $this->belongsTo(User::class, 'validated_by');
     }
 
-    // Statuts 'soumis'/'valide' verrouillés — cf. règles côté service/policy (Phase 1).
+    public const STATUT_BROUILLON = 'brouillon';
+
+    public const STATUT_SOUMIS = 'soumis';
+
+    public const STATUT_CONFIRME = 'confirme';
+
+    public const STATUT_GENERE = 'genere';
+
+    public const STATUTS = [self::STATUT_BROUILLON, self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_GENERE];
+
+    // Verrouillées : toute saisie qui n'est plus un brouillon (soumise, confirmée, générée).
     public function isLocked(): bool
     {
-        return in_array($this->statut_validation, ['soumis', 'valide'], true);
+        return in_array($this->statut_validation, [self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_GENERE], true);
     }
 }

@@ -23,6 +23,8 @@ use App\Http\Controllers\ShareCodeController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
+use App\Http\Controllers\TimesheetMoisController;
+use App\Http\Controllers\TimesheetValidationController;
 use App\Http\Controllers\TypeCoursController;
 use App\Http\Controllers\TypeFormationController;
 use Illuminate\Support\Facades\Route;
@@ -137,6 +139,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/professeurs/{professeur}/tarifs/{professeurTarif}', [ProfesseurTarifController::class, 'destroy']);
     Route::post('/professeurs/{professeur}/tarifs/{professeurTarif}/terminate', [ProfesseurTarifController::class, 'terminate']);
     Route::get('/professeurs/{professeur}/tarif-effectif', [ProfesseurTarifController::class, 'effectiveAt']);
+
+    // CLS-01 T3 : écran mensuel, vue directeur par session, validation en lot (déclarées AVANT /timesheets/{timesheet}).
+    Route::get('/timesheets/mon-mois', [TimesheetMoisController::class, 'monMois']);
+    Route::post('/timesheets/soumettre-mois', [TimesheetMoisController::class, 'soumettreMois']);
+    Route::get('/timesheets/sessions-sans-heures', [TimesheetValidationController::class, 'sessionsSansHeures']);
+    Route::post('/timesheets/valider-lot', [TimesheetValidationController::class, 'validerLot']);
 
     Route::get('/timesheets', [TimesheetController::class, 'index']);
     Route::post('/timesheets', [TimesheetController::class, 'store']);

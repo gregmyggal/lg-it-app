@@ -44,9 +44,11 @@ export default function PortalLayout() {
               </NavLink>
             </>
           )}
-          <NavLink to="/timesheets" className={navClass}>
-            Timesheets
-          </NavLink>
+          {!isStaff && (
+            <NavLink to="/timesheets" className={navClass}>
+              Timesheets
+            </NavLink>
+          )}
 
           {isStaff && (
             <>

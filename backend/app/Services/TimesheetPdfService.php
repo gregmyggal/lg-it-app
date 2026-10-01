@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Timesheet;
 use App\Models\Professeur;
+use App\Models\Timesheet;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Mpdf\Mpdf;
-use Carbon\Carbon;
 
 class TimesheetPdfService
 {
@@ -19,7 +19,7 @@ class TimesheetPdfService
 
     /**
      * Génère un PDF de défraiement pour un mois complet
-     * Tous les timesheets doivent être en statut "confirmé" et signés
+     * Tous les timesheets doivent être en statut "confirme" et signés
      */
     public function generateMonthlyPdf(int $professeurId, int $year, int $month, int $userId): array
     {
@@ -29,7 +29,7 @@ class TimesheetPdfService
         $timesheets = Timesheet::where('professeur_id', $professeurId)
             ->whereYear('date_prestation', $year)
             ->whereMonth('date_prestation', $month)
-            ->where('statut_validation', 'confirmé')
+            ->where('statut_validation', 'confirme')
             ->get();
 
         if ($timesheets->isEmpty()) {
@@ -66,7 +66,7 @@ class TimesheetPdfService
                 ->whereYear('date_prestation', $year)
                 ->whereMonth('date_prestation', $month)
                 ->update([
-                    'statut_validation' => 'généré',
+                    'statut_validation' => 'genere',
                     'pdf_generated_at' => now(),
                     'pdf_generated_by' => $userId,
                 ]);
@@ -78,7 +78,7 @@ class TimesheetPdfService
                 'filename' => $filename,
             ];
         } catch (\Exception $e) {
-            return ['success' => false, 'error' => 'Erreur lors de la génération: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Erreur lors de la génération: '.$e->getMessage()];
         }
     }
 
@@ -142,9 +142,9 @@ class TimesheetPdfService
                     <td>{$date}</td>
                     <td style='text-align: right;'>{$totalHeures}h</td>
                     <td style='text-align: right;'>{$tarif}€</td>
-                    <td style='text-align: right;'>" . number_format($montantTotal, 2, ',', '') . "€</td>
+                    <td style='text-align: right;'>".number_format($montantTotal, 2, ',', '').'€</td>
                 </tr>
-            ";
+            ';
         }
 
         return "
@@ -194,7 +194,7 @@ class TimesheetPdfService
                         <tr class='total-row'>
                             <td colspan='2'><strong>TOTAL</strong></td>
                             <td style='text-align: right;'></td>
-                            <td style='text-align: right;'>" . number_format($synthese['total_montant'], 2, ',', '') . "€</td>
+                            <td style='text-align: right;'>".number_format($synthese['total_montant'], 2, ',', '')."€</td>
                         </tr>
                     </tbody>
                 </table>
@@ -207,12 +207,12 @@ class TimesheetPdfService
                 </div>
 
                 <div class='footer'>
-                    <p>Document généré le " . now()->format('d/m/Y à H:i') . "</p>
+                    <p>Document généré le ".now()->format('d/m/Y à H:i').'</p>
                     <p>Conformité: Max 44,02€/jour ✓</p>
                 </div>
             </body>
             </html>
-        ";
+        ';
     }
 
     /**
@@ -223,14 +223,15 @@ class TimesheetPdfService
         $timesheet = Timesheet::where('professeur_id', $professeurId)
             ->whereYear('date_prestation', $year)
             ->whereMonth('date_prestation', $month)
-            ->where('statut_validation', 'généré')
+            ->where('statut_validation', 'genere')
             ->first();
 
-        if (!$timesheet || !$timesheet->pdf_generated_at) {
+        if (! $timesheet || ! $timesheet->pdf_generated_at) {
             return null;
         }
 
         $filename = "defraiement_{$professeurId}_{$year}_{$month}.pdf";
+
         return "pdfs/{$filename}";
     }
 }

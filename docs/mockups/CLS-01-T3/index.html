@@ -1,0 +1,158 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sommaire — Heures par session — Maquette CLS-01 T3</title><style>
+
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+.s-loading,.s-empty,.s-error,.s-data,.s-success,.s-ro,.s-refus{}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]):not([data-state=success]):not([data-state=readonly]) .s-data{display:none!important}
+body:not([data-state=success]) .s-success{display:none!important}
+body:not([data-state=readonly]) .s-ro{display:none!important}
+body:not([data-state=refus]) .s-refus{display:none!important}
+body[data-state=readonly] .edit{display:none!important}
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+.phone{max-width:375px;margin:16px auto;border:1px solid #9ca3af;border-radius:24px;overflow:hidden;background:var(--bg);box-shadow:0 10px 15px -3px rgba(0,0,0,.15)}.ph-h{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}.ph-b{padding:8px 16px 24px}.pp{display:none}.pp.on{display:block}.card.empty{padding:24px 12px}@media (max-width:420px){.phone{margin:0;border-radius:0;border:0}}
+.dot-s{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor}
+.sheet{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sheet .sb{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:420px;max-height:94vh;overflow:auto;padding:16px}
+.sheet .sb footer{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.sess{border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px}
+.sess .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.btn-l{min-height:48px;width:100%;font-size:15px}
+.radio{display:flex;gap:8px}.radio label{flex:1;text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;border:1px solid #d1d5db;border-radius:8px;padding:10px;min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;margin:0}
+.b-ind{background:#e0e7ff;color:#3730a3}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi .card b{font-size:24px;display:block}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}.seg button{border:0;background:#fff;padding:8px 14px;cursor:pointer;font-weight:600}.seg button[aria-pressed=true]{background:var(--primary);color:#fff}
+</style></head>
+<body data-state="data">
+<div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-01 · T3</strong><span>Sommaire des maquettes « heures rattachées aux sessions »</span><a href="../CLS-01/index.html">Sommaire CLS-01 →</a></div>
+<div class="phead"><div class="in"><div><div class="crumb">CLS-01 › Tranche T3</div><h1>Heures (timesheets) rattachées aux sessions</h1><p class="d">Mock-ups statiques à valider avant tout développement. Chaque page a un sélecteur d’états (Chargement, Vide, Erreur, Données, Confirmation) en haut. Date simulée : jeudi 03/12/2026.</p></div><a class="btn btn-p" href="WORKFLOW_UX.md">Lire le workflow UX (WORKFLOW_UX.md)</a></div></div>
+<div class="content">
+<div class="banner info"><div class="tx"><strong>Données d’exemple :</strong> classe « Scratch Junior — mercredi 14h–17h » (2026-2027, période 1) ; Alice Dupont (principale), Bob Leroy (co-enseignant), Carol Simon (remplaçante de la séance 5) ; séance 6 annulée, bis le 16/12/2026.</div></div>
+<div class="sect"><header><h2>Maquettes</h2></header><div class="tw"><table><caption class="sr">Liste des maquettes</caption><thead><tr><th scope="col">Maquette</th><th scope="col">Écran existant remplacé ou étendu</th><th scope="col">Rôle</th><th scope="col">AC couverts</th></tr></thead><tbody>
+<tr><td><a href="02-portail-mon-mois.html"><strong>02 — Encoder mon mois (écran principal du professeur)</strong></a><div class="small muted">Navigation de mois, sessions préremplies, autres heures (préparation, etc.), total heures et montants, soumission du mois, signature mensuelle inchangée</div></td><td><code>TimesheetsPage</code> (devenue l’écran mensuel ; tableau et formulaire date + heures absorbés)</td><td>Professeur</td><td>AC-3, AC-25, AC-6, RG-5</td></tr>
+<tr><td><a href="01-portail-session-encoder.html"><strong>01 — Mes classes › sessions (raccourci d’encodage)</strong></a><div class="small muted">Mobile 375 px : statut d’encodage par session, encodage d’une séance en 2 clics ; vues Alice, Bob, Carol</div></td><td><code>MesClasseSessionsPage</code> (étendu) ; fenêtre « illustrative » de 06 <strong>remplacée</strong></td><td>Professeur</td><td>AC-3, AC-14, <strong>AC-25</strong>, AC-2, AC-20, AC-24, US-4, US-5</td></tr>
+<tr><td><a href="03-admin-timesheets-session.html"><strong>03 — Timesheets directeur, par classe et séance</strong></a><div class="small muted">Sessions passées sans heures, grille séances × professeurs, validation en lot avec lissage proposé dans le même flux</div></td><td><code>AdminTimesheetsPage</code> (étendue : sélecteur de vue)</td><td>Directeur, Admin</td><td>AC-3, AC-14, <strong>AC-25</strong>, AC-20, AC-24</td></tr>
+</tbody></table></div></div>
+<div class="sect"><header><h2>Règles à valider</h2><p>Détail dans WORKFLOW_UX.md (§3, §4) ; questions ouvertes au §7.</p></header><div class="body"><ul style="margin:0;padding-left:20px"><li>Chaque professeur a sa propre timesheet, unique par (professeur, session, type d’activité).</li><li>Peut encoder : le professeur assigné non remplacé, ou le remplaçant. Le remplacé garde ses heures et n’en crée plus.</li><li>Le remplacement n’a aucune contrainte de timesheet (aucun blocage, aucun avertissement).</li><li>Statuts inchangés : brouillon, soumis, confirmé, généré ; « À encoder » est un état calculé de la session.</li><li>Encodage libre = fonction normale : type, date, durée, cours et commentaire facultatifs (Q19).</li><li>Parcours principal : « Encoder mon mois » ; encodage par séance = raccourci (Q20).</li><li>Validation par admin/directeur, lissage proposé dans le même flux (Q21) ; euros visibles du professeur pour ses propres heures (Q22).</li></ul></div></div>
+<div class="note-m">Aucune case de validation n’est remplie. Maquettes statiques : aucune donnée n’est enregistrée.</div>
+</div>
+<script>
+
+function setState(s){document.body.setAttribute('data-state',s);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});}
+var lastFocus=null;
+function openM(id){var m=document.getElementById(id);if(!m)return;lastFocus=document.activeElement;m.classList.add('open');var f=m.querySelector('input,select,button,textarea');if(f)f.focus();}
+function closeM(id){var m=document.getElementById(id);if(m)m.classList.remove('open');if(lastFocus)lastFocus.focus();}
+document.addEventListener('keydown',function(e){
+  var o=document.querySelector('.modal.open');
+  if(e.key==='Escape'&&o){o.classList.remove('open');if(lastFocus)lastFocus.focus();}
+  if(e.key==='Tab'&&o){var els=o.querySelectorAll('input:not([disabled]),select,button:not([disabled]),textarea,a[href]');if(!els.length)return;var a=els[0],z=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
+});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function confirmM(id,toast){closeM(id);setState('success');var t=document.getElementById('toast-txt');if(t&&toast)t.textContent=toast;}
+
+
+
+</script></body></html>

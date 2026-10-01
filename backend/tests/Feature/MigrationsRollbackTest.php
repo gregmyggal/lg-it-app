@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -45,11 +46,27 @@ class MigrationsRollbackTest extends TestCase
         $this->assertFalse(Schema::hasTable('professeur_cours'));
     }
 
+    public function test_rollback_des_migrations_t3_restaure_l_enum_des_statuts_puis_remigration(): void
+    {
+        Artisan::call('migrate:fresh');
+        DB::table('users')->insert(['id' => 1, 'name' => 'P', 'email' => 'p@t.test', 'password' => 'x', 'role' => 'professeur', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('professeurs')->insert(['id' => 1, 'user_id' => 1, 'prenom' => 'A', 'nom' => 'B', 'email' => 'p@t.test', 'statut' => 'actif', 'date_entree' => '2026-01-01', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('timesheets')->insert(['professeur_id' => 1, 'date_prestation' => '2026-10-01', 'nombre_heures' => 2, 'statut_validation' => 'confirme', 'created_at' => now(), 'updated_at' => now()]);
+
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 2]), Artisan::output());
+        // Hors enum d'origine : ramené à « valide »
+        $this->assertSame('valide', DB::table('timesheets')->value('statut_validation'));
+
+        $this->assertSame(0, Artisan::call('migrate'), Artisan::output());
+        // La re-migration convertit « valide » en « confirme ».
+        $this->assertSame('confirme', DB::table('timesheets')->value('statut_validation'));
+    }
+
     public function test_rollback_des_migrations_t2_puis_remigration(): void
     {
         Artisan::call('migrate:fresh');
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 3]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 5]), Artisan::output());
 
         $this->assertFalse(Schema::hasTable('professeur_classe'));
         $this->assertFalse(Schema::hasTable('session_professors'));
@@ -65,9 +82,9 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        // On revient sur les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
+        // On revient sur les 2 migrations T3, les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
         // antérieur à CLS-01 échoue sur des down() plus anciens, hors périmètre).
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 5]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 7]), Artisan::output());
 
         // Structure Sprint 2 recréée (vide), tables T1 supprimées.
         $this->assertFalse(Schema::hasTable('classes'));

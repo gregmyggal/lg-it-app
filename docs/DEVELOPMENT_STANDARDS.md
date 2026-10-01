@@ -160,7 +160,7 @@ auth/           → contexte utilisateur, ProtectedRoute
 - **Liens de cours (`classe_liens`)** : modifiables par `admin`/`staff` et par **tout professeur ayant au moins une classe active de ce cours** (`professeur_classe` valide à la date du jour). Les liens sont **partagés au niveau du cours** : toute modification est **versionnée** (`classe_liens_historique`, append-only : qui, quand, avant/après), les suppressions sont des **soft deletes**, et l'**annulation/restauration** crée une nouvelle version (l'historique n'est jamais réécrit).
 - **Historique générique** : pour toute donnée partagée modifiable par plusieurs rôles, appliquer ce même schéma (versions append-only + restauration).
 - Accès public (codes de partage) : lecture seule, `statut = publish`, aucune donnée personnelle ni tarifaire.
-- Données sensibles (tarifs, montants) : réservées `admin`/`staff` ; jamais dans une Resource accessible au professeur ni dans les logs.
+- Données sensibles (tarifs, montants) : un professeur voit **ses propres** tarifs et montants sur ses timesheets (décision direction, CLS-01 Q22) ; jamais ceux d'un autre professeur, ni dans les ressources de classes/sessions/calendrier (aucun tarif exposé là), ni dans les logs.
 - Pas de secrets en dépôt : `.env.deploy.prod` ne doit **pas** être versionné (vérifier `.gitignore`).
 
 ### 4.5 Contrat d'API

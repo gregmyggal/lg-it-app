@@ -6,11 +6,14 @@ use App\Http\Requests\MesClassesRequest;
 use App\Http\Resources\ClasseResource;
 use App\Http\Resources\CourseSessionResource;
 use App\Http\Resources\ProfesseurClasseResource;
+use App\Http\Resources\TimesheetResource;
 use App\Models\Classe;
 use App\Models\CourseSession;
 use App\Models\ProfesseurClasse;
 use App\Models\SessionProfesseur;
+use App\Models\Timesheet;
 use App\Services\CalendrierScolaireService;
+use App\Services\TimesheetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,7 +21,10 @@ use Illuminate\Support\Facades\Gate;
 /** Portail professeur « Mes classes » : uniquement les classes et sessions du professeur connecté. */
 class MesClassesController extends Controller
 {
-    public function __construct(private readonly CalendrierScolaireService $calendrier) {}
+    public function __construct(
+        private readonly CalendrierScolaireService $calendrier,
+        private readonly TimesheetService $timesheets,
+    ) {}
 
     public function index(MesClassesRequest $request): JsonResponse
     {
@@ -67,7 +73,12 @@ class MesClassesController extends Controller
         $sessions->each->setRelation('classe', $classe);
         $this->calendrier->attachAlerts($sessions);
 
-        return response()->json(['data' => $sessions->map(function (CourseSession $s) use ($moi) {
+        // T3 : mes propres saisies par session (jamais celles d'un autre professeur), pour l'état d'encodage.
+        $mesSaisies = Timesheet::where('professeur_id', $moi)->whereIn('course_session_id', $sessions->pluck('id'))
+            ->with('professeur', 'cours')->get()->groupBy('course_session_id');
+        $professeur = $request->user()->professeur;
+
+        return response()->json(['data' => $sessions->map(function (CourseSession $s) use ($moi, $mesSaisies, $professeur, $request) {
             $lignes = $s->sessionProfesseurs;
             $mienne = $lignes->firstWhere('professeur_id', $moi);
             $remplace = $lignes->firstWhere('remplace_par_professeur_id', $moi);
@@ -79,7 +90,13 @@ class MesClassesController extends Controller
                 default => null,
             };
 
+            $miennes = $mesSaisies->get($s->id, collect());
+
             return (new CourseSessionResource($s))->resolve() + [
+                'encodage' => $this->timesheets->etatEncodage($miennes),
+                'mes_timesheets' => TimesheetResource::collection($miennes->values())->resolve($request),
+                'duree_par_defaut' => $this->timesheets->dureeParDefaut($s),
+                'peut_encoder' => $this->timesheets->peutEncoder($professeur, $s),
                 'ma_situation' => $situation,
                 'co_professeurs' => $lignes->reject(fn ($l) => $l->professeur_id === $moi || $l->remplace)
                     ->map(fn ($l) => ProfesseurClasseResource::professeurLeger($l->professeur) + ['role' => $l->role])->values(),

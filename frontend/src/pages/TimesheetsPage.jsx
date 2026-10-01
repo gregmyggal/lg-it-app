@@ -1,546 +1,333 @@
-import { useEffect, useState } from 'react';
-import client from '../api/client';
+import { useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { AdminPageHeader, AdminPageContent } from '../components/AdminPageLayout';
 import AdminButton from '../components/AdminButton';
-import { AdminFormField, AdminInput } from '../components/AdminFormField';
-import {
-  AdminPageHeader,
-  AdminPageContent,
-  AdminBadge,
-} from '../components/AdminPageLayout';
-import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
-import TimesheetMontantDisplay from '../components/TimesheetMontantDisplay';
-import TimesheetLissingModal from '../components/TimesheetLissingModal';
+import AdminModal from '../components/AdminModal';
+import { Section } from '../components/ui/Card';
+import { EmptyBlock, ErrorBlock, LoadingBlock } from '../components/ui/DataStates';
+import LinkButton from '../components/ui/LinkButton';
+import Banner from '../components/ui/Banner';
+import { Table, Th, Td, Tr } from '../components/ui/Table';
+import StatutBadge from '../components/ui/StatutBadge';
+import SessionsDuMoisTable from '../components/timesheets/SessionsDuMoisTable';
+import SyntheseMois from '../components/timesheets/SyntheseMois';
+import AjouterHeuresModal from '../components/timesheets/AjouterHeuresModal';
 import TimesheetConfirmationPage from '../components/TimesheetConfirmationPage';
-import TimesheetPdfGenerator from '../components/TimesheetPdfGenerator';
+import { creerSaisie, soumettreMois, supprimerSaisie, useMonMois } from '../hooks/useTimesheets';
+import { useCours } from '../hooks/useCours';
+import { useToast } from '../hooks/useToast';
+import { getErrorMessage } from '../api/errors';
+import { STATUTS_TIMESHEET, TYPES_ACTIVITE, getStatut } from '../utils/statuts';
+import { MOIS_LONGS, formatDateCourte } from '../utils/dates';
+import { formatEuros, formatHeures } from '../utils/format';
 
-const STATUT_LABELS = {
-  brouillon: 'Brouillon',
-  soumis: 'Soumis',
-  confirmé: 'Confirmé',
-  généré: 'Généré',
-};
+const pad = (n) => String(n).padStart(2, '0');
 
-const STATUT_COLORS = {
-  brouillon: 'amber',
-  soumis: 'blue',
-  confirmé: 'indigo',
-  généré: 'green',
-};
-
-function NewTimesheetForm({ professeurId, onCreated }) {
-  const [date, setDate] = useState('');
-  const [heures, setHeures] = useState('');
-  const [error, setError] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      const res = await client.post('/timesheets', {
-        professeur_id: professeurId,
-        date_prestation: date,
-        nombre_heures: heures,
-      });
-      onCreated(res.data);
-      setDate('');
-      setHeures('');
-    } catch {
-      setError('Saisie invalide.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} style={{
-      display: 'flex',
-      gap: '12px',
-      padding: '16px',
-      background: '#f9fafb',
-      borderRadius: '8px',
-      marginBottom: '24px',
-    }}>
-      <AdminFormField label="">
-        <AdminInput
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-      </AdminFormField>
-      <AdminFormField label="">
-        <AdminInput
-          type="number"
-          step="0.5"
-          min="0.5"
-          max="24"
-          placeholder="Heures"
-          value={heures}
-          onChange={(e) => setHeures(e.target.value)}
-          required
-        />
-      </AdminFormField>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
-        <AdminButton
-          variant="primary"
-          icon="➕"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
-          Ajouter
-        </AdminButton>
-      </div>
-      {error && <span style={{ color: ADMIN_COLORS.error }}>{error}</span>}
-    </form>
-  );
-}
-
+/** Écran mensuel « Encoder mon mois » du professeur (mock-up 02) ; le staff passe par `/admin/timesheets`. */
 export default function TimesheetsPage() {
   const { user } = useAuth();
-  const [timesheets, setTimesheets] = useState(null);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showLissingModal, setShowLissingModal] = useState(false);
-  const [selectedTimesheet, setSelectedTimesheet] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  if (user.role !== 'professeur') return <Navigate to="/admin/timesheets" replace />;
+  return <MonMois user={user} />;
+}
 
-  const isStaff = user.role === 'admin' || user.role === 'directeur';
-  const [year, month] = selectedMonth.split('-').map(Number);
+function MonMois({ user }) {
+  const toast = useToast();
+  const aujourdhui = new Date();
+  const [periode, setPeriode] = useState({ annee: aujourdhui.getFullYear(), mois: aujourdhui.getMonth() + 1 });
+  const mon = useMonMois(periode.annee, periode.mois);
+  const cours = useCours();
+  const [locales, setLocales] = useState({});
+  const [ajout, setAjout] = useState(false);
+  const [edition, setEdition] = useState(null);
+  const [suppression, setSuppression] = useState(null);
+  const [soumission, setSoumission] = useState(false);
+  const [signature, setSignature] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState(null);
 
+  // Sessions à encoder : préremplies (durée de la session), incluses par défaut.
   useEffect(() => {
-    client
-      .get('/timesheets')
-      .then((res) => setTimesheets(res.data))
-      .catch(() => setError('Impossible de charger les timesheets.'));
-  }, []);
+    if (!mon.data) return;
+    setLocales(
+      Object.fromEntries(
+        mon.data.sessions
+          .filter((s) => s.encodage === 'a_encoder' && s.peut_encoder)
+          .map((s) => [s.id, { inclure: true, heures: String(s.duree_par_defaut) }]),
+      ),
+    );
+  }, [mon.data]);
 
-  function updateLocal(id, patch) {
-    setTimesheets((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  const incluses = useMemo(
+    () => Object.entries(locales).filter(([, l]) => l.inclure && Number(l.heures) >= 0.5).map(([id, l]) => ({ course_session_id: Number(id), nombre_heures: Number(l.heures) })),
+    [locales],
+  );
+  const heuresEnAttente = incluses.reduce((t, s) => t + s.nombre_heures, 0);
+
+  function aller(delta) {
+    const d = new Date(periode.annee, periode.mois - 1 + delta, 1);
+    setPeriode({ annee: d.getFullYear(), mois: d.getMonth() + 1 });
+    setSignature(false);
+    setErreur(null);
   }
 
-  async function handleSubmitEntry(id) {
+  function modifierLocale(id, patch) {
+    setLocales((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  }
+
+  async function agir(fn, succes) {
+    setEnvoi(true);
+    setErreur(null);
     try {
-      setIsSubmitting(true);
-      const res = await client.post(`/timesheets/${id}/submit`);
-      updateLocal(id, res.data);
-      setSuccess('Timesheet soumis');
-      setTimeout(() => setSuccess(null), 2000);
-    } catch {
-      setError('Erreur lors de la soumission');
+      await fn();
+      toast.success(succes);
+      mon.reload();
+    } catch (err) {
+      setErreur(getErrorMessage(err));
     } finally {
-      setIsSubmitting(false);
+      setEnvoi(false);
     }
   }
 
-  async function handleValidate(id) {
-    try {
-      setIsSubmitting(true);
-      const res = await client.post(`/timesheets/${id}/validate`);
-      updateLocal(id, res.data);
-      setSuccess('Timesheet validé');
-      setTimeout(() => setSuccess(null), 2000);
-    } catch {
-      setError('Erreur lors de la validation');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const enregistrer = () =>
+    agir(async () => {
+      for (const s of incluses) await creerSaisie(s);
+    }, 'Brouillon enregistré. Vous pourrez encore modifier ces heures avant de soumettre le mois.');
+
+  async function soumettre() {
+    await agir(() => soumettreMois({ annee: periode.annee, mois: periode.mois, sessions: incluses }), 'Mois soumis. La direction peut maintenant valider vos heures.');
+    setSoumission(false);
   }
 
-  function openLissingModal(timesheet, montant) {
-    setSelectedTimesheet({ ...timesheet, montantActuel: montant });
-    setShowLissingModal(true);
-  }
-
-  function handleLissingSuccess() {
-    setShowLissingModal(false);
-    setError(null);
-    setSuccess('Lissage appliqué avec succès');
-    setTimeout(() => setSuccess(null), 2000);
-  }
-
-  if (error && !success) {
-    return (
-      <div style={{ padding: '24px' }}>
-        <p style={{ color: ADMIN_COLORS.error }}>⚠️ {error}</p>
-      </div>
-    );
-  }
-
-  if (timesheets === null) {
-    return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
-        Chargement…
-      </div>
-    );
-  }
+  const titreMois = `${MOIS_LONGS[periode.mois - 1][0].toUpperCase()}${MOIS_LONGS[periode.mois - 1].slice(1)} ${periode.annee}`;
+  const data = mon.data;
+  const vide = data && data.sessions.length === 0 && data.libres.length === 0;
+  const seances = (data?.sessions || [])
+    .filter((s) => s.peut_encoder && s.encodage === 'a_encoder')
+    .map((s) => ({ value: String(s.id), label: `${formatDateCourte(s.date)} — ${s.classe_libelle} · ${s.libelle}` }));
+  const coursOptions = (cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }));
 
   return (
     <>
       <AdminPageHeader
         icon="📋"
-        title="Timesheets"
-        description={isStaff ? 'Validez les timesheets de vos professeurs' : 'Gérez vos heures de prestation'}
-        badge={`${timesheets.length} entrées`}
+        title="Encoder mon mois"
+        description="Vos sessions sont préremplies ; ajoutez vos autres heures (préparation, etc.), vérifiez le total, puis soumettez le mois."
       />
-
       <AdminPageContent>
-        {/* DIRECTEUR: Section Validation & Gestion */}
-        {isStaff && (
-          <>
-            <div style={{
-              background: '#eff6ff',
-              border: '2px solid #3b82f6',
-              padding: '16px',
-              borderRadius: '8px',
-              marginBottom: '24px',
-            }}>
-              <h3 style={{ margin: '0 0 12px 0', color: '#1e40af', fontSize: '1.05em' }}>
-                👨‍💼 Section Directeur - Validation et Gestion
-              </h3>
-              <p style={{ margin: 0, color: '#1e40af', fontSize: '0.95em' }}>
-                Validez les heures, appliquez les lissages et générez les PDF de défraiement.
-              </p>
-            </div>
+        <nav aria-label="Choix du mois" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <AdminButton size="sm" variant="secondary" onClick={() => aller(-1)}>
+            ‹ Mois précédent
+          </AdminButton>
+          <strong style={{ minWidth: '140px', textAlign: 'center' }}>{titreMois}</strong>
+          <AdminButton size="sm" variant="secondary" onClick={() => aller(1)}>
+            Mois suivant ›
+          </AdminButton>
+        </nav>
 
-            <div style={{
-              display: 'flex',
-              gap: '12px',
-              alignItems: 'center',
-              marginBottom: '20px',
-            }}>
-              <label style={{ fontWeight: '500', color: '#374151', whiteSpace: 'nowrap' }}>
-                Mois à traiter:
-              </label>
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                style={{
-                  padding: '8px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '1em',
-                  minWidth: '150px',
-                }}
-              />
-            </div>
+        {erreur && (
+          <Banner tone="error" role="alert">
+            <strong>{erreur}</strong>
+          </Banner>
+        )}
+        {mon.loading && <LoadingBlock message="Chargement de votre mois…" lignes={4} />}
+        {mon.error && <ErrorBlock message="Impossible de charger votre mois. Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez." onRetry={mon.reload} />}
 
-            <TimesheetMontantDisplay
-              timesheets={timesheets}
-              professeurId={user.professeur?.id}
-              year={year}
-              month={month}
-            />
-          </>
+        {vide && (
+          <EmptyBlock
+            icon="🗓️"
+            title="Rien à encoder pour ce mois"
+            actions={
+              <>
+                <AdminButton onClick={() => setAjout(true)}>Ajouter des heures</AdminButton>
+                <LinkButton to="/mes-classes">Aller à Mes classes</LinkButton>
+              </>
+            }
+          >
+            Aucune de vos sessions n'a encore commencé ce mois-ci et vous n'avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.
+          </EmptyBlock>
         )}
 
-        {/* PROFESSEUR: Section Confirmation & Signature */}
-        {!isStaff && (
+        {data && !vide && (
           <>
-            {!showConfirmation && (
-              <div style={{
-                background: '#f0fdf4',
-                border: '2px solid #10b981',
-                padding: '16px',
-                borderRadius: '8px',
-                marginBottom: '24px',
-              }}>
-                <h3 style={{ margin: '0 0 12px 0', color: '#047857', fontSize: '1.05em' }}>
-                  ✍️ Section Professeur - Vos Heures
-                </h3>
-                <p style={{ margin: 0, color: '#047857', fontSize: '0.95em' }}>
-                  Encodez vos heures, soumettez-les et signez votre feuille de temps chaque mois.
-                </p>
-              </div>
-            )}
-
-            {showConfirmation && (
-              <div style={{ marginBottom: '24px' }}>
-                <AdminButton
-                  onClick={() => setShowConfirmation(false)}
-                  variant="secondary"
-                  icon="←"
-                  style={{ marginBottom: '16px' }}
-                >
-                  Retour à mes heures
-                </AdminButton>
-                <TimesheetConfirmationPage
-                  professeurId={user.professeur?.id}
-                  year={year}
-                  month={month}
+            <Section
+              title="1. Mes sessions du mois"
+              subtitle="Durée préremplie = durée de la session, modifiable. Seules les sessions commencées sont proposées. Décochez une session pour la laisser « À encoder » plus tard."
+              bodyPadding={false}
+            >
+              {data.sessions.length === 0 ? (
+                <p style={{ padding: '16px', margin: 0 }}>Aucune session commencée ce mois-ci.</p>
+              ) : (
+                <SessionsDuMoisTable
+                  sessions={data.sessions}
+                  saisiesLocales={locales}
+                  onChange={modifierLocale}
+                  onModifier={setEdition}
+                  onSupprimer={setSuppression}
                 />
-              </div>
-            )}
+              )}
+            </Section>
 
-            {!showConfirmation && timesheets.length > 0 && (
-              <AdminButton
-                variant="primary"
-                icon="✍️"
-                onClick={() => setShowConfirmation(true)}
-                style={{ marginBottom: '24px', width: '100%', padding: '14px' }}
-              >
-                Confirmer et signer ce mois
-              </AdminButton>
+            <Section
+              title="2. Mes autres heures du mois"
+              subtitle="Préparation, animation ou autre travail, avec ou sans cours : à la date où vous l'avez réalisé."
+              bodyPadding={false}
+              actions={
+                <AdminButton size="sm" onClick={() => setAjout(true)}>
+                  Ajouter des heures
+                </AdminButton>
+              }
+            >
+              {data.libres.length === 0 ? (
+                <p style={{ padding: '16px', margin: 0 }}>Aucune autre heure encodée ce mois-ci.</p>
+              ) : (
+                <Table caption="Mes autres heures du mois" minWidth="640px">
+                  <thead>
+                    <tr>
+                      <Th>Date</Th>
+                      <Th>Activité</Th>
+                      <Th>Cours</Th>
+                      <Th>Durée</Th>
+                      <Th>Montant</Th>
+                      <Th>État</Th>
+                      <Th>Actions</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.libres.map((x) => (
+                      <Tr key={x.id}>
+                        <Td>{formatDateCourte(x.date_prestation.slice(0, 10))}</Td>
+                        <Td>{getStatut(TYPES_ACTIVITE, x.type_activite).label}</Td>
+                        <Td>{x.cours?.titre || '—'}</Td>
+                        <Td>{formatHeures(x.nombre_heures)}</Td>
+                        <Td>{formatEuros(x.montant_brut)}</Td>
+                        <Td>
+                          <StatutBadge table={STATUTS_TIMESHEET} valeur={x.statut_validation} />
+                        </Td>
+                        <Td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            {x.can?.update && (
+                              <AdminButton size="sm" variant="secondary" onClick={() => setEdition(x)}>
+                                Modifier
+                              </AdminButton>
+                            )}
+                            {x.can?.delete && (
+                              <AdminButton size="sm" variant="secondary" onClick={() => setSuppression(x)}>
+                                Supprimer
+                              </AdminButton>
+                            )}
+                          </div>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </Section>
+
+            <Section title="3. Total du mois" subtitle="Brouillons et saisies à enregistrer comprises.">
+              <SyntheseMois synthese={data.synthese} heuresEnAttente={heuresEnAttente} />
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
+                <AdminButton variant="secondary" onClick={enregistrer} disabled={incluses.length === 0 || envoi}>
+                  Enregistrer en brouillon
+                </AdminButton>
+                <AdminButton onClick={() => setSoumission(true)} disabled={(incluses.length === 0 && data.synthese.nb_brouillons === 0) || envoi}>
+                  Soumettre le mois
+                </AdminButton>
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: 0 }}>
+                Signature mensuelle : « Confirmer et signer ce mois » puis PDF. Elle est proposée une fois vos heures confirmées par la direction.
+              </p>
+              {!signature && (
+                <AdminButton variant="secondary" onClick={() => setSignature(true)} disabled={!data.peut_signer} style={{ marginTop: '8px' }}>
+                  Confirmer et signer ce mois
+                </AdminButton>
+              )}
+            </Section>
+
+            {signature && (
+              <TimesheetConfirmationPage professeurId={user.professeur?.id} year={periode.annee} month={periode.mois} />
             )}
           </>
-        )}
-        {error && (
-          <div style={{
-            background: '#fee2e2',
-            color: ADMIN_COLORS.error,
-            padding: '16px',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            display: 'flex',
-            gap: '12px',
-          }}>
-            <span>⚠️</span>
-            <div>{error}</div>
-          </div>
-        )}
-
-        {success && (
-          <div style={{
-            background: '#d1fae5',
-            color: ADMIN_COLORS.success,
-            padding: '16px',
-            borderRadius: '8px',
-            marginBottom: '16px',
-            display: 'flex',
-            gap: '12px',
-          }}>
-            <span>✓</span>
-            <div>{success}</div>
-          </div>
-        )}
-
-        {!isStaff && user.professeur && (
-          <NewTimesheetForm
-            professeurId={user.professeur.id}
-            onCreated={(t) => setTimesheets((prev) => [t, ...prev])}
-          />
-        )}
-
-        <div style={{
-          background: 'white',
-          borderRadius: '8px',
-          border: `1px solid ${ADMIN_COLORS.border}`,
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-          }}>
-            <thead>
-              <tr style={{
-                background: '#f9fafb',
-                borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-              }}>
-                {isStaff && (
-                  <th style={{
-                    padding: '16px',
-                    textAlign: 'left',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: ADMIN_COLORS.textPrimary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                  }}>
-                    Professeur
-                  </th>
-                )}
-                <th style={{
-                  padding: '16px',
-                  textAlign: 'left',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: ADMIN_COLORS.textPrimary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Date
-                </th>
-                <th style={{
-                  padding: '16px',
-                  textAlign: 'left',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: ADMIN_COLORS.textPrimary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Heures
-                </th>
-                <th style={{
-                  padding: '16px',
-                  textAlign: 'left',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: ADMIN_COLORS.textPrimary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Statut
-                </th>
-                <th style={{
-                  padding: '16px',
-                  textAlign: 'right',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: ADMIN_COLORS.textPrimary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {timesheets.map((t, idx) => (
-                <tr
-                  key={t.id}
-                  style={{
-                    borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-                    background: idx % 2 === 0 ? 'white' : '#f9fafb',
-                  }}
-                >
-                  {isStaff && (
-                    <td style={{
-                      padding: '16px',
-                      fontSize: '14px',
-                      color: ADMIN_COLORS.textPrimary,
-                    }}>
-                      {t.professeur?.prenom} {t.professeur?.nom}
-                    </td>
-                  )}
-                  <td style={{
-                    padding: '16px',
-                    fontSize: '14px',
-                    color: ADMIN_COLORS.textPrimary,
-                  }}>
-                    {t.date_prestation?.slice(0, 10)}
-                  </td>
-                  <td style={{
-                    padding: '16px',
-                    fontSize: '14px',
-                    color: ADMIN_COLORS.textPrimary,
-                  }}>
-                    {t.nombre_heures}h
-                  </td>
-                  <td style={{
-                    padding: '16px',
-                    fontSize: '14px',
-                  }}>
-                    <AdminBadge
-                      label={STATUT_LABELS[t.statut_validation]}
-                      color={STATUT_COLORS[t.statut_validation]}
-                    />
-                  </td>
-                  <td style={{
-                    padding: '16px',
-                    textAlign: 'right',
-                  }}>
-                    {!isStaff && t.statut_validation === 'brouillon' && (
-                      <AdminButton
-                        variant="primary"
-                        size="sm"
-                        icon="✓"
-                        onClick={() => handleSubmitEntry(t.id)}
-                        disabled={isSubmitting}
-                      >
-                        Soumettre
-                      </AdminButton>
-                    )}
-                    {isStaff && t.statut_validation === 'soumis' && (
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <AdminButton
-                          variant="success"
-                          size="sm"
-                          icon="✓"
-                          onClick={() => handleValidate(t.id)}
-                          disabled={isSubmitting}
-                        >
-                          Valider
-                        </AdminButton>
-                      </div>
-                    )}
-                    {isStaff && t.statut_validation === 'confirmé' && (
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <AdminButton
-                          variant="secondary"
-                          size="sm"
-                          icon="🔄"
-                          onClick={() => openLissingModal(t, t.nombre_heures * 7.5)}
-                          title="Appliquer lissage pour ce jour"
-                        >
-                          Lissage
-                        </AdminButton>
-                      </div>
-                    )}
-                    {(
-                      (t.statut_validation === 'soumis' && !isStaff) ||
-                      (t.statut_validation === 'confirmé') ||
-                      (t.statut_validation === 'généré')
-                    ) && (
-                      <span style={{ fontSize: '13px', color: '#9ca3af' }}>—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {timesheets.length === 0 && (
-            <div style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: '#9ca3af',
-            }}>
-              Aucun timesheet
-            </div>
-          )}
-        </div>
-
-        {/* Phase 2: Générateur PDF (pour directeur) */}
-        {isStaff && (
-          <div style={{
-            marginTop: '32px',
-            paddingTop: '24px',
-            borderTop: `1px solid ${ADMIN_COLORS.border}`,
-          }}>
-            <TimesheetPdfGenerator
-              professeurId={user.professeur?.id || user.id}
-              year={year}
-              month={month}
-              professeurName={user.prenom || 'defraiement'}
-              onGenerateSuccess={() => {
-                setSuccess('PDF généré avec succès');
-                setTimeout(() => setSuccess(null), 3000);
-              }}
-            />
-          </div>
-        )}
-
-        {/* Phase 1B: Modal lissage */}
-        {selectedTimesheet && (
-          <TimesheetLissingModal
-            timesheetId={selectedTimesheet.id}
-            datePrestation={selectedTimesheet.date_prestation}
-            montantActuel={selectedTimesheet.montantActuel}
-            isOpen={showLissingModal}
-            onClose={() => setShowLissingModal(false)}
-            onSuccess={handleLissingSuccess}
-            year={year}
-            month={month}
-          />
         )}
       </AdminPageContent>
+
+      {ajout && (
+        <AjouterHeuresModal
+          dateParDefaut={`${periode.annee}-${pad(periode.mois)}-01`}
+          cours={coursOptions}
+          seances={seances}
+          onClose={() => setAjout(false)}
+          onDone={(m) => {
+            setAjout(false);
+            toast.success(m);
+            mon.reload();
+          }}
+        />
+      )}
+      {edition && (
+        <AjouterHeuresModal
+          saisie={edition}
+          dateParDefaut=""
+          onClose={() => setEdition(null)}
+          onDone={(m) => {
+            setEdition(null);
+            toast.success(m);
+            mon.reload();
+          }}
+        />
+      )}
+      {suppression && (
+        <AdminModal
+          isOpen
+          title="Supprimer ces heures ?"
+          size="sm"
+          onClose={() => setSuppression(null)}
+          footer={
+            <>
+              <AdminButton variant="secondary" onClick={() => setSuppression(null)}>
+                Conserver
+              </AdminButton>
+              <AdminButton
+                variant="danger"
+                loading={envoi}
+                onClick={async () => {
+                  await agir(() => supprimerSaisie(suppression.id), 'Heures supprimées.');
+                  setSuppression(null);
+                }}
+              >
+                Supprimer ces heures
+              </AdminButton>
+            </>
+          }
+        >
+          <p style={{ margin: 0 }}>
+            {formatHeures(suppression.nombre_heures)} du {formatDateCourte(suppression.date_prestation.slice(0, 10))} seront supprimées. Seuls les brouillons peuvent l'être.
+          </p>
+        </AdminModal>
+      )}
+      {soumission && (
+        <AdminModal
+          isOpen
+          title="Soumettre mon mois"
+          size="sm"
+          onClose={() => setSoumission(false)}
+          footer={
+            <>
+              <AdminButton variant="secondary" onClick={() => setSoumission(false)}>
+                Annuler
+              </AdminButton>
+              <AdminButton loading={envoi} onClick={soumettre}>
+                Soumettre les heures
+              </AdminButton>
+            </>
+          }
+        >
+          <p style={{ margin: 0 }}>
+            Une fois soumises, ces heures sont visibles par la direction et ne sont plus modifiables par vous. Elles seront ensuite validées par la direction.
+          </p>
+        </AdminModal>
+      )}
     </>
   );
 }

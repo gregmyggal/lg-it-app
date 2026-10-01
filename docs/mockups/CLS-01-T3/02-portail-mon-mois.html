@@ -1,0 +1,215 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portail — Encoder mon mois — Maquette CLS-01 T3</title><style>
+
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+.s-loading,.s-empty,.s-error,.s-data,.s-success,.s-ro,.s-refus{}
+body:not([data-state=loading]) .s-loading{display:none!important}
+body:not([data-state=empty]) .s-empty{display:none!important}
+body:not([data-state=error]) .s-error{display:none!important}
+body:not([data-state=data]):not([data-state=success]):not([data-state=readonly]) .s-data{display:none!important}
+body:not([data-state=success]) .s-success{display:none!important}
+body:not([data-state=readonly]) .s-ro{display:none!important}
+body:not([data-state=refus]) .s-refus{display:none!important}
+body[data-state=readonly] .edit{display:none!important}
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+.phone{max-width:375px;margin:16px auto;border:1px solid #9ca3af;border-radius:24px;overflow:hidden;background:var(--bg);box-shadow:0 10px 15px -3px rgba(0,0,0,.15)}.ph-h{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}.ph-b{padding:8px 16px 24px}.pp{display:none}.pp.on{display:block}.card.empty{padding:24px 12px}@media (max-width:420px){.phone{margin:0;border-radius:0;border:0}}
+.dot-s{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor}
+.sheet{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sheet .sb{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:420px;max-height:94vh;overflow:auto;padding:16px}
+.sheet .sb footer{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.sess{border-bottom:1px solid var(--bd-l);padding:12px 0;display:flex;flex-direction:column;gap:8px}
+.sess .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.btn-l{min-height:48px;width:100%;font-size:15px}
+.radio{display:flex;gap:8px}.radio label{flex:1;text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;border:1px solid #d1d5db;border-radius:8px;padding:10px;min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;margin:0}
+.b-ind{background:#e0e7ff;color:#3730a3}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi .card b{font-size:24px;display:block}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}.seg button{border:0;background:#fff;padding:8px 14px;cursor:pointer;font-weight:600}.seg button[aria-pressed=true]{background:var(--primary);color:#fff}
+</style></head>
+<body data-state="data">
+<div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-01 · T3</strong><span>État affiché :</span><div class="sw"><button type="button" data-s="loading" aria-pressed="false" onclick="setState('loading')">Chargement</button><button type="button" data-s="empty" aria-pressed="false" onclick="setState('empty')">Vide</button><button type="button" data-s="error" aria-pressed="false" onclick="setState('error')">Erreur</button><button type="button" data-s="data" aria-pressed="true" onclick="setState('data')">Données</button><button type="button" data-s="success" aria-pressed="false" onclick="setState('success')">Confirmation</button></div><a href="index.html">← Sommaire</a></div>
+<div class="shell">
+<aside class="side"><div class="brand"><i></i>Logiscool Pays Vert</div><nav aria-label="Menu principal"><a href="01-portail-session-encoder.html" class="chg">Mes classes</a><a href="#" class="active" aria-current="page">Timesheets</a><a href="#">Ressources de mes cours</a></nav><div class="acct" id="acct">Connecté : Bob Leroy<br>Professeur</div></aside>
+<main class="main">
+<div class="phead"><div class="in"><div><div class="crumb">Accueil › Timesheets</div><h1>Encoder mon mois</h1><p class="d">Vos sessions sont préremplies ; ajoutez vos autres heures (préparation, etc.), vérifiez le total, puis soumettez le mois.</p></div>
+<div class="row" role="group" aria-label="Choix du mois"><button class="btn btn-s" type="button" id="mp" onclick="mv(-1)" aria-label="Mois précédent">‹ Mois précédent</button><strong id="mn" style="min-width:130px;text-align:center" aria-live="polite">Novembre 2026</strong><button class="btn btn-s" type="button" id="mx" onclick="mv(1)" aria-label="Mois suivant">Mois suivant ›</button></div></div></div>
+<div class="content">
+<div class="note-m">Page existante <strong>TimesheetsPage</strong>, devenue l’écran mensuel principal (le tableau de saisies et le formulaire date + heures sont absorbés). L’encodage séance par séance depuis « Mes classes » reste un raccourci (01). Date simulée : jeudi 03/12/2026. Montants illustratifs (exemple : animation 12,00 € / h, préparation 10,00 € / h) : le professeur ne voit que les siens. <span class="row" role="group" aria-label="Simuler un professeur">Vue de : <button class="btn btn-p btn-sm" id="pb" type="button" onclick="per('bob')">Bob (co-enseignant)</button><button class="btn btn-s btn-sm" id="pa" type="button" onclick="per('alice')">Alice (principale)</button></span></div>
+
+<div class="s-loading" role="status" aria-busy="true"><span class="sr">Chargement de votre mois…</span><span class="sk" style="height:40px;margin:12px 0" aria-hidden="true"></span><span class="sk" style="height:40px;margin:12px 0;width:92%" aria-hidden="true"></span><span class="sk" style="height:40px;margin:12px 0;width:84%" aria-hidden="true"></span><span class="sk" style="height:40px;margin:12px 0;width:90%" aria-hidden="true"></span></div>
+<div class="s-error banner err" role="alert"><div class="tx"><strong>Impossible de charger votre mois.</strong> Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez.</div><button class="btn btn-s btn-sm" type="button" onclick="setState('data')">Réessayer</button></div>
+<div class="s-empty card empty"><div class="ic" aria-hidden="true">🗓️</div><h2>Rien à encoder pour ce mois</h2><p>Aucune de vos sessions n’a encore commencé ce mois-ci et vous n’avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.</p><div class="row" style="justify-content:center"><button class="btn btn-p" type="button" onclick="openFree()">Ajouter des heures</button><a class="btn btn-s" href="01-portail-session-encoder.html">Aller à Mes classes</a></div></div>
+
+<div class="s-data">
+<div id="bn" class="banner warn" role="status"></div>
+<div class="sect"><header><div><h2>1. Mes sessions du mois</h2><p>Durée préremplie = durée de la session, modifiable. Seules les sessions commencées sont proposées. Décochez une session pour la laisser « À encoder » plus tard.</p></div></header><div class="tw"><table><caption class="sr">Mes sessions du mois</caption><thead><tr><th scope="col">Inclure</th><th scope="col">Date</th><th scope="col">Classe · Séance</th><th scope="col">Activité</th><th scope="col">Durée (h)</th><th scope="col">Montant</th><th scope="col">État</th></tr></thead><tbody id="ts"></tbody></table></div><p class="small muted" id="snote" style="padding:10px 16px"></p></div>
+<div class="sect"><header><div><h2>2. Mes autres heures du mois</h2><p>Préparation, animation ou autre travail, avec ou sans cours : à la date où vous l’avez réalisé.</p></div><button class="btn btn-s" type="button" onclick="openFree()">Ajouter des heures</button></header><div class="tw"><table><caption class="sr">Mes autres heures du mois</caption><thead><tr><th scope="col">Date</th><th scope="col">Activité</th><th scope="col">Cours / séance</th><th scope="col">Durée</th><th scope="col">Montant</th><th scope="col">État</th><th scope="col" style="text-align:right">Actions</th></tr></thead><tbody id="tf"></tbody></table></div></div>
+<div class="sect"><header><div><h2>3. Total du mois</h2><p>Brouillons et saisies à enregistrer comprises.</p></div></header><div class="body"><div class="kpi" style="margin:0"><div class="card"><span class="small muted">Total heures</span><b id="k-h">0 h</b></div><div class="card"><span class="small muted">Total montant</span><b id="k-m">0,00 €</b></div><div class="card"><span class="small muted">Jours encodés</span><b id="k-j">0</b></div><div class="card"><span class="small muted">Déjà soumis</span><b id="k-s">0 h</b></div></div><div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn btn-s" type="button" id="bd" onclick="saveDraft()">Enregistrer en brouillon</button><button class="btn btn-p" type="button" id="bs" onclick="openSub()" aria-describedby="bs-w">Soumettre le mois</button></div><p class="small muted" id="bs-w" style="text-align:right;margin-top:6px"></p></div></div>
+<div class="banner info"><div class="tx"><strong>Signature mensuelle (inchangée) :</strong> <span class="small">« Confirmer et signer ce mois » puis PDF, comme aujourd’hui. Il n’est proposé que lorsque tout le mois est soumis.</span></div><button class="btn btn-p btn-sm" type="button" id="sg" disabled aria-describedby="sg-w">Confirmer et signer ce mois</button><span class="small" id="sg-w" style="width:100%"></span></div>
+</div>
+</div></main></div>
+
+<div class="modal" id="m-free" role="dialog" aria-modal="true" aria-labelledby="m-free-t"><div class="mbox"><header><h2 id="m-free-t">Ajouter des heures</h2><button class="x" type="button" aria-label="Fermer la fenêtre" onclick="closeM('m-free')">×</button></header><div class="mb">
+<fieldset style="border:0;padding:0;margin:0"><legend class="lbl">Type d’activité</legend><div class="radio"><label><input type="radio" name="tb" value="Préparation" checked> Préparation</label><label><input type="radio" name="tb" value="Animation"> Animation</label></div></fieldset>
+<div class="grid2"><div><label for="g1">Date</label><input type="date" id="g1" value="2026-11-12"></div><div><label for="g2">Durée (heures)</label><input type="text" id="g2" inputmode="decimal" value="1"></div></div>
+<div class="grid2"><div><label for="g4">Cours (facultatif)</label><select id="g4" onchange="chS()"><option value="">Aucun cours</option><option value="c">Scratch Junior — mercredi 14h–17h</option></select></div><div><label for="g5">Séance (facultatif)</label><select id="g5" disabled><option value="">Aucune séance</option></select></div></div>
+<p class="help">Reliez les heures à une séance quand elles la concernent : la direction les retrouve alors dans la classe. Sinon, laissez vide.</p>
+<div><label for="g3">Commentaire (facultatif)</label><textarea id="g3" rows="2"></textarea></div></div>
+<footer><button class="btn btn-s" type="button" onclick="closeM('m-free')">Annuler</button><button class="btn btn-p" type="button" onclick="addFree()">Ajouter ces heures</button></footer></div></div>
+<div class="modal" id="m-sub" role="dialog" aria-modal="true" aria-labelledby="m-sub-t"><div class="mbox"><header><h2 id="m-sub-t">Soumettre mon mois</h2><button class="x" type="button" aria-label="Fermer la fenêtre" onclick="closeM('m-sub')">×</button></header><div class="mb"><div class="recap"><strong id="sub-s"></strong><ul id="sub-l"></ul></div><p class="small">Une fois soumises, ces heures sont visibles par la direction et ne sont plus modifiables par vous. Elles seront ensuite validées par la direction.</p></div><footer><button class="btn btn-s" type="button" onclick="closeM('m-sub')">Annuler</button><button class="btn btn-p" type="button" onclick="doSub()">Soumettre les heures</button></footer></div></div>
+<div class="toast s-success" role="status" aria-live="polite"><span aria-hidden="true">✔</span><span id="toast-txt">Mois soumis.</span></div>
+<script>
+
+function setState(s){document.body.setAttribute('data-state',s);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});}
+var lastFocus=null;
+function openM(id){var m=document.getElementById(id);if(!m)return;lastFocus=document.activeElement;m.classList.add('open');var f=m.querySelector('input,select,button,textarea');if(f)f.focus();}
+function closeM(id){var m=document.getElementById(id);if(m)m.classList.remove('open');if(lastFocus)lastFocus.focus();}
+document.addEventListener('keydown',function(e){
+  var o=document.querySelector('.modal.open');
+  if(e.key==='Escape'&&o){o.classList.remove('open');if(lastFocus)lastFocus.focus();}
+  if(e.key==='Tab'&&o){var els=o.querySelectorAll('input:not([disabled]),select,button:not([disabled]),textarea,a[href]');if(!els.length)return;var a=els[0],z=els[els.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
+});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+function confirmM(id,toast){closeM(id);setState('success');var t=document.getElementById('toast-txt');if(t&&toast)t.textContent=toast;}
+
+
+var CL='Scratch Junior (mer.) · ',RT={'Animation':12,'Préparation':10},MN=['Octobre 2026','Novembre 2026','Décembre 2026'],mi=1,who='bob',uid=100;
+function mk(n,d,st,h,x){var o={id:n,d:d,n:'Séance '+n,st:st,h:h||3,type:'Animation',inc:true};for(var k in x)o[k]=x[k];return o}
+var S={bob:[[mk(1,'07/10/2026','Soumis'),mk(2,'14/10/2026','Soumis'),mk(3,'21/10/2026','Soumis')],[mk(4,'18/11/2026','À encoder'),mk(5,'25/11/2026','À encoder')],[]],
+ alice:[[mk(1,'07/10/2026','Généré'),mk(2,'14/10/2026','Confirmé'),mk(3,'21/10/2026','Soumis')],[mk(4,'18/11/2026','Brouillon'),mk(5,'25/11/2026','Soumis',3,{rep:'Carol Simon'})],[]]};
+var F={bob:[[{id:90,d:'21/10/2026',type:'Préparation',h:1,c:'—',st:'Soumis'}],[{id:91,d:'12/11/2026',type:'Préparation',h:1,c:'Scratch Junior (mercredi)',st:'Brouillon',com:'Préparation des séances 4 à 6'}],[]],alice:[[],[{id:92,d:'10/11/2026',type:'Préparation',h:2,c:'Scratch Junior (mercredi)',st:'Brouillon'}],[]]};
+var BC={'Brouillon':'b-warn','Soumis':'b-blue','Confirmé':'b-ind','Généré':'b-ok','À encoder':'b-warn'};
+function eur(x){return x.toFixed(2).replace('.',',')+' €'}
+function badge(s){return '<span class="badge '+BC[s]+'">'+s+'</span>'}
+function mv(k){mi+=k;render()}
+function per(w){who=w;document.getElementById('pb').className='btn btn-sm '+(w==='bob'?'btn-p':'btn-s');document.getElementById('pa').className='btn btn-sm '+(w==='alice'?'btn-p':'btn-s');document.getElementById('acct').innerHTML='Connecté : '+(w==='bob'?'Bob Leroy':'Alice Dupont')+'<br>Professeur';render()}
+function setH(id,v){S[who][mi].forEach(function(r){if(r.id===id)r.h=parseFloat(String(v).replace(',','.'))||0});render()}
+function setInc(id,v){S[who][mi].forEach(function(r){if(r.id===id)r.inc=v});render()}
+function pending(){var a=[];S[who][mi].forEach(function(r){if((r.st==='À encoder'&&r.inc)||r.st==='Brouillon')a.push({l:r.n,d:r.d,h:r.h,t:r.type,o:r})});F[who][mi].forEach(function(r){if(r.st==='Brouillon')a.push({l:'Heures libres',d:r.d,h:r.h,t:r.type,o:r})});return a}
+function render(){var s=S[who][mi],f=F[who][mi],h='',tot=0,mon=0,days={},sub=0,todo=0,bro=0;
+ s.forEach(function(r){var lock=['Soumis','Confirmé','Généré'].indexOf(r.st)>-1,ed=!lock,cnt=lock||r.st==='Brouillon'||r.inc;
+  if(r.st==='À encoder')todo++;if(r.st==='Brouillon')bro++;
+  if(cnt){tot+=r.h;mon+=r.h*RT[r.type];days[r.d]=1}if(lock)sub+=r.h;
+  var st=r.st==='À encoder'&&!r.inc?'<span class="badge b-warn">À encoder</span> <span class="small muted">(laissée pour plus tard)</span>':badge(r.st);
+  h+='<tr><td>'+(r.st==='À encoder'?'<input type="checkbox" '+(r.inc?'checked ':'')+'aria-label="Inclure la '+r.n.toLowerCase()+'" onchange="setInc('+r.id+',this.checked)">':'—')+'</td><td>'+r.d+'</td><td>'+CL+r.n+(r.rep?'<div class="small"><span class="badge b-school">Remplacée par '+r.rep+'</span></div><div class="small muted">Vos heures déjà encodées restent inchangées ; '+r.rep+' encode les siennes.</div>':'')+'</td><td>'+r.type+'</td><td>'+(ed?'<input type="text" inputmode="decimal" style="width:70px" value="'+String(r.h).replace('.',',')+'" aria-label="Durée en heures, '+r.n+'" onchange="setH('+r.id+',this.value)">':r.h+' h')+'</td><td>'+eur(r.h*RT[r.type])+'</td><td>'+st+(lock?'<div class="small muted">🔒 Verrouillé</div>':'')+'</td></tr>'});
+ document.getElementById('ts').innerHTML=h||'<tr><td colspan="7" class="muted" style="padding:20px;text-align:center">Aucune session commencée ce mois-ci.</td></tr>';
+ document.getElementById('snote').textContent=mi===2?'La séance 6 (02/12) est annulée : rien à encoder. La « Séance 6 bis » (16/12) sera proposée dès son début.':'';
+ h='';f.forEach(function(r){var lock=r.st!=='Brouillon';tot+=r.h;mon+=r.h*RT[r.type];days[r.d]=1;if(lock)sub+=r.h;if(r.st==='Brouillon')bro++;
+  h+='<tr><td>'+r.d+'</td><td>'+r.type+(r.com?'<div class="small muted">'+r.com+'</div>':'')+'</td><td>'+r.c+'</td><td>'+r.h+' h</td><td>'+eur(r.h*RT[r.type])+'</td><td>'+badge(r.st)+'</td><td style="text-align:right">'+(lock?'<span class="small muted">🔒 Verrouillé</span>':'<button class="btn btn-s btn-sm" type="button" onclick="delFree('+r.id+')">Supprimer</button>')+'</td></tr>'});
+ document.getElementById('tf').innerHTML=h||'<tr><td colspan="7" class="muted" style="padding:20px;text-align:center">Aucune autre heure ce mois-ci. Utilisez « Ajouter des heures » pour votre préparation, par exemple.</td></tr>';
+ document.getElementById('mn').textContent=MN[mi];var p=document.getElementById('mp'),x=document.getElementById('mx');p.disabled=mi===0;x.disabled=mi===2;p.title=mi===0?'Octobre est le premier mois de l’année scolaire':'';x.title=mi===2?'Aucun mois suivant n’est encore ouvert':'';
+ var b=document.getElementById('bn');if(todo){b.style.display='';b.className='banner warn';b.innerHTML='<div class="tx"><strong>'+todo+(todo>1?' sessions à encoder':' session à encoder')+'</strong> ce mois-ci : durée préremplie, vérifiez-la puis soumettez.</div>'}else if(bro){b.style.display='';b.className='banner info';b.innerHTML='<div class="tx"><strong>'+bro+(bro>1?' brouillons':' brouillon')+'</strong> à soumettre.</div>'}else{b.style.display='';b.className='banner ok';b.innerHTML='<div class="tx"><strong>✔ Rien à encoder.</strong> Toutes les sessions commencées de ce mois ont des heures.</div>'}
+ document.getElementById('k-h').textContent=tot+' h';document.getElementById('k-m').textContent=eur(mon);document.getElementById('k-j').textContent=Object.keys(days).length;document.getElementById('k-s').textContent=sub+' h';
+ var n=pending().length,bs=document.getElementById('bs'),bd=document.getElementById('bd');bs.disabled=!n;bd.disabled=!pending().filter(function(q){return q.o.st==='À encoder'}).length;
+ document.getElementById('bs-w').textContent=n?'':'Désactivé : rien à soumettre pour ce mois.';
+ var ok=!todo&&!bro&&sub>0;document.getElementById('sg').disabled=!ok;document.getElementById('sg-w').innerHTML=ok?'Tout le mois est soumis : vous pouvez signer.':'Désactivé : il reste des sessions à encoder ou des brouillons à soumettre, ou rien n’a été soumis ce mois-ci.';}
+function saveDraft(){var c=0;S[who][mi].forEach(function(r){if(r.st==='À encoder'&&r.inc){r.st='Brouillon';c++}});render();setState('success');document.getElementById('toast-txt').textContent=c+(c>1?' sessions enregistrées':' session enregistrée')+' en brouillon. Pensez à soumettre le mois.'}
+function openSub(){var p=pending(),h=0,m=0;p.forEach(function(q){h+=q.h;m+=q.h*RT[q.t]});document.getElementById('sub-s').textContent=p.length+(p.length>1?' saisies':' saisie')+' · '+h+' h · '+eur(m);document.getElementById('sub-l').innerHTML=p.map(function(q){return '<li>'+q.d+' — '+q.l+' — '+q.t+' — '+q.h+' h</li>'}).join('');openM('m-sub')}
+function doSub(){var p=pending(),h=0;p.forEach(function(q){h+=q.h;q.o.st='Soumis'});render();confirmM('m-sub','Heures de '+MN[mi].toLowerCase()+' soumises ('+h+' h). Elles sont visibles par la direction.')}
+function openFree(){document.getElementById('g5').innerHTML='<option value="">Aucune séance</option>';document.getElementById('g5').disabled=true;document.getElementById('g4').value='';openM('m-free')}
+function chS(){var g=document.getElementById('g5'),c=document.getElementById('g4').value;g.disabled=!c;g.innerHTML=c?'<option value="">Aucune séance</option><option>Séance 4</option><option>Séance 5</option>':'<option value="">Aucune séance</option>'}
+function addFree(){var t=document.querySelector('input[name=tb]:checked').value,h=parseFloat(String(document.getElementById('g2').value).replace(',','.'))||1,c=document.getElementById('g4').value,se=document.getElementById('g5').value;
+ var dv=document.getElementById('g1').value.split('-').reverse().join('/');F[who][mi].push({id:uid++,d:dv,type:t,h:h,c:c?'Scratch Junior (mercredi)'+(se?' · '+se:''):'—',st:'Brouillon'});render();confirmM('m-free','Heures ajoutées en brouillon ('+h+' h de '+t.toLowerCase()+').')}
+function delFree(id){F[who][mi]=F[who][mi].filter(function(r){return r.id!==id});render();setState('success');document.getElementById('toast-txt').textContent='Brouillon supprimé.'}
+per('bob');
+</script></body></html>

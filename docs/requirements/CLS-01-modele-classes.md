@@ -77,6 +77,14 @@ Voir `DEVELOPMENT_STANDARDS.md` §2.0 (Cours, Année scolaire, Classe, Session, 
 | AC-22 | une classe dont la période se termine le 30/01 | on tente de créer/déplacer une session au 06/02 | refus **bloquant** : « Cette date est après la fin de la période 1 » |
 | AC-23 | un cours avec des liens généraux et des liens par séance | un professeur ouvre la « Séance 3 » (ou « Séance 3 bis ») d'une de ses classes | il voit les liens **généraux** + ceux de la **séance 3** ; il peut créer/modifier les deux types (RG-6/RG-10) ; un lien de séance est visible par toutes les classes du cours |
 | AC-24 | une session annulée | le directeur la remplace | un **bis** (même n° de séance, autre date de la période) est créé, professeurs propagés (RG-8) ; la session annulée reste visible avec son motif et un lien vers son bis |
+| AC-26 | une session passée, non annulée, où un professeur attendu n'a aucune saisie | le directeur ouvre la vue « par session » | la session est listée « sans heures » avec le(s) professeur(s) concerné(s) |
+| AC-27 | un professeur remplacé sur une session | il tente de créer une saisie pour cette session | refus 403 ; ses saisies existantes restent visibles et gardent leur workflow ; le remplaçant peut créer les siennes |
+| AC-28 | une saisie existe pour (professeur, session, type d'activité) | le même professeur en crée une autre identique | refus 422 (doublon) ; une saisie d'un autre type, ou d'un autre professeur, est acceptée |
+| AC-29 | une session annulée ou qui n'a pas encore commencé | un professeur tente d'y rattacher des heures | refus 422 ; l'écran mensuel ne la propose pas |
+| AC-30 | des heures sans cours ni session (ex. préparation) | le professeur les encode | elles sont acceptées (type, date, durée ; cours et commentaire facultatifs) et comptent dans le mois |
+| AC-31 | un mois avec des brouillons (sessions préremplies + heures libres) | le professeur soumet le mois | toutes les saisies incluses passent en « Soumis » en une opération |
+| AC-32 | des saisies soumises, dont certaines dépassent le plafond journalier | le directeur ou l'administrateur valide (en lot) avec lissage | les lissages demandés sont appliqués puis la validation faite en une transaction ; aucune saisie n'est exclue du lot |
+| AC-33 | une session qui a des heures encodées | on tente de l'annuler ou de la déplacer | refus 409 expliqué (le remplacement de professeur reste possible) |
 | AC-16 | un lien modifié par un professeur | n'importe quel utilisateur autorisé ouvre l'historique | il voit chaque version (qui, quand, avant/après) et peut **restaurer** une version ; la restauration crée elle-même une entrée d'historique |
 | AC-18 | l'année scolaire est créée | on ouvre son calendrier | les vacances/fériés **FWB** sont pré-remplis ; le directeur peut ajouter, modifier ou supprimer des dates (fermetures propres à l'école) ; les entrées sont marquées « FWB » ou « École » |
 | AC-19 | une version de lien de plus de 6 mois | la purge planifiée s'exécute | elle est supprimée ; les versions de moins de 6 mois restent restaurables par **tout professeur** ayant une classe du cours |
@@ -141,7 +149,7 @@ Isolation stricte par `professeur_classe` (tests 403) ; audit des modifications 
 | **T0** ✅ (2026-09-30) | Base de test MySQL Docker + garde-fou ; tests de caractérisation de l'existant |
 | **T1** | Années scolaires + **périodes** + **calendrier scolaire (import FWB + édition manuelle)** + classes + génération des 14 sessions + ajustement des sessions (numéros de séance fixes, **bis** pour une session annulée, nombre de sessions dépassable, borne fin de période) + écran admin classes |
 | **T2** ✅ (2026-10-01) | `professeur_classe` + assignation **bidirectionnelle avec propagation aux sessions** + **remplacement ponctuel** + Policies + `Mes classes` (prof) |
-| **T3** | Rattachement timesheets ↔ session/prof indépendant ; encodage depuis « Mes classes » |
+| **T3** ✅ (2026-10-01) | Rattachement timesheets ↔ session/prof indépendant ; encodage depuis « Mes classes » |
 | **T4** | Liens du cours **généraux et par séance** édités par les profs de classe (Policy) + **historique versionné (6 mois) avec annulation/restauration par tous les professeurs du cours** |
 | **T5** | Suppression du type de cours et des anciennes tables/routes/écrans ; nettoyage |
 
@@ -165,6 +173,11 @@ R1 Directeur crée une classe → 14 sessions. R2 Deux classes React, deux profs
 | Q14 | Le **nombre de sessions** peut dépasser 14 (bis), pas le nombre de séances. |
 | Q15 | **Aucune session** créée après la fin de la période (bloquant). |
 | Q16 | Une session annulée est remplacée par un **bis** de la même séance (AC-24). |
+| Q23 | **T3 — mock-ups validés** (`docs/mockups/CLS-01-T3/`, 2026-10-01) avec les recommandations de l'UX : Q7 (correction d'une saisie soumise par erreur) **hors T3**, la direction est contactée ; Q13 **statuts normalisés sans accent** (`confirme`, `genere`) et `isLocked()` corrigé ; Q14 **annuler/déplacer une session ayant des heures est bloqué** ; Q16 la **feuille d'encodage** remplace l'ouverture de la page Timesheets du mock-up 06 ; Q11 le staff n'encode pas pour un professeur. |
+| Q19 | **Encodage libre** des heures, **pas forcément lié à un cours ni à une session** (ex. préparation faite à une autre date que le cours) : c'est une fonction à part entière, pas une exception (T3). |
+| Q20 | **Encodage de toutes les heures en fin de mois** : le parcours principal est un écran mensuel « Encoder mon mois » (sessions du mois à encoder, préremplies, + heures libres), pas un encodage séance par séance au fil de l'eau. |
+| Q21 | **Validation par l'administrateur ou le directeur**, avec **lissage possible** pendant la validation (le lissage ne bloque pas la validation en lot : il fait partie du flux). |
+| Q22 | **Les montants en euros restent visibles pour le professeur** (ses propres heures/montants), pas masqués. |
 | Q18 | **Remplacement d'un professeur sans contrainte liée aux timesheets** (session passée ou à venir ; timesheets existantes inchangées). |
 | Q17 | Liens : **par séance (n° 1..14 fixe)** + **généraux** (RG-12). |
 | Q7 | Assignation possible **depuis la classe et depuis le professeur**, avec **propagation** à toutes les sessions (RG-8). |

@@ -6,7 +6,6 @@ use App\Models\Professeur;
 use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class TimesheetLissingService
 {
@@ -40,7 +39,7 @@ class TimesheetLissingService
                 $timesheet->date_prestation
             );
 
-            if (!$tarif) {
+            if (! $tarif) {
                 // Pas de tarif disponible — garder le timesheet sans montant
                 $result['timesheets'][] = [
                     'id' => $timesheet->id,
@@ -50,6 +49,7 @@ class TimesheetLissingService
                     'montant_brut' => null,
                     'erreur' => 'Aucun tarif disponible pour cette date',
                 ];
+
                 continue;
             }
 
@@ -112,9 +112,9 @@ class TimesheetLissingService
 
         // Cherche la dépassement spécifique
         $depassement = collect($monthData['depassements'])
-            ->first(fn($d) => $d['date'] === $dateDepassement->format('Y-m-d'));
+            ->first(fn ($d) => $d['date'] === $dateDepassement->format('Y-m-d'));
 
-        if (!$depassement) {
+        if (! $depassement) {
             return [
                 'success' => false,
                 'error' => 'Dépassement non trouvé pour cette date',
@@ -123,7 +123,7 @@ class TimesheetLissingService
 
         // Récupère les timesheets du jour en dépassement
         $timesheetsDay = collect($monthData['timesheets'])
-            ->filter(fn($t) => $t['date_prestation']->format('Y-m-d') === $dateDepassement->format('Y-m-d'));
+            ->filter(fn ($t) => $t['date_prestation']->format('Y-m-d') === $dateDepassement->format('Y-m-d'));
 
         // Cherche un jour proche avec capacité disponible
         $dayToMove = $this->findCapacitableDay($dateDepassement, $month, $depassement['depassement']);
@@ -137,7 +137,7 @@ class TimesheetLissingService
                 'quantite_a_deplacer_eur' => $depassement['depassement'],
                 'note' => $dayToMove
                     ? "Déplacer {$depassement['depassement']}€ au {$dayToMove->format('d/m/Y')}"
-                    : "Aucun jour disponible trouvé — ajustement manuel nécessaire",
+                    : 'Aucun jour disponible trouvé — ajustement manuel nécessaire',
             ],
         ];
     }
@@ -159,7 +159,7 @@ class TimesheetLissingService
             Carbon::parse($dateFrom)
         );
 
-        if (!$tarif) {
+        if (! $tarif) {
             return false;
         }
 
@@ -177,8 +177,8 @@ class TimesheetLissingService
             'nombre_heures' => $heuresToMove,
             'type_activite' => $timesheet->type_activite,
             'cours_id' => $timesheet->cours_id,
-            'commentaire' => "Lissé depuis " . Carbon::parse($dateFrom)->format('Y-m-d'),
-            'statut_validation' => 'confirmé',
+            'commentaire' => 'Lissé depuis '.Carbon::parse($dateFrom)->format('Y-m-d'),
+            'statut_validation' => 'confirme',
             'lissage_applique' => true,
         ]);
 
@@ -223,7 +223,7 @@ class TimesheetLissingService
         $monthData = $this->calculateMonthlyMontants($date->day, $year, $month);
 
         $currentDay = collect($monthData['timesheets'])
-            ->filter(fn($t) => $t['date_prestation']->format('Y-m-d') === $date->format('Y-m-d'))
+            ->filter(fn ($t) => $t['date_prestation']->format('Y-m-d') === $date->format('Y-m-d'))
             ->sum('montant_brut');
 
         $availableCapacity = self::MAX_MONTANT_PAR_JOUR - $currentDay;

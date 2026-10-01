@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
+import TimesheetsParSession from '../components/timesheets/TimesheetsParSession';
 import { useAuth } from '../auth/AuthContext';
 import AdminButton from '../components/AdminButton';
 import {
@@ -12,15 +13,15 @@ import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
 const STATUT_LABELS = {
   brouillon: 'Brouillon',
   soumis: 'Soumis',
-  confirmé: 'Confirmé',
-  généré: 'Généré',
+  confirme: 'Confirmé',
+  genere: 'Généré',
 };
 
 const STATUT_COLORS = {
   brouillon: 'amber',
   soumis: 'blue',
-  confirmé: 'indigo',
-  généré: 'green',
+  confirme: 'indigo',
+  genere: 'green',
 };
 
 export default function AdminTimesheetsPage() {
@@ -29,7 +30,7 @@ export default function AdminTimesheetsPage() {
   const [error, setError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [selectedProfesseur, setSelectedProfesseur] = useState(null);
-  const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'professor'
+  const [viewMode, setViewMode] = useState('monthly'); // 'monthly', 'professor' ou 'session' (CLS-01 T3)
   const [professeurs, setProfesseurs] = useState([]);
   const [pdfGenerationHistory, setPdfGenerationHistory] = useState([]);
 
@@ -74,16 +75,13 @@ export default function AdminTimesheetsPage() {
   // Calculer les statistiques
   const stats = {
     totalHeures: filteredTS.reduce((sum, ts) => sum + parseFloat(ts.nombre_heures || 0), 0),
-    totalMontant: filteredTS.reduce((sum, ts) => {
-      const prof = professeurs.find(p => p.id === ts.professeur_id);
-      const tarif = prof?.tarif_effectif?.tarif_horaire_eur || 0;
-      return sum + (parseFloat(ts.nombre_heures || 0) * parseFloat(tarif));
-    }, 0),
+    // Montants calculés par le serveur (heures × tarif en vigueur à la date de chaque saisie).
+    totalMontant: filteredTS.reduce((sum, ts) => sum + (parseFloat(ts.montant_brut) || 0), 0),
     byStatus: {
       brouillon: filteredTS.filter(ts => ts.statut_validation === 'brouillon').length,
       soumis: filteredTS.filter(ts => ts.statut_validation === 'soumis').length,
-      confirmé: filteredTS.filter(ts => ts.statut_validation === 'confirmé').length,
-      généré: filteredTS.filter(ts => ts.statut_validation === 'généré').length,
+      confirme: filteredTS.filter(ts => ts.statut_validation === 'confirme').length,
+      genere: filteredTS.filter(ts => ts.statut_validation === 'genere').length,
     },
   };
 
@@ -214,6 +212,13 @@ export default function AdminTimesheetsPage() {
               >
                 👨‍🏫 Profs
               </AdminButton>
+              <AdminButton
+                variant={viewMode === 'session' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => setViewMode('session')}
+              >
+                🏫 Sessions
+              </AdminButton>
             </div>
 
             {/* Rafraîchir */}
@@ -228,6 +233,10 @@ export default function AdminTimesheetsPage() {
           </div>
         </div>
 
+        {viewMode === 'session' && <TimesheetsParSession mois={selectedMonth} onChange={loadData} />}
+
+        {viewMode !== 'session' && (
+          <>
         {/* Statistiques */}
         <div style={{
           display: 'grid',
@@ -255,17 +264,19 @@ export default function AdminTimesheetsPage() {
           />
           <StatCard
             title="Validés"
-            value={`${stats.byStatus.confirmé}`}
+            value={`${stats.byStatus.confirme}`}
             icon="✓"
             color="#8b5cf6"
           />
           <StatCard
             title="Générés"
-            value={`${stats.byStatus.généré}`}
+            value={`${stats.byStatus.genere}`}
             icon="📄"
             color="#059669"
           />
         </div>
+          </>
+        )}
 
         {/* Vue par Mois (tableau consolidé) */}
         {viewMode === 'monthly' && (
@@ -303,14 +314,12 @@ export default function AdminTimesheetsPage() {
                 <tbody>
                   {Object.entries(groupedByProf).map(([profName, entries]) => {
                     const profHeures = entries.reduce((sum, ts) => sum + parseFloat(ts.nombre_heures || 0), 0);
-                    const prof = entries[0].professeur;
-                    const tarif = prof?.tarif_effectif?.tarif_horaire_eur || 0;
-                    const profMontant = profHeures * parseFloat(tarif);
+                    const profMontant = entries.reduce((sum, ts) => sum + (parseFloat(ts.montant_brut) || 0), 0);
                     const statusCount = {
                       brouillon: entries.filter(e => e.statut_validation === 'brouillon').length,
                       soumis: entries.filter(e => e.statut_validation === 'soumis').length,
-                      confirmé: entries.filter(e => e.statut_validation === 'confirmé').length,
-                      généré: entries.filter(e => e.statut_validation === 'généré').length,
+                      confirme: entries.filter(e => e.statut_validation === 'confirme').length,
+                      genere: entries.filter(e => e.statut_validation === 'genere').length,
                     };
 
                     return (
@@ -325,8 +334,8 @@ export default function AdminTimesheetsPage() {
                         </td>
                         <td style={tdStyle}>{statusCount.brouillon}</td>
                         <td style={tdStyle}>{statusCount.soumis}</td>
-                        <td style={tdStyle}>{statusCount.confirmé}</td>
-                        <td style={tdStyle}>{statusCount.généré}</td>
+                        <td style={tdStyle}>{statusCount.confirme}</td>
+                        <td style={tdStyle}>{statusCount.genere}</td>
                       </tr>
                     );
                   })}
@@ -336,7 +345,8 @@ export default function AdminTimesheetsPage() {
           </>
         )}
 
-        {/* Vue Détaillée */}
+        {/* Vue Détaillée (masquée dans la vue par session, qui a ses propres tableaux) */}
+        {viewMode !== 'session' && (
         <div style={{
           background: 'white',
           borderRadius: '8px',
@@ -374,9 +384,9 @@ export default function AdminTimesheetsPage() {
                 </tr>
               ) : (
                 filteredTS.map((ts, idx) => {
-                  const prof = professeurs.find(p => p.id === ts.professeur_id);
-                  const tarif = prof?.tarif_effectif?.tarif_horaire_eur || 0;
-                  const montant = parseFloat(ts.nombre_heures || 0) * parseFloat(tarif);
+                  const montant = parseFloat(ts.montant_brut) || 0;
+                  const heures = parseFloat(ts.nombre_heures || 0);
+                  const tarif = heures > 0 ? montant / heures : 0;
 
                   return (
                     <tr
@@ -406,6 +416,7 @@ export default function AdminTimesheetsPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Historique des générations PDF */}
         {monthHistory.length > 0 && (

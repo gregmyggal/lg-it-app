@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Models\CourseSession;
+use App\Models\SessionProfesseur;
 use App\Models\Timesheet;
 use App\Models\User;
 
@@ -17,16 +19,24 @@ class TimesheetPolicy
         return $user->isStaff() || $this->isOwner($user, $timesheet);
     }
 
-    // Un professeur ne crée une saisie que pour lui-même ; $professeurId vient du payload de la requête.
-    public function create(User $user, ?int $professeurId = null): bool
+    // CLS-01 T3 (Q11) : seuls les professeurs encodent leurs heures ; le staff n'encode pas pour eux.
+    public function create(User $user): bool
     {
-        if ($user->isStaff()) {
-            return true;
+        return $user->isProfesseur() && $user->professeur !== null;
+    }
+
+    // R-T3-2 : le professeur assigné à la session (non remplacé) ou son remplaçant peut y rattacher des heures ;
+    // le remplacé ne peut plus créer de saisie (il garde les siennes). Le rôle n'a aucun effet.
+    public function createForSession(User $user, CourseSession $session): bool
+    {
+        if (! $this->create($user)) {
+            return false;
         }
 
-        return $user->isProfesseur()
-            && $user->professeur
-            && $professeurId === $user->professeur->id;
+        return SessionProfesseur::where('course_session_id', $session->id)
+            ->where('professeur_id', $user->professeur->id)
+            ->where('remplace', false)
+            ->exists();
     }
 
     // Verrou (US-302/311) : seul l'admin peut modifier une saisie soumise/validée ;
@@ -48,7 +58,7 @@ class TimesheetPolicy
     // Transition brouillon → soumis, réservée au professeur propriétaire.
     public function submit(User $user, Timesheet $timesheet): bool
     {
-        return $this->isOwner($user, $timesheet) && $timesheet->statut_validation === 'brouillon';
+        return $this->isOwner($user, $timesheet) && $timesheet->statut_validation === Timesheet::STATUT_BROUILLON;
     }
 
     // Transition soumis → validé, réservée au directeur/admin.
@@ -58,7 +68,7 @@ class TimesheetPolicy
             return true;
         }
 
-        return $user->isDirecteur() && $timesheet->statut_validation === 'soumis';
+        return $user->isDirecteur() && $timesheet->statut_validation === Timesheet::STATUT_SOUMIS;
     }
 
     private function isOwner(User $user, Timesheet $timesheet): bool

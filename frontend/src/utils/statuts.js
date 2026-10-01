@@ -122,3 +122,31 @@ export function phraseSituation(situation) {
   if (situation?.type === 'remplacant_de') return nom ? `Vous remplacez ${nom}` : 'Vous êtes remplaçant';
   return 'Vous êtes assigné à cette session';
 }
+
+/**
+ * Statuts d'une saisie d'heures (`statut_validation`, sans accent côté API) : brouillon → soumis → confirmé → généré.
+ * Le professeur modifie ses brouillons ; le staff confirme ; la génération du PDF clôt le mois.
+ */
+export const STATUTS_TIMESHEET = {
+  brouillon: { label: 'Brouillon', tone: 'warning' },
+  soumis: { label: 'Soumis', tone: 'info' },
+  confirme: { label: 'Confirmé', tone: 'primary' },
+  genere: { label: 'Généré', tone: 'success' },
+};
+
+/** État d'encodage CALCULÉ d'une session pour un professeur (pas un statut stocké) ; `a_encoder` = aucune saisie. */
+export const ETATS_ENCODAGE = {
+  a_encoder: { label: 'À encoder', tone: 'warning' },
+  ...STATUTS_TIMESHEET,
+};
+
+/** Type d'activité d'une saisie. */
+export const TYPES_ACTIVITE = {
+  animation: { label: 'Animation', tone: 'primary' },
+  preparation: { label: 'Préparation', tone: 'info' },
+};
+
+/** Une saisie n'est modifiable par le professeur que tant qu'elle est en brouillon. */
+export function estBrouillon(statut) {
+  return statut === 'brouillon';
+}

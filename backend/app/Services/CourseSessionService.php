@@ -24,6 +24,7 @@ class CourseSessionService
         if ($session->isPassee()) {
             throw RegleMetierException::conflit('Une session passée ne peut pas être déplacée.');
         }
+        $this->refuserSiHeuresEncodees($session, 'déplacée');
 
         if (isset($data['date'])) {
             $this->assertDansLaPeriode($session->classe()->with('periode')->first(), $data['date']);
@@ -39,6 +40,7 @@ class CourseSessionService
         if (! $session->isCancellable()) {
             throw RegleMetierException::conflit('Seule une session planifiée ou en cours peut être annulée.');
         }
+        $this->refuserSiHeuresEncodees($session, 'annulée');
 
         $session->update([
             'statut' => CourseSession::STATUT_ANNULEE,
@@ -47,6 +49,20 @@ class CourseSessionService
         ]);
 
         return $session->refresh();
+    }
+
+    /**
+     * R-T3-8 / AC-33 : une session qui a des heures encodées ne peut être ni annulée ni déplacée (le remplacement
+     * d'un professeur, lui, reste possible).
+     */
+    private function refuserSiHeuresEncodees(CourseSession $session, string $action): void
+    {
+        $nb = $session->timesheets()->count();
+        if ($nb > 0) {
+            throw RegleMetierException::conflit(
+                "Cette session ne peut pas être {$action} : {$nb} saisie".($nb > 1 ? 's' : '')." d'heures y ".($nb > 1 ? 'sont rattachées' : 'est rattachée').'. Le remplacement d\'un professeur reste possible.'
+            );
+        }
     }
 
     /**

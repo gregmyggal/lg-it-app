@@ -20,8 +20,8 @@ class TimesheetSignatureService
             return false;
         }
 
-        // Vérification: seuls les timesheets "confirmé" peuvent être signés
-        if ($timesheet->statut_validation !== 'confirmé') {
+        // Vérification: seuls les timesheets "confirme" peuvent être signés
+        if ($timesheet->statut_validation !== 'confirme') {
             return false;
         }
 
@@ -37,7 +37,7 @@ class TimesheetSignatureService
      */
     public function preparePdfData(int $professeurId, int $year, int $month): array
     {
-        $lissingService = new TimesheetLissingService();
+        $lissingService = new TimesheetLissingService;
         $monthData = $lissingService->calculateMonthlyMontants($professeurId, $year, $month);
 
         $timesheets = DB::table('timesheets')
@@ -57,7 +57,7 @@ class TimesheetSignatureService
         $parJour = [];
         foreach ($monthData['timesheets'] as $ts) {
             $jour = $ts['date_prestation']->format('Y-m-d');
-            if (!isset($parJour[$jour])) {
+            if (! isset($parJour[$jour])) {
                 $parJour[$jour] = [
                     'date' => $ts['date_prestation'],
                     'montant_total' => 0,
@@ -118,10 +118,10 @@ class TimesheetSignatureService
             ->whereMonth('date_prestation', $month)
             ->get();
 
-        $notConfirmed = $timesheets->where('statut_validation', '!==', 'confirmé');
+        $notConfirmed = $timesheets->where('statut_validation', '!==', 'confirme');
         $alreadySigned = $timesheets->whereNotNull('signature_professeur');
 
-        $lissingService = new TimesheetLissingService();
+        $lissingService = new TimesheetLissingService;
         $monthData = $lissingService->calculateMonthlyMontants($professeurId, $year, $month);
 
         return [
@@ -132,8 +132,8 @@ class TimesheetSignatureService
             ),
             'errors' => array_filter([
                 $notConfirmed->count() > 0 ? "{$notConfirmed->count()} entrée(s) non confirmées" : null,
-                $alreadySigned->count() > 0 ? "Mois déjà signé" : null,
-                count($monthData['depassements']) > 0 ? "Dépassements détectés" : null,
+                $alreadySigned->count() > 0 ? 'Mois déjà signé' : null,
+                count($monthData['depassements']) > 0 ? 'Dépassements détectés' : null,
             ]),
             'warnings' => [],
         ];
@@ -149,7 +149,7 @@ class TimesheetSignatureService
         }
 
         $canSign = $this->canSignMonth($professeurId, $year, $month);
-        if (!$canSign['can_sign']) {
+        if (! $canSign['can_sign']) {
             return false;
         }
 
@@ -160,7 +160,7 @@ class TimesheetSignatureService
                     ->where('professeur_id', $professeurId)
                     ->whereYear('date_prestation', $year)
                     ->whereMonth('date_prestation', $month)
-                    ->where('statut_validation', 'confirmé')
+                    ->where('statut_validation', 'confirme')
                     ->whereNull('signature_professeur')
                     ->update([
                         'signature_professeur' => now(),

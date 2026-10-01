@@ -2,57 +2,76 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTimesheetRequest;
+use App\Http\Resources\TimesheetResource;
 use App\Models\Timesheet;
 use App\Services\TimesheetLissingService;
-use App\Services\TimesheetSignatureService;
 use App\Services\TimesheetPdfService;
+use App\Services\TimesheetService;
+use App\Services\TimesheetSignatureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class TimesheetController extends Controller
 {
+    /** Liste filtrable ; un professeur ne voit que ses propres saisies (et ses propres montants). */
     public function index(Request $request)
     {
         Gate::authorize('viewAny', Timesheet::class);
 
+        $filtres = $request->validate([
+            'professeur_id' => ['sometimes', 'integer'],
+            'classe_id' => ['sometimes', 'integer'],
+            'course_session_id' => ['sometimes', 'integer'],
+            'date_from' => ['sometimes', 'date_format:Y-m-d'],
+            'date_to' => ['sometimes', 'date_format:Y-m-d'],
+            'statut' => ['sometimes', Rule::in(Timesheet::STATUTS)],
+            'type_activite' => ['sometimes', Rule::in(TimesheetService::TYPES)],
+        ]);
+
         $user = $request->user();
 
-        $query = Timesheet::with('professeur', 'cours');
+        $query = Timesheet::with('professeur', 'cours', 'session.classe.cours');
 
         if (! $user->isStaff()) {
             $query->where('professeur_id', $user->professeur?->id ?? 0);
+        } elseif (isset($filtres['professeur_id'])) {
+            $query->where('professeur_id', $filtres['professeur_id']);
         }
 
-        return $query->latest('date_prestation')->get();
+        $query
+            ->when(isset($filtres['classe_id']), fn ($q) => $q->whereHas('session', fn ($s) => $s->where('classe_id', $filtres['classe_id'])))
+            ->when(isset($filtres['course_session_id']), fn ($q) => $q->where('course_session_id', $filtres['course_session_id']))
+            ->when(isset($filtres['date_from']), fn ($q) => $q->where('date_prestation', '>=', $filtres['date_from']))
+            ->when(isset($filtres['date_to']), fn ($q) => $q->where('date_prestation', '<=', $filtres['date_to']))
+            ->when(isset($filtres['statut']), fn ($q) => $q->where('statut_validation', $filtres['statut']))
+            ->when(isset($filtres['type_activite']), fn ($q) => $q->where('type_activite', $filtres['type_activite']));
+
+        // Forme historique conservée : un tableau (pas d'enveloppe `data`).
+        return response()->json(TimesheetResource::collection($query->latest('date_prestation')->latest('id')->get())->resolve($request));
     }
 
-    public function store(Request $request)
+    /** Encodage par le professeur connecté : lié à une session ou libre (CLS-01 T3, R-T3-1 à 5). */
+    public function store(StoreTimesheetRequest $request, TimesheetService $service)
     {
-        $data = $request->validate([
-            'professeur_id' => ['required', 'integer'],
-            'date_prestation' => ['required', 'date'],
-            'nombre_heures' => ['required', 'numeric', 'min:0.5', 'max:24'],
-            'cours_id' => ['nullable', 'integer'],
-            'commentaire' => ['nullable', 'string'],
-        ]);
+        $timesheet = $service->creer($request->user(), $request->validated());
 
-        Gate::authorize('create', [Timesheet::class, $data['professeur_id']]);
-
-        $timesheet = Timesheet::create($data + ['statut_validation' => 'brouillon']);
-
-        return response()->json($timesheet, 201);
+        return (new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours')))
+            ->response()->setStatusCode(201);
     }
 
     public function show(Timesheet $timesheet)
     {
         Gate::authorize('view', $timesheet);
 
-        return $timesheet->load('professeur', 'cours');
+        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
     }
 
     // Verrouillé (US-302/311) : seul l'admin modifie une saisie soumise/validée,
     // le professeur ne modifie que ses brouillons (cf. TimesheetPolicy::update).
+    // Le rattachement à la session n'est pas modifiable (R-T3-4).
     public function update(Request $request, Timesheet $timesheet)
     {
         Gate::authorize('update', $timesheet);
@@ -64,9 +83,13 @@ class TimesheetController extends Controller
             'commentaire' => ['nullable', 'string'],
         ]);
 
+        if ($timesheet->course_session_id !== null) {
+            unset($data['date_prestation'], $data['cours_id']);
+        }
+
         $timesheet->update($data);
 
-        return $timesheet;
+        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
     }
 
     public function destroy(Timesheet $timesheet)
@@ -83,9 +106,9 @@ class TimesheetController extends Controller
     {
         Gate::authorize('submit', $timesheet);
 
-        $timesheet->update(['statut_validation' => 'soumis']);
+        $timesheet->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
 
-        return $timesheet;
+        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
     }
 
     // Transition soumis → confirmé (US-311), réservée au directeur/admin.
@@ -98,7 +121,7 @@ class TimesheetController extends Controller
         ]);
 
         $timesheet->update([
-            'statut_validation' => 'confirmé',
+            'statut_validation' => 'confirme',
             'validated_at' => now(),
             'validated_by' => $request->user()->id,
             'lissage_applique' => $data['lissage_applique'] ?? false,
@@ -117,7 +140,7 @@ class TimesheetController extends Controller
             'month' => ['required', 'integer', 'min:1', 'max:12'],
         ]);
 
-        $service = new TimesheetLissingService();
+        $service = new TimesheetLissingService;
         $proposal = $service->proposeLissage(
             $timesheet->professeur_id,
             $timesheet->date_prestation->format('Y-m-d'),
@@ -138,7 +161,7 @@ class TimesheetController extends Controller
             'montant_to_move' => ['required', 'numeric', 'min:0.01', 'max:44.02'],
         ]);
 
-        $service = new TimesheetLissingService();
+        $service = new TimesheetLissingService;
         $success = $service->executeLissage(
             $timesheet->id,
             $timesheet->date_prestation->format('Y-m-d'),
@@ -146,7 +169,7 @@ class TimesheetController extends Controller
             $data['montant_to_move']
         );
 
-        if (!$success) {
+        if (! $success) {
             return response()->json(['error' => 'Lissage impossible'], 422);
         }
 
@@ -168,7 +191,7 @@ class TimesheetController extends Controller
             'month' => ['required', 'integer', 'min:1', 'max:12'],
         ]);
 
-        $service = new TimesheetSignatureService();
+        $service = new TimesheetSignatureService;
         $pdfData = $service->preparePdfData(
             $request->input('professeur_id'),
             $request->input('year'),
@@ -184,12 +207,12 @@ class TimesheetController extends Controller
         Gate::authorize('view', $timesheet);
 
         $user = $request->user();
-        if (!$user->isProfesseur()) {
+        if (! $user->isProfesseur()) {
             abort(403, 'Seul un professeur peut signer');
         }
 
-        $service = new TimesheetSignatureService();
-        if (!$service->signTimesheet($timesheet, $user)) {
+        $service = new TimesheetSignatureService;
+        if (! $service->signTimesheet($timesheet, $user)) {
             return response()->json(['error' => 'Impossible de signer ce timesheet'], 422);
         }
 
@@ -211,7 +234,7 @@ class TimesheetController extends Controller
             'month' => ['required', 'integer', 'min:1', 'max:12'],
         ]);
 
-        $service = new TimesheetSignatureService();
+        $service = new TimesheetSignatureService;
         $result = $service->canSignMonth(
             $request->input('professeur_id'),
             $request->input('year'),
@@ -239,8 +262,8 @@ class TimesheetController extends Controller
             abort(403);
         }
 
-        $service = new TimesheetSignatureService();
-        if (!$service->signMonth(
+        $service = new TimesheetSignatureService;
+        if (! $service->signMonth(
             $request->input('professeur_id'),
             $request->input('year'),
             $request->input('month'),
@@ -268,11 +291,11 @@ class TimesheetController extends Controller
 
         // Vérification: directeur ne peut générer que pour ses propres professeurs
         $user = $request->user();
-        if (!$user->isAdmin()) {
+        if (! $user->isAdmin()) {
             // TODO: vérifier que le directeur gère ce professeur
         }
 
-        $service = new TimesheetPdfService(new TimesheetLissingService());
+        $service = new TimesheetPdfService(new TimesheetLissingService);
         $result = $service->generateMonthlyPdf(
             $data['professeur_id'],
             $data['year'],
@@ -294,14 +317,14 @@ class TimesheetController extends Controller
 
         Gate::authorize('viewAny', Timesheet::class);
 
-        $service = new TimesheetPdfService(new TimesheetLissingService());
+        $service = new TimesheetPdfService(new TimesheetLissingService);
         $pdfPath = $service->getPdfPath(
             $data['professeur_id'],
             $data['year'],
             $data['month']
         );
 
-        if (!$pdfPath || !Storage::disk('local')->exists($pdfPath)) {
+        if (! $pdfPath || ! Storage::disk('local')->exists($pdfPath)) {
             return response()->json(['error' => 'PDF non trouvé'], 404);
         }
 
