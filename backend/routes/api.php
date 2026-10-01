@@ -82,6 +82,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
 
     // ADMIN-01 : gestion des comptes admin/directeur (staff).
     Route::apiResource('staff', StaffController::class);
+    Route::get('/staff/{staff}/impact-info', [StaffController::class, 'impactInfo']);
     Route::post('/staff/{staff}/desactiver', [StaffController::class, 'desactiver']);
     Route::post('/staff/{staff}/reactiver', [StaffController::class, 'reactiver']);
     Route::post('/staff/{staff}/reinitialiser-mot-de-passe', [StaffController::class, 'reinitialiserMotDePasse']);

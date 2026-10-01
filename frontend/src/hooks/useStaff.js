@@ -131,3 +131,26 @@ export function useResetStaffPassword() {
 
   return { reset, loading, error };
 }
+
+export function useGetImpactInfo() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [impact, setImpact] = useState(null);
+
+  const fetch = useCallback(async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.get(`/staff/${id}/impact-info`);
+      setImpact(response.data);
+      return response.data;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { fetch, impact, loading, error };
+}

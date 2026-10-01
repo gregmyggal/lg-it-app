@@ -3,7 +3,7 @@ import AdminButton from '../AdminButton';
 import { useResetStaffPassword } from '../../hooks/useStaff';
 import { libelleRole } from '../../utils/statuts';
 
-export default function StaffDetailModal({ staff, onClose, onDesactiver, onReactiver }) {
+export default function StaffDetailModal({ staff, onClose, onDesactiver, onReactiver, onEditEmail }) {
   const { reset, loading: resetLoading } = useResetStaffPassword();
 
   async function handleReinitMotDePasse() {
@@ -43,9 +43,12 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
         )}
       </div>
 
-      <div style={{ borderTop: '1px solid #ddd', paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+      <div style={{ borderTop: '1px solid #ddd', paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         {staff.statut === 'actif' ? (
           <>
+            <AdminButton onClick={onEditEmail} disabled={resetLoading} style={{ background: '#2196f3' }}>
+              Modifier email
+            </AdminButton>
             <AdminButton onClick={handleReinitMotDePasse} disabled={resetLoading} style={{ background: '#ff9800' }}>
               Réinitialiser mot de passe
             </AdminButton>

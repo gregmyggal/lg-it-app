@@ -85,11 +85,29 @@ class StaffController extends Controller
         return response()->noContent();
     }
 
+    public function impactInfo(User $staff)
+    {
+        Gate::authorize('view', $staff);
+
+        $impact = [
+            'isLastAdmin' => $this->isLastAdmin($staff),
+            'isLastDirecteur' => $this->isLastDirecteur($staff),
+            'timsheetsCount' => $this->countTimesheets($staff),
+        ];
+
+        return response()->json(['data' => $impact]);
+    }
+
     public function desactiver(Request $request, User $staff)
     {
         Gate::authorize('update', $staff);
 
         $this->refuserSoi($staff);
+
+        // Empêcher la désactivation du dernier admin
+        if ($this->isLastAdmin($staff)) {
+            abort(409, 'Vous ne pouvez pas désactiver le dernier admin du système.');
+        }
 
         $staff->update([
             'statut' => 'inactif',
@@ -145,5 +163,36 @@ class StaffController extends Controller
         // Pour l'instant, un directeur sans données liées est rare. On considère qu'il n'a pas d'impact direct.
         // Cas futur : vérifier les classes assignées, etc.
         return false;
+    }
+
+    private function isLastAdmin(User $user): bool
+    {
+        if ($user->role !== 'admin') {
+            return false;
+        }
+
+        $count = User::where('role', 'admin')->where('statut', 'actif')->count();
+        return $count === 1;
+    }
+
+    private function isLastDirecteur(User $user): bool
+    {
+        if ($user->role !== 'directeur') {
+            return false;
+        }
+
+        $count = User::where('role', 'directeur')->where('statut', 'actif')->count();
+        return $count === 1;
+    }
+
+    private function countTimesheets(User $user): int
+    {
+        // Compter les timesheets en brouillon ou soumis du professeur associé
+        if ($user->isProfesseur()) {
+            return $user->professeur?->timesheets()
+                ->whereIn('statut_validation', ['brouillon', 'soumis'])
+                ->count() ?? 0;
+        }
+        return 0;
     }
 }

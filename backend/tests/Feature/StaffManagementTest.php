@@ -163,4 +163,21 @@ class StaffManagementTest extends TestCase
             ->assertJsonPath('data.name', 'Jean-Pierre Dupont')
             ->assertJsonPath('data.email', $newEmail);
     }
+
+    // T2 : Impact info endpoint fonctionne
+    public function test_impact_info_endpoint_works()
+    {
+        $response = $this->actingAs($this->admin)->getJson("/api/staff/{$this->directeur->id}/impact-info");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data' => ['isLastAdmin', 'isLastDirecteur', 'timsheetsCount']]);
+    }
+
+    public function test_can_get_impact_info()
+    {
+        $response = $this->actingAs($this->admin)->getJson("/api/staff/{$this->directeur->id}/impact-info");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data' => ['isLastAdmin', 'isLastDirecteur', 'timsheetsCount']]);
+    }
 }

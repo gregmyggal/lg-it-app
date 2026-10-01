@@ -9,6 +9,7 @@ import { useStaff, useCreateStaff, useDeactivateStaff, useReactivateStaff } from
 import StaffCreateModal from '../../components/staff/StaffCreateModal';
 import StaffDetailModal from '../../components/staff/StaffDetailModal';
 import StaffDeactivateModal from '../../components/staff/StaffDeactivateModal';
+import StaffEditEmailModal from '../../components/staff/StaffEditEmailModal';
 import { STATUTS_STAFF, libelleRole } from '../../utils/statuts';
 import { formatDateCourte } from '../../utils/dates';
 
@@ -18,11 +19,12 @@ const LIBELLESTATUT = {
 };
 
 export default function StaffAdminPage() {
-  const [filtres, setFiltres] = useState({ statut: '' });
+  const [filtres, setFiltres] = useState({ statut: '', role: '' });
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [modaleCreation, setModaleCreation] = useState(false);
   const [modaleDetail, setModaleDetail] = useState(false);
   const [modaleDesactivation, setModaleDesactivation] = useState(false);
+  const [modaleEditEmail, setModaleEditEmail] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
   const staff = useStaff(filtres);
@@ -114,6 +116,13 @@ export default function StaffAdminPage() {
               <option value="inactif">Désactivés</option>
             </select>
           </FilterField>
+          <FilterField label="Rôle">
+            <select value={filtres.role} onChange={(e) => majFiltre('role', e.target.value)}>
+              <option value="">Tous</option>
+              <option value="admin">Admin</option>
+              <option value="directeur">Directeur</option>
+            </select>
+          </FilterField>
         </FilterBar>
         <Table>
           <thead>
@@ -161,6 +170,7 @@ export default function StaffAdminPage() {
           onClose={() => setModaleDetail(false)}
           onDesactiver={() => setModaleDesactivation(true)}
           onReactiver={handleReactiver}
+          onEditEmail={() => setModaleEditEmail(true)}
         />
       )}
       {modaleDesactivation && selectedStaff && (
@@ -168,6 +178,18 @@ export default function StaffAdminPage() {
           staff={selectedStaff}
           onClose={() => setModaleDesactivation(false)}
           onConfirm={handleDesactiver}
+        />
+      )}
+      {modaleEditEmail && selectedStaff && (
+        <StaffEditEmailModal
+          staff={selectedStaff}
+          onClose={() => setModaleEditEmail(false)}
+          onSubmit={(updatedStaff) => {
+            setSelectedStaff(updatedStaff);
+            setModaleEditEmail(false);
+            setSuccessMessage(`Email modifié. Les tokens ont été révoqués.`);
+            staff.reload();
+          }}
         />
       )}
     </>
