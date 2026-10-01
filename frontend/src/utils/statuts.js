@@ -152,6 +152,15 @@ export const STATUTS_STAFF = {
   inactif: { label: 'Inactif', tone: 'neutral' },
 };
 
+/** ADMIN-02 : état d'accès d'un compte staff (texte + icône, jamais la couleur seule). */
+export const STATUTS_ACCES = {
+  mot_de_passe_defini: { label: '✓ Mot de passe défini', tone: 'success' },
+  invitation_en_attente: { label: '✉ Invitation en attente', tone: 'info' },
+  invitation_expiree: { label: '⚠ Invitation expirée', tone: 'warning' },
+  invitation_non_envoyee: { label: '✕ Invitation non envoyée', tone: 'error' },
+  mot_de_passe_provisoire: { label: '● Mot de passe provisoire', tone: 'neutral' },
+};
+
 /** Une saisie n'est modifiable par le professeur que tant qu'elle est en brouillon. */
 export function estBrouillon(statut) {
   return statut === 'brouillon';

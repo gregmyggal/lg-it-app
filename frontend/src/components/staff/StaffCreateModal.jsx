@@ -2,45 +2,83 @@ import { useState } from 'react';
 import Modal from '../ui/Modal';
 import { FormField } from '../ui/FormField';
 import AdminButton from '../AdminButton';
-import { useCreateStaff } from '../../hooks/useStaff';
+import LienCopiable from './LienCopiable';
+import { useCreateStaff, useSendStaffLink } from '../../hooks/useStaff';
+import { getErrorMessage } from '../../api/errors';
 
+const VIDE = { name: '', email: '', role: 'directeur' };
+
+/** ADMIN-02 : création d'un compte staff ; l'invitation est envoyée par email (aucun mot de passe affiché). */
 export default function StaffCreateModal({ onClose, onCreated }) {
-  const [formData, setFormData] = useState({ name: '', email: '', role: 'directeur' });
+  const [formData, setFormData] = useState(VIDE);
   const [errors, setErrors] = useState({});
-  const [password, setPassword] = useState('');
-  const [createdRole, setCreatedRole] = useState('directeur');
+  const [resultat, setResultat] = useState(null); // { staff, emailEnvoye, lien }
+  const [erreurReessai, setErreurReessai] = useState('');
   const { create, loading } = useCreateStaff();
+  const { send, loading: reessaiEnCours } = useSendStaffLink();
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErrors({});
     try {
       const response = await create(formData);
-      setCreatedRole(formData.role);
-      setPassword(response.data.password);
-      onCreated?.(response.data.data);
+      const { data, email_envoye: emailEnvoye, lien } = response.data;
+      setResultat({ staff: data, emailEnvoye, lien });
+      onCreated?.(data);
     } catch (err) {
       const apiErrors = err.response?.data?.errors;
-      setErrors(apiErrors || { general: err.response?.data?.message || 'Erreur lors de la création' });
+      setErrors(apiErrors || { general: getErrorMessage(err, 'Erreur lors de la création') });
     }
   }
 
-  if (password) {
+  async function reessayer() {
+    setErreurReessai('');
+    try {
+      const response = await send(resultat.staff.id);
+      const { data, email_envoye: emailEnvoye, lien } = response.data;
+      setResultat({ staff: data, emailEnvoye, lien });
+      onCreated?.(data);
+    } catch (err) {
+      setErreurReessai(getErrorMessage(err));
+    }
+  }
+
+  function creerUnAutre() {
+    setResultat(null);
+    setFormData(VIDE);
+    setErrors({});
+  }
+
+  if (resultat?.emailEnvoye) {
     return (
       <Modal onClose={onClose}>
-        <h2>{createdRole === 'admin' ? 'Administrateur' : 'Directeur'} créé avec succès</h2>
-        <p>Mot de passe temporaire à communiquer (affiché une seule fois) :</p>
-        <div style={{
-          padding: '12px',
-          backgroundColor: '#f0f0f0',
-          borderRadius: '4px',
-          fontFamily: 'monospace',
-          userSelect: 'all',
-          marginBottom: '16px',
-        }}>
-          {password}
+        <h2>Invitation envoyée</h2>
+        <p role="status">
+          Un email d&apos;invitation a été envoyé à <strong>{resultat.staff.email}</strong>. Le lien est valable 72 h
+          et permet à {resultat.staff.name} de choisir son mot de passe.
+        </p>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={creerUnAutre}>Créer un autre compte</button>
+          <AdminButton onClick={onClose}>Fermer</AdminButton>
         </div>
-        <div style={{ textAlign: 'center' }}>
+      </Modal>
+    );
+  }
+
+  if (resultat) {
+    return (
+      <Modal onClose={onClose}>
+        <h2>Compte créé, email non envoyé</h2>
+        <div role="alert" style={{ padding: '12px', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '16px' }}>
+          Le compte de <strong>{resultat.staff.name}</strong> a été créé mais l&apos;email n&apos;a pas pu être envoyé à {resultat.staff.email}.
+          Réessayez, ou transmettez vous-même le lien ci-dessous.
+        </div>
+        {erreurReessai && <p role="alert" className="error">{erreurReessai}</p>}
+        <LienCopiable lien={resultat.lien} />
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
+          <button type="button" onClick={reessayer} disabled={reessaiEnCours}>
+            {reessaiEnCours ? 'Envoi…' : 'Réessayer l’envoi'}
+          </button>
           <AdminButton onClick={onClose}>Fermer</AdminButton>
         </div>
       </Modal>
@@ -51,11 +89,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
     <Modal onClose={onClose}>
       <h2>Créer un compte staff</h2>
       <form onSubmit={handleSubmit}>
-        <FormField
-          label="Rôle"
-          error={errors.role}
-          required
-        >
+        <FormField label="Rôle" error={errors.role} required>
           <select
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -66,11 +100,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
           </select>
         </FormField>
 
-        <FormField
-          label="Nom complet"
-          error={errors.name}
-          required
-        >
+        <FormField label="Nom complet" error={errors.name} required>
           <input
             type="text"
             value={formData.name}
@@ -84,6 +114,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
         <FormField
           label="Email de connexion"
           error={errors.email}
+          helperText="Un email d'invitation sera envoyé à cette adresse."
           required
         >
           <input
@@ -97,7 +128,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
         </FormField>
 
         {errors.general && (
-          <div style={{ color: '#d32f2f', marginBottom: '16px', fontSize: '14px' }}>{errors.general}</div>
+          <div role="alert" style={{ color: '#d32f2f', marginBottom: '16px', fontSize: '14px' }}>{errors.general}</div>
         )}
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -105,7 +136,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
             Annuler
           </button>
           <AdminButton type="submit" disabled={loading}>
-            {loading ? 'Création...' : 'Créer'}
+            {loading ? 'Envoi…' : 'Créer et envoyer l’invitation'}
           </AdminButton>
         </div>
       </form>

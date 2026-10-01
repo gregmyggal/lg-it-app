@@ -4,6 +4,8 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import ChangerMotDePassePage from './pages/ChangerMotDePassePage';
+import MotDePasseOubliePage from './pages/MotDePasseOubliePage';
+import DefinirMotDePassePage from './pages/DefinirMotDePassePage';
 import MesCoursPage from './pages/MesCoursPage';
 import CoursLiensPage from './pages/CoursLiensPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -50,6 +52,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/connexion" element={<LoginPage />} />
+          <Route path="/mot-de-passe-oublie" element={<MotDePasseOubliePage />} />
+          <Route path="/definir-mot-de-passe" element={<DefinirMotDePassePage />} />
           <Route path="/share/:code" element={<SharePage />} />
           <Route
             path="/mot-de-passe"

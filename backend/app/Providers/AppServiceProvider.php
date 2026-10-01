@@ -9,7 +9,10 @@ use App\Models\Stage;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,5 +43,9 @@ class AppServiceProvider extends ServiceProvider
 
         // ADMIN-01 : enregistrer la Policy pour User
         Gate::policy(User::class, UserPolicy::class);
+
+        // ADMIN-02 : routes publiques de mot de passe.
+        RateLimiter::for('acces-oubli', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('acces-lien', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
     }
 }

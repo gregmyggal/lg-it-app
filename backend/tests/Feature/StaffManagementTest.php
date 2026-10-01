@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class StaffManagementTest extends TestCase
@@ -16,6 +17,8 @@ class StaffManagementTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Mail::fake();
 
         // Créer un admin et un directeur pour les tests
         $this->admin = User::factory()->create(['role' => 'admin', 'statut' => 'actif']);
@@ -33,7 +36,8 @@ class StaffManagementTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonStructure(['data', 'password'])
+            ->assertJsonStructure(['data', 'email_envoye'])
+            ->assertJsonMissingPath('password')
             ->assertJsonPath('data.statut', 'actif')
             ->assertJsonPath('data.email', $email)
             ->assertJsonPath('data.role', 'directeur');
@@ -92,7 +96,8 @@ class StaffManagementTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.statut', 'actif')
-            ->assertJsonStructure(['password']);
+            ->assertJsonStructure(['email_envoye'])
+            ->assertJsonMissingPath('password');
 
         $this->directeur->refresh();
         $this->assertEquals('actif', $this->directeur->statut);
@@ -143,16 +148,6 @@ class StaffManagementTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_can_reinitialize_password()
-    {
-        $response = $this->actingAs($this->admin)->postJson("/api/staff/{$this->directeur->id}/reinitialiser-mot-de-passe");
-
-        $response->assertStatus(200)
-            ->assertJsonStructure(['password']);
-
-        $this->directeur->refresh();
-        $this->assertTrue($this->directeur->must_change_password);
-    }
 
     public function test_can_update_staff()
     {
@@ -191,28 +186,6 @@ class StaffManagementTest extends TestCase
         return $this->postJson('/api/login', ['email' => $email, 'password' => $password]);
     }
 
-    public function test_flux_complet_creation_premiere_connexion_et_changement_de_mot_de_passe()
-    {
-        $created = $this->actingAs($this->admin)->postJson('/api/staff', [
-            'name' => 'Nouveau Dir', 'email' => 'nouveau.dir@example.com', 'role' => 'directeur',
-        ])->assertStatus(201);
-        $temp = $created->json('password');
-
-        $login = $this->loginAs('nouveau.dir@example.com', $temp)->assertOk();
-        $this->assertTrue($login->json('user.must_change_password'));
-        $token = $login->json('token');
-
-        $this->app['auth']->forgetGuards();
-        $this->withHeader('Authorization', "Bearer $token")->postJson('/api/me/mot-de-passe', [
-            'current_password' => $temp,
-            'password' => 'NouveauMdp123',
-            'password_confirmation' => 'NouveauMdp123',
-        ])->assertOk();
-
-        $this->assertFalse(User::where('email', 'nouveau.dir@example.com')->first()->must_change_password);
-        $this->loginAs('nouveau.dir@example.com', $temp)->assertStatus(422);
-        $this->loginAs('nouveau.dir@example.com', 'NouveauMdp123')->assertOk();
-    }
 
     public function test_desactivation_revoque_les_jetons_et_refuse_la_connexion()
     {
@@ -286,18 +259,6 @@ class StaffManagementTest extends TestCase
             ->assertOk()->assertJsonPath('data.date_sortie', '2026-10-15');
     }
 
-    public function test_reinitialisation_invalide_l_ancien_mot_de_passe_et_les_jetons()
-    {
-        $this->directeur->update(['password' => 'ancien-123']);
-        $this->loginAs($this->directeur->email, 'ancien-123')->assertOk();
-
-        $new = $this->actingAs($this->admin)
-            ->postJson("/api/staff/{$this->directeur->id}/reinitialiser-mot-de-passe")->json('password');
-
-        $this->assertSame(0, $this->directeur->tokens()->count());
-        $this->loginAs($this->directeur->email, 'ancien-123')->assertStatus(422);
-        $this->loginAs($this->directeur->email, $new)->assertOk();
-    }
 
     public function test_un_professeur_ne_peut_pas_etre_cible_via_l_api_staff()
     {

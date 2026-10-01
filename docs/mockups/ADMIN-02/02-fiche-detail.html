@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>02 — Fiche staff : statut d'invitation et actions</title>
+<style>* { box-sizing: border-box; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; margin: 0; padding: 16px; background: #f9fafb; color: #111827; line-height: 1.5; }
+.page { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+.lead { color: #4b5563; margin: 0 0 16px; font-size: 14px; }
+a { color: #1d4ed8; }
+:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+.states-nav { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.state-btn { padding: 8px 12px; border: 1px solid #d1d5db; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: #111827; }
+.state-btn.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+.demo-section h2 { margin: 0 0 12px; font-size: 16px; color: #374151; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+.demo-content { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.backdrop { background: rgba(17,24,39,.45); border-radius: 8px; padding: 32px 16px; display: flex; justify-content: center; }
+.modal { background: #fff; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,.15); width: 100%; max-width: 560px; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.modal-header h3 { margin: 0; font-size: 20px; }
+.modal-close { background: transparent; border: none; font-size: 22px; cursor: pointer; color: #4b5563; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.form-group { margin-bottom: 18px; }
+.form-group label, .lbl { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.req { color: #b91c1c; }
+input, select { width: 100%; padding: 10px 12px; border: 1px solid #9ca3af; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: #111827; }
+input:focus, select:focus { outline: none; border-color: #1d4ed8; box-shadow: 0 0 0 3px #dbeafe; }
+input.error { border-color: #b91c1c; }
+input[readonly] { background: #f3f4f6; }
+.hint { font-size: 13px; color: #4b5563; margin-top: 4px; }
+.form-error { font-size: 13px; color: #b91c1c; margin-top: 4px; }
+.btn { padding: 10px 16px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-primary { background: #1d4ed8; color: #fff; }
+.btn-primary:hover { background: #1e40af; }
+.btn-primary:disabled { background: #6b7280; cursor: not-allowed; }
+.btn-secondary { background: #fff; color: #111827; border-color: #d1d5db; }
+.btn-warn { background: #b45309; color: #fff; }
+.btn-danger { background: #b91c1c; color: #fff; }
+.btn-success { background: #047857; color: #fff; }
+.btn-sm { padding: 6px 10px; font-size: 13px; }
+.btn-link { background: none; border: none; color: #1d4ed8; text-decoration: underline; cursor: pointer; padding: 0; font: inherit; }
+.alert { padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; border-left: 4px solid; }
+.alert-ok { background: #ecfdf5; border-color: #047857; color: #064e3b; }
+.alert-warn { background: #fffbeb; border-color: #b45309; color: #78350f; }
+.alert-err { background: #fef2f2; border-color: #b91c1c; color: #7f1d1d; }
+.alert-info { background: #eff6ff; border-color: #1d4ed8; color: #1e3a8a; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-green { background: #d1fae5; color: #065f46; }
+.b-blue { background: #dbeafe; color: #1e40af; }
+.b-orange { background: #fef3c7; color: #92400e; }
+.b-red { background: #fee2e2; color: #991b1b; }
+.b-gray { background: #e5e7eb; color: #374151; }
+.linkbox { display: flex; gap: 8px; align-items: center; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px; }
+.linkbox input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; border: none; background: transparent; padding: 4px; }
+.check { text-align: center; font-size: 40px; margin-bottom: 8px; }
+.center { text-align: center; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 10px 12px; background: #f3f4f6; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #374151; }
+td { padding: 12px; border-top: 1px solid #e5e7eb; vertical-align: middle; }
+.public { min-height: 60vh; display: flex; align-items: center; justify-content: center; background: #f3f4f6; border-radius: 8px; padding: 32px 16px; }
+.card { background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.card h1 { font-size: 22px; margin-bottom: 16px; }
+.pw-wrap { position: relative; }
+.pw-wrap button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+.req-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; color: #4b5563; }
+.annot { background: #fefce8; border: 1px dashed #ca8a04; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #713f12; margin-top: 16px; }
+.dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; font-size: 14px; margin: 0 0 16px; }
+.dl dt { color: #4b5563; font-weight: 600; }
+.dl dd { margin: 0; }
+.block { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.block h4 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: .5px; color: #374151; }
+.skel { height: 14px; background: #e5e7eb; border-radius: 4px; margin: 10px 0; }
+.mail { max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+.mail-head { background: #f3f4f6; padding: 12px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #e5e7eb; }
+.mail-body { padding: 24px; font-size: 15px; }
+.mail-btn { display: inline-block; background: #1d4ed8; color: #fff !important; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; margin: 8px 0 16px; }
+.mail-foot { padding: 12px 24px; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; }
+@media (max-width: 600px) { .demo-content { padding: 12px; } .modal-body, .modal-header, .modal-footer { padding: 16px; } table { font-size: 13px; } .dl { grid-template-columns: 1fr; } }
+</style></head>
+<body><div class="page">
+<p><a href="index.html">← Index ADMIN-02</a></p>
+<h1>02 — Fiche staff : statut d'accès et envois</h1>
+<p class="lead">Modale de fiche existante (StaffDetailModal). Ajoute la ligne « Accès » et remplace « Réinitialiser mot de passe ».</p>
+<div class="states-nav" role="group" aria-label="États de la maquette">
+<button class="state-btn active" data-s="pending">Invitation en attente</button>
+<button class="state-btn" data-s="confirm">Confirmation d'envoi</button>
+<button class="state-btn" data-s="sent">Email envoyé</button>
+<button class="state-btn" data-s="fail">Échec d'envoi</button>
+<button class="state-btn" data-s="defined">Mot de passe défini</button>
+<button class="state-btn" data-s="off">Compte désactivé</button>
+</div>
+
+<section id="s-pending" class="demo-section"><h2>Invitation envoyée, pas encore activée</h2><div class="demo-content"><div class="backdrop">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="a1">
+<div class="modal-header"><h3 id="a1">Jean Dupont</h3><button class="modal-close" aria-label="Fermer">✕</button></div>
+<div class="modal-body">
+<div class="block"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Rôle</dt><dd>Directeur</dd><dt>Créé le</dt><dd>28/09/2026</dd></dl></div>
+<div class="block"><h4>Compte de connexion</h4>
+<dl class="dl"><dt>Email</dt><dd>jean.dupont@logiscool.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-blue">✉ Invitation en attente</span><br><span class="hint">Envoyée le 28/09/2026 à 14:32 — expire le 01/10/2026 à 14:32</span></dd></dl>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-warn btn-sm">Renvoyer l'invitation</button><button class="btn btn-secondary btn-sm">Modifier l'email</button><button class="btn btn-danger btn-sm">Désactiver</button></div>
+<p class="hint" style="margin-bottom:0"><button class="btn-link">Générer un lien à transmettre</button> — si l'email n'arrive pas (spam, adresse erronée).</p></div>
+</div>
+<div class="modal-footer"><button class="btn btn-secondary">Fermer</button></div>
+</div></div></div></section>
+
+<section id="s-confirm" class="demo-section" hidden><h2>Confirmation en ligne avant envoi</h2><div class="demo-content"><div class="backdrop">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="a2">
+<div class="modal-header"><h3 id="a2">Jean Dupont</h3><button class="modal-close" aria-label="Fermer">✕</button></div>
+<div class="modal-body">
+<div class="block"><h4>Compte de connexion</h4>
+<dl class="dl"><dt>Email</dt><dd>jean.dupont@logiscool.com</dd><dt>Accès</dt><dd><span class="badge b-orange">⚠ Invitation expirée</span><br><span class="hint">Envoyée le 25/09/2026, expirée le 28/09/2026</span></dd></dl>
+<div class="alert alert-info" role="group" aria-label="Confirmer l'envoi">Envoyer une nouvelle invitation à <strong>jean.dupont@logiscool.com</strong> ? Les liens précédents seront annulés.
+<div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-primary btn-sm">Envoyer l'email</button><button class="btn btn-secondary btn-sm">Annuler</button></div></div>
+</div></div>
+<div class="modal-footer"><button class="btn btn-secondary">Fermer</button></div>
+</div></div></div></section>
+
+<section id="s-sent" class="demo-section" hidden><h2>Succès de l'envoi</h2><div class="demo-content"><div class="backdrop">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="a3">
+<div class="modal-header"><h3 id="a3">Jean Dupont</h3><button class="modal-close" aria-label="Fermer">✕</button></div>
+<div class="modal-body">
+<div class="alert alert-ok" role="status">✔ Email envoyé à jean.dupont@logiscool.com à 14:32. Lien valable 72 h.</div>
+<div class="block"><h4>Compte de connexion</h4>
+<dl class="dl"><dt>Accès</dt><dd><span class="badge b-blue">✉ Invitation en attente</span><br><span class="hint">Envoyée le 01/10/2026 à 14:32</span></dd></dl>
+<button class="btn btn-warn btn-sm" disabled>Renvoyer l'invitation (disponible dans 1 min)</button></div>
+</div><div class="modal-footer"><button class="btn btn-secondary">Fermer</button></div>
+</div></div></div></section>
+
+<section id="s-fail" class="demo-section" hidden><h2>Échec d'envoi depuis la fiche</h2><div class="demo-content"><div class="backdrop">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="a4">
+<div class="modal-header"><h3 id="a4">Jean Dupont</h3><button class="modal-close" aria-label="Fermer">✕</button></div>
+<div class="modal-body">
+<div class="alert alert-err" role="alert"><strong>L'email n'a pas pu être envoyé.</strong> Aucun changement n'a été fait sur le compte. Réessayez, ou transmettez un lien vous-même :</div>
+<div class="linkbox"><input readonly value="https://app.logiscool.be/definir-mot-de-passe#token=Qm9z…" aria-label="Lien à transmettre"><button class="btn btn-primary btn-sm">Copier</button></div>
+<p class="hint">Affiché une seule fois. Les liens précédents sont annulés. L'action est enregistrée dans le journal.</p>
+<button class="btn btn-secondary btn-sm">Réessayer l'envoi</button>
+</div><div class="modal-footer"><button class="btn btn-secondary">Fermer</button></div>
+</div></div></div></section>
+
+<section id="s-defined" class="demo-section" hidden><h2>Mot de passe déjà défini : lien de réinitialisation</h2><div class="demo-content"><div class="backdrop">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="a5">
+<div class="modal-header"><h3 id="a5">Marie Dupont</h3><button class="modal-close" aria-label="Fermer">✕</button></div>
+<div class="modal-body">
+<div class="block"><h4>Compte de connexion</h4>
+<dl class="dl"><dt>Email</dt><dd>marie.dupont@logiscool.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-green">✔ Mot de passe défini</span><br><span class="hint">Défini le 12/09/2026</span></dd></dl>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-warn btn-sm">Envoyer un lien de réinitialisation</button><button class="btn btn-secondary btn-sm">Modifier l'email</button><button class="btn btn-danger btn-sm">Désactiver</button></div>
+<p class="hint" style="margin-bottom:0">Son mot de passe actuel reste valable tant qu'elle n'a pas utilisé le lien.</p></div>
+</div><div class="modal-footer"><button class="btn btn-secondary">Fermer</button></div>
+</div></div></div></section>
+
+<section id="s-off" class="demo-section" hidden><h2>Compte désactivé : pas d'envoi</h2><div class="demo-content"><div class="backdrop">
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="a6">
+<div class="modal-header"><h3 id="a6">Paul Leroy</h3><button class="modal-close" aria-label="Fermer">✕</button></div>
+<div class="modal-body">
+<div class="block"><h4>Compte de connexion</h4>
+<dl class="dl"><dt>Email</dt><dd>paul.leroy@logiscool.com</dd><dt>Statut</dt><dd><span class="badge b-gray">⏸ Désactivé</span></dd><dt>Date de sortie</dt><dd>30/06/2026</dd><dt>Accès</dt><dd>—</dd></dl>
+<p class="hint">Aucune invitation ni lien ne peut être envoyé à un compte désactivé.</p>
+<button class="btn btn-success btn-sm">Réactiver</button></div>
+<div class="alert alert-info" style="margin-bottom:0">« Réactiver » : le compte redevient actif, <strong>l'ancien mot de passe n'est plus valable</strong> et une invitation est envoyée à paul.leroy@logiscool.com (lien valable 72 h).</div>
+</div><div class="modal-footer"><button class="btn btn-secondary">Fermer</button></div>
+</div></div></div></section>
+</div>
+<script>
+document.querySelectorAll('.state-btn').forEach(function(b){b.addEventListener('click',function(){
+document.querySelectorAll('.demo-section').forEach(function(s){s.hidden=true});
+document.querySelectorAll('.state-btn').forEach(function(x){x.classList.remove('active')});
+document.getElementById('s-'+b.dataset.s).hidden=false;b.classList.add('active');});});
+</script></body></html>

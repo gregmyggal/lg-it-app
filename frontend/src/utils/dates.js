@@ -50,6 +50,13 @@ export function formatDate(iso) {
   return `${deuxChiffres(d.getDate())}/${deuxChiffres(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
 
+/** Horodatage ISO 8601 avec fuseau → « 25/11/2026 14:32 » (heure locale du navigateur). */
+export function formatDateHeure(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return `${formatDate(toISODate(d))} ${deuxChiffres(d.getHours())}:${deuxChiffres(d.getMinutes())}`;
+}
+
 /** « mer. 25/11/2026 » */
 export function formatDateCourte(iso) {
   const d = parseDate(iso);

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { getStatus } from '../api/errors';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -33,6 +34,9 @@ export default function LoginPage() {
   return (
     <div className="card card--narrow">
       <h1>Connexion</h1>
+      {location.state?.motDePasseDefini && (
+        <p role="status">Mot de passe enregistré. Connectez-vous avec votre nouveau mot de passe.</p>
+      )}
       <form onSubmit={handleSubmit}>
         <label>
           Email
@@ -53,6 +57,7 @@ export default function LoginPage() {
           />
         </label>
         {error && <p className="error">{error}</p>}
+        <p><Link to="/mot-de-passe-oublie" state={{ email }}>Mot de passe oublié ?</Link></p>
         <button type="submit" disabled={submitting}>
           {submitting ? 'Connexion…' : 'Se connecter'}
         </button>

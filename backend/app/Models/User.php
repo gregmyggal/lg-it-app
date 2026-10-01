@@ -26,6 +26,8 @@ class User extends Authenticatable
         'statut',
         'date_sortie',
         'must_change_password',
+        'invitation_envoyee_le',
+        'mot_de_passe_defini_le',
     ];
 
     /**
@@ -50,6 +52,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'date_sortie' => 'date:Y-m-d',
+            'invitation_envoyee_le' => 'datetime',
+            'mot_de_passe_defini_le' => 'datetime',
         ];
     }
 

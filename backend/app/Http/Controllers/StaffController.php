@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AccesCompteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
 {
+    public function __construct(private readonly AccesCompteService $acces) {}
+
     public function index(Request $request)
     {
         Gate::authorize('viewAny', User::class);
@@ -21,7 +23,9 @@ class StaffController extends Controller
             ->when($request->query('role'),
                 fn ($q) => $q->where('role', $request->query('role')))
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role', 'statut', 'date_sortie']);
+            ->get()
+            ->map(fn (User $u) => $this->payload($u, ['id', 'name', 'email', 'role', 'statut', 'date_sortie']))
+            ->values();
     }
 
     public function show(User $staff)
@@ -41,18 +45,18 @@ class StaffController extends Controller
             'role' => ['required', 'in:admin,directeur'],
         ]);
 
-        $password = Str::random(12);
-
         $staff = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'role' => $data['role'],
-            'password' => bcrypt($password),
-            'must_change_password' => true,
+            'password' => $this->acces->motDePasseInutilisable(),
+            'must_change_password' => false,
             'statut' => 'actif',
         ]);
 
-        return response()->json(['data' => $staff, 'password' => $password], 201);
+        $envoi = $this->acces->envoyer($staff->fresh(), AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
+
+        return response()->json($this->reponseEnvoi($staff->fresh(), $envoi), 201);
     }
 
     public function update(Request $request, User $staff)
@@ -79,6 +83,7 @@ class StaffController extends Controller
         // Un changement d'identifiant de connexion invalide les sessions existantes.
         if ($emailChange) {
             $staff->tokens()->delete();
+            $this->acces->annulerLiens($staff);
         }
 
         return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
@@ -132,6 +137,7 @@ class StaffController extends Controller
 
         // Révoquer tous les tokens actifs.
         $staff->tokens()->delete();
+        $this->acces->annulerLiens($staff);
 
         return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
     }
@@ -142,39 +148,71 @@ class StaffController extends Controller
 
         abort_if($staff->statut === 'actif', 409, 'Ce compte est déjà actif.');
 
-        $password = Str::random(12);
-
+        // L'ancien mot de passe n'est plus de confiance : le compte repasse par une invitation.
         $staff->update([
             'statut' => 'actif',
             'date_sortie' => null,
-            'password' => bcrypt($password),
-            'must_change_password' => true,
+            'password' => $this->acces->motDePasseInutilisable(),
+            'must_change_password' => false,
+            'mot_de_passe_defini_le' => null,
+            'invitation_envoyee_le' => null,
         ]);
+        $staff->tokens()->delete();
 
-        return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut']), 'password' => $password]);
+        $envoi = $this->acces->envoyer($staff->fresh(), AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
+
+        return response()->json($this->reponseEnvoi($staff->fresh(), $envoi));
     }
 
-    public function reinitialiserMotDePasse(User $staff)
+    /** Renvoie l'invitation (mot de passe jamais défini) ou envoie un lien de réinitialisation. */
+    public function envoyerLien(User $staff)
     {
         Gate::authorize('update', $staff);
 
-        $password = Str::random(12);
+        $this->exigerCompteActif($staff);
 
-        $staff->update([
-            'password' => bcrypt($password),
-            'must_change_password' => true,
-        ]);
+        $attente = $this->acces->attenteEnvoi($staff);
+        if ($attente > 0) {
+            abort(429, 'Un email vient d\'être envoyé. Réessayez dans '.$attente.' seconde'.($attente > 1 ? 's' : '').'.');
+        }
 
-        // Révoquer les tokens existants.
-        $staff->tokens()->delete();
+        $envoi = $this->acces->envoyer($staff, $this->acces->typePour($staff), AccesCompteService::DUREE_ADMIN_MINUTES);
 
-        return response()->json(['password' => $password, 'message' => 'Mot de passe réinitialisé']);
+        return response()->json($this->reponseEnvoi($staff->fresh(), $envoi));
+    }
+
+    /** Lien à transmettre soi-même (affiché une fois) quand l'email n'arrive pas. */
+    public function genererLien(Request $request, User $staff)
+    {
+        Gate::authorize('update', $staff);
+
+        $this->exigerCompteActif($staff);
+
+        $lien = $this->acces->genererLienManuel($staff, $request->user()->id);
+
+        return response()->json(['data' => $this->payload($staff->fresh(), ['id', 'name', 'email', 'role', 'statut', 'date_sortie']), 'lien' => $lien]);
+    }
+
+    private function exigerCompteActif(User $staff): void
+    {
+        abort_if($staff->statut !== 'actif', 409, 'Réactivez le compte pour envoyer une invitation.');
+    }
+
+    /** @param array{envoye: bool, lien: ?string} $envoi */
+    private function reponseEnvoi(User $staff, array $envoi): array
+    {
+        return array_filter([
+            'data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie']),
+            'email_envoye' => $envoi['envoye'],
+            'lien' => $envoi['lien'],
+        ], fn ($v) => $v !== null);
     }
 
     /** Sérialise via toArray() pour appliquer les casts (date_sortie en Y-m-d). */
     private function payload(User $staff, array $champs): array
     {
-        return \Illuminate\Support\Arr::only($staff->toArray(), $champs);
+        return \Illuminate\Support\Arr::only($staff->toArray(), $champs)
+            + ['acces' => $this->acces->resumeAcces($staff)];
     }
 
     private function refuserSoi(User $staff): void

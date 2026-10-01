@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccesController;
 use App\Http\Controllers\AnneeScolaireController;
 use App\Http\Controllers\AnniversaireController;
 use App\Http\Controllers\AuthController;
@@ -41,6 +42,11 @@ Route::middleware('validate.share.code')->group(function () {
 });
 
 Route::post('/login', [AuthController::class, 'login']);
+
+// ADMIN-02 : « Mot de passe oublié » et définition du mot de passe via un lien (publics, tous rôles).
+Route::post('/mot-de-passe/oublie', [AccesController::class, 'oubli'])->middleware('throttle:acces-oubli');
+Route::post('/mot-de-passe/verifier', [AccesController::class, 'verifier'])->middleware('throttle:acces-lien');
+Route::post('/mot-de-passe/definir', [AccesController::class, 'definir'])->middleware('throttle:acces-lien');
 
 // ---------------------------------------------------------------------------
 // Back-office — authentifié (Sanctum). Isolation par professeur et verrous
@@ -85,7 +91,9 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/staff/{staff}/impact-info', [StaffController::class, 'impactInfo']);
     Route::post('/staff/{staff}/desactiver', [StaffController::class, 'desactiver']);
     Route::post('/staff/{staff}/reactiver', [StaffController::class, 'reactiver']);
-    Route::post('/staff/{staff}/reinitialiser-mot-de-passe', [StaffController::class, 'reinitialiserMotDePasse']);
+    // ADMIN-02 : invitation / lien de réinitialisation envoyés par email.
+    Route::post('/staff/{staff}/envoyer-lien', [StaffController::class, 'envoyerLien']);
+    Route::post('/staff/{staff}/generer-lien', [StaffController::class, 'genererLien']);
 
     // CLS-01 T2 : assignation des professeurs aux classes (mêmes services dans les deux sens),
     // remplacement ponctuel sur une session, portail « Mes classes ».

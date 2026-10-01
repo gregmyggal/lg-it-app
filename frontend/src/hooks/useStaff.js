@@ -111,25 +111,32 @@ export function useReactivateStaff() {
   return { reactivate, loading, error };
 }
 
-export function useResetStaffPassword() {
+/** POST d'une action de la fiche (renvoie la réponse axios) ; les erreurs 4xx portent un message métier. */
+function useActionStaff(chemin) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  const reset = useCallback(async (id) => {
+  const run = useCallback(async (id) => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await api.post(`/staff/${id}/reinitialiser-mot-de-passe`);
-      return response;
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
+      return await api.post(`/staff/${id}/${chemin}`);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [chemin]);
 
-  return { reset, loading, error };
+  return { run, loading };
+}
+
+/** Renvoie l'invitation ou envoie un lien de réinitialisation (selon l'état d'accès du compte). */
+export function useSendStaffLink() {
+  const { run, loading } = useActionStaff('envoyer-lien');
+  return { send: run, loading };
+}
+
+/** Génère un lien à transmettre soi-même (repli quand l'email n'arrive pas). */
+export function useGenerateStaffLink() {
+  const { run, loading } = useActionStaff('generer-lien');
+  return { generate: run, loading };
 }
 
 export function useGetImpactInfo() {

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ADMIN-02 — Invitation et réinitialisation du mot de passe</title>
+  <style>
+    body { font-family: -apple-system, 'Segoe UI', sans-serif; max-width: 760px; margin: 32px auto; padding: 0 16px; line-height: 1.7; color: #111827; }
+    h1 { margin-bottom: 8px; }
+    p { margin: 0 0 16px; color: #4b5563; }
+    a { color: #1d4ed8; }
+    a:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 12px; }
+    .status { display: inline-block; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>ADMIN-02 — Invitation par email et réinitialisation du mot de passe</h1>
+  <p><span class="status">À valider</span> Maquettes statiques (aucun développement avant validation). Voir <a href="WORKFLOW_UX.md">WORKFLOW_UX.md</a>, en particulier la liste « Décisions à valider » (§11).</p>
+  <ul>
+    <li><a href="01-creation-modale.html">01-creation-modale.html</a> — Création staff : plus de mot de passe, « invitation envoyée », échec d'envoi avec lien copiable</li>
+    <li><a href="02-fiche-detail.html">02-fiche-detail.html</a> — Fiche : statut d'accès, « Renvoyer l'invitation », « Envoyer un lien de réinitialisation », compte désactivé</li>
+    <li><a href="03-liste-statut-acces.html">03-liste-statut-acces.html</a> — Liste : colonne Accès, filtre « À relancer », relance rapide</li>
+    <li><a href="04-connexion-oubli.html">04-connexion-oubli.html</a> — Connexion, « Mot de passe oublié ? », confirmation neutre, limitation de débit</li>
+    <li><a href="05-definir-mot-de-passe.html">05-definir-mot-de-passe.html</a> — Page publique « Définir mon mot de passe » (formulaire, erreurs, succès)</li>
+    <li><a href="06-lien-expire.html">06-lien-expire.html</a> — Lien expiré, déjà utilisé ou invalide</li>
+    <li><a href="07-apercu-emails.html">07-apercu-emails.html</a> — Emails : invitation, réinitialisation, notification de changement</li>
+  </ul>
+  <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;">
+  <h2>Notes de conception</h2>
+  <ul>
+    <li><strong>Lien à usage unique</strong> : plus aucun mot de passe affiché ni envoyé ; invitation 72 h, self-service 60 min.</li>
+    <li><strong>Pas d'énumération</strong> : réponse identique que le compte existe ou non ; message unique pour les liens invalides.</li>
+    <li><strong>Repli en cas d'échec d'envoi</strong> : compte créé, « Réessayer » et lien copiable affiché une fois.</li>
+    <li><strong>Sessions</strong> révoquées à la définition du mot de passe ; pas de connexion automatique.</li>
+    <li><strong>Comptes désactivés</strong> : aucun envoi ; réactivation = nouveau lien, ancien mot de passe invalidé.</li>
+  </ul>
+</body>
+</html>

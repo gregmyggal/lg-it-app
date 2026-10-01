@@ -13,8 +13,10 @@ return [
         'string' => 'Le champ :attribute doit contenir entre :min et :max caractères.',
     ],
     'boolean' => 'Le champ :attribute doit être vrai ou faux.',
+    'confirmed' => 'La confirmation du champ :attribute ne correspond pas.',
     'date' => 'Le champ :attribute n\'est pas une date valide.',
     'date_format' => 'Le champ :attribute ne correspond pas au format :format.',
+    'different' => 'Le champ :attribute doit être différent de :other.',
     'distinct' => 'Le champ :attribute contient une valeur en double.',
     'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
     'exists' => 'La valeur choisie pour :attribute est invalide.',
@@ -45,6 +47,8 @@ return [
     'custom' => [],
 
     'attributes' => [
+        'password' => 'mot de passe',
+        'current_password' => 'mot de passe actuel',
         'libelle' => 'libellé',
         'date_debut' => 'date de début',
         'date_fin' => 'date de fin',

@@ -5,12 +5,14 @@ import StatutBadge from '../../components/ui/StatutBadge';
 import { Table, Th, Td, Tr } from '../../components/ui/Table';
 import { FilterBar, FilterField } from '../../components/ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../../components/ui/DataStates';
-import { useStaff, useReactivateStaff } from '../../hooks/useStaff';
+import { useStaff, useReactivateStaff, useSendStaffLink } from '../../hooks/useStaff';
+import LienCopiable from '../../components/staff/LienCopiable';
+import { getErrorMessage } from '../../api/errors';
 import StaffCreateModal from '../../components/staff/StaffCreateModal';
 import StaffDetailModal from '../../components/staff/StaffDetailModal';
 import StaffDeactivateModal from '../../components/staff/StaffDeactivateModal';
 import StaffEditEmailModal from '../../components/staff/StaffEditEmailModal';
-import { STATUTS_STAFF, libelleRole } from '../../utils/statuts';
+import { STATUTS_ACCES, STATUTS_STAFF, libelleRole } from '../../utils/statuts';
 
 export default function StaffAdminPage() {
   const [filtres, setFiltres] = useState({ statut: '', role: '' });
@@ -21,9 +23,13 @@ export default function StaffAdminPage() {
   const [modaleEditEmail, setModaleEditEmail] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [erreurAction, setErreurAction] = useState('');
+  const [lienRepli, setLienRepli] = useState(null); // { nom, lien } quand un email n'a pas pu partir
+  const [filtreAcces, setFiltreAcces] = useState('');
 
   const staff = useStaff(filtres);
   const { reactivate: reactiverStaff } = useReactivateStaff();
+  const { send: envoyerLien } = useSendStaffLink();
+  const [envoiEnCoursId, setEnvoiEnCoursId] = useState(null);
 
   function majFiltre(cle, valeur) {
     setFiltres((prev) => ({ ...prev, [cle]: valeur }));
@@ -43,16 +49,52 @@ export default function StaffAdminPage() {
     staff.reload();
   }
 
+  function annoncerEnvoi(nom, email, { email_envoye: emailEnvoye, lien }, messageOk) {
+    if (emailEnvoye) {
+      setLienRepli(null);
+      setSuccessMessage(messageOk);
+    } else {
+      setSuccessMessage('');
+      setErreurAction(`L'email destiné à ${email} n'a pas pu être envoyé. Réessayez, ou transmettez le lien ci-dessous.`);
+      setLienRepli({ nom, lien });
+    }
+  }
+
   async function handleReactiver() {
+    setErreurAction('');
+    setLienRepli(null);
     try {
       const response = await reactiverStaff(selectedStaff.id);
-      setSelectedStaff({ ...selectedStaff, statut: 'actif', date_sortie: null });
-      setSuccessMessage(`${selectedStaff.name} réactivé. Nouveau mot de passe provisoire : ${response.data.password}`);
+      setSelectedStaff(response.data.data);
+      annoncerEnvoi(selectedStaff.name, selectedStaff.email, response.data,
+        `${selectedStaff.name} réactivé. Invitation envoyée à ${selectedStaff.email} (l'ancien mot de passe n'est plus valable).`);
       staff.reload();
     } catch (err) {
       setSuccessMessage('');
-      setErreurAction(err.response?.data?.message || 'Erreur lors de la réactivation');
+      setErreurAction(getErrorMessage(err, 'Erreur lors de la réactivation'));
     }
+  }
+
+  // Relance rapide depuis la liste (invitation expirée ou non envoyée).
+  async function relancer(s) {
+    setErreurAction('');
+    setLienRepli(null);
+    setEnvoiEnCoursId(s.id);
+    try {
+      const response = await envoyerLien(s.id);
+      annoncerEnvoi(s.name, s.email, response.data, `Invitation envoyée à ${s.email}.`);
+      staff.reload();
+    } catch (err) {
+      setSuccessMessage('');
+      setErreurAction(getErrorMessage(err));
+    } finally {
+      setEnvoiEnCoursId(null);
+    }
+  }
+
+  function handleStaffMisAJour(maj) {
+    setSelectedStaff((prev) => ({ ...prev, ...maj }));
+    staff.reload();
   }
 
   function ouvrirDetail(s) {
@@ -60,6 +102,9 @@ export default function StaffAdminPage() {
     setSelectedStaff(s);
     setModaleDetail(true);
   }
+
+  const lignes = filtreAcces === 'relancer' ? staff.data.filter((s) => s.acces?.a_relancer) : staff.data;
+  const aRelancer = staff.data.filter((s) => s.statut === 'actif' && s.acces?.a_relancer).length;
 
   let contenu;
   if (staff.loading) {
@@ -78,6 +123,7 @@ export default function StaffAdminPage() {
         {erreurAction && (
           <div role="alert" style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#ffcdd2', color: '#c62828', borderRadius: '4px' }}>
             {erreurAction}
+            {lienRepli && <LienCopiable lien={lienRepli.lien} />}
             <button
               onClick={() => setErreurAction('')}
               aria-label="Fermer le message"
@@ -88,7 +134,7 @@ export default function StaffAdminPage() {
           </div>
         )}
         {successMessage && (
-          <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+          <div role="status" style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
             {successMessage}
             <button
               onClick={() => setSuccessMessage('')}
@@ -126,7 +172,19 @@ export default function StaffAdminPage() {
             ]}
             placeholder="Tous"
           />
+          <FilterField
+            label="Accès"
+            value={filtreAcces}
+            onChange={setFiltreAcces}
+            options={[{ value: 'relancer', label: 'À relancer' }]}
+            placeholder="Tous"
+          />
         </FilterBar>
+        {aRelancer > 0 && (
+          <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
+            {aRelancer} invitation{aRelancer > 1 ? 's' : ''} à relancer.
+          </p>
+        )}
         <Table>
           <thead>
             <Tr>
@@ -134,11 +192,17 @@ export default function StaffAdminPage() {
               <Th>Email</Th>
               <Th>Rôle</Th>
               <Th>Statut</Th>
+              <Th>Accès</Th>
               <Th>Actions</Th>
             </Tr>
           </thead>
           <tbody>
-            {staff.data.map((s) => (
+            {lignes.length === 0 && (
+              <Tr>
+                <Td colSpan={6}>Aucun compte ne correspond à ce filtre.</Td>
+              </Tr>
+            )}
+            {lignes.map((s) => (
               <Tr key={s.id}>
                 <Td>{s.name}</Td>
                 <Td>{s.email}</Td>
@@ -147,9 +211,21 @@ export default function StaffAdminPage() {
                   <StatutBadge table={STATUTS_STAFF} valeur={s.statut} />
                 </Td>
                 <Td>
+                  {s.statut === 'actif' && s.acces?.statut ? (
+                    <StatutBadge table={STATUTS_ACCES} valeur={s.acces.statut} />
+                  ) : (
+                    <span aria-label="Non applicable">—</span>
+                  )}
+                </Td>
+                <Td>
                   <AdminButton onClick={() => ouvrirDetail(s)} small>
                     Modifier
                   </AdminButton>
+                  {s.statut === 'actif' && ['invitation_expiree', 'invitation_non_envoyee'].includes(s.acces?.statut) && (
+                    <AdminButton onClick={() => relancer(s)} disabled={envoiEnCoursId === s.id} small variant="secondary" style={{ marginLeft: '6px' }}>
+                      {envoiEnCoursId === s.id ? 'Envoi…' : 'Renvoyer'}
+                    </AdminButton>
+                  )}
                 </Td>
               </Tr>
             ))}
@@ -175,6 +251,7 @@ export default function StaffAdminPage() {
           onDesactiver={() => setModaleDesactivation(true)}
           onReactiver={handleReactiver}
           onEditEmail={() => setModaleEditEmail(true)}
+          onChanged={handleStaffMisAJour}
         />
       )}
       {modaleDesactivation && selectedStaff && (
