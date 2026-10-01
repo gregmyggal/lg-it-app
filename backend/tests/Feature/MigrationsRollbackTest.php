@@ -53,7 +53,7 @@ class MigrationsRollbackTest extends TestCase
         DB::table('professeurs')->insert(['id' => 1, 'user_id' => 1, 'prenom' => 'A', 'nom' => 'B', 'email' => 'p@t.test', 'statut' => 'actif', 'date_entree' => '2026-01-01', 'created_at' => now(), 'updated_at' => now()]);
         DB::table('timesheets')->insert(['professeur_id' => 1, 'date_prestation' => '2026-10-01', 'nombre_heures' => 2, 'statut_validation' => 'confirme', 'created_at' => now(), 'updated_at' => now()]);
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 2]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 5]), Artisan::output());
         // Hors enum d'origine : ramené à « valide »
         $this->assertSame('valide', DB::table('timesheets')->value('statut_validation'));
 
@@ -66,7 +66,7 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 5]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 8]), Artisan::output());
 
         $this->assertFalse(Schema::hasTable('professeur_classe'));
         $this->assertFalse(Schema::hasTable('session_professors'));
@@ -82,9 +82,9 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        // On revient sur les 2 migrations T3, les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
+        // On revient sur les 3 migrations T4, les 2 migrations T3, les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
         // antérieur à CLS-01 échoue sur des down() plus anciens, hors périmètre).
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 7]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 10]), Artisan::output());
 
         // Structure Sprint 2 recréée (vide), tables T1 supprimées.
         $this->assertFalse(Schema::hasTable('classes'));

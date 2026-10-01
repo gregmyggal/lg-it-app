@@ -4,6 +4,8 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import MesCoursPage from './pages/MesCoursPage';
+import CoursLiensPage from './pages/CoursLiensPage';
+import CoursLiensHistoriquePage from './pages/CoursLiensHistoriquePage';
 import MesClassesPage from './pages/MesClassesPage';
 import MesClasseSessionsPage from './pages/MesClasseSessionsPage';
 import TimesheetsPage from './pages/TimesheetsPage';
@@ -72,6 +74,38 @@ export default function App() {
               element={
                 <ProtectedRoute roles={PORTAL}>
                   <MesCoursPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="mes-ressources/:coursId"
+              element={
+                <ProtectedRoute roles={PORTAL}>
+                  <CoursLiensPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="mes-ressources/:coursId/historique"
+              element={
+                <ProtectedRoute roles={PORTAL}>
+                  <CoursLiensHistoriquePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/cours/:coursId/liens"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <CoursLiensPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/cours/:coursId/liens/historique"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <CoursLiensHistoriquePage />
                 </ProtectedRoute>
               }
             />

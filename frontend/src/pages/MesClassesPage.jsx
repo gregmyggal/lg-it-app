@@ -108,7 +108,7 @@ export default function MesClassesPage() {
             </Section>
 
             <p style={{ fontSize: '13px' }}>
-              Besoin des ressources d'un cours ? <Link to="/mes-ressources">Ressources de mes cours</Link>
+              Besoin des liens d'un cours ? <Link to="/mes-ressources">Liens de mes cours</Link>
             </p>
           </>
         )}

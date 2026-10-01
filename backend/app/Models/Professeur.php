@@ -96,6 +96,14 @@ class Professeur extends Model
     }
 
     /** Accès accordé si le professeur a une assignation active sur au moins une classe de ce cours (RG-6). */
+    /** A (ou a eu) une assignation sur une classe de ce cours : consultation de l'historique des liens (T4). */
+    public function aEuAssignationSurCours(Cours $cours): bool
+    {
+        return $this->assignations()
+            ->whereIn('classe_id', Classe::query()->select('id')->where('cours_id', $cours->id))
+            ->exists();
+    }
+
     public function canAccessCours(Cours $cours): bool
     {
         return $this->cours()->where('cours.id', $cours->id)->exists();

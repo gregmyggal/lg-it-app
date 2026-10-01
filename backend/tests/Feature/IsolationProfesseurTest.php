@@ -130,7 +130,8 @@ class IsolationProfesseurTest extends TestCase
         $sansClasse = Professeur::factory()->create();
 
         Sanctum::actingAs($sansClasse->user);
-        $this->getJson("/api/cours/{$cours->id}/liens")->assertForbidden();
+        // T4 (Q-T4-9) : lecture seule autorisée, écriture refusée.
+        $this->getJson("/api/cours/{$cours->id}/liens")->assertOk()->assertJsonPath('peut_modifier', false);
         $this->postJson("/api/cours/{$cours->id}/liens", ['titre' => 'X', 'url' => 'https://example.com'])->assertForbidden();
 
         Sanctum::actingAs($this->alice->user);

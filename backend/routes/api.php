@@ -12,8 +12,10 @@ use App\Http\Controllers\ClasseSessionController;
 use App\Http\Controllers\ClasseSettingController;
 use App\Http\Controllers\CoursController;
 use App\Http\Controllers\CourseSessionController;
+use App\Http\Controllers\CoursLienController;
 use App\Http\Controllers\CoursRessourceController;
 use App\Http\Controllers\FormationController;
+use App\Http\Controllers\LienVersionController;
 use App\Http\Controllers\MesClassesController;
 use App\Http\Controllers\ProfesseurClasseController;
 use App\Http\Controllers\ProfesseurController;
@@ -167,6 +169,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/timesheets/download-pdf', [TimesheetController::class, 'downloadPdf']);
 
     // Liens de classe / réglages — polymorphes, {parentType} ∈ cours|stages|formations|anniversaires.
+    // CLS-01 T4 : liens d'un COURS (versionnés), déclarés AVANT les routes génériques par type de parent.
+    Route::get('/cours/{cours}/liens', [CoursLienController::class, 'index']);
+    Route::post('/cours/{cours}/liens', [CoursLienController::class, 'store']);
+    Route::put('/cours/{cours}/liens/ordre', [CoursLienController::class, 'ordre']);
+    Route::get('/cours/{cours}/liens/historique', [CoursLienController::class, 'historique']);
+    Route::post('/cours/{cours}/liens/reprendre-ressources', [CoursLienController::class, 'reprendre']);
+    Route::post('/liens-versions/{version}/restaurer', [LienVersionController::class, 'restaurer']);
+
     Route::get('/{parentType}/{parentId}/liens', [ClasseLienController::class, 'index']);
     Route::post('/{parentType}/{parentId}/liens', [ClasseLienController::class, 'store']);
     Route::put('/liens/{lien}', [ClasseLienController::class, 'update']);

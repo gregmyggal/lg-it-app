@@ -1,4 +1,5 @@
 import { Table, Th, Td, Tr } from '../ui/Table';
+import { liensDeSession, resumeLiens } from '../../utils/liens';
 import StatutBadge from '../ui/StatutBadge';
 import AdminButton from '../AdminButton';
 import { ADMIN_COLORS, ADMIN_TONES } from '../../styles/AdminDesignSystem';
@@ -12,9 +13,10 @@ import { formatDate, formatDateCourte, formatHoraire } from '../../utils/dates';
  * @param {object} props
  * @param {object[]} props.sessions CourseSessionResource[] triées par séance puis bis
  * @param {(session: object, mode: 'deplacer'|'annuler'|'bis') => void} props.onAjuster
+ * @param {object[]} [props.liens] liens actifs du cours : colonne « Liens » (généraux + ceux de la séance)
  * @param {(session: object) => void} [props.onRemplacer] ouvre le remplacement ponctuel d'un professeur (staff)
  */
-export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer }) {
+export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, liens }) {
   const parId = new Map(sessions.map((s) => [s.id, s]));
   const remplacantDe = new Map(sessions.filter((s) => s.remplace_session_id).map((s) => [s.remplace_session_id, s]));
 
@@ -26,6 +28,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer }
           <Th>Date</Th>
           <Th>Horaire</Th>
           <Th>Professeurs</Th>
+          {liens && <Th>Liens</Th>}
           <Th>Statut</Th>
           <Th>Actions</Th>
         </tr>
@@ -84,6 +87,11 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer }
                   </ul>
                 )}
               </Td>
+              {liens && (
+                <Td>
+                  <span style={{ fontSize: '13px' }}>{resumeLiens(liensDeSession(liens, s.seance_numero), s.seance_numero)}</span>
+                </Td>
+              )}
               <Td>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <StatutBadge table={STATUTS_SESSION} valeur={s.statut} />

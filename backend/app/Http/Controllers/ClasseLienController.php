@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateCoursLienRequest;
+use App\Http\Resources\ClasseLienResource;
 use App\Models\Anniversaire;
 use App\Models\ClasseLien;
 use App\Models\Cours;
 use App\Models\Formation;
 use App\Models\Stage;
+use App\Services\CoursLienService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ClasseLienController extends Controller
 {
+    public function __construct(private readonly CoursLienService $liens) {}
+
     // Whitelist explicite : jamais d'instanciation de classe à partir de l'input brut.
     private const PARENT_TYPES = [
         'cours' => Cours::class,
@@ -54,6 +59,15 @@ class ClasseLienController extends Controller
     {
         Gate::authorize('update', $lien);
 
+        // CLS-01 T4 : les liens d'un COURS sont versionnés (concurrence optimiste, historique) ; les autres parents
+        // (stages, formations, anniversaires) gardent le comportement historique.
+        if ($lien->parent_type === ClasseLien::PARENT_COURS) {
+            $data = app(UpdateCoursLienRequest::class)->validated();
+            $lien = $this->liens->modifier($lien, $request->user(), collect($data)->except('version')->all(), $data['version']);
+
+            return new ClasseLienResource($lien);
+        }
+
         $data = $request->validate([
             'titre' => ['sometimes', 'string', 'max:255'],
             'url' => ['sometimes', 'url'],
@@ -74,7 +88,14 @@ class ClasseLienController extends Controller
     {
         Gate::authorize('delete', $lien);
 
-        $lien->delete();
+        // CLS-01 T4 : supprimer un lien de cours = l'archiver (restaurable 6 mois) ; les autres parents : suppression physique.
+        if ($lien->parent_type === ClasseLien::PARENT_COURS) {
+            $version = $this->liens->archiver($lien, request()->user());
+
+            return response()->json(['historique_id' => $version->id]);
+        }
+
+        $lien->forceDelete();
 
         return response()->noContent();
     }

@@ -13,6 +13,7 @@ import SessionAdjustModal from '../../components/classes/SessionAdjustModal';
 import ProfesseursClasseSection from '../../components/professeurs/ProfesseursClasseSection';
 import RemplacerProfesseurModal from '../../components/professeurs/RemplacerProfesseurModal';
 import { useProfesseursListe } from '../../hooks/useProfesseursClasses';
+import { useLiensCours } from '../../hooks/useLiens';
 import { useClasse, useClasseSessions, modifierClasse, supprimerClasse } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getStatus } from '../../api/errors';
@@ -28,6 +29,7 @@ export default function ClasseDetailPage() {
   const classe = useClasse(id);
   const sessions = useClasseSessions(id);
   const professeursListe = useProfesseursListe();
+  const liensCours = useLiensCours(classe.data?.cours?.id);
   const [remplacement, setRemplacement] = useState(null); // session à remplacer
   const [ajustement, setAjustement] = useState(null); // { session, mode }
   const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message }
@@ -231,6 +233,7 @@ export default function ClasseDetailPage() {
           ) : (
             <ClasseSessionsTable
               sessions={liste}
+              liens={liensCours.data?.data}
               onAjuster={(session, mode) => setAjustement({ session, mode })}
               onRemplacer={c.can?.update ? setRemplacement : undefined}
             />

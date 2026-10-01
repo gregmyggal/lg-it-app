@@ -16,7 +16,11 @@ class CoursController extends Controller
 
         $user = $request->user();
 
-        $query = Cours::with('typesCours', 'ressources');
+        // T4 : nombre de liens (généraux / de séance) pour les cartes « Liens de mes cours » et la liste admin.
+        $query = Cours::with('typesCours', 'ressources')->withCount([
+            'liensClasse as liens_generaux_count' => fn ($q) => $q->whereNull('seance_numero'),
+            'liensClasse as liens_seance_count' => fn ($q) => $q->whereNotNull('seance_numero')->where('seance_numero', '<=', 14),
+        ]);
 
         if (! $user->isStaff()) {
             $query->where('statut', 'publish');

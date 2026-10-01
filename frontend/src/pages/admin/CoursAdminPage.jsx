@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import CheckboxGroup from '../../components/CheckboxGroup';
-import ClasseLiensManager from '../../components/ClasseLiensManager';
 import AdminModal from '../../components/AdminModal';
 import AdminButton, { AdminIconButton } from '../../components/AdminButton';
 import { AdminFormField, AdminInput, AdminTextarea, AdminSelect } from '../../components/AdminFormField';
@@ -22,7 +21,6 @@ export default function CoursAdminPage() {
   const [typesCours, setTypesCours] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -151,24 +149,12 @@ export default function CoursAdminPage() {
                     onEdit={startEdit}
                     onDelete={() => setDeleteConfirm(c.id)}
                     onNavigateContent={() => navigate(`/admin/cours/${c.id}/contenu`)}
-                    onToggleResources={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                    isExpanded={expandedId === c.id}
+                    onNavigateLiens={() => navigate(`/admin/cours/${c.id}/liens`)}
                   />
                 ))}
               </div>
             )}
           </div>
-
-          {/* Ressources Section */}
-          {expandedId && (
-            <div style={{ background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '48px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <RessourcesPanel
-                cours={cours.find((c) => c.id === expandedId)}
-                onClose={() => setExpandedId(null)}
-              />
-              <ClasseLiensManager parentType="cours" parentId={expandedId} />
-            </div>
-          )}
         </div>
       </div>
 
@@ -303,7 +289,7 @@ export default function CoursAdminPage() {
   );
 }
 
-function CourseCard({ course, onEdit, onDelete, onNavigateContent, onToggleResources, isExpanded }) {
+function CourseCard({ course, onEdit, onDelete, onNavigateContent, onNavigateLiens }) {
   const statusColor = course.statut === 'publish' ? '#10b981' : '#f59e0b';
   const statusLabel = course.statut === 'publish' ? 'Publié' : 'Brouillon';
 
@@ -345,7 +331,7 @@ function CourseCard({ course, onEdit, onDelete, onNavigateContent, onToggleResou
       <div style={{ display: 'grid', gap: '8px' }}>
         <ActionButton color="#2563eb" onClick={() => onEdit(course)}>📝 Modifier</ActionButton>
         <ActionButton color="#7c3aed" onClick={onNavigateContent}>📄 Contenus</ActionButton>
-        <ActionButton color="#0891b2" onClick={onToggleResources}>{isExpanded ? '✕ Fermer ressources' : '📚 Ressources'}</ActionButton>
+        <ActionButton color="#0891b2" onClick={onNavigateLiens}>🔗 Liens ({(course.liens_generaux_count || 0) + (course.liens_seance_count || 0)})</ActionButton>
         <ActionButton color="#ef4444" onClick={() => onDelete(course.id)}>🗑️ Supprimer</ActionButton>
       </div>
     </div>
@@ -436,91 +422,6 @@ function EmptyState() {
       <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
       <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600, color: '#111827' }}>Aucun cours pour le moment</h3>
       <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>Créez votre premier cours en utilisant le formulaire ci-dessous</p>
-    </div>
-  );
-}
-
-function RessourcesPanel({ cours, onClose }) {
-  const [ressources, setRessources] = useState(cours.ressources);
-  const [titre, setTitre] = useState('');
-  const [url, setUrl] = useState('');
-  const [type, setType] = useState('outil');
-  const [showForm, setShowForm] = useState(false);
-
-  async function handleAdd(e) {
-    e.preventDefault();
-    const res = await client.post(`/cours/${cours.id}/ressources`, {
-      titre_ressource: titre,
-      url_ressource: url,
-      type_ressource: type,
-    });
-    setRessources((prev) => [...prev, res.data]);
-    setTitre('');
-    setUrl('');
-    setShowForm(false);
-  }
-
-  async function handleDelete(id) {
-    if (confirm('Supprimer cette ressource ?')) {
-      await client.delete(`/ressources/${id}`);
-      setRessources((prev) => prev.filter((r) => r.id !== id));
-    }
-  }
-
-  return (
-    <div style={{ marginBottom: '32px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#111827' }}>📚 Ressources pédagogiques</h3>
-        <p style={{ margin: 0, fontSize: '12px', color: '#6b7280' }}>{ressources.length} ressource(s)</p>
-      </div>
-
-      {ressources.length > 0 && (
-        <div style={{ display: 'grid', gap: '12px', marginBottom: '20px' }}>
-          {ressources.map((r) => (
-            <div key={r.id} style={{ background: '#f9fafb', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <a href={r.url_ressource} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 500 }}>
-                  {r.titre_ressource}
-                </a>
-                <span style={{ marginLeft: '8px', fontSize: '12px', color: '#6b7280' }}>({r.type_ressource})</span>
-              </div>
-              <button onClick={() => handleDelete(r.id)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 500 }}>
-                Supprimer
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!showForm && (
-        <button
-          onClick={() => setShowForm(true)}
-          style={{ padding: '10px 16px', background: '#dbeafe', color: '#1e40af', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' }}
-        >
-          ➕ Ajouter une ressource
-        </button>
-      )}
-
-      {showForm && (
-        <form onSubmit={handleAdd} style={{ background: '#f0f9ff', padding: '16px', borderRadius: '8px', display: 'grid', gap: '12px' }}>
-          <input placeholder="Titre" value={titre} onChange={(e) => setTitre(e.target.value)} required style={{ ...inputStyle, padding: '8px 12px' }} />
-          <input placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} required style={{ ...inputStyle, padding: '8px 12px' }} />
-          <select value={type} onChange={(e) => setType(e.target.value)} style={{ ...inputStyle, padding: '8px 12px' }}>
-            <option value="video">Vidéo</option>
-            <option value="outil">Outil</option>
-            <option value="document">Document</option>
-            <option value="jeu">Jeu</option>
-          </select>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button type="submit" style={{ flex: 1, padding: '8px 12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' }}>
-              Ajouter
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} style={{ flex: 1, padding: '8px 12px', background: 'white', color: '#6b7280', border: '1px solid #e5e7eb', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' }}>
-              Annuler
-            </button>
-          </div>
-        </form>
-      )}
     </div>
   );
 }

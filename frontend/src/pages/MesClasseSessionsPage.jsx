@@ -6,6 +6,9 @@ import { EmptyBlock, ErrorBlock, LoadingBlock } from '../components/ui/DataState
 import StatutBadge from '../components/ui/StatutBadge';
 import AdminButton from '../components/AdminButton';
 import EncoderSessionModal from '../components/timesheets/EncoderSessionModal';
+import LiensSession from '../components/liens/LiensSession';
+import LinkButton from '../components/ui/LinkButton';
+import { useLiensCours } from '../hooks/useLiens';
 import { useMesSessions } from '../hooks/useProfesseursClasses';
 import { useToast } from '../hooks/useToast';
 import { useClasse } from '../hooks/useClasses';
@@ -19,6 +22,8 @@ export default function MesClasseSessionsPage() {
   const classe = useClasse(id);
   const sessions = useMesSessions(id);
   const toast = useToast();
+  const coursId = classe.data?.cours?.id;
+  const liens = useLiensCours(coursId);
   const [aEncoder, setAEncoder] = useState(null);
   const titre = classe.data ? libelleClasse(classe.data) : 'Classe';
 
@@ -44,6 +49,13 @@ export default function MesClasseSessionsPage() {
         {sessions.data && (
           <p style={{ fontSize: '13px' }}>
             Toutes vos heures du mois en un seul passage : <Link to="/timesheets">Encoder mon mois</Link>
+          </p>
+        )}
+        {coursId && (
+          <p style={{ fontSize: '13px' }}>
+            <LinkButton to={`/mes-ressources/${coursId}`} size="sm">
+              Gérer les liens du cours
+            </LinkButton>
           </p>
         )}
         {sessions.data?.length > 0 && (
@@ -84,6 +96,7 @@ export default function MesClasseSessionsPage() {
                         </AdminButton>
                       </div>
                     )}
+                    {liens.data && <LiensSession liens={liens.data.data} seanceNumero={s.seance_numero} />}
                     {s.co_professeurs.length > 0 && (
                       <div style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.xs }}>
                         Avec : {s.co_professeurs.map((p) => p.nom).join(', ')}

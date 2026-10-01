@@ -150,3 +150,27 @@ export const TYPES_ACTIVITE = {
 export function estBrouillon(statut) {
   return statut === 'brouillon';
 }
+
+/** Type d'un lien de cours (ancien « thème » ; facultatif) — icône + libellé. */
+export const TYPES_LIEN = {
+  document: { label: 'Document', icone: '📄', tone: 'info' },
+  video: { label: 'Vidéo', icone: '🎥', tone: 'primary' },
+  outil: { label: 'Outil', icone: '🛠️', tone: 'neutral' },
+  jeu: { label: 'Jeu', icone: '🎮', tone: 'success' },
+};
+
+/** Actions de l'historique des liens (une version par action ; une restauration est elle-même une version). */
+export const ACTIONS_VERSION = {
+  creation: { label: 'Création', tone: 'success' },
+  modification: { label: 'Modification', tone: 'info' },
+  portee: { label: 'Changement de portée', tone: 'info' },
+  archivage: { label: 'Archivage', tone: 'warning' },
+  ordre: { label: 'Réordonnancement', tone: 'neutral' },
+  restauration: { label: 'Restauration', tone: 'primary' },
+};
+
+/** Libellé d'une portée : « Liens généraux » ou « Séance 6 » (au-delà de 14 : « Hors programme »). */
+export function libellePortee(seanceNumero) {
+  if (seanceNumero === null || seanceNumero === undefined) return 'Liens généraux';
+  return seanceNumero > 14 ? `Hors programme (séance ${seanceNumero})` : `Séance ${seanceNumero}`;
+}

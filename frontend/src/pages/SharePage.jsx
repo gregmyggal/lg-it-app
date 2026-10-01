@@ -82,7 +82,8 @@ export default function SharePage() {
     );
   }
 
-  const { type, content: data, ressources, types, dates } = content;
+  const { type, content: data, ressources, liens, types, dates } = content;
+  const aDesLiens = liens && (liens.generaux.length > 0 || liens.par_seance.length > 0);
 
   return (
     <div className="share-page">
@@ -110,14 +111,46 @@ export default function SharePage() {
           </div>
         )}
 
+        {aDesLiens && (
+          <div className="ressources-section">
+            {liens.generaux.length > 0 && (
+              <>
+                <h2>Pour tout le cours</h2>
+                <ul className="ressources-list">
+                  {liens.generaux.map((l) => (
+                    <LienPartage key={l.id} lien={l} />
+                  ))}
+                </ul>
+              </>
+            )}
+            {liens.par_seance.length > 0 && (
+              <>
+                <h2>Par séance</h2>
+                {liens.par_seance.map((g) => (
+                  <details key={g.seance_numero}>
+                    <summary>
+                      Séance {g.seance_numero} ({g.liens.length} lien{g.liens.length > 1 ? 's' : ''})
+                    </summary>
+                    <ul className="ressources-list">
+                      {g.liens.map((l) => (
+                        <LienPartage key={l.id} lien={l} />
+                      ))}
+                    </ul>
+                  </details>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
         {ressources && ressources.length > 0 && (
           <div className="ressources-section">
-            <h2>Ressources</h2>
+            <h2>{aDesLiens ? 'Anciennes ressources' : 'Ressources'}</h2>
             <ul className="ressources-list">
               {ressources.map((res) => (
                 <li key={res.id}>
-                  <a href={res.url} target="_blank" rel="noopener noreferrer" className="resource-link">
-                    {res.titre || 'Ressource'}
+                  <a href={res.url_ressource || res.url} target="_blank" rel="noopener noreferrer" className="resource-link">
+                    {res.titre_ressource || res.titre || 'Ressource'}
                   </a>
                   {res.description && <p className="resource-desc">{res.description}</p>}
                 </li>
@@ -165,6 +198,18 @@ export default function SharePage() {
         <p>Logiscool Pays Vert • Portail d'accès aux ressources</p>
       </footer>
     </div>
+  );
+}
+
+/** Un lien (forme publique : titre, adresse, description, type — jamais d'auteur ni d'historique). */
+function LienPartage({ lien }) {
+  return (
+    <li>
+      <a href={lien.url} target="_blank" rel="noopener noreferrer" className="resource-link">
+        {lien.titre}
+      </a>
+      {lien.description && <p className="resource-desc">{lien.description}</p>}
+    </li>
   );
 }
 

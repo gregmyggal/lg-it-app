@@ -13,7 +13,10 @@ class CoursRessource extends Model
         'url_ressource',
         'type_ressource',
         'ordre',
+        'repris_at',
     ];
+
+    protected $casts = ['repris_at' => 'datetime'];
 
     public function cours(): BelongsTo
     {

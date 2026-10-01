@@ -40,7 +40,7 @@ export default function PortalLayout() {
                 Mes classes
               </NavLink>
               <NavLink to="/mes-ressources" className={navClass}>
-                Ressources de mes cours
+                Liens de mes cours
               </NavLink>
             </>
           )}
