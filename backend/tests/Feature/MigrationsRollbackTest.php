@@ -34,6 +34,25 @@ class MigrationsRollbackTest extends TestCase
         $this->assertTrue(Schema::hasTable('session_calendar_views'));
     }
 
+    public function test_t5_supprime_les_types_de_cours_et_conserve_les_types_de_formation(): void
+    {
+        Artisan::call('migrate:fresh');
+
+        foreach (['types_cours', 'professeur_type_cours', 'cours_type_cours'] as $table) {
+            $this->assertFalse(Schema::hasTable($table), "Table encore présente : {$table}");
+        }
+        $this->assertTrue(Schema::hasTable('types_formation'));
+        $this->assertTrue(Schema::hasTable('formation_type_formation'));
+
+        // Rollback : les trois tables sont recréées (vides) ; puis re-migration propre.
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 1]), Artisan::output());
+        foreach (['types_cours', 'professeur_type_cours', 'cours_type_cours'] as $table) {
+            $this->assertTrue(Schema::hasTable($table), "Table non recréée : {$table}");
+        }
+        $this->assertSame(0, Artisan::call('migrate'), Artisan::output());
+        $this->assertFalse(Schema::hasTable('types_cours'));
+    }
+
     public function test_migrate_fresh_cree_le_schema_t2(): void
     {
         $this->assertSame(0, Artisan::call('migrate:fresh'));
@@ -53,7 +72,7 @@ class MigrationsRollbackTest extends TestCase
         DB::table('professeurs')->insert(['id' => 1, 'user_id' => 1, 'prenom' => 'A', 'nom' => 'B', 'email' => 'p@t.test', 'statut' => 'actif', 'date_entree' => '2026-01-01', 'created_at' => now(), 'updated_at' => now()]);
         DB::table('timesheets')->insert(['professeur_id' => 1, 'date_prestation' => '2026-10-01', 'nombre_heures' => 2, 'statut_validation' => 'confirme', 'created_at' => now(), 'updated_at' => now()]);
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 5]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 6]), Artisan::output());
         // Hors enum d'origine : ramené à « valide »
         $this->assertSame('valide', DB::table('timesheets')->value('statut_validation'));
 
@@ -66,7 +85,7 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 8]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 9]), Artisan::output());
 
         $this->assertFalse(Schema::hasTable('professeur_classe'));
         $this->assertFalse(Schema::hasTable('session_professors'));
@@ -82,9 +101,9 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        // On revient sur les 3 migrations T4, les 2 migrations T3, les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
+        // On revient sur la migration T5, les 3 migrations T4, les 2 migrations T3, les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
         // antérieur à CLS-01 échoue sur des down() plus anciens, hors périmètre).
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 10]), Artisan::output());
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => 11]), Artisan::output());
 
         // Structure Sprint 2 recréée (vide), tables T1 supprimées.
         $this->assertFalse(Schema::hasTable('classes'));

@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -36,11 +35,6 @@ class Cours extends Model
         'sidebar_pratiques' => 'array',
         'sidebar_benefits' => 'array',
     ];
-
-    public function typesCours(): BelongsToMany
-    {
-        return $this->belongsToMany(TypeCours::class, 'cours_type_cours');
-    }
 
     public function ressources(): HasMany
     {

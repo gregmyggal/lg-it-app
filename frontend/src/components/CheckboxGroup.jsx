@@ -1,4 +1,4 @@
-// Groupe de cases à cocher pour assigner des types_cours/types_formation (relations N-N).
+// Groupe de cases à cocher pour assigner des types_formation (relations N-N).
 export default function CheckboxGroup({ options, selected, onChange }) {
   function toggle(id) {
     onChange(selected.includes(id) ? selected.filter((v) => v !== id) : [...selected, id]);

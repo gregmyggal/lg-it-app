@@ -17,7 +17,7 @@ class CoursController extends Controller
         $user = $request->user();
 
         // T4 : nombre de liens (généraux / de séance) pour les cartes « Liens de mes cours » et la liste admin.
-        $query = Cours::with('typesCours', 'ressources')->withCount([
+        $query = Cours::with('ressources')->withCount([
             'liensClasse as liens_generaux_count' => fn ($q) => $q->whereNull('seance_numero'),
             'liensClasse as liens_seance_count' => fn ($q) => $q->whereNotNull('seance_numero')->where('seance_numero', '<=', 14),
         ]);
@@ -39,7 +39,7 @@ class CoursController extends Controller
     {
         Gate::authorize('view', $cours);
 
-        return $cours->load(['typesCours', 'ressources']);
+        return $cours->load('ressources');
     }
 
     // Réservé staff (CoursPolicy) : un professeur ne modifie jamais la structure d'un cours.
@@ -50,9 +50,8 @@ class CoursController extends Controller
         $data = $this->validated($request);
 
         $cours = Cours::create($data);
-        $cours->typesCours()->sync($data['types_cours'] ?? []);
 
-        return response()->json($cours->load('typesCours'), 201);
+        return response()->json($cours, 201);
     }
 
     public function update(Request $request, Cours $cours)
@@ -63,11 +62,7 @@ class CoursController extends Controller
 
         $cours->update($data);
 
-        if (array_key_exists('types_cours', $data)) {
-            $cours->typesCours()->sync($data['types_cours']);
-        }
-
-        return $cours->load('typesCours');
+        return $cours;
     }
 
     public function destroy(Cours $cours)
@@ -92,8 +87,6 @@ class CoursController extends Controller
             'url_logiscool' => ['nullable', 'url'],
             'menu_order' => ['nullable', 'integer'],
             'statut' => ['nullable', 'in:publish,draft'],
-            'types_cours' => ['nullable', 'array'],
-            'types_cours.*' => ['integer', 'exists:types_cours,id'],
         ]);
     }
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import client from '../../api/client';
 import AdminModal from '../../components/AdminModal';
 import AdminButton, { AdminIconButton } from '../../components/AdminButton';
-import { AdminFormField, AdminInput, AdminTextarea, AdminSelect, AdminCheckboxGroup } from '../../components/AdminFormField';
+import { AdminFormField, AdminInput, AdminTextarea, AdminSelect } from '../../components/AdminFormField';
 import {
   AdminPageHeader,
   AdminPageContent,
@@ -26,7 +26,6 @@ const emptyCreateForm = {
   date_entree: '',
   date_sortie: '',
   type_contrat: '',
-  types_cours: [],
 };
 
 const emptyEditForm = {
@@ -39,12 +38,10 @@ const emptyEditForm = {
   date_entree: '',
   date_sortie: '',
   type_contrat: '',
-  types_cours: [],
 };
 
 export default function ProfesseursAdminPage() {
   const [professeurs, setProfesseurs] = useState(null);
-  const [typesCours, setTypesCours] = useState([]);
   const [form, setForm] = useState(emptyCreateForm);
   const [editingId, setEditingId] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -56,7 +53,6 @@ export default function ProfesseursAdminPage() {
 
   useEffect(() => {
     client.get('/professeurs').then((res) => setProfesseurs(res.data));
-    client.get('/types-cours').then((res) => setTypesCours(res.data));
   }, []);
 
   function openCreateModal() {
@@ -83,7 +79,6 @@ export default function ProfesseursAdminPage() {
       date_entree: p.date_entree?.slice(0, 10) || '',
       date_sortie: p.date_sortie?.slice(0, 10) || '',
       type_contrat: p.type_contrat || '',
-      types_cours: p.types_cours.map((t) => t.id),
     });
     setError(null);
     setIsEditModalOpen(true);
@@ -176,7 +171,7 @@ export default function ProfesseursAdminPage() {
       <AdminPageHeader
         icon="👨‍🏫"
         title="Professeurs"
-        description="Gérez les professeurs et leurs types de cours"
+        description="Gérez les professeurs, leurs coordonnées et leur contrat"
         badge={`${professeurs.length} professeur${professeurs.length !== 1 ? 's' : ''}`}
         action={
           <AdminButton
@@ -273,22 +268,6 @@ export default function ProfesseursAdminPage() {
                     </p>
                   )}
 
-                  {p.types_cours && p.types_cours.length > 0 && (
-                    <div style={{ marginTop: '12px' }}>
-                      <p style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>
-                        Types de cours ({p.types_cours.length}):
-                      </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {p.types_cours.map((t) => (
-                          <AdminBadge
-                            key={t.id}
-                            label={t.nom}
-                            color="blue"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </AdminCardBody>
               </AdminCard>
             );
@@ -403,13 +382,6 @@ export default function ProfesseursAdminPage() {
             />
           </AdminFormField>
 
-          <AdminFormField label="Types de cours enseignés">
-            <AdminCheckboxGroup
-              options={typesCours.map((t) => ({ value: t.id, label: t.nom }))}
-              selected={form.types_cours}
-              onChange={(types_cours) => setForm({ ...form, types_cours })}
-            />
-          </AdminFormField>
         </form>
       </AdminModal>
 
@@ -518,13 +490,6 @@ export default function ProfesseursAdminPage() {
             />
           </AdminFormField>
 
-          <AdminFormField label="Types de cours enseignés">
-            <AdminCheckboxGroup
-              options={typesCours.map((t) => ({ value: t.id, label: t.nom }))}
-              selected={form.types_cours}
-              onChange={(types_cours) => setForm({ ...form, types_cours })}
-            />
-          </AdminFormField>
         </form>
       </AdminModal>
 

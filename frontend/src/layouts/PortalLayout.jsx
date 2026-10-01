@@ -84,9 +84,6 @@ export default function PortalLayout() {
               <NavLink to="/admin/anniversaires" className={navClass}>
                 Anniversaires
               </NavLink>
-              <NavLink to="/admin/types-cours" className={navClass}>
-                Types de cours
-              </NavLink>
               <NavLink to="/admin/types-formation" className={navClass}>
                 Types de formation
               </NavLink>

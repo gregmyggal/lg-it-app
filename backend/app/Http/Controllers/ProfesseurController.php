@@ -14,7 +14,7 @@ class ProfesseurController extends Controller
     {
         Gate::authorize('viewAny', Professeur::class);
 
-        return Professeur::with('typesCours')
+        return Professeur::query()
             ->withCount(['assignations as classes_count' => fn ($q) => $q->actif()])
             ->orderBy('nom')
             ->get();
@@ -24,7 +24,7 @@ class ProfesseurController extends Controller
     {
         Gate::authorize('view', $professeur);
 
-        return $professeur->load('typesCours', 'tarifs')
+        return $professeur->load('tarifs')
             ->loadCount(['assignations as classes_count' => fn ($q) => $q->actif()]);
     }
 
@@ -45,8 +45,6 @@ class ProfesseurController extends Controller
             'date_sortie' => ['nullable', 'date'],
             'type_contrat' => ['nullable', 'in:salarie,freelance,prestataire'],
             'photo_path' => ['nullable', 'string'],
-            'types_cours' => ['nullable', 'array'],
-            'types_cours.*' => ['integer', 'exists:types_cours,id'],
         ]);
 
         $professeur = DB::transaction(function () use ($data) {
@@ -58,16 +56,14 @@ class ProfesseurController extends Controller
             ]);
 
             $professeur = Professeur::create([
-                ...array_diff_key($data, array_flip(['login_email', 'password', 'types_cours'])),
+                ...array_diff_key($data, array_flip(['login_email', 'password'])),
                 'user_id' => $user->id,
             ]);
-
-            $professeur->typesCours()->sync($data['types_cours'] ?? []);
 
             return $professeur;
         });
 
-        return response()->json($professeur->load('typesCours', 'user'), 201);
+        return response()->json($professeur->load('user'), 201);
     }
 
     public function update(Request $request, Professeur $professeur)
@@ -84,17 +80,11 @@ class ProfesseurController extends Controller
             'date_sortie' => ['nullable', 'date'],
             'type_contrat' => ['nullable', 'in:salarie,freelance,prestataire'],
             'photo_path' => ['nullable', 'string'],
-            'types_cours' => ['nullable', 'array'],
-            'types_cours.*' => ['integer', 'exists:types_cours,id'],
         ]);
 
-        $professeur->update(array_diff_key($data, array_flip(['types_cours'])));
+        $professeur->update($data);
 
-        if (array_key_exists('types_cours', $data)) {
-            $professeur->typesCours()->sync($data['types_cours']);
-        }
-
-        return $professeur->load('typesCours');
+        return $professeur;
     }
 
     // Supprime aussi le compte de connexion lié (cascade FK professeurs.user_id).

@@ -19,7 +19,7 @@ function slugify(text) {
     .replace(/(^-|-$)/g, '');
 }
 
-// CRUD générique pour un lookup {nom, slug} — réutilisé pour types-cours et types-formation,
+// CRUD générique pour un lookup {nom, slug} — utilisé pour les types de formation,
 // qui ont exactement la même forme.
 export default function SimpleLookupAdmin({ title, endpoint }) {
   const [items, setItems] = useState(null);

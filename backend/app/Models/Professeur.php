@@ -65,13 +65,6 @@ class Professeur extends Model
                 ->actif()));
     }
 
-    // Détermine les cours que le professeur est habilité à voir/modifier (isolation).
-    // LEGACY: Peut être remplacé par cours() pour isolation fine, mais garder pour sécurité en double
-    public function typesCours(): BelongsToMany
-    {
-        return $this->belongsToMany(TypeCours::class, 'professeur_type_cours');
-    }
-
     public function timesheets(): HasMany
     {
         return $this->hasMany(Timesheet::class);
@@ -107,21 +100,5 @@ class Professeur extends Model
     public function canAccessCours(Cours $cours): bool
     {
         return $this->cours()->where('cours.id', $cours->id)->exists();
-    }
-
-    /**
-     * LEGACY: Accès selon les types de cours (T5 : suppression des types de cours).
-     */
-    public function canAccessCoursByType(Cours $cours): bool
-    {
-        $allowedIds = $this->typesCours()->pluck('types_cours.id');
-
-        if ($allowedIds->isEmpty()) {
-            return false;
-        }
-
-        $coursTypeIds = $cours->typesCours()->pluck('types_cours.id');
-
-        return $allowedIds->intersect($coursTypeIds)->isNotEmpty();
     }
 }

@@ -39,6 +39,6 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return $request->user()->load('professeur.typesCours');
+        return $request->user()->load('professeur');
     }
 }

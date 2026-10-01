@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
-import CheckboxGroup from '../../components/CheckboxGroup';
 import AdminModal from '../../components/AdminModal';
 import AdminButton, { AdminIconButton } from '../../components/AdminButton';
 import { AdminFormField, AdminInput, AdminTextarea, AdminSelect } from '../../components/AdminFormField';
@@ -12,13 +11,11 @@ const emptyForm = {
   contenu: '',
   extrait: '',
   statut: 'draft',
-  types_cours: [],
 };
 
 export default function CoursAdminPage() {
   const navigate = useNavigate();
   const [cours, setCours] = useState(null);
-  const [typesCours, setTypesCours] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,7 +26,6 @@ export default function CoursAdminPage() {
 
   useEffect(() => {
     client.get('/cours').then((res) => setCours(res.data));
-    client.get('/types-cours').then((res) => setTypesCours(res.data));
   }, []);
 
   function startCreate() {
@@ -47,7 +43,6 @@ export default function CoursAdminPage() {
       contenu: c.contenu || '',
       extrait: c.extrait || '',
       statut: c.statut,
-      types_cours: c.types_cours.map((t) => t.id),
     });
     setError(null);
     setIsModalOpen(true);
@@ -232,15 +227,6 @@ export default function CoursAdminPage() {
             />
           </AdminFormField>
 
-          <AdminFormField label="Types de cours">
-            <div style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-              <CheckboxGroup
-                options={typesCours}
-                selected={form.types_cours}
-                onChange={(types_cours) => setForm({ ...form, types_cours })}
-              />
-            </div>
-          </AdminFormField>
         </form>
       </AdminModal>
 
@@ -321,11 +307,6 @@ function CourseCard({ course, onEdit, onDelete, onNavigateContent, onNavigateLie
         <span style={{ background: statusColor + '20', color: statusColor, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
           {statusLabel}
         </span>
-        {course.types_cours.map((t) => (
-          <span key={t.id} style={{ background: '#dbeafe', color: '#1e40af', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500 }}>
-            {t.nom}
-          </span>
-        ))}
       </div>
 
       <div style={{ display: 'grid', gap: '8px' }}>

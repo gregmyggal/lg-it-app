@@ -5,6 +5,7 @@ import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import MesCoursPage from './pages/MesCoursPage';
 import CoursLiensPage from './pages/CoursLiensPage';
+import NotFoundPage from './pages/NotFoundPage';
 import CoursLiensHistoriquePage from './pages/CoursLiensHistoriquePage';
 import MesClassesPage from './pages/MesClassesPage';
 import MesClasseSessionsPage from './pages/MesClasseSessionsPage';
@@ -28,7 +29,6 @@ import ClasseCreatePage from './pages/admin/ClasseCreatePage';
 import ClasseDetailPage from './pages/admin/ClasseDetailPage';
 import CalendrierScolaireAdminPage from './pages/admin/CalendrierScolaireAdminPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
-import TypesCoursAdminPage from './pages/admin/TypesCoursAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
 import SharePage from './pages/SharePage';
 
@@ -257,14 +257,6 @@ export default function App() {
               }
             />
             <Route
-              path="admin/types-cours"
-              element={
-                <ProtectedRoute roles={STAFF}>
-                  <TypesCoursAdminPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="admin/types-formation"
               element={
                 <ProtectedRoute roles={STAFF}>
@@ -273,6 +265,7 @@ export default function App() {
               }
             />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </ToastProvider>
       </AuthProvider>

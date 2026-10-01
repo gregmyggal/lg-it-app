@@ -47,7 +47,6 @@ class ShareCodeController extends Controller
             ];
             // Anciennes ressources pas encore reprises en liens (affichage transitoire, Q-T4-1).
             $data['ressources'] = $shareable->ressources()->whereNull('repris_at')->get();
-            $data['types'] = $shareable->typesCours;
         } elseif ($shareable instanceof Stage) {
             $data['dates'] = $shareable->dates;
         } elseif ($shareable instanceof Formation) {

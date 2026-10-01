@@ -1,0 +1,19 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sommaire — Maquettes CLS-01 T5</title><style>
+:root{--t1:#111827;--t3:#6b7280;--bd:#e5e7eb;--primary:#2563eb;--bg:#f9fafb}
+body{margin:0;font-family:'Manrope',-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:var(--t1);background:var(--bg)}
+.w{max-width:1000px;margin:0 auto;padding:24px 16px}h1{font-size:28px;margin:0 0 8px}p{margin:0 0 12px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--bd);vertical-align:top;font-size:14px}th{font-size:12px;text-transform:uppercase;color:#4b5563;background:var(--bg)}
+a{color:var(--primary);font-weight:600}:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}.note{border:1px dashed #cbd5e1;background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--t3);margin-top:16px}
+.tw{overflow-x:auto}
+</style></head><body><div class="w">
+<h1>CLS-01 / T5 — Suppression du « type de cours »</h1>
+<p>Maquettes statiques « Avant / Après » à valider avant tout développement. Chaque maquette a un sélecteur <strong>Avant / Après</strong> et un sélecteur d'états <strong>Chargement / Vide / Erreur / Données</strong>.</p>
+<div class="tw"><table><thead><tr><th>Maquette</th><th>Écran existant concerné</th><th>Ce qui change</th><th>AC</th></tr></thead><tbody>
+<tr><td><a href="01-menu-admin.html">01 — Menu admin</a></td><td>Menu latéral (<code>PortalLayout</code>)</td><td>Le lien « Types de cours » est retiré ; « Types de formation » reste.</td><td>AC-8</td></tr>
+<tr><td><a href="02-cours-admin.html">02 — Cours (admin)</a></td><td>Liste/cartes et formulaire (<code>CoursAdminPage</code>)</td><td>Plus de badges de types sur les cartes ; plus de champ dans le formulaire.</td><td>AC-8</td></tr>
+<tr><td><a href="03-professeur-formulaire.html">03 — Professeurs</a></td><td>Liste, formulaires création/édition, fiche (<code>ProfesseursAdminPage</code>, <code>AdminProfesseurDetail</code>)</td><td>Plus de bloc sur la carte ni de champ dans les formulaires ; sous-titre mis à jour ; section « Classes » (T2) conservée.</td><td>AC-8</td></tr>
+<tr><td><a href="04-partage-eleve.html">04 — Partage élève</a></td><td>Page publique (<code>SharePage</code>)</td><td>Cours : plus de « Catégories ». Formation : inchangée (types de formation).</td><td>AC-8</td></tr>
+</tbody></table></div>
+<div class="note">Documents associés : <code>WORKFLOW_UX.md</code> (workflow, décisions, questions ouvertes) et <code>INVENTAIRE.md</code> (inventaire technique). Aucune case de validation n'est remplie : ces maquettes sont en attente de validation.</div>
+</div></body></html>

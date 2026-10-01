@@ -27,7 +27,6 @@ use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\TimesheetMoisController;
 use App\Http\Controllers\TimesheetValidationController;
-use App\Http\Controllers\TypeCoursController;
 use App\Http\Controllers\TypeFormationController;
 use Illuminate\Support\Facades\Route;
 
@@ -63,14 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('formations', FormationController::class);
     Route::apiResource('anniversaires', AnniversaireController::class);
-    // Pas de Route::apiResource ici : le tiret dans "types-cours"/"types-formation"
-    // casserait le nom de paramètre attendu par le binding implicite ($typeCours).
-    Route::get('/types-cours', [TypeCoursController::class, 'index']);
-    Route::post('/types-cours', [TypeCoursController::class, 'store']);
-    Route::get('/types-cours/{typeCours}', [TypeCoursController::class, 'show']);
-    Route::put('/types-cours/{typeCours}', [TypeCoursController::class, 'update']);
-    Route::delete('/types-cours/{typeCours}', [TypeCoursController::class, 'destroy']);
-
+    // Pas de Route::apiResource ici : le tiret dans "types-formation"
+    // casserait le nom de paramètre attendu par le binding implicite ($typeFormation).
     Route::get('/types-formation', [TypeFormationController::class, 'index']);
     Route::post('/types-formation', [TypeFormationController::class, 'store']);
     Route::get('/types-formation/{typeFormation}', [TypeFormationController::class, 'show']);
