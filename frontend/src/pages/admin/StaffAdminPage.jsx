@@ -109,20 +109,26 @@ export default function StaffAdminPage() {
           </div>
         )}
         <FilterBar>
-          <FilterField label="Statut">
-            <select value={filtres.statut} onChange={(e) => majFiltre('statut', e.target.value)}>
-              <option value="">Tous</option>
-              <option value="actif">Actifs</option>
-              <option value="inactif">Désactivés</option>
-            </select>
-          </FilterField>
-          <FilterField label="Rôle">
-            <select value={filtres.role} onChange={(e) => majFiltre('role', e.target.value)}>
-              <option value="">Tous</option>
-              <option value="admin">Admin</option>
-              <option value="directeur">Directeur</option>
-            </select>
-          </FilterField>
+          <FilterField
+            label="Statut"
+            value={filtres.statut}
+            onChange={(value) => majFiltre('statut', value)}
+            options={[
+              { value: 'actif', label: 'Actifs' },
+              { value: 'inactif', label: 'Désactivés' },
+            ]}
+            placeholder="Tous"
+          />
+          <FilterField
+            label="Rôle"
+            value={filtres.role}
+            onChange={(value) => majFiltre('role', value)}
+            options={[
+              { value: 'admin', label: 'Admin' },
+              { value: 'directeur', label: 'Directeur' },
+            ]}
+            placeholder="Tous"
+          />
         </FilterBar>
         <Table>
           <thead>
@@ -158,9 +164,10 @@ export default function StaffAdminPage() {
 
   return (
     <>
-      <AdminPageHeader title="Gestion du staff">
-        <AdminButton onClick={() => setModaleCreation(true)}>＋ Créer</AdminButton>
-      </AdminPageHeader>
+      <AdminPageHeader
+        title="Gestion du staff"
+        action={<AdminButton onClick={() => setModaleCreation(true)}>＋ Créer</AdminButton>}
+      />
       <AdminPageContent>{contenu}</AdminPageContent>
 
       {modaleCreation && <StaffCreateModal onClose={() => setModaleCreation(false)} onSubmit={handleCreerStaff} />}
