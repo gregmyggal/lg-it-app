@@ -5,9 +5,9 @@
 <table role="presentation" width="100%" style="max-width:600px;background:#ffffff;border-radius:8px;padding:32px;">
 <tr><td style="font-size:15px;line-height:1.6;">
 <p>Bonjour {{ $nom }},</p>
-<p>Un compte <strong>{{ $role }}</strong> vient d'être créé pour vous sur la plateforme Logiscool Pays Vert. Pour l'activer, choisissez votre mot de passe :</p>
+<p>Un compte <strong>{{ $role }}</strong> vient d'être créé pour vous sur la plateforme Logiscool Pays Vert@if ($role === 'professeur'), qui vous permet de consulter vos classes et d'encoder vos heures@endif. Pour l'activer, choisissez votre mot de passe :</p>
 <p style="text-align:center;margin:28px 0;"><a href="{{ $lien }}" style="background:#d9531e;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;">Définir mon mot de passe</a></p>
 <p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br><span style="word-break:break-all;">{{ $lien }}</span></p>
-<p>Ce lien est valable {{ $validite }} et ne peut être utilisé qu'une seule fois.</p>
-<p style="color:#4b5a6b;font-size:13px;">Si vous n'attendiez pas cet email, ignorez-le : aucun compte n'est actif sans votre action.</p>
+<p>Ce lien est valable {{ $validite }} et ne peut être utilisé qu'une seule fois.@if ($role === 'professeur') Ensuite, connectez-vous avec cette adresse email.@endif</p>
+<p style="color:#4b5a6b;font-size:13px;">Si vous n'attendiez pas cet email, ignorez-le : aucun compte n'est actif sans votre action.@if ($role === 'professeur') Une question ? Contactez la direction de votre centre.@endif</p>
 </td></tr></table></td></tr></table></body></html>

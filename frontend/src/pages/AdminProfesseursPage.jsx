@@ -11,7 +11,25 @@ import {
 import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
 import ProfesseurTariffForm from '../components/ProfesseurTariffForm';
 import CreerProfesseurModal from '../components/professeurs/CreerProfesseurModal';
-import MotDePasseProvisoireModal from '../components/professeurs/MotDePasseProvisoireModal';
+import StatutBadge from '../components/ui/StatutBadge';
+import LienCopiable from '../components/ui/LienCopiable';
+import { STATUTS_ACCES } from '../utils/statuts';
+import { A_RELANCER_RAPIDE } from '../utils/acces';
+import { FilterToolbar, ResultCount } from '../components/ui/Filters';
+import { EmptyBlock } from '../components/ui/DataStates';
+import { useFiltresListe } from '../hooks/useFiltresListe';
+import {
+  OPTIONS_ACCES, OPTIONS_CONTRAT, OPTIONS_STATUT, STATUT_PAR_DEFAUT, correspondAcces, correspondContrat,
+  correspondRecherche, libelleResultats, statutPourApi,
+} from '../utils/filtres';
+
+const DEFAUTS = { q: '', statut: STATUT_PAR_DEFAUT, contrat: '', acces: '' };
+const AUTORISEES = {
+  statut: OPTIONS_STATUT.map((o) => o.value),
+  contrat: OPTIONS_CONTRAT.map((o) => o.value),
+  acces: OPTIONS_ACCES.map((o) => o.value),
+};
+const ID_RECHERCHE = 'professeurs-recherche';
 
 export default function AdminProfesseursPage() {
   const navigate = useNavigate();
@@ -23,18 +41,23 @@ export default function AdminProfesseursPage() {
   const [showTarifForm, setShowTarifForm] = useState(false);
   const [tariffs, setTariffs] = useState({});
   const [editingTariff, setEditingTariff] = useState(null);
-  const [filtre, setFiltre] = useState('actif');
+  const { valeurs, majFiltre, reinitialiser, nbActifs, estParDefaut } = useFiltresListe(DEFAUTS, AUTORISEES);
   const [showCreer, setShowCreer] = useState(false);
-  const [secret, setSecret] = useState(null);
+  const [statutCharge, setStatutCharge] = useState(null); // statut pour lequel `professeurs` est chargé
+  const [lienRepli, setLienRepli] = useState(null);
+  const [relanceId, setRelanceId] = useState(null);
 
+  // Seul le statut est filtré par le serveur : les autres filtres (recherche, contrat, accès) sont instantanés.
   useEffect(() => {
     loadData();
-  }, [filtre]);
+  }, [valeurs.statut]);
 
   async function loadData() {
     try {
-      const profsRes = await client.get('/professeurs', { params: filtre === 'tous' ? {} : { statut: filtre } });
+      const statutDemande = valeurs.statut;
+      const profsRes = await client.get('/professeurs', { params: statutDemande === 'tous' ? {} : { statut: statutPourApi(statutDemande) } });
       setProfesseurs(profsRes.data);
+      setStatutCharge(statutDemande);
 
       // Charger les tarifs pour chaque professeur
       const tariffMap = {};
@@ -51,6 +74,29 @@ export default function AdminProfesseursPage() {
     } catch (err) {
       setError('Impossible de charger les données');
       console.error(err);
+    }
+  }
+
+  // Relance rapide depuis la carte (invitation expirée ou non envoyée).
+  async function relancer(prof) {
+    setRelanceId(prof.id);
+    setError(null);
+    setSuccess(null);
+    setLienRepli(null);
+    try {
+      const res = await client.post(`/professeurs/${prof.id}/envoyer-lien`);
+      if (res.data.mail_envoye) {
+        setSuccess(`Invitation envoyée à ${prof.user?.email}.`);
+        setTimeout(() => setSuccess(null), 4000);
+      } else {
+        setError(`L'email destiné à ${prof.user?.email} n'a pas pu être envoyé. Réessayez, ou transmettez le lien ci-dessous.`);
+        setLienRepli(res.data.lien);
+      }
+      loadData();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setRelanceId(null);
     }
   }
 
@@ -93,13 +139,24 @@ export default function AdminProfesseursPage() {
     };
   };
 
+  const aRelancer = professeurs.filter((p) => p.statut === 'actif' && p.acces?.a_relancer).length;
+  const affiches = professeurs.filter((p) => correspondAcces(p.acces, valeurs.acces)
+    && correspondContrat(p.type_contrat, valeurs.contrat)
+    && correspondRecherche([p.prenom, p.nom, p.email, p.user?.email], valeurs.q));
+  // Vide « pour de vrai » seulement si les données correspondent au statut affiché (évite de démonter la barre).
+  const listeReellementVide = professeurs.length === 0 && estParDefaut && statutCharge === valeurs.statut;
+
+  function reinitialiserEtFocaliser() {
+    reinitialiser();
+    document.getElementById(ID_RECHERCHE)?.focus();
+  }
+
   return (
     <>
       <AdminPageHeader
         icon="👨‍🏫"
         title="Gestion des Professeurs & Tarifs"
         description="Gérez vos professeurs, leurs comptes et leurs tarifs horaires"
-        badge={`${professeurs.length} professeurs`}
         action={
           <AdminButton variant="primary" icon="➕" onClick={() => setShowCreer(true)}>
             Nouveau professeur
@@ -117,6 +174,7 @@ export default function AdminProfesseursPage() {
             marginBottom: '16px',
           }}>
             ⚠️ {error}
+            {lienRepli && <LienCopiable lien={lienRepli} />}
           </div>
         )}
 
@@ -132,29 +190,59 @@ export default function AdminProfesseursPage() {
           </div>
         )}
 
-        <div role="group" aria-label="Filtrer par statut" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          {[['actif', 'Actifs'], ['inactif', 'Désactivés'], ['tous', 'Tous']].map(([valeur, libelle]) => (
-            <AdminButton
-              key={valeur}
-              size="sm"
-              variant={filtre === valeur ? 'primary' : 'secondary'}
-              aria-pressed={filtre === valeur}
-              onClick={() => setFiltre(valeur)}
-            >
-              {libelle}
-            </AdminButton>
-          ))}
-        </div>
-
-        {professeurs.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#6b7280', padding: '32px' }}>
-            Aucun professeur {filtre === 'inactif' ? 'désactivé' : filtre === 'actif' ? 'actif' : ''}.
-          </div>
+        {listeReellementVide ? (
+          <EmptyBlock icon="👨‍🏫" title="Aucun professeur actif">
+            Créez un professeur avec « Nouveau professeur » pour commencer.
+          </EmptyBlock>
+        ) : (
+          <>
+            <FilterToolbar
+              label="Filtres des professeurs"
+              recherche={{ id: ID_RECHERCHE, value: valeurs.q, onChange: (v) => majFiltre('q', v), placeholder: 'Nom ou email' }}
+              filtres={[
+                { id: 'professeurs-statut', label: 'Statut', value: valeurs.statut, onChange: (v) => majFiltre('statut', v), options: OPTIONS_STATUT },
+                { id: 'professeurs-contrat', label: 'Contrat', value: valeurs.contrat, onChange: (v) => majFiltre('contrat', v), options: OPTIONS_CONTRAT, placeholder: 'Tous' },
+                { id: 'professeurs-acces', label: 'Accès', value: valeurs.acces, onChange: (v) => majFiltre('acces', v), options: OPTIONS_ACCES, placeholder: 'Tous' },
+              ]}
+              nbActifs={nbActifs}
+              onReset={reinitialiser}
+              resetDisabled={estParDefaut}
+            />
+            <ResultCount>{libelleResultats(affiches.length, professeurs.length, ['professeur', 'professeurs'])}</ResultCount>
+            {aRelancer > 0 && valeurs.statut !== 'inactif' && valeurs.acces !== 'relancer' && (
+              <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
+                {aRelancer} invitation{aRelancer > 1 ? 's' : ''} à relancer.{' '}
+                <button
+                  type="button"
+                  onClick={() => majFiltre('acces', 'relancer')}
+                  style={{ background: 'none', border: 'none', padding: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
+                >
+                  Les afficher
+                </button>
+              </p>
+            )}
+            {affiches.length === 0 && (
+              <EmptyBlock
+                icon="🔎"
+                title="Aucun professeur ne correspond à ces filtres"
+                actions={(
+                  <>
+                    <AdminButton variant="primary" onClick={reinitialiserEtFocaliser}>Réinitialiser les filtres</AdminButton>
+                    {valeurs.statut === STATUT_PAR_DEFAUT && (
+                      <AdminButton variant="secondary" onClick={() => majFiltre('statut', 'tous')}>Inclure les désactivés</AdminButton>
+                    )}
+                  </>
+                )}
+              >
+                Modifiez la recherche ou les filtres pour afficher des professeurs.
+              </EmptyBlock>
+            )}
+          </>
         )}
 
         {/* Liste des professeurs */}
         <div style={{ display: 'grid', gap: '24px' }}>
-          {professeurs.map((prof) => {
+          {affiches.map((prof) => {
             const stats = getProfStats(prof.id);
             const profTariffs = tariffs[prof.id] || [];
 
@@ -188,6 +276,22 @@ export default function AdminProfesseursPage() {
                     <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9em' }}>
                       {prof.email}
                     </p>
+                    {prof.statut === 'actif' && prof.acces?.statut && (
+                      <p style={{ margin: '8px 0 0' }}>
+                        <StatutBadge table={STATUTS_ACCES} valeur={prof.acces.statut} />
+                        {A_RELANCER_RAPIDE.includes(prof.acces.statut) && (
+                          <AdminButton
+                            variant="secondary"
+                            size="sm"
+                            style={{ marginLeft: '8px' }}
+                            loading={relanceId === prof.id}
+                            onClick={() => relancer(prof)}
+                          >
+                            Renvoyer
+                          </AdminButton>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
                     <AdminButton
@@ -338,20 +442,8 @@ export default function AdminProfesseursPage() {
         {showCreer && (
           <CreerProfesseurModal
             onClose={() => setShowCreer(false)}
-            onCreated={({ professeur, motDePasse, mailEnvoye }) => {
-              setShowCreer(false);
-              setSecret({ professeur, motDePasse, mailEnvoye });
-              loadData();
-            }}
-          />
-        )}
-        {secret && (
-          <MotDePasseProvisoireModal
-            titre={`${secret.professeur.prenom} ${secret.professeur.nom} est créé`}
-            loginEmail={secret.professeur.user?.email}
-            motDePasse={secret.motDePasse}
-            mailEnvoye={secret.mailEnvoye}
-            onClose={() => setSecret(null)}
+            onCreated={() => loadData()}
+            onVoirFiche={(professeur) => navigate(`/admin/professeurs/${professeur.id}`)}
           />
         )}
 

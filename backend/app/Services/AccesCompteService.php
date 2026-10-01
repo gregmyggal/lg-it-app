@@ -39,7 +39,7 @@ class AccesCompteService
     /** Statut d'accès affiché (calculé ici : le backend est la source de vérité). */
     public function statutAcces(User $user): ?string
     {
-        if ($user->statut === 'inactif') {
+        if (! $this->estActif($user)) {
             return null;
         }
         if ($user->mot_de_passe_defini_le) {
@@ -105,7 +105,7 @@ class AccesCompteService
      *
      * @return array{envoye: bool, lien: ?string}
      */
-    public function envoyer(User $user, string $type, int $dureeMinutes): array
+    public function envoyer(User $user, string $type, int $dureeMinutes, bool $parDirection = false): array
     {
         $lien = $this->emettre($user, $type, $dureeMinutes);
 
@@ -116,7 +116,7 @@ class AccesCompteService
         try {
             $mail = $type === self::INVITATION
                 ? new InvitationCompteMail($user->name, $this->libelleRole($user), $lien, $this->libelleDuree($dureeMinutes))
-                : new ReinitialisationMotDePasseMail($user->name, $lien, $this->libelleDuree($dureeMinutes));
+                : new ReinitialisationMotDePasseMail($user->name, $lien, $this->libelleDuree($dureeMinutes), $parDirection);
             Mail::to($user->email)->send($mail);
         } catch (Throwable $e) {
             report($e);
@@ -246,8 +246,13 @@ class AccesCompteService
         return ($acces && ! $acces->expire_le->isPast()) ? $acces : null;
     }
 
+    /** Utilise la relation préchargée (liste) pour éviter une requête par compte. */
     private function dernierToken(User $user): ?AccesToken
     {
+        if ($user->relationLoaded('accesTokens')) {
+            return $user->accesTokens->sortByDesc('id')->first();
+        }
+
         return AccesToken::where('user_id', $user->id)->latest('id')->first();
     }
 

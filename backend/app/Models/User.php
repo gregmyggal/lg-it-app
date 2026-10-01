@@ -57,6 +57,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function accesTokens(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AccesToken::class);
+    }
+
     public function professeur(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Professeur::class);

@@ -1,6 +1,6 @@
 Bonjour {!! $nom !!},
 
-Une réinitialisation de votre mot de passe a été demandée. Pour choisir un nouveau mot de passe :
+@if ($parDirection)La direction a demandé la réinitialisation de votre mot de passe.@else Une réinitialisation de votre mot de passe a été demandée.@endif Pour choisir un nouveau mot de passe :
 
 {!! $lien !!}
 

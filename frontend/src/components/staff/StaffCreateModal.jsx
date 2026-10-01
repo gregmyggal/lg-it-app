@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Modal from '../ui/Modal';
 import { FormField } from '../ui/FormField';
 import AdminButton from '../AdminButton';
-import LienCopiable from './LienCopiable';
+import LienCopiable from '../ui/LienCopiable';
 import { useCreateStaff, useSendStaffLink } from '../../hooks/useStaff';
 import { getErrorMessage } from '../../api/errors';
 

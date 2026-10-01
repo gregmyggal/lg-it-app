@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
-use App\Mail\InvitationProfesseurMail;
 use App\Models\CourseSession;
 use App\Models\Professeur;
 use App\Models\ProfesseurClasse;
@@ -11,31 +10,29 @@ use App\Models\SessionProfesseur;
 use App\Models\Timesheet;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use Throwable;
 
 /**
- * PROF-01 : cycle de vie du professeur et de son compte (création, désactivation, réactivation, reset,
- * email de connexion). Le mot de passe provisoire est généré ici, envoyé par mail et renvoyé une seule fois.
+ * PROF-01 : cycle de vie du professeur et de son compte (création, désactivation, réactivation, envoi de lien,
+ * email de connexion). ADMIN-03 : aucun mot de passe n'est généré ni communiqué ; l'accès passe par un lien à usage
+ * unique envoyé à l'email de connexion (AccesCompteService, commun à tous les rôles).
  */
 class ProfesseurCompteService
 {
-    public function __construct(private readonly ClasseProfesseurAssignmentService $assignations) {}
+    public function __construct(
+        private readonly ClasseProfesseurAssignmentService $assignations,
+        private readonly AccesCompteService $acces,
+    ) {}
 
-    /** @return array{professeur: Professeur, mot_de_passe: string, mail_envoye: bool} */
+    /** @return array{professeur: Professeur, mail_envoye: bool, lien: ?string} */
     public function creer(array $data): array
     {
-        $motDePasse = $this->genererMotDePasse();
-
-        $professeur = DB::transaction(function () use ($data, $motDePasse) {
+        $professeur = DB::transaction(function () use ($data) {
             $user = User::create([
                 'name' => $data['prenom'].' '.$data['nom'],
                 'email' => $data['login_email'],
-                'password' => $motDePasse,
+                'password' => $this->acces->motDePasseInutilisable(),
                 'role' => 'professeur',
             ]);
-            $user->forceFill(['must_change_password' => true])->save();
 
             return Professeur::create([
                 ...array_diff_key($data, array_flip(['login_email'])),
@@ -44,11 +41,9 @@ class ProfesseurCompteService
             ]);
         });
 
-        return [
-            'professeur' => $professeur->load('user'),
-            'mot_de_passe' => $motDePasse,
-            'mail_envoye' => $this->inviter($professeur, $motDePasse, 'creation'),
-        ];
+        $envoi = $this->acces->envoyer($professeur->user, AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
+
+        return ['professeur' => $professeur->load('user'), 'mail_envoye' => $envoi['envoye'], 'lien' => $envoi['lien']];
     }
 
     /**
@@ -97,36 +92,63 @@ class ProfesseurCompteService
 
             $professeur->update(['statut' => 'inactif', 'date_sortie' => $dateSortie ?? $this->aujourdhui()]);
             $professeur->user->tokens()->delete();
+            $this->acces->annulerLiens($professeur->user);
 
             return ['professeur' => $professeur->refresh(), 'assignations_terminees' => $terminees];
         });
     }
 
-    /** @return array{professeur: Professeur, mot_de_passe: string, mail_envoye: bool} */
+    /** @return array{professeur: Professeur, mail_envoye: bool, lien: ?string} */
     public function reactiver(Professeur $professeur): array
     {
         if ($professeur->statut === 'actif') {
             throw RegleMetierException::conflit('Ce professeur est déjà actif.');
         }
 
-        $motDePasse = $this->genererMotDePasse();
-        DB::transaction(function () use ($professeur, $motDePasse) {
+        DB::transaction(function () use ($professeur) {
             $professeur->update(['statut' => 'actif', 'date_sortie' => null]);
-            $this->definirMotDePasse($professeur->user, $motDePasse);
+            // L'ancien mot de passe n'est plus de confiance : le compte repasse par une invitation.
+            $professeur->user->forceFill([
+                'password' => $this->acces->motDePasseInutilisable(),
+                'must_change_password' => false,
+                'mot_de_passe_defini_le' => null,
+                'invitation_envoyee_le' => null,
+            ])->save();
+            $professeur->user->tokens()->delete();
         });
 
-        return ['professeur' => $professeur->refresh(), 'mot_de_passe' => $motDePasse,
-            'mail_envoye' => $this->inviter($professeur, $motDePasse, 'reactivation')];
+        $envoi = $this->acces->envoyer($professeur->user, AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
+
+        return ['professeur' => $professeur->refresh(), 'mail_envoye' => $envoi['envoye'], 'lien' => $envoi['lien']];
     }
 
-    /** @return array{mot_de_passe: string, mail_envoye: bool} */
-    public function reinitialiserMotDePasse(Professeur $professeur): array
+    /**
+     * Renvoie l'invitation (mot de passe jamais défini) ou envoie un lien de réinitialisation.
+     *
+     * @return array{mail_envoye: bool, lien: ?string}
+     */
+    public function envoyerLien(Professeur $professeur): array
     {
         $this->assertActif($professeur);
-        $motDePasse = $this->genererMotDePasse();
-        $this->definirMotDePasse($professeur->user, $motDePasse);
 
-        return ['mot_de_passe' => $motDePasse, 'mail_envoye' => $this->inviter($professeur, $motDePasse, 'reinitialisation')];
+        $attente = $this->acces->attenteEnvoi($professeur->user);
+        if ($attente > 0) {
+            throw new RegleMetierException(
+                'Un email vient d\'être envoyé. Réessayez dans '.$attente.' seconde'.($attente > 1 ? 's' : '').'.', 429);
+        }
+
+        $envoi = $this->acces->envoyer($professeur->user, $this->acces->typePour($professeur->user),
+            AccesCompteService::DUREE_ADMIN_MINUTES, parDirection: true);
+
+        return ['mail_envoye' => $envoi['envoye'], 'lien' => $envoi['lien']];
+    }
+
+    /** Lien à transmettre soi-même (affiché une fois) quand l'email n'arrive pas. */
+    public function genererLien(Professeur $professeur, int $parUserId): string
+    {
+        $this->assertActif($professeur);
+
+        return $this->acces->genererLienManuel($professeur->user, $parUserId);
     }
 
     public function changerEmailConnexion(Professeur $professeur, string $email): Professeur
@@ -135,6 +157,7 @@ class ProfesseurCompteService
         DB::transaction(function () use ($user, $email) {
             $user->update(['email' => $email]);
             $user->tokens()->delete();
+            $this->acces->annulerLiens($user);
         });
 
         return $professeur->refresh()->load('user');
@@ -155,32 +178,6 @@ class ProfesseurCompteService
     {
         if ($professeur->statut !== 'actif') {
             throw RegleMetierException::conflit('Ce professeur est désactivé : réactivez-le d\'abord.');
-        }
-    }
-
-    private function definirMotDePasse(User $user, string $motDePasse): void
-    {
-        $user->forceFill(['password' => $motDePasse, 'must_change_password' => true])->save();
-        $user->tokens()->delete();
-    }
-
-    private function genererMotDePasse(): string
-    {
-        return Str::password(12, symbols: false);
-    }
-
-    /** L'échec d'envoi ne bloque pas l'action : le mot de passe est de toute façon affiché une fois à l'écran. */
-    private function inviter(Professeur $professeur, string $motDePasse, string $motif): bool
-    {
-        try {
-            Mail::to($professeur->email)->send(new InvitationProfesseurMail(
-                $professeur->prenom, $professeur->user->email, $motDePasse, $motif));
-
-            return true;
-        } catch (Throwable $e) {
-            report($e);
-
-            return false;
         }
     }
 

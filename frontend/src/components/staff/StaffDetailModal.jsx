@@ -1,19 +1,12 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
 import AdminButton from '../AdminButton';
-import LienCopiable from './LienCopiable';
+import LienCopiable from '../ui/LienCopiable';
 import { useGenerateStaffLink, useSendStaffLink } from '../../hooks/useStaff';
 import { STATUTS_ACCES, libelleRole } from '../../utils/statuts';
 import { formatDate, formatDateHeure } from '../../utils/dates';
+import { detailAcces, libelleEnvoiLien } from '../../utils/acces';
 import { getErrorMessage } from '../../api/errors';
-
-const LIBELLE_ACCES_DETAIL = {
-  mot_de_passe_defini: (a) => `Mot de passe défini le ${formatDateHeure(a.mot_de_passe_defini_le)}`,
-  invitation_en_attente: (a) => `Invitation envoyée le ${formatDateHeure(a.invitation_envoyee_le)} (expire le ${formatDateHeure(a.invitation_expire_le)})`,
-  invitation_expiree: (a) => `Invitation expirée le ${formatDateHeure(a.invitation_expire_le)}`,
-  invitation_non_envoyee: () => 'Invitation non envoyée',
-  mot_de_passe_provisoire: () => 'Mot de passe provisoire (jamais changé)',
-};
 
 const champ = (label, valeur) => (
   <div style={{ marginBottom: '16px' }}>
@@ -32,8 +25,7 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
 
   const actif = staff.statut === 'actif';
   const acces = staff.acces;
-  const invitation = acces?.statut?.startsWith('invitation_');
-  const libelleEnvoi = invitation ? 'Renvoyer l’invitation' : 'Envoyer un lien de réinitialisation';
+  const libelleEnvoi = libelleEnvoiLien(acces);
   const occupe = envoiEnCours || generationEnCours;
 
   async function envoyer() {
@@ -79,7 +71,7 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
         {actif && acces?.statut && champ('Accès:', (
           <>
             <strong>{STATUTS_ACCES[acces.statut]?.label ?? acces.statut}</strong>
-            <div style={{ fontSize: '13px', color: '#4b5563' }}>{LIBELLE_ACCES_DETAIL[acces.statut]?.(acces)}</div>
+            <div style={{ fontSize: '13px', color: '#4b5563' }}>{detailAcces(acces)}</div>
           </>
         ))}
         {staff.date_sortie && champ('Date de sortie:', formatDate(staff.date_sortie))}

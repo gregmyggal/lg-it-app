@@ -5,34 +5,52 @@ import AdminButton from '../AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody, AdminBadge } from '../AdminPageLayout';
 import { AdminFormField, AdminInput, AdminCheckbox } from '../AdminFormField';
 import Banner from '../ui/Banner';
-import MotDePasseProvisoireModal from './MotDePasseProvisoireModal';
+import StatutBadge from '../ui/StatutBadge';
+import LienCopiable from '../ui/LienCopiable';
+import { STATUTS_ACCES } from '../../utils/statuts';
+import { detailAcces, libelleEnvoiLien } from '../../utils/acces';
+import { formatDateHeure } from '../../utils/dates';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 
 /**
- * Compte de connexion du professeur : activer / désactiver, réinitialiser le mot de passe,
- * changer l'email de connexion. Le serveur reste la source de vérité (impact, règles, tokens).
+ * Compte de connexion du professeur : état d'accès, envoi d'invitation / lien de réinitialisation (ADMIN-03),
+ * activer / désactiver, changer l'email de connexion. Le serveur reste la source de vérité.
  *
  * @param {object} props
- * @param {object} props.professeur  professeur chargé avec `user`
- * @param {(message: string) => void} props.onChange  rechargement + message de succès
+ * @param {object} props.professeur  professeur chargé avec `user` et `acces`
+ * @param {(message: string|null) => void} props.onChange  rechargement + message de succès éventuel
  */
 export default function CompteProfesseurSection({ professeur, onChange }) {
   const [modal, setModal] = useState(null); // 'desactiver' | 'email'
-  const [secret, setSecret] = useState(null);
+  const [confirmation, setConfirmation] = useState(null); // 'envoi' | 'reactivation'
   const [erreur, setErreur] = useState(null);
+  const [lien, setLien] = useState(null);
+  const [apresEmail, setApresEmail] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const actif = professeur.statut === 'actif';
   const loginEmail = professeur.user?.email;
+  const acces = professeur.acces;
+  const id = professeur.id;
 
-  async function action(promesse, message, avecSecret) {
-    setEnvoi(true);
+  function reinitialiserRetour() {
     setErreur(null);
+    setLien(null);
+  }
+
+  /** Appel d'envoi (invitation, lien, réactivation) : succès → message ; échec d'envoi → lien de repli. */
+  async function executer(promesse, messageOk) {
+    setEnvoi(true);
+    setConfirmation(null);
+    setApresEmail(false);
+    reinitialiserRetour();
     try {
       const res = await promesse;
-      if (avecSecret) {
-        setSecret({ titre: avecSecret, motDePasse: res.data.mot_de_passe, mailEnvoye: res.data.mail_envoye, message });
+      if (res.data.mail_envoye) {
+        onChange(messageOk(res.data));
       } else {
-        onChange(message);
+        setErreur('L\u2019email n\u2019a pas pu être envoyé. Réessayez, ou transmettez le lien ci-dessous.');
+        setLien(res.data.lien);
+        onChange(null);
       }
     } catch (err) {
       setErreur(getErrorMessage(err));
@@ -41,22 +59,77 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
     }
   }
 
-  const id = professeur.id;
+  const envoyerLien = () => executer(
+    client.post(`/professeurs/${id}/envoyer-lien`),
+    () => `Email envoyé à ${loginEmail} à ${formatDateHeure(new Date().toISOString()).slice(-5)}.`,
+  );
+
+  const reactiver = () => executer(
+    client.post(`/professeurs/${id}/reactiver`),
+    () => `Professeur réactivé. Invitation envoyée à ${loginEmail} (l'ancien mot de passe n'est plus valable).`,
+  );
+
+  async function genererLien() {
+    reinitialiserRetour();
+    setEnvoi(true);
+    try {
+      const res = await client.post(`/professeurs/${id}/generer-lien`);
+      setLien(res.data.lien);
+      onChange(null);
+    } catch (err) {
+      setErreur(getErrorMessage(err));
+    } finally {
+      setEnvoi(false);
+    }
+  }
 
   return (
     <AdminCard>
       <AdminCardHeader title="🔐 Compte de connexion" />
       <AdminCardBody>
         {erreur && <Banner tone="error">{erreur}</Banner>}
+        {apresEmail && actif && (
+          <Banner
+            tone="info"
+            actions={<AdminButton size="sm" variant="secondary" onClick={envoyerLien} loading={envoi}>Envoyer l&apos;invitation à la nouvelle adresse</AdminButton>}
+          >
+            Email de connexion modifié : les liens en cours ont été annulés.
+          </Banner>
+        )}
         <p>
           Identifiant : <strong>{loginEmail}</strong>{' '}
           <AdminBadge label={actif ? 'Actif' : 'Désactivé'} color={actif ? 'green' : 'red'} />
         </p>
+        {actif && acces?.statut && (
+          <p>
+            Accès : <StatutBadge table={STATUTS_ACCES} valeur={acces.statut} />
+            <span style={{ display: 'block', fontSize: '13px', color: '#4b5563', marginTop: '4px' }}>{detailAcces(acces)}</span>
+          </p>
+        )}
         {!actif && (
           <p style={{ color: '#6b7280' }}>
             Ce professeur ne peut plus se connecter. Son historique (heures, tarifs, séances passées) est conservé.
+            Réactivez le compte pour envoyer une invitation.
           </p>
         )}
+        {lien && <LienCopiable lien={lien} />}
+
+        {confirmation && (
+          <div role="group" aria-label="Confirmation d'envoi" style={{ margin: '12px 0', padding: '12px', background: '#f3f4f6', borderRadius: '6px' }}>
+            <p style={{ marginTop: 0 }}>
+              {confirmation === 'envoi'
+                ? <>Envoyer un email à <strong>{loginEmail}</strong> ? Les liens précédents seront annulés.</>
+                : <>Le compte sera réactivé et un email de définition de mot de passe sera envoyé à <strong>{loginEmail}</strong> (l&apos;ancien mot de passe ne sera plus valable).</>}
+            </p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <AdminButton size="sm" variant="primary" loading={envoi} onClick={confirmation === 'envoi' ? envoyerLien : reactiver}>
+                {confirmation === 'envoi' ? 'Envoyer' : 'Réactiver et envoyer'}
+              </AdminButton>
+              <AdminButton size="sm" variant="secondary" onClick={() => setConfirmation(null)}>Annuler</AdminButton>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {actif ? (
             <>
@@ -64,14 +137,10 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
               <AdminButton
                 variant="secondary"
                 size="sm"
-                loading={envoi}
-                onClick={() => {
-                  if (window.confirm('Générer un nouveau mot de passe provisoire et déconnecter ce professeur ?')) {
-                    action(client.post(`/professeurs/${id}/reinitialiser-mot-de-passe`), 'Mot de passe réinitialisé.', 'Nouveau mot de passe provisoire');
-                  }
-                }}
+                disabled={envoi || confirmation === 'envoi'}
+                onClick={() => { reinitialiserRetour(); setConfirmation('envoi'); }}
               >
-                Réinitialiser le mot de passe
+                {libelleEnvoiLien(acces)}
               </AdminButton>
               <AdminButton variant="danger" size="sm" onClick={() => setModal('desactiver')}>Désactiver</AdminButton>
             </>
@@ -79,36 +148,35 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
             <AdminButton
               variant="primary"
               size="sm"
-              loading={envoi}
-              onClick={() => action(client.post(`/professeurs/${id}/reactiver`), 'Professeur réactivé.', 'Professeur réactivé')}
+              disabled={envoi || confirmation === 'reactivation'}
+              onClick={() => { reinitialiserRetour(); setConfirmation('reactivation'); }}
             >
               Réactiver
             </AdminButton>
           )}
         </div>
+        {actif && (
+          <p style={{ marginTop: '12px', fontSize: '13px' }}>
+            L&apos;email n&apos;arrive pas ?{' '}
+            <button type="button" onClick={genererLien} disabled={envoi} style={{ background: 'none', border: 'none', padding: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}>
+              Générer un lien à transmettre
+            </button>
+          </p>
+        )}
       </AdminCardBody>
 
       {modal === 'desactiver' && (
         <DesactiverModal
           professeur={professeur}
           onClose={() => setModal(null)}
-          onDone={(message) => { setModal(null); onChange(message); }}
+          onDone={(message) => { setModal(null); reinitialiserRetour(); onChange(message); }}
         />
       )}
       {modal === 'email' && (
         <EmailModal
           professeur={professeur}
           onClose={() => setModal(null)}
-          onDone={(message) => { setModal(null); onChange(message); }}
-        />
-      )}
-      {secret && (
-        <MotDePasseProvisoireModal
-          titre={secret.titre}
-          loginEmail={loginEmail}
-          motDePasse={secret.motDePasse}
-          mailEnvoye={secret.mailEnvoye}
-          onClose={() => { const m = secret.message; setSecret(null); onChange(m); }}
+          onDone={(message) => { setModal(null); reinitialiserRetour(); setApresEmail(true); onChange(message); }}
         />
       )}
     </AdminCard>

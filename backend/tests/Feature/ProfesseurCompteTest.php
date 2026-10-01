@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Mail\InvitationProfesseurMail;
+use App\Mail\InvitationCompteMail;
 use App\Models\Professeur;
 use App\Models\ProfesseurClasse;
 use App\Models\Timesheet;
@@ -25,19 +25,23 @@ class ProfesseurCompteTest extends TestCase
             'email' => 'ada@example.com', 'date_entree' => '2026-09-01'];
     }
 
-    public function test_creation_genere_mot_de_passe_provisoire_et_envoie_invitation(): void
+    public function test_creation_envoie_une_invitation_a_l_email_de_connexion_sans_mot_de_passe(): void
     {
         Mail::fake();
         $this->actingAsRole('directeur');
 
         $r = $this->postJson('/api/professeurs', $this->payload())->assertCreated()
-            ->assertJsonPath('data.statut', 'actif')->assertJsonPath('mail_envoye', true);
+            ->assertJsonPath('data.statut', 'actif')->assertJsonPath('mail_envoye', true)
+            ->assertJsonPath('data.acces.statut', 'invitation_en_attente')
+            ->assertJsonMissingPath('mot_de_passe')->assertJsonMissingPath('lien');
 
         $user = User::where('email', 'nouveau@example.com')->first();
-        $this->assertTrue($user->must_change_password);
+        $this->assertFalse($user->must_change_password);
         $this->assertSame('professeur', $user->role);
-        $this->assertNotEmpty($r->json('mot_de_passe'));
-        Mail::assertSent(InvitationProfesseurMail::class, fn ($m) => $m->hasTo('ada@example.com') && $m->motDePasse === $r->json('mot_de_passe'));
+        $this->assertNotNull($r->json('data.id'));
+        // Le lien part vers l'email de connexion, jamais vers l'email de contact du profil.
+        Mail::assertSent(InvitationCompteMail::class, fn ($m) => $m->hasTo('nouveau@example.com') && $m->role === 'professeur');
+        Mail::assertNotSent(InvitationCompteMail::class, fn ($m) => $m->hasTo('ada@example.com'));
     }
 
     public function test_email_de_connexion_deja_pris_est_refuse(): void
@@ -115,21 +119,25 @@ class ProfesseurCompteTest extends TestCase
         $this->postJson("/api/professeurs/{$prof->id}/classes", ['classe_id' => $classe->id])->assertStatus(409);
     }
 
-    public function test_reactivation_regenere_un_mot_de_passe(): void
+    public function test_reactivation_invalide_l_ancien_mot_de_passe_et_envoie_une_invitation(): void
     {
         Mail::fake();
         $prof = Professeur::factory()->create(['statut' => 'inactif', 'date_sortie' => '2026-09-30']);
+        $prof->user->forceFill(['password' => 'ancien-123', 'mot_de_passe_defini_le' => now()])->save();
         $this->actingAsRole('directeur');
 
-        $r = $this->postJson("/api/professeurs/{$prof->id}/reactiver")->assertOk()->assertJsonPath('data.statut', 'actif');
+        $this->postJson("/api/professeurs/{$prof->id}/reactiver")->assertOk()
+            ->assertJsonPath('data.statut', 'actif')->assertJsonPath('mail_envoye', true)
+            ->assertJsonPath('data.acces.statut', 'invitation_en_attente')->assertJsonMissingPath('mot_de_passe');
 
-        $this->assertNull($prof->refresh()->date_sortie);
-        $this->assertTrue($prof->user->must_change_password);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check($r->json('mot_de_passe'), $prof->user->password));
-        Mail::assertSent(InvitationProfesseurMail::class);
+        $prof->refresh();
+        $this->assertNull($prof->date_sortie);
+        $this->assertNull($prof->user->mot_de_passe_defini_le);
+        $this->assertFalse(\Illuminate\Support\Facades\Hash::check('ancien-123', $prof->user->password));
+        Mail::assertSent(InvitationCompteMail::class, fn ($m) => $m->hasTo($prof->user->email));
     }
 
-    public function test_reinitialisation_et_changement_demail_revoquent_les_tokens(): void
+    public function test_changement_demail_revoque_les_tokens(): void
     {
         Mail::fake();
         $prof = Professeur::factory()->create();
@@ -141,9 +149,6 @@ class ProfesseurCompteTest extends TestCase
         $this->putJson("/api/professeurs/{$prof->id}/compte", ['login_email' => 'neuf@example.com'])->assertOk();
         $this->assertSame('neuf@example.com', $prof->user->refresh()->email);
         $this->assertSame(0, $prof->user->tokens()->count());
-
-        $this->postJson("/api/professeurs/{$prof->id}/reinitialiser-mot-de-passe")->assertOk()->assertJsonStructure(['mot_de_passe']);
-        $this->assertTrue($prof->user->refresh()->must_change_password);
     }
 
     public function test_suppression_refusee_avec_donnees_liees_acceptee_sinon(): void

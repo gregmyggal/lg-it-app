@@ -83,7 +83,9 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/professeurs/{professeur}/impact-desactivation', [ProfesseurController::class, 'impact']);
     Route::post('/professeurs/{professeur}/desactiver', [ProfesseurController::class, 'desactiver']);
     Route::post('/professeurs/{professeur}/reactiver', [ProfesseurController::class, 'reactiver']);
-    Route::post('/professeurs/{professeur}/reinitialiser-mot-de-passe', [ProfesseurController::class, 'reinitialiserMotDePasse']);
+    // ADMIN-03 : invitation / lien de réinitialisation envoyés par email (même contrat que le staff).
+    Route::post('/professeurs/{professeur}/envoyer-lien', [ProfesseurController::class, 'envoyerLien']);
+    Route::post('/professeurs/{professeur}/generer-lien', [ProfesseurController::class, 'genererLien']);
     Route::put('/professeurs/{professeur}/compte', [ProfesseurController::class, 'changerEmailConnexion']);
 
     // ADMIN-01 : gestion des comptes admin/directeur (staff).

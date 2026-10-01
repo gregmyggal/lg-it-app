@@ -13,6 +13,7 @@ class ReinitialisationMotDePasseMail extends Mailable
         public readonly string $nom,
         public readonly string $lien,
         public readonly string $validite,
+        public readonly bool $parDirection = false,
     ) {}
 
     public function envelope(): Envelope

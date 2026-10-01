@@ -5,6 +5,8 @@ export function useStaff(filtres = {}) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Filtres pour lesquels `data` a été chargée : tant qu'ils diffèrent des filtres demandés, la liste est « en chargement ».
+  const [chargePour, setChargePour] = useState(null);
 
   const reload = useCallback(async () => {
     try {
@@ -13,6 +15,7 @@ export function useStaff(filtres = {}) {
       const params = new URLSearchParams(filtres);
       const response = await api.get(`/staff?${params.toString()}`);
       setData(response.data);
+      setChargePour(filtres);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -24,7 +27,7 @@ export function useStaff(filtres = {}) {
     reload();
   }, [reload]);
 
-  return { data, loading, error, reload };
+  return { data, loading: loading || (chargePour !== filtres && !error), error, reload };
 }
 
 export function useCreateStaff() {

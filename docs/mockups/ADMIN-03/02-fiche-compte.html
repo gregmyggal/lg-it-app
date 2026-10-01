@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>02 — Fiche professeur : section Compte</title>
+<style>* { box-sizing: border-box; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; margin: 0; padding: 16px; background: #f9fafb; color: #111827; line-height: 1.5; }
+.page { max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+.lead { color: #4b5563; margin: 0 0 16px; font-size: 14px; }
+a { color: #1d4ed8; }
+:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+.states-nav { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.state-btn { padding: 8px 12px; border: 1px solid #d1d5db; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: #111827; }
+.state-btn.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+.demo-section h2 { margin: 0 0 12px; font-size: 16px; color: #374151; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+.demo-content { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.backdrop { background: rgba(17,24,39,.45); border-radius: 8px; padding: 32px 16px; display: flex; justify-content: center; }
+.modal { background: #fff; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,.15); width: 100%; max-width: 560px; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.modal-header h3 { margin: 0; font-size: 20px; }
+.modal-close { background: transparent; border: none; font-size: 22px; cursor: pointer; color: #4b5563; }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.form-group { margin-bottom: 18px; }
+.form-group label, .lbl { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.req { color: #b91c1c; }
+input, select { width: 100%; padding: 10px 12px; border: 1px solid #9ca3af; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: #111827; }
+input:focus, select:focus { outline: none; border-color: #1d4ed8; box-shadow: 0 0 0 3px #dbeafe; }
+input.error { border-color: #b91c1c; }
+input[readonly] { background: #f3f4f6; }
+.hint { font-size: 13px; color: #4b5563; margin-top: 4px; }
+.form-error { font-size: 13px; color: #b91c1c; margin-top: 4px; }
+.btn { padding: 10px 16px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-primary { background: #1d4ed8; color: #fff; }
+.btn-primary:hover { background: #1e40af; }
+.btn-primary:disabled { background: #6b7280; cursor: not-allowed; }
+.btn-secondary { background: #fff; color: #111827; border-color: #d1d5db; }
+.btn-warn { background: #b45309; color: #fff; }
+.btn-danger { background: #b91c1c; color: #fff; }
+.btn-success { background: #047857; color: #fff; }
+.btn-sm { padding: 6px 10px; font-size: 13px; }
+.btn-link { background: none; border: none; color: #1d4ed8; text-decoration: underline; cursor: pointer; padding: 0; font: inherit; }
+.alert { padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; border-left: 4px solid; }
+.alert-ok { background: #ecfdf5; border-color: #047857; color: #064e3b; }
+.alert-warn { background: #fffbeb; border-color: #b45309; color: #78350f; }
+.alert-err { background: #fef2f2; border-color: #b91c1c; color: #7f1d1d; }
+.alert-info { background: #eff6ff; border-color: #1d4ed8; color: #1e3a8a; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.b-green { background: #d1fae5; color: #065f46; }
+.b-blue { background: #dbeafe; color: #1e40af; }
+.b-orange { background: #fef3c7; color: #92400e; }
+.b-red { background: #fee2e2; color: #991b1b; }
+.b-gray { background: #e5e7eb; color: #374151; }
+.linkbox { display: flex; gap: 8px; align-items: center; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px; }
+.linkbox input { font-family: ui-monospace, Menlo, monospace; font-size: 12px; border: none; background: transparent; padding: 4px; }
+.check { text-align: center; font-size: 40px; margin-bottom: 8px; }
+.center { text-align: center; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 10px 12px; background: #f3f4f6; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #374151; }
+td { padding: 12px; border-top: 1px solid #e5e7eb; vertical-align: middle; }
+.public { min-height: 60vh; display: flex; align-items: center; justify-content: center; background: #f3f4f6; border-radius: 8px; padding: 32px 16px; }
+.card { background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.card h1 { font-size: 22px; margin-bottom: 16px; }
+.pw-wrap { position: relative; }
+.pw-wrap button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+.req-list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; color: #4b5563; }
+.annot { background: #fefce8; border: 1px dashed #ca8a04; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #713f12; margin-top: 16px; }
+.dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; font-size: 14px; margin: 0 0 16px; }
+.dl dt { color: #4b5563; font-weight: 600; }
+.dl dd { margin: 0; }
+.block { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.block h4 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: .5px; color: #374151; }
+.skel { height: 14px; background: #e5e7eb; border-radius: 4px; margin: 10px 0; }
+.mail { max-width: 600px; margin: 0 auto; background: #fff; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+.mail-head { background: #f3f4f6; padding: 12px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #e5e7eb; }
+.mail-body { padding: 24px; font-size: 15px; }
+.mail-btn { display: inline-block; background: #1d4ed8; color: #fff !important; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; margin: 8px 0 16px; }
+.mail-foot { padding: 12px 24px; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; }
+@media (max-width: 600px) { .demo-content { padding: 12px; } .modal-body, .modal-header, .modal-footer { padding: 16px; } table { font-size: 13px; } .dl { grid-template-columns: 1fr; } }
+
+.prof-card{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:16px;background:#fff}
+.prof-head{background:#f9fafb;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid #e5e7eb}
+.prof-head h3{margin:0 0 4px;font-size:17px}
+.diff{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:13px;color:#1e3a8a;margin-top:12px}
+</style></head>
+<body><div class="page">
+<p><a href="index.html">← Index ADMIN-03</a></p>
+<h1>02 — Fiche professeur : section « Compte de connexion »</h1>
+<p class="lead">Évolution de CompteProfesseurSection (page /admin/professeurs/:id) : mêmes libellés et mêmes comportements que la fiche staff.</p>
+<div class="states-nav" role="group" aria-label="États de la maquette"><button class="state-btn active" data-s="pending">Invitation en attente</button><button class="state-btn" data-s="confirm">Confirmation</button><button class="state-btn" data-s="sent">Envoyé</button><button class="state-btn" data-s="fail">Échec + lien</button><button class="state-btn" data-s="defined">Mot de passe défini</button><button class="state-btn" data-s="legacy">Mot de passe provisoire (existant)</button><button class="state-btn" data-s="emailchg">Email modifié</button><button class="state-btn" data-s="off">Désactivé</button></div>
+<section id="s-pending" class="demo-section"><h2>Invitation envoyée, pas encore activée</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-blue">✉ Invitation envoyée le 28/09/2026</span> <span class="hint">expire le 01/10 à 14:32</span></dd></dl>
+<p style="margin:12px 0 0"><button class="btn-link">Générer un lien à transmettre</button> <span class="hint">(si l'email n'arrive jamais)</span></p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm">Renvoyer l'invitation</button> <button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div></div></section>
+<section id="s-confirm" class="demo-section" hidden><h2>Confirmation en ligne avant envoi (remplace window.confirm)</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-blue">✉ Invitation envoyée le 28/09/2026</span></dd></dl>
+<div class="alert alert-info" role="group" aria-label="Confirmer l'envoi">Envoyer un email à <strong>camille.lambert@gmail.com</strong> ? Les liens précédents seront annulés.<div style="margin-top:8px;display:flex;gap:8px"><button class="btn btn-primary btn-sm">Envoyer</button><button class="btn btn-secondary btn-sm">Annuler</button></div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div><div class="annot">Le texte s'adapte : « Renvoyer l'invitation » ou « Envoyer un lien de réinitialisation ». Pour cette dernière, ajouter : « Son mot de passe actuel reste valable jusqu'à ce qu'elle utilise le lien. » (fini « déconnecter ce professeur » immédiat).</div></div></section>
+<section id="s-sent" class="demo-section" hidden><h2>Succès de l'envoi</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-blue">✉ Invitation envoyée le 01/10/2026</span> <span class="hint">expire le 04/10 à 14:32</span></dd></dl>
+<div class="alert alert-ok" role="status">✔ Email envoyé à camille.lambert@gmail.com à 14:32. Lien valable 72 h.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" disabled>Renvoyer l'invitation</button> <button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div></div></section>
+<section id="s-fail" class="demo-section" hidden><h2>Échec d'envoi depuis la fiche</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-red">✖ Invitation non envoyée</span></dd></dl>
+<div class="alert alert-warn" role="alert"><strong>L'email n'a pas pu être envoyé.</strong> Réessayez, ou transmettez ce lien vous-même.
+<div class="linkbox" style="margin-top:8px"><input readonly value="https://app.logiscool.be/definir-mot-de-passe#token=Xk3p…" aria-label="Lien à transmettre"><button class="btn btn-primary btn-sm">Copier</button></div><p class="hint">Affiché une seule fois, valable 72 h, usage unique.</p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm">Réessayer</button> <button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div></div></section>
+<section id="s-defined" class="demo-section" hidden><h2>Mot de passe déjà défini : lien de réinitialisation</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-green">✔ Mot de passe défini le 12/09/2026</span></dd></dl>
+<p style="margin:12px 0 0"><button class="btn-link">Générer un lien à transmettre</button> <span class="hint">(si l'email n'arrive jamais)</span></p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm">Envoyer un lien de réinitialisation</button> <button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div></div></section>
+<section id="s-legacy" class="demo-section" hidden><h2>Professeur EXISTANT avec mot de passe provisoire</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-gray">🔑 Mot de passe provisoire</span> <span class="hint">jamais changé par le professeur</span></dd></dl>
+<div class="alert alert-info">Ce professeur n'a pas encore choisi son mot de passe : l'ancien mot de passe provisoire reste valable jusqu'à l'utilisation du lien. Aucun mot de passe n'est plus jamais affiché.</div><p style="margin:12px 0 0"><button class="btn-link">Générer un lien à transmettre</button> <span class="hint">(si l'email n'arrive jamais)</span></p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm">Envoyer un lien de réinitialisation</button> <button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div><div class="annot">Même comportement que le staff : le statut interne <code>mot_de_passe_provisoire</code> d'ADMIN-02. Aucun envoi automatique (D2).</div></div></section>
+<section id="s-emailchg" class="demo-section" hidden><h2>Après changement de l'email de connexion</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-green">✔ Actif</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-green">✔ Actif</span></dd>
+<dt>Accès</dt><dd><span class="badge b-orange">⚠ Lien précédent annulé</span> <span class="hint">adresse modifiée le 01/10</span></dd></dl>
+<div class="alert alert-ok" role="status">Email de connexion modifié : camille.l@logiscool.be. Les liens envoyés à l'ancienne adresse ne fonctionnent plus.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm">Envoyer l'invitation à la nouvelle adresse</button> <button class="btn btn-secondary btn-sm">Modifier l'email de connexion</button> <button class="btn btn-danger btn-sm">Désactiver</button></div></div></div></div><div class="annot">Le lien contient l'adresse du compte : l'ancien lien devient invalide de fait. On propose immédiatement le renvoi plutôt que de laisser le professeur bloqué.</div></div></section>
+<section id="s-off" class="demo-section" hidden><h2>Compte désactivé : pas d'envoi, réactivation = lien envoyé</h2><div class="demo-content"><div class="backdrop" style="background:#f3f4f6"><div style="width:100%;max-width:720px">
+<div class="block" style="background:#fff"><h4>Profil</h4><dl class="dl" style="margin:0"><dt>Nom</dt><dd>Camille Lambert</dd><dt>Email de contact</dt><dd>camille.lambert@gmail.com</dd><dt>Statut</dt><dd><span class="badge b-gray">⏸ Désactivé</span></dd></dl></div>
+<div class="block" style="background:#fff"><h4>🔐 Compte de connexion</h4>
+<dl class="dl"><dt>Identifiant</dt><dd>camille.lambert@gmail.com <span class="badge b-gray">⏸ Désactivé</span></dd>
+<dt>Accès</dt><dd>—</dd></dl>
+<p class="hint">Ce professeur ne peut plus se connecter. Son historique est conservé. Réactivez le compte pour envoyer une invitation.</p><div class="alert alert-info" style="margin-top:8px">À la réactivation : « Un email de définition de mot de passe sera envoyé à camille.lambert@gmail.com (l'ancien mot de passe ne sera plus valable). » En cas d'échec d'envoi : même repli lien copiable.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-success btn-sm">Réactiver</button></div></div></div></div></div></section>
+
+</div>
+<script>
+document.querySelectorAll('.state-btn').forEach(function(b){b.addEventListener('click',function(){
+document.querySelectorAll('.demo-section').forEach(function(s){s.hidden=true});
+document.querySelectorAll('.state-btn').forEach(function(x){x.classList.remove('active')});
+document.getElementById('s-'+b.dataset.s).hidden=false;b.classList.add('active');});});
+var c=document.getElementById('copy');if(c)c.addEventListener('click',function(){document.getElementById('copied').textContent='Lien copié dans le presse-papiers.';});
+</script></body></html>

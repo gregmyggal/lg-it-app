@@ -176,7 +176,7 @@ class StaffController extends Controller
             abort(429, 'Un email vient d\'être envoyé. Réessayez dans '.$attente.' seconde'.($attente > 1 ? 's' : '').'.');
         }
 
-        $envoi = $this->acces->envoyer($staff, $this->acces->typePour($staff), AccesCompteService::DUREE_ADMIN_MINUTES);
+        $envoi = $this->acces->envoyer($staff, $this->acces->typePour($staff), AccesCompteService::DUREE_ADMIN_MINUTES, parDirection: true);
 
         return response()->json($this->reponseEnvoi($staff->fresh(), $envoi));
     }
