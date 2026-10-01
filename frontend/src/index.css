@@ -564,6 +564,11 @@ button[type='submit']:hover {
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
+  /* Desktop : menu collé à la hauteur de l'écran, le compte reste visible en bas */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .portal-side .brand-mark {
@@ -576,6 +581,12 @@ button[type='submit']:hover {
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.portal-side__account {
+  flex-shrink: 0;
 }
 
 .portal-side nav a {
@@ -831,6 +842,16 @@ button[type='submit']:hover {
   .portal-shell {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
+  }
+
+  .portal-side {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .portal-side nav {
+    overflow-y: visible;
   }
 
   .portal-side .brand-mark {
