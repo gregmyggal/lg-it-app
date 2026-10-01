@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class StaffManagementTest extends TestCase
 {
+    use RefreshDatabase;
+
     private User $admin;
     private User $directeur;
 
@@ -179,5 +182,151 @@ class StaffManagementTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure(['data' => ['isLastAdmin', 'isLastDirecteur', 'timsheetsCount']]);
+    }
+
+    // ---- Validation fonctionnelle : flux complet avec de vrais jetons ----
+
+    private function loginAs(string $email, string $password): \Illuminate\Testing\TestResponse
+    {
+        return $this->postJson('/api/login', ['email' => $email, 'password' => $password]);
+    }
+
+    public function test_flux_complet_creation_premiere_connexion_et_changement_de_mot_de_passe()
+    {
+        $created = $this->actingAs($this->admin)->postJson('/api/staff', [
+            'name' => 'Nouveau Dir', 'email' => 'nouveau.dir@example.com', 'role' => 'directeur',
+        ])->assertStatus(201);
+        $temp = $created->json('password');
+
+        $login = $this->loginAs('nouveau.dir@example.com', $temp)->assertOk();
+        $this->assertTrue($login->json('user.must_change_password'));
+        $token = $login->json('token');
+
+        $this->app['auth']->forgetGuards();
+        $this->withHeader('Authorization', "Bearer $token")->postJson('/api/me/mot-de-passe', [
+            'current_password' => $temp,
+            'password' => 'NouveauMdp123',
+            'password_confirmation' => 'NouveauMdp123',
+        ])->assertOk();
+
+        $this->assertFalse(User::where('email', 'nouveau.dir@example.com')->first()->must_change_password);
+        $this->loginAs('nouveau.dir@example.com', $temp)->assertStatus(422);
+        $this->loginAs('nouveau.dir@example.com', 'NouveauMdp123')->assertOk();
+    }
+
+    public function test_desactivation_revoque_les_jetons_et_refuse_la_connexion()
+    {
+        $this->directeur->update(['password' => 'secret-123']);
+        $token = $this->loginAs($this->directeur->email, 'secret-123')->assertOk()->json('token');
+
+        $this->actingAs($this->admin)->postJson("/api/staff/{$this->directeur->id}/desactiver")->assertOk();
+        $this->assertSame(0, $this->directeur->tokens()->count());
+
+        $this->app['auth']->forgetGuards();
+        $this->withHeader('Authorization', "Bearer $token")->getJson('/api/me')->assertStatus(401);
+
+        $this->loginAs($this->directeur->email, 'secret-123')
+            ->assertStatus(403)
+            ->assertJsonPath('code', 'compte_desactive');
+        $this->assertSame(0, $this->directeur->tokens()->count());
+    }
+
+    public function test_changement_d_email_revoque_les_jetons_mais_pas_le_changement_de_nom()
+    {
+        $this->directeur->createToken('api');
+
+        $this->actingAs($this->admin)->putJson("/api/staff/{$this->directeur->id}", ['name' => 'Autre Nom'])->assertOk();
+        $this->assertSame(1, $this->directeur->tokens()->count());
+
+        $this->actingAs($this->admin)->putJson("/api/staff/{$this->directeur->id}", ['email' => 'neuf@example.com'])->assertOk();
+        $this->assertSame(0, $this->directeur->tokens()->count());
+    }
+
+    public function test_email_deja_pris_refuse_a_la_modification()
+    {
+        $this->actingAs($this->admin)
+            ->putJson("/api/staff/{$this->directeur->id}", ['email' => $this->admin->email])
+            ->assertStatus(422)->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_admin_ne_peut_pas_modifier_son_propre_role()
+    {
+        $this->actingAs($this->admin)
+            ->putJson("/api/staff/{$this->admin->id}", ['role' => 'directeur'])
+            ->assertStatus(403);
+        $this->assertSame('admin', $this->admin->fresh()->role);
+    }
+
+    public function test_un_admin_peut_changer_le_role_d_un_autre_admin()
+    {
+        $autre = User::factory()->create(['role' => 'admin', 'statut' => 'actif']);
+
+        $this->actingAs($this->admin)->putJson("/api/staff/{$autre->id}", ['role' => 'directeur'])
+            ->assertOk()->assertJsonPath('data.role', 'directeur');
+    }
+
+    public function test_reactiver_un_compte_actif_est_refuse_et_ne_change_pas_le_mot_de_passe()
+    {
+        $hash = $this->directeur->password;
+
+        $this->actingAs($this->admin)->postJson("/api/staff/{$this->directeur->id}/reactiver")->assertStatus(409);
+        $this->assertSame($hash, $this->directeur->fresh()->password);
+    }
+
+    public function test_desactiver_un_compte_deja_inactif_est_refuse()
+    {
+        $this->directeur->update(['statut' => 'inactif', 'date_sortie' => '2026-09-01']);
+
+        $this->actingAs($this->admin)->postJson("/api/staff/{$this->directeur->id}/desactiver")->assertStatus(409);
+    }
+
+    public function test_date_sortie_est_serialisee_en_date_simple()
+    {
+        $this->actingAs($this->admin)->postJson("/api/staff/{$this->directeur->id}/desactiver", ['date_sortie' => '2026-10-15'])
+            ->assertOk()->assertJsonPath('data.date_sortie', '2026-10-15');
+    }
+
+    public function test_reinitialisation_invalide_l_ancien_mot_de_passe_et_les_jetons()
+    {
+        $this->directeur->update(['password' => 'ancien-123']);
+        $this->loginAs($this->directeur->email, 'ancien-123')->assertOk();
+
+        $new = $this->actingAs($this->admin)
+            ->postJson("/api/staff/{$this->directeur->id}/reinitialiser-mot-de-passe")->json('password');
+
+        $this->assertSame(0, $this->directeur->tokens()->count());
+        $this->loginAs($this->directeur->email, 'ancien-123')->assertStatus(422);
+        $this->loginAs($this->directeur->email, $new)->assertOk();
+    }
+
+    public function test_un_professeur_ne_peut_pas_etre_cible_via_l_api_staff()
+    {
+        $prof = User::factory()->create(['role' => 'professeur']);
+
+        $this->actingAs($this->admin)->putJson("/api/staff/{$prof->id}", ['name' => 'X'])->assertStatus(403);
+        $this->actingAs($this->admin)->postJson("/api/staff/{$prof->id}/desactiver")->assertStatus(403);
+        $this->actingAs($this->admin)->postJson("/api/staff/{$prof->id}/reactiver")->assertStatus(403);
+    }
+
+    public function test_validations_de_creation_et_acces_non_authentifie()
+    {
+        $this->actingAs($this->admin)->postJson('/api/staff', [])
+            ->assertStatus(422)->assertJsonValidationErrors(['name', 'email', 'role']);
+        $this->actingAs($this->admin)->postJson('/api/staff', ['name' => 'x', 'email' => 'x@example.com', 'role' => 'professeur'])
+            ->assertStatus(422)->assertJsonValidationErrors(['role']);
+
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/staff')->assertStatus(401);
+    }
+
+    public function test_filtres_statut_et_role()
+    {
+        $this->directeur->update(['statut' => 'inactif', 'date_sortie' => '2026-09-01']);
+
+        $inactifs = $this->actingAs($this->admin)->getJson('/api/staff?statut=inactif')->json();
+        $this->assertSame([$this->directeur->id], array_column($inactifs, 'id'));
+
+        $admins = $this->actingAs($this->admin)->getJson('/api/staff?role=admin')->json();
+        $this->assertSame(['admin'], array_unique(array_column($admins, 'role')));
     }
 }

@@ -1,22 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
 import StatutBadge from '../../components/ui/StatutBadge';
 import { Table, Th, Td, Tr } from '../../components/ui/Table';
 import { FilterBar, FilterField } from '../../components/ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../../components/ui/DataStates';
-import { useStaff, useCreateStaff, useDeactivateStaff, useReactivateStaff } from '../../hooks/useStaff';
+import { useStaff, useReactivateStaff } from '../../hooks/useStaff';
 import StaffCreateModal from '../../components/staff/StaffCreateModal';
 import StaffDetailModal from '../../components/staff/StaffDetailModal';
 import StaffDeactivateModal from '../../components/staff/StaffDeactivateModal';
 import StaffEditEmailModal from '../../components/staff/StaffEditEmailModal';
 import { STATUTS_STAFF, libelleRole } from '../../utils/statuts';
-import { formatDateCourte } from '../../utils/dates';
-
-const LIBELLESTATUT = {
-  actif: { label: 'Actif', color: 'green' },
-  inactif: { label: 'Désactivé', color: 'gray' },
-};
 
 export default function StaffAdminPage() {
   const [filtres, setFiltres] = useState({ statut: '', role: '' });
@@ -26,52 +20,43 @@ export default function StaffAdminPage() {
   const [modaleDesactivation, setModaleDesactivation] = useState(false);
   const [modaleEditEmail, setModaleEditEmail] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [erreurAction, setErreurAction] = useState('');
 
   const staff = useStaff(filtres);
-  const { create: creerStaff } = useCreateStaff();
-  const { deactivate: desactiverStaff } = useDeactivateStaff();
   const { reactivate: reactiverStaff } = useReactivateStaff();
 
   function majFiltre(cle, valeur) {
     setFiltres((prev) => ({ ...prev, [cle]: valeur }));
   }
 
-  async function handleCreerStaff(data) {
-    try {
-      const response = await creerStaff(data);
-      setModaleCreation(false);
-      setSuccessMessage(`${data.role === 'admin' ? 'Admin' : 'Directeur'} créé avec succès. Mot de passe provisoire: ${response.password}`);
-      staff.reload();
-    } catch (err) {
-      // L'erreur est gérée dans la modale
-    }
+  function handleStaffCree(created) {
+    setSuccessMessage(`${created.role === 'admin' ? 'Administrateur' : 'Directeur'} « ${created.name} » créé.`);
+    staff.reload();
   }
 
-  async function handleDesactiver() {
-    try {
-      await desactiverStaff(selectedStaff.id);
-      setModaleDesactivation(false);
-      setModaleDetail(false);
-      setSelectedStaff(null);
-      setSuccessMessage('Staff désactivé avec succès');
-      staff.reload();
-    } catch (err) {
-      // L'erreur est gérée dans la modale
-    }
+  // L'appel API est fait par StaffDeactivateModal ; ici uniquement la suite de l'écran.
+  function handleStaffDesactive() {
+    setModaleDesactivation(false);
+    setModaleDetail(false);
+    setSuccessMessage(`${selectedStaff.name} a été désactivé. Ses sessions ont été révoquées.`);
+    setSelectedStaff(null);
+    staff.reload();
   }
 
   async function handleReactiver() {
     try {
       const response = await reactiverStaff(selectedStaff.id);
-      setSelectedStaff({ ...selectedStaff, statut: 'actif' });
-      setSuccessMessage(`Réactivé. Nouveau mot de passe: ${response.password}`);
+      setSelectedStaff({ ...selectedStaff, statut: 'actif', date_sortie: null });
+      setSuccessMessage(`${selectedStaff.name} réactivé. Nouveau mot de passe provisoire : ${response.data.password}`);
       staff.reload();
     } catch (err) {
-      // L'erreur est gérée
+      setSuccessMessage('');
+      setErreurAction(err.response?.data?.message || 'Erreur lors de la réactivation');
     }
   }
 
   function ouvrirDetail(s) {
+    setErreurAction('');
     setSelectedStaff(s);
     setModaleDetail(true);
   }
@@ -90,6 +75,18 @@ export default function StaffAdminPage() {
   } else {
     contenu = (
       <>
+        {erreurAction && (
+          <div role="alert" style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#ffcdd2', color: '#c62828', borderRadius: '4px' }}>
+            {erreurAction}
+            <button
+              onClick={() => setErreurAction('')}
+              aria-label="Fermer le message"
+              style={{ float: 'right', background: 'none', border: 'none', color: '#c62828', cursor: 'pointer', fontSize: '18px' }}
+            >
+              ×
+            </button>
+          </div>
+        )}
         {successMessage && (
           <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
             {successMessage}
@@ -147,7 +144,7 @@ export default function StaffAdminPage() {
                 <Td>{s.email}</Td>
                 <Td>{libelleRole(s.role)}</Td>
                 <Td>
-                  <StatutBadge statut={s.statut} libelle={LIBELLESTATUT[s.statut]?.label} />
+                  <StatutBadge table={STATUTS_STAFF} valeur={s.statut} />
                 </Td>
                 <Td>
                   <AdminButton onClick={() => ouvrirDetail(s)} small>
@@ -170,7 +167,7 @@ export default function StaffAdminPage() {
       />
       <AdminPageContent>{contenu}</AdminPageContent>
 
-      {modaleCreation && <StaffCreateModal onClose={() => setModaleCreation(false)} onSubmit={handleCreerStaff} />}
+      {modaleCreation && <StaffCreateModal onClose={() => setModaleCreation(false)} onCreated={handleStaffCree} />}
       {modaleDetail && selectedStaff && (
         <StaffDetailModal
           staff={selectedStaff}
@@ -184,7 +181,7 @@ export default function StaffAdminPage() {
         <StaffDeactivateModal
           staff={selectedStaff}
           onClose={() => setModaleDesactivation(false)}
-          onConfirm={handleDesactiver}
+          onConfirm={handleStaffDesactive}
         />
       )}
       {modaleEditEmail && selectedStaff && (
@@ -194,7 +191,7 @@ export default function StaffAdminPage() {
           onSubmit={(updatedStaff) => {
             setSelectedStaff(updatedStaff);
             setModaleEditEmail(false);
-            setSuccessMessage(`Email modifié. Les tokens ont été révoqués.`);
+            setSuccessMessage('Email modifié. Les sessions en cours de ce compte ont été révoquées.');
             staff.reload();
           }}
         />

@@ -142,8 +142,8 @@ export function useGetImpactInfo() {
       setLoading(true);
       setError(null);
       const response = await api.get(`/staff/${id}/impact-info`);
-      setImpact(response.data);
-      return response.data;
+      setImpact(response.data.data);
+      return response.data.data;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       throw err;

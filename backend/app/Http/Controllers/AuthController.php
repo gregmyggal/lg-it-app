@@ -25,7 +25,11 @@ class AuthController extends Controller
         }
 
         // PROF-01 RG-2 : le refus « désactivé » n'est révélé qu'avec un mot de passe correct.
-        if ($user->isProfesseur() && $user->professeur?->statut === 'inactif') {
+        $inactif = $user->isProfesseur()
+            ? $user->professeur?->statut === 'inactif'
+            : $user->statut === 'inactif';
+
+        if ($inactif) {
             return response()->json(['message' => 'Ce compte est désactivé. Contactez la direction.', 'code' => 'compte_desactive'], 403);
         }
 

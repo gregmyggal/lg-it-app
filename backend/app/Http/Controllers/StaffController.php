@@ -28,7 +28,7 @@ class StaffController extends Controller
     {
         Gate::authorize('view', $staff);
 
-        return $staff->only(['id', 'name', 'email', 'role', 'statut', 'date_sortie', 'created_at']);
+        return $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie', 'created_at']);
     }
 
     public function store(Request $request)
@@ -65,9 +65,23 @@ class StaffController extends Controller
             'role' => ['sometimes', 'in:admin,directeur'],
         ]);
 
+        if (isset($data['role']) && $data['role'] !== $staff->role) {
+            $this->refuserSoi($staff);
+            if ($this->isLastAdmin($staff)) {
+                abort(409, 'Vous ne pouvez pas retirer le rôle du dernier admin du système.');
+            }
+        }
+
+        $emailChange = isset($data['email']) && $data['email'] !== $staff->email;
+
         $staff->update($data);
 
-        return response()->json(['data' => $staff->only(['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
+        // Un changement d'identifiant de connexion invalide les sessions existantes.
+        if ($emailChange) {
+            $staff->tokens()->delete();
+        }
+
+        return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
     }
 
     public function destroy(User $staff)
@@ -104,6 +118,8 @@ class StaffController extends Controller
 
         $this->refuserSoi($staff);
 
+        abort_if($staff->statut === 'inactif', 409, 'Ce compte est déjà désactivé.');
+
         // Empêcher la désactivation du dernier admin
         if ($this->isLastAdmin($staff)) {
             abort(409, 'Vous ne pouvez pas désactiver le dernier admin du système.');
@@ -117,12 +133,14 @@ class StaffController extends Controller
         // Révoquer tous les tokens actifs.
         $staff->tokens()->delete();
 
-        return response()->json(['data' => $staff->only(['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
+        return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
     }
 
     public function reactiver(User $staff)
     {
         Gate::authorize('update', $staff);
+
+        abort_if($staff->statut === 'actif', 409, 'Ce compte est déjà actif.');
 
         $password = Str::random(12);
 
@@ -133,7 +151,7 @@ class StaffController extends Controller
             'must_change_password' => true,
         ]);
 
-        return response()->json(['data' => $staff->only(['id', 'name', 'email', 'role', 'statut']), 'password' => $password]);
+        return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut']), 'password' => $password]);
     }
 
     public function reinitialiserMotDePasse(User $staff)
@@ -151,6 +169,12 @@ class StaffController extends Controller
         $staff->tokens()->delete();
 
         return response()->json(['password' => $password, 'message' => 'Mot de passe réinitialisé']);
+    }
+
+    /** Sérialise via toArray() pour appliquer les casts (date_sortie en Y-m-d). */
+    private function payload(User $staff, array $champs): array
+    {
+        return \Illuminate\Support\Arr::only($staff->toArray(), $champs);
     }
 
     private function refuserSoi(User $staff): void

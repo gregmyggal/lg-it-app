@@ -4,10 +4,11 @@ import { FormField } from '../ui/FormField';
 import AdminButton from '../AdminButton';
 import { useCreateStaff } from '../../hooks/useStaff';
 
-export default function StaffCreateModal({ onClose, onSubmit }) {
+export default function StaffCreateModal({ onClose, onCreated }) {
   const [formData, setFormData] = useState({ name: '', email: '', role: 'directeur' });
   const [errors, setErrors] = useState({});
   const [password, setPassword] = useState('');
+  const [createdRole, setCreatedRole] = useState('directeur');
   const { create, loading } = useCreateStaff();
 
   async function handleSubmit(e) {
@@ -15,20 +16,20 @@ export default function StaffCreateModal({ onClose, onSubmit }) {
     setErrors({});
     try {
       const response = await create(formData);
+      setCreatedRole(formData.role);
       setPassword(response.data.password);
-      setFormData({ name: '', email: '', role: 'directeur' });
-      // Appeler onSubmit après un délai pour que l'utilisateur puisse voir le mot de passe
-      setTimeout(() => onSubmit(formData), 3000);
+      onCreated?.(response.data.data);
     } catch (err) {
-      setErrors(err.response?.data?.errors || err.message);
+      const apiErrors = err.response?.data?.errors;
+      setErrors(apiErrors || { general: err.response?.data?.message || 'Erreur lors de la création' });
     }
   }
 
   if (password) {
     return (
       <Modal onClose={onClose}>
-        <h2>Directeur créé avec succès</h2>
-        <p>Mot de passe temporaire à communiquer au directeur:</p>
+        <h2>{createdRole === 'admin' ? 'Administrateur' : 'Directeur'} créé avec succès</h2>
+        <p>Mot de passe temporaire à communiquer (affiché une seule fois) :</p>
         <div style={{
           padding: '12px',
           backgroundColor: '#f0f0f0',
@@ -95,14 +96,12 @@ export default function StaffCreateModal({ onClose, onSubmit }) {
           />
         </FormField>
 
-        {Object.keys(errors).length > 0 && (
-          <div style={{ color: '#d32f2f', marginBottom: '16px', fontSize: '14px' }}>
-            Veuillez corriger les erreurs ci-dessus.
-          </div>
+        {errors.general && (
+          <div style={{ color: '#d32f2f', marginBottom: '16px', fontSize: '14px' }}>{errors.general}</div>
         )}
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={loading} style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} disabled={loading} style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}>
             Annuler
           </button>
           <AdminButton type="submit" disabled={loading}>

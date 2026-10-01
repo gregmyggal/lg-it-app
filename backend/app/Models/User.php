@@ -49,7 +49,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
-            'date_sortie' => 'date',
+            'date_sortie' => 'date:Y-m-d',
         ];
     }
 

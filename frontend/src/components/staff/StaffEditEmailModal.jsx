@@ -20,9 +20,9 @@ export default function StaffEditEmailModal({ staff, onClose, onSubmit }) {
 
     try {
       const response = await update(staff.id, { email });
-      onSubmit(response.data);
+      onSubmit(response.data.data);
     } catch (err) {
-      setErrors(err);
+      setErrors(err.response?.data?.errors || { email: err.response?.data?.message || 'Erreur lors de la modification' });
     }
   }
 
@@ -48,6 +48,7 @@ export default function StaffEditEmailModal({ staff, onClose, onSubmit }) {
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
           <button
+            type="button"
             onClick={onClose}
             disabled={loading}
             style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}
