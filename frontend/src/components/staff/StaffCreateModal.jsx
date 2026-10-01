@@ -15,12 +15,12 @@ export default function StaffCreateModal({ onClose, onSubmit }) {
     setErrors({});
     try {
       const response = await create(formData);
-      setPassword(response.password);
+      setPassword(response.data.password);
       setFormData({ name: '', email: '', role: 'directeur' });
       // Appeler onSubmit après un délai pour que l'utilisateur puisse voir le mot de passe
       setTimeout(() => onSubmit(formData), 3000);
     } catch (err) {
-      setErrors(err);
+      setErrors(err.response?.data?.errors || err.message);
     }
   }
 
