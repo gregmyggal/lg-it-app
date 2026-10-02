@@ -151,7 +151,7 @@ function MonMois({ user }) {
           <>
             <Section
               title="1. Mes sessions du mois"
-              subtitle="Durée préremplie = durée de la session, modifiable. Seules les sessions commencées sont proposées. Décochez une session pour la laisser « À encoder » plus tard."
+              subtitle="Heures défrayées préremplies (séance + préparation), modifiables. Seules les sessions commencées sont proposées. Décochez une session pour la laisser « À encoder » plus tard."
               bodyPadding={false}
             >
               {data.sessions.length === 0 ? (

@@ -86,9 +86,12 @@ export default function TimesheetParametresPage() {
           <AdminCardHeader title="Paramètres par année civile" />
           <AdminCardBody>
             <AdminFormField label="Année" htmlFor="param-annee">
-              <AdminSelect id="param-annee" value={annee} onChange={(e) => setAnnee(Number(e.target.value))}>
-                {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
-              </AdminSelect>
+              <AdminSelect
+                id="param-annee"
+                value={annee}
+                options={ANNEES.map((a) => ({ value: a, label: String(a) }))}
+                onChange={(e) => setAnnee(Number(e.target.value))}
+              />
             </AdminFormField>
             {!donnees ? (
               <LoadingBlock />
