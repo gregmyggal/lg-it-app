@@ -6,7 +6,7 @@ import LienCopiable from '../ui/LienCopiable';
 import { useCreateStaff, useSendStaffLink } from '../../hooks/useStaff';
 import { getErrorMessage } from '../../api/errors';
 
-const VIDE = { name: '', email: '', role: 'directeur' };
+const VIDE = { name: '', email: '', role: 'directeur', envoyer_invitation: true };
 
 /** ADMIN-02 : création d'un compte staff ; l'invitation est envoyée par email (aucun mot de passe affiché). */
 export default function StaffCreateModal({ onClose, onCreated }) {
@@ -16,6 +16,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
   const [erreurReessai, setErreurReessai] = useState('');
   const { create, loading } = useCreateStaff();
   const { send, loading: reessaiEnCours } = useSendStaffLink();
+  const sansEnvoi = resultat && !resultat.emailEnvoye && resultat.staff.acces?.motif === 'volontaire';
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -60,6 +61,26 @@ export default function StaffCreateModal({ onClose, onCreated }) {
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
           <button type="button" onClick={creerUnAutre}>Créer un autre compte</button>
           <AdminButton onClick={onClose}>Fermer</AdminButton>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (sansEnvoi) {
+    return (
+      <Modal onClose={onClose}>
+        <h2>Compte créé</h2>
+        {erreurReessai && <p role="alert" className="error">{erreurReessai}</p>}
+        <p role="status">
+          <strong>{resultat.staff.name}</strong> est créé. Aucun email n&apos;a été envoyé : le compte reste en « Accès non envoyé »
+          et cette personne ne recevra aucun email avant d&apos;avoir défini son mot de passe.
+        </p>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={creerUnAutre}>Créer un autre compte</button>
+          <AdminButton onClick={reessayer} disabled={reessaiEnCours}>
+            {reessaiEnCours ? 'Envoi…' : 'Envoyer l’invitation maintenant'}
+          </AdminButton>
+          <button type="button" onClick={onClose}>Fermer</button>
         </div>
       </Modal>
     );
@@ -114,7 +135,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
         <FormField
           label="Email de connexion"
           error={errors.email}
-          helperText="Un email d'invitation sera envoyé à cette adresse."
+          helperText={formData.envoyer_invitation ? 'Un email d\'invitation sera envoyé à cette adresse.' : 'Adresse de connexion du compte (aucun email ne sera envoyé maintenant).'}
           required
         >
           <input
@@ -127,6 +148,24 @@ export default function StaffCreateModal({ onClose, onCreated }) {
           />
         </FormField>
 
+        <div style={{ margin: '0 0 16px' }}>
+          <label style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={formData.envoyer_invitation}
+              onChange={(e) => setFormData({ ...formData, envoyer_invitation: e.target.checked })}
+              disabled={loading}
+              aria-describedby="staff-envoyer-aide"
+            />
+            Envoyer l&apos;invitation maintenant
+          </label>
+          <p id="staff-envoyer-aide" aria-live="polite" style={{ margin: '4px 0 0 24px', fontSize: '13px', color: 'var(--c-text-2)' }}>
+            {formData.envoyer_invitation
+              ? 'Un email contenant un lien valable 72 h sera envoyé.'
+              : 'Aucun email ne sera envoyé. Le compte est créé « Accès non envoyé » ; vous enverrez l’invitation quand vous le déciderez.'}
+          </p>
+        </div>
+
         {errors.general && (
           <div role="alert" style={{ color: 'var(--tone-error-fg)', marginBottom: '16px', fontSize: '14px' }}>{errors.general}</div>
         )}
@@ -136,7 +175,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
             Annuler
           </button>
           <AdminButton type="submit" disabled={loading}>
-            {loading ? 'Envoi…' : 'Créer et envoyer l’invitation'}
+            {loading ? (formData.envoyer_invitation ? 'Envoi…' : 'Création…') : (formData.envoyer_invitation ? 'Créer et envoyer l’invitation' : 'Créer le compte')}
           </AdminButton>
         </div>
       </form>

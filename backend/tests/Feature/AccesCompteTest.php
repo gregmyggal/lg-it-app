@@ -342,7 +342,7 @@ class AccesCompteTest extends TestCase
         $svc = $this->app->make(\App\Services\AccesCompteService::class);
         $dir = User::factory()->create(['role' => 'directeur', 'statut' => 'actif', 'must_change_password' => false]);
 
-        $this->assertTrue($svc->resumeAcces($dir)['a_relancer']);            // jamais envoyée
+        $this->assertFalse($svc->resumeAcces($dir)['a_relancer']);           // jamais envoyée (volontaire, ADMIN-05)
 
         $this->actingAs($this->admin)->postJson("/api/staff/{$dir->id}/envoyer-lien")->assertOk();
         $this->assertFalse($svc->resumeAcces($dir->fresh())['a_relancer']);  // en attente, récente

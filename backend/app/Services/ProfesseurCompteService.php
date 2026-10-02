@@ -24,7 +24,7 @@ class ProfesseurCompteService
     ) {}
 
     /** @return array{professeur: Professeur, mail_envoye: bool, lien: ?string} */
-    public function creer(array $data): array
+    public function creer(array $data, bool $envoyerInvitation = true): array
     {
         $professeur = DB::transaction(function () use ($data) {
             $user = User::create([
@@ -40,6 +40,10 @@ class ProfesseurCompteService
                 'user_id' => $user->id,
             ]);
         });
+
+        if (! $envoyerInvitation) {
+            return ['professeur' => $professeur->load('user'), 'mail_envoye' => false, 'lien' => null];
+        }
 
         $envoi = $this->acces->envoyer($professeur->user, AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
 
@@ -99,7 +103,7 @@ class ProfesseurCompteService
     }
 
     /** @return array{professeur: Professeur, mail_envoye: bool, lien: ?string} */
-    public function reactiver(Professeur $professeur): array
+    public function reactiver(Professeur $professeur, bool $envoyerInvitation = true): array
     {
         if ($professeur->statut === 'actif') {
             throw RegleMetierException::conflit('Ce professeur est déjà actif.');
@@ -113,9 +117,14 @@ class ProfesseurCompteService
                 'must_change_password' => false,
                 'mot_de_passe_defini_le' => null,
                 'invitation_envoyee_le' => null,
+                'invitation_echec_le' => null,
             ])->save();
             $professeur->user->tokens()->delete();
         });
+
+        if (! $envoyerInvitation) {
+            return ['professeur' => $professeur->refresh(), 'mail_envoye' => false, 'lien' => null];
+        }
 
         $envoi = $this->acces->envoyer($professeur->user, AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
 

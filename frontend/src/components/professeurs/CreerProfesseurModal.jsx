@@ -2,7 +2,7 @@ import { useState } from 'react';
 import client from '../../api/client';
 import AdminModal from '../AdminModal';
 import AdminButton from '../AdminButton';
-import { AdminFormField, AdminInput, AdminSelect } from '../AdminFormField';
+import { AdminFormField, AdminInput, AdminSelect, AdminCheckbox } from '../AdminFormField';
 import Banner from '../ui/Banner';
 import LienCopiable from '../ui/LienCopiable';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
@@ -12,6 +12,8 @@ const VIDE = {
   date_entree: new Date().toISOString().slice(0, 10),
 };
 
+// ADMIN-05 : toujours recochée à l'ouverture (jamais mémorisée) ; décochée = compte préparé sans email.
+
 /**
  * Création d'un professeur + compte de connexion ; l'invitation (lien à usage unique) part vers l'email de
  * connexion, aucun mot de passe n'est communiqué (ADMIN-03). `onCreated(professeur)` recharge la liste ;
@@ -19,6 +21,7 @@ const VIDE = {
  */
 export default function CreerProfesseurModal({ onClose, onCreated, onVoirFiche }) {
   const [form, setForm] = useState(VIDE);
+  const [envoyerInvitation, setEnvoyerInvitation] = useState(true);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [champs, setChamps] = useState({});
@@ -42,7 +45,7 @@ export default function CreerProfesseurModal({ onClose, onCreated, onVoirFiche }
     setErreur(null);
     setChamps({});
     try {
-      const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ''));
+      const payload = { ...Object.fromEntries(Object.entries(form).filter(([, v]) => v !== '')), envoyer_invitation: envoyerInvitation };
       const res = await client.post('/professeurs', payload);
       setResultat({ professeur: res.data.data, mailEnvoye: res.data.mail_envoye, lien: res.data.lien });
       onCreated?.(res.data.data);
@@ -72,24 +75,35 @@ export default function CreerProfesseurModal({ onClose, onCreated, onVoirFiche }
     const { professeur, mailEnvoye, lien } = resultat;
     const nom = `${professeur.prenom} ${professeur.nom}`;
     const loginEmail = professeur.user?.email;
+    const sansEnvoi = !mailEnvoye && professeur.acces?.motif === 'volontaire';
     return (
       <AdminModal
         isOpen
-        title={mailEnvoye ? 'Professeur créé' : 'Professeur créé, email non envoyé'}
+        title={mailEnvoye || sansEnvoi ? 'Professeur créé' : 'Professeur créé, email non envoyé'}
         size="sm"
         onClose={onClose}
         closeOnBackdrop={false}
         footer={
           <>
             {!mailEnvoye && (
-              <AdminButton variant="secondary" onClick={reessayer} loading={reessai}>Réessayer l&apos;envoi</AdminButton>
+              <AdminButton variant="secondary" onClick={reessayer} loading={reessai}>
+                {sansEnvoi ? 'Envoyer l\u2019invitation maintenant' : 'Réessayer l\u2019envoi'}
+              </AdminButton>
             )}
-            <AdminButton variant="secondary" onClick={() => onVoirFiche?.(professeur)}>Voir la fiche</AdminButton>
-            <AdminButton variant="primary" onClick={onClose}>Fermer</AdminButton>
+            <AdminButton variant={sansEnvoi ? 'primary' : 'secondary'} onClick={() => onVoirFiche?.(professeur)}>
+              {sansEnvoi ? 'Configurer ses classes →' : 'Voir la fiche'}
+            </AdminButton>
+            <AdminButton variant={sansEnvoi ? 'secondary' : 'primary'} onClick={onClose}>Fermer</AdminButton>
           </>
         }
       >
-        {mailEnvoye ? (
+        {sansEnvoi ? (
+          <Banner tone="info">
+            <strong>{nom}</strong> est créé. Aucun email n&apos;a été envoyé : le compte reste en « Accès non envoyé »
+            et {nom} ne recevra aucun email avant d&apos;avoir défini son mot de passe. Vous pouvez configurer ses classes,
+            puis envoyer l&apos;invitation à {loginEmail} depuis sa fiche ou la liste.
+          </Banner>
+        ) : mailEnvoye ? (
           <Banner tone="success">
             Invitation envoyée à <strong>{loginEmail}</strong>. Le lien est valable 72 h et permet à {nom} de choisir son mot de passe.
           </Banner>
@@ -117,7 +131,7 @@ export default function CreerProfesseurModal({ onClose, onCreated, onVoirFiche }
         <>
           <AdminButton variant="secondary" onClick={onClose}>Annuler</AdminButton>
           <AdminButton variant="primary" type="submit" form="form-creer-professeur" loading={envoi}>
-            Créer et envoyer l'invitation
+            {envoyerInvitation ? 'Créer et envoyer l\u2019invitation' : 'Créer le compte'}
           </AdminButton>
         </>
       }
@@ -161,6 +175,18 @@ export default function CreerProfesseurModal({ onClose, onCreated, onVoirFiche }
         <AdminFormField label="Date d'entrée" htmlFor="prof-entree" required error={champs.date_entree}>
           <AdminInput id="prof-entree" type="date" value={form.date_entree} onChange={maj('date_entree')} required error={champs.date_entree} />
         </AdminFormField>
+        <AdminCheckbox
+          id="prof-envoyer-invitation"
+          label="Envoyer l'invitation maintenant"
+          checked={envoyerInvitation}
+          onChange={(e) => setEnvoyerInvitation(e.target.checked)}
+          aria-describedby="prof-envoyer-aide"
+        />
+        <p id="prof-envoyer-aide" aria-live="polite" style={{ margin: '4px 0 0 28px', fontSize: '13px', color: 'var(--c-text-2)' }}>
+          {envoyerInvitation
+            ? `Un email contenant un lien valable 72 h sera envoyé à ${form.login_email || 'l\u2019email de connexion'}.`
+            : 'Aucun email ne sera envoyé. Le compte est créé « Accès non envoyé » : vous pourrez le configurer, puis envoyer l\u2019invitation quand vous le décidez.'}
+        </p>
       </form>
     </AdminModal>
   );

@@ -200,7 +200,8 @@ class ProfesseurAccesTest extends TestCase
         $liste = collect($this->getJson('/api/professeurs')->assertOk()->json())->keyBy('id');
 
         $this->assertSame('invitation_non_envoyee', $liste[$nonEnvoye->id]['acces']['statut']);
-        $this->assertTrue($liste[$nonEnvoye->id]['acces']['a_relancer']);
+        $this->assertSame('volontaire', $liste[$nonEnvoye->id]['acces']['motif']);
+        $this->assertFalse($liste[$nonEnvoye->id]['acces']['a_relancer']); // ADMIN-05 : pas un échec
         $this->assertSame('mot_de_passe_defini', $liste[$defini->id]['acces']['statut']);
         $this->assertFalse($liste[$defini->id]['acces']['a_relancer']);
         $this->assertNull($liste[$inactif->id]['acces']['statut']);

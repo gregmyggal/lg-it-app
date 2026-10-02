@@ -170,7 +170,8 @@ export const STATUTS_ACCES = {
   mot_de_passe_defini: { label: '✓ Mot de passe défini', tone: 'success' },
   invitation_en_attente: { label: '✉ Invitation en attente', tone: 'info' },
   invitation_expiree: { label: '⚠ Invitation expirée', tone: 'warning' },
-  invitation_non_envoyee: { label: '✕ Invitation non envoyée', tone: 'error' },
+  invitation_non_envoyee: { label: '⏸ Accès non envoyé', tone: 'neutral' },
+  invitation_echec: { label: '✕ Invitation en échec', tone: 'error' },
   mot_de_passe_provisoire: { label: '● Mot de passe provisoire', tone: 'neutral' },
 };
 

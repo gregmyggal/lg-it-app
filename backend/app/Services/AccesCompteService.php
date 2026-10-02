@@ -57,7 +57,7 @@ class AccesCompteService
         return (! $token || $token->expire_le->isPast()) ? 'invitation_expiree' : 'invitation_en_attente';
     }
 
-    /** @return array{statut: ?string, invitation_envoyee_le: ?string, invitation_expire_le: ?string, mot_de_passe_defini_le: ?string, a_relancer: bool} */
+    /** @return array{statut: ?string, motif: ?string, invitation_envoyee_le: ?string, invitation_expire_le: ?string, mot_de_passe_defini_le: ?string, a_relancer: bool} */
     public function resumeAcces(User $user): array
     {
         $statut = $this->statutAcces($user);
@@ -69,15 +69,17 @@ class AccesCompteService
             'invitation_expire_le' => in_array($statut, ['invitation_en_attente', 'invitation_expiree'], true)
                 ? $token?->expire_le->toIso8601String() : null,
             'mot_de_passe_defini_le' => $user->mot_de_passe_defini_le?->toIso8601String(),
+            'motif' => $statut === 'invitation_non_envoyee' ? ($user->invitation_echec_le ? 'echec' : 'volontaire') : null,
             'a_relancer' => $this->aRelancer($statut, $user),
         ];
     }
 
-    /** À relancer : invitation non envoyée, expirée, ou en attente depuis plus de 3 jours. */
+    /** À relancer : envoi en échec, invitation expirée, ou en attente depuis plus de 3 jours (pas un accès volontairement non envoyé). */
     private function aRelancer(?string $statut, User $user): bool
     {
         return match ($statut) {
-            'invitation_non_envoyee', 'invitation_expiree' => true,
+            'invitation_non_envoyee' => $user->invitation_echec_le !== null,
+            'invitation_expiree' => true,
             'invitation_en_attente' => $user->invitation_envoyee_le?->lt(now()->subDays(3)) ?? false,
             default => false,
         };
@@ -121,17 +123,53 @@ class AccesCompteService
         } catch (Throwable $e) {
             report($e);
             Log::warning('acces_compte: échec d\'envoi', ['user_id' => $user->id, 'type' => $type]);
+            if ($type === self::INVITATION) {
+                $user->forceFill(['invitation_echec_le' => now()])->save();
+            }
 
             return ['envoye' => false, 'lien' => $lien];
         }
 
         if ($type === self::INVITATION) {
-            $user->forceFill(['invitation_envoyee_le' => now()])->save();
+            $user->forceFill(['invitation_envoyee_le' => now(), 'invitation_echec_le' => null])->save();
         }
         RateLimiter::hit($this->cleEnvoi($user), 60);
         Log::info('acces_compte: email envoyé', ['user_id' => $user->id, 'type' => $type]);
 
         return ['envoye' => true, 'lien' => null];
+    }
+
+    public const LOT_MAX = 25;
+
+    /**
+     * ADMIN-05 : envoie l'invitation à chaque compte « accès non envoyé » (séquentiel, un compte = une ligne de résultat).
+     * Les comptes déjà invités, désactivés ou limités (1 envoi/min) sont rapportés sans double envoi.
+     *
+     * @param  iterable<User>  $users
+     * @return list<array{id: int, nom: string, email: string, resultat: string, motif: ?string}>
+     */
+    public function envoyerEnLot(iterable $users): array
+    {
+        $lignes = [];
+        foreach ($users as $user) {
+            $ligne = ['id' => $user->id, 'nom' => $user->name, 'email' => $user->email, 'resultat' => 'ignore', 'motif' => null];
+
+            if ($this->statutAcces($user) !== 'invitation_non_envoyee') {
+                $ligne['motif'] = $this->estActif($user) ? 'Déjà invité' : 'Compte désactivé';
+            } elseif (($attente = $this->attenteEnvoi($user)) > 0) {
+                $ligne['resultat'] = 'echec';
+                $ligne['motif'] = 'Un email vient d\'être envoyé. Réessayez dans '.$attente.' seconde'.($attente > 1 ? 's' : '').'.';
+            } elseif ($this->envoyer($user, self::INVITATION, self::DUREE_ADMIN_MINUTES, parDirection: true)['envoye']) {
+                $ligne['resultat'] = 'envoye';
+            } else {
+                $ligne['resultat'] = 'echec';
+                $ligne['motif'] = 'Email non envoyé';
+            }
+
+            $lignes[] = $ligne;
+        }
+
+        return $lignes;
     }
 
     /** Lien à transmettre soi-même (repli quand l'email n'arrive pas). */
@@ -141,7 +179,7 @@ class AccesCompteService
         $lien = $this->emettre($user, $type, self::DUREE_ADMIN_MINUTES);
 
         if ($type === self::INVITATION) {
-            $user->forceFill(['invitation_envoyee_le' => now()])->save();
+            $user->forceFill(['invitation_envoyee_le' => now(), 'invitation_echec_le' => null])->save();
         }
         Log::info('acces_compte: lien généré manuellement', ['user_id' => $user->id, 'type' => $type, 'par' => $parUserId]);
 

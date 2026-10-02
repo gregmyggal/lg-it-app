@@ -27,6 +27,7 @@ export const statutPourApi = (statut) => (statut === 'tous' ? '' : statut);
 /** Accès : mêmes libellés et valeurs sur toutes les listes (filtre appliqué côté client). */
 export const OPTIONS_ACCES = [
   { value: 'relancer', label: 'À relancer' },
+  { value: 'non_envoye', label: 'Accès non envoyé' },
   { value: 'invitation_en_attente', label: 'Invitation en attente' },
   { value: 'mot_de_passe_provisoire', label: 'Mot de passe provisoire' },
   { value: 'mot_de_passe_defini', label: 'Mot de passe défini' },
@@ -35,6 +36,7 @@ export const OPTIONS_ACCES = [
 export function correspondAcces(acces, filtre) {
   if (!filtre) return true;
   if (filtre === 'relancer') return Boolean(acces?.a_relancer);
+  if (filtre === 'non_envoye') return acces?.statut === 'invitation_non_envoyee' && acces.motif !== 'echec';
   return acces?.statut === filtre;
 }
 

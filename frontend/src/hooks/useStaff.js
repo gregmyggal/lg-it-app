@@ -97,11 +97,11 @@ export function useReactivateStaff() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const reactivate = useCallback(async (id) => {
+  const reactivate = useCallback(async (id, payload = {}) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.post(`/staff/${id}/reactiver`);
+      const response = await api.post(`/staff/${id}/reactiver`, payload);
       return response;
     } catch (err) {
       setError(err.response?.data?.message || err.message);

@@ -27,6 +27,7 @@ class User extends Authenticatable
         'date_sortie',
         'must_change_password',
         'invitation_envoyee_le',
+        'invitation_echec_le',
         'mot_de_passe_defini_le',
     ];
 
@@ -53,8 +54,15 @@ class User extends Authenticatable
             'must_change_password' => 'boolean',
             'date_sortie' => 'date:Y-m-d',
             'invitation_envoyee_le' => 'datetime',
+            'invitation_echec_le' => 'datetime',
             'mot_de_passe_defini_le' => 'datetime',
         ];
+    }
+
+    /** ADMIN-05 : aucun email de notification tant que la personne n'a pas défini son mot de passe (la cloche reste). */
+    public function peutRecevoirEmailNotification(): bool
+    {
+        return $this->mot_de_passe_defini_le !== null;
     }
 
     public function accesTokens(): \Illuminate\Database\Eloquent\Relations\HasMany

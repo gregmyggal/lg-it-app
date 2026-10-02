@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/types-formation/{typeFormation}', [TypeFormationController::class, 'show']);
     Route::put('/types-formation/{typeFormation}', [TypeFormationController::class, 'update']);
     Route::delete('/types-formation/{typeFormation}', [TypeFormationController::class, 'destroy']);
+    Route::post('/professeurs/envoyer-invitations', [ProfesseurController::class, 'envoyerInvitations']);
     Route::apiResource('professeurs', ProfesseurController::class);
     // PROF-01 : cycle de vie du professeur et de son compte.
     Route::get('/professeurs/{professeur}/impact-desactivation', [ProfesseurController::class, 'impact']);
@@ -97,6 +98,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::put('/professeurs/{professeur}/compte', [ProfesseurController::class, 'changerEmailConnexion']);
 
     // ADMIN-01 : gestion des comptes admin/directeur (staff).
+    Route::post('/staff/envoyer-invitations', [StaffController::class, 'envoyerInvitations']);
     Route::apiResource('staff', StaffController::class);
     Route::get('/staff/{staff}/impact-info', [StaffController::class, 'impactInfo']);
     Route::post('/staff/{staff}/desactiver', [StaffController::class, 'desactiver']);

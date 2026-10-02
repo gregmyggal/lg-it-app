@@ -14,7 +14,8 @@ import CreerProfesseurModal from '../components/professeurs/CreerProfesseurModal
 import StatutBadge from '../components/ui/StatutBadge';
 import LienCopiable from '../components/ui/LienCopiable';
 import { STATUTS_ACCES } from '../utils/statuts';
-import { A_RELANCER_RAPIDE } from '../utils/acces';
+import { LOT_MAX, cleStatutAcces, eligibleLot, estAccesNonEnvoye, relanceRapide } from '../utils/acces';
+import EnvoiLotModal from '../components/ui/EnvoiLotModal';
 import { FilterToolbar, ResultCount } from '../components/ui/Filters';
 import { EmptyBlock } from '../components/ui/DataStates';
 import { useFiltresListe } from '../hooks/useFiltresListe';
@@ -46,6 +47,8 @@ export default function AdminProfesseursPage() {
   const [statutCharge, setStatutCharge] = useState(null); // statut pour lequel `professeurs` est chargé
   const [lienRepli, setLienRepli] = useState(null);
   const [relanceId, setRelanceId] = useState(null);
+  const [selection, setSelection] = useState([]); // ids des professeurs cochés pour l'envoi en lot
+  const [showLot, setShowLot] = useState(false);
 
   // Seul le statut est filtré par le serveur : les autres filtres (recherche, contrat, accès) sont instantanés.
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function AdminProfesseursPage() {
     }
   }
 
-  // Relance rapide depuis la carte (invitation expirée ou non envoyée).
+  // Envoi / relance rapide depuis la carte (accès non envoyé, invitation expirée ou en échec).
   async function relancer(prof) {
     setRelanceId(prof.id);
     setError(null);
@@ -140,9 +143,15 @@ export default function AdminProfesseursPage() {
   };
 
   const aRelancer = professeurs.filter((p) => p.statut === 'actif' && p.acces?.a_relancer).length;
+  const nonEnvoyes = professeurs.filter((p) => p.statut === 'actif' && estAccesNonEnvoye(p.acces)).length;
   const affiches = professeurs.filter((p) => correspondAcces(p.acces, valeurs.acces)
     && correspondContrat(p.type_contrat, valeurs.contrat)
     && correspondRecherche([p.prenom, p.nom, p.email, p.user?.email], valeurs.q));
+  const eligiblesAffiches = affiches.filter((p) => p.statut === 'actif' && eligibleLot(p.acces));
+  const comptesLot = professeurs
+    .filter((p) => selection.includes(p.id) && p.statut === 'actif' && eligibleLot(p.acces))
+    .map((p) => ({ id: p.id, nom: `${p.prenom} ${p.nom}`, email: p.user?.email }));
+  const basculer = (id) => setSelection((sel) => (sel.includes(id) ? sel.filter((i) => i !== id) : sel.length >= LOT_MAX ? sel : [...sel, id]));
   // Vide « pour de vrai » seulement si les données correspondent au statut affiché (évite de démonter la barre).
   const listeReellementVide = professeurs.length === 0 && estParDefaut && statutCharge === valeurs.statut;
 
@@ -209,6 +218,41 @@ export default function AdminProfesseursPage() {
               resetDisabled={estParDefaut}
             />
             <ResultCount>{libelleResultats(affiches.length, professeurs.length, ['professeur', 'professeurs'])}</ResultCount>
+            {nonEnvoyes > 0 && valeurs.statut !== 'inactif' && valeurs.acces !== 'non_envoye' && (
+              <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
+                {nonEnvoyes} accès non envoyé{nonEnvoyes > 1 ? 's' : ''}.{' '}
+                <button
+                  type="button"
+                  onClick={() => majFiltre('acces', 'non_envoye')}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--tone-primary-fg)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
+                >
+                  Les afficher
+                </button>
+              </p>
+            )}
+            {eligiblesAffiches.length > 0 && (
+              <div role="region" aria-label="Envoi en lot des invitations" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', margin: '0 0 12px', fontSize: '14px' }}>
+                <AdminButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSelection(eligiblesAffiches.slice(0, LOT_MAX).map((p) => p.id))}
+                >
+                  Tout sélectionner ({Math.min(eligiblesAffiches.length, LOT_MAX)})
+                </AdminButton>
+                {selection.length > 0 && (
+                  <>
+                    <span role="status">{selection.length} sélectionné{selection.length > 1 ? 's' : ''}</span>
+                    <AdminButton variant="primary" size="sm" onClick={() => setShowLot(true)} disabled={comptesLot.length === 0}>
+                      Envoyer {comptesLot.length} invitation{comptesLot.length > 1 ? 's' : ''}…
+                    </AdminButton>
+                    <AdminButton variant="secondary" size="sm" onClick={() => setSelection([])}>Désélectionner</AdminButton>
+                  </>
+                )}
+                {eligiblesAffiches.length > LOT_MAX && (
+                  <span style={{ color: 'var(--c-text-2)' }}>Maximum {LOT_MAX} comptes par envoi.</span>
+                )}
+              </div>
+            )}
             {aRelancer > 0 && valeurs.statut !== 'inactif' && valeurs.acces !== 'relancer' && (
               <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
                 {aRelancer} invitation{aRelancer > 1 ? 's' : ''} à relancer.{' '}
@@ -277,9 +321,18 @@ export default function AdminProfesseursPage() {
                       {prof.email}
                     </p>
                     {prof.statut === 'actif' && prof.acces?.statut && (
-                      <p style={{ margin: '8px 0 0' }}>
-                        <StatutBadge table={STATUTS_ACCES} valeur={prof.acces.statut} />
-                        {A_RELANCER_RAPIDE.includes(prof.acces.statut) && (
+                      <p style={{ margin: '8px 0 0' }} onClick={(e) => e.stopPropagation()}>
+                        {eligibleLot(prof.acces) && (
+                          <input
+                            type="checkbox"
+                            aria-label={`Sélectionner ${prof.prenom} ${prof.nom} pour l'envoi en lot`}
+                            checked={selection.includes(prof.id)}
+                            onChange={() => basculer(prof.id)}
+                            style={{ marginRight: '8px' }}
+                          />
+                        )}
+                        <StatutBadge table={STATUTS_ACCES} valeur={cleStatutAcces(prof.acces)} />
+                        {(relanceRapide(prof.acces) || estAccesNonEnvoye(prof.acces)) && (
                           <AdminButton
                             variant="secondary"
                             size="sm"
@@ -287,7 +340,7 @@ export default function AdminProfesseursPage() {
                             loading={relanceId === prof.id}
                             onClick={() => relancer(prof)}
                           >
-                            Renvoyer
+                            {estAccesNonEnvoye(prof.acces) ? 'Envoyer l\u2019invitation' : 'Renvoyer'}
                           </AdminButton>
                         )}
                       </p>
@@ -438,6 +491,15 @@ export default function AdminProfesseursPage() {
             );
           })}
         </div>
+
+        {showLot && (
+          <EnvoiLotModal
+            comptes={comptesLot}
+            endpoint="/professeurs/envoyer-invitations"
+            onClose={() => { setShowLot(false); setSelection([]); }}
+            onDone={() => loadData()}
+          />
+        )}
 
         {showCreer && (
           <CreerProfesseurModal

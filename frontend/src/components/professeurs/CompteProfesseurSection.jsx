@@ -8,7 +8,7 @@ import Banner from '../ui/Banner';
 import StatutBadge from '../ui/StatutBadge';
 import LienCopiable from '../ui/LienCopiable';
 import { STATUTS_ACCES } from '../../utils/statuts';
-import { detailAcces, libelleEnvoiLien } from '../../utils/acces';
+import { cleStatutAcces, detailAcces, estAccesNonEnvoye, libelleEnvoiLien, sansMotDePasseDefini } from '../../utils/acces';
 import { formatDateHeure } from '../../utils/dates';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 
@@ -27,6 +27,7 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
   const [lien, setLien] = useState(null);
   const [apresEmail, setApresEmail] = useState(false);
   const [envoi, setEnvoi] = useState(false);
+  const [envoyerApresReactivation, setEnvoyerApresReactivation] = useState(true);
   const actif = professeur.statut === 'actif';
   const loginEmail = professeur.user?.email;
   const acces = professeur.acces;
@@ -64,10 +65,25 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
     () => `Email envoyé à ${loginEmail} à ${formatDateHeure(new Date().toISOString()).slice(-5)}.`,
   );
 
-  const reactiver = () => executer(
-    client.post(`/professeurs/${id}/reactiver`),
-    () => `Professeur réactivé. Invitation envoyée à ${loginEmail} (l'ancien mot de passe n'est plus valable).`,
-  );
+  const reactiver = async () => {
+    if (envoyerApresReactivation) {
+      return executer(
+        client.post(`/professeurs/${id}/reactiver`),
+        () => `Professeur réactivé. Invitation envoyée à ${loginEmail} (l'ancien mot de passe n'est plus valable).`,
+      );
+    }
+    setEnvoi(true);
+    setConfirmation(null);
+    reinitialiserRetour();
+    try {
+      await client.post(`/professeurs/${id}/reactiver`, { envoyer_invitation: false });
+      onChange('Professeur réactivé. Aucun email envoyé : accès non envoyé (l\u2019ancien mot de passe n\u2019est plus valable).');
+    } catch (err) {
+      setErreur(getErrorMessage(err));
+    } finally {
+      setEnvoi(false);
+    }
+  };
 
   async function genererLien() {
     reinitialiserRetour();
@@ -102,8 +118,16 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         </p>
         {actif && acces?.statut && (
           <p>
-            Accès : <StatutBadge table={STATUTS_ACCES} valeur={acces.statut} />
+            Accès : <StatutBadge table={STATUTS_ACCES} valeur={cleStatutAcces(acces)} />
             <span style={{ display: 'block', fontSize: '13px', color: 'var(--c-text-muted)', marginTop: '4px' }}>{detailAcces(acces)}</span>
+          </p>
+        )}
+        {actif && estAccesNonEnvoye(acces) && (
+          <Banner tone="info">Cette personne n&apos;a pas encore accès à l&apos;application. Configurez ses classes et ses tarifs, puis envoyez l&apos;invitation quand vous êtes prêt.</Banner>
+        )}
+        {actif && sansMotDePasseDefini(acces) && (
+          <p style={{ fontSize: '13px', color: 'var(--c-text-muted)' }}>
+            Aucun email ne sera envoyé à cette personne avant la définition de son mot de passe. Ses notifications restent visibles dans l&apos;application.
           </p>
         )}
         {!actif && (
@@ -119,11 +143,19 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
             <p style={{ marginTop: 0 }}>
               {confirmation === 'envoi'
                 ? <>Envoyer un email à <strong>{loginEmail}</strong> ? Les liens précédents seront annulés.</>
-                : <>Le compte sera réactivé et un email de définition de mot de passe sera envoyé à <strong>{loginEmail}</strong> (l&apos;ancien mot de passe ne sera plus valable).</>}
+                : <>Le compte sera réactivé ; l&apos;ancien mot de passe ne sera plus valable.</>}
             </p>
+            {confirmation === 'reactivation' && (
+              <AdminCheckbox
+                id="reactivation-envoyer"
+                label={`Envoyer l'invitation maintenant à ${loginEmail}`}
+                checked={envoyerApresReactivation}
+                onChange={(e) => setEnvoyerApresReactivation(e.target.checked)}
+              />
+            )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <AdminButton size="sm" variant="primary" loading={envoi} onClick={confirmation === 'envoi' ? envoyerLien : reactiver}>
-                {confirmation === 'envoi' ? 'Envoyer' : 'Réactiver et envoyer'}
+                {confirmation === 'envoi' ? 'Envoyer' : (envoyerApresReactivation ? 'Réactiver et envoyer' : 'Réactiver sans envoyer')}
               </AdminButton>
               <AdminButton size="sm" variant="secondary" onClick={() => setConfirmation(null)}>Annuler</AdminButton>
             </div>

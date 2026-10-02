@@ -14,6 +14,8 @@ import StaffDetailModal from '../../components/staff/StaffDetailModal';
 import StaffDeactivateModal from '../../components/staff/StaffDeactivateModal';
 import StaffEditEmailModal from '../../components/staff/StaffEditEmailModal';
 import { STATUTS_ACCES, STATUTS_STAFF, libelleRole } from '../../utils/statuts';
+import { LOT_MAX, cleStatutAcces, eligibleLot, estAccesNonEnvoye, relanceRapide } from '../../utils/acces';
+import EnvoiLotModal from '../../components/ui/EnvoiLotModal';
 import {
   OPTIONS_ACCES, OPTIONS_STATUT, STATUT_PAR_DEFAUT, correspondAcces, correspondRecherche,
   libelleResultats, statutPourApi,
@@ -47,6 +49,8 @@ export default function StaffAdminPage() {
   const { reactivate: reactiverStaff } = useReactivateStaff();
   const { send: envoyerLien } = useSendStaffLink();
   const [envoiEnCoursId, setEnvoiEnCoursId] = useState(null);
+  const [selection, setSelection] = useState([]);
+  const [showLot, setShowLot] = useState(false);
 
   function handleStaffCree(created) {
     setSuccessMessage(`${created.role === 'admin' ? 'Administrateur' : 'Directeur'} « ${created.name} » créé.`);
@@ -73,14 +77,18 @@ export default function StaffAdminPage() {
     }
   }
 
-  async function handleReactiver() {
+  async function handleReactiver({ envoyerInvitation = true } = {}) {
     setErreurAction('');
     setLienRepli(null);
     try {
-      const response = await reactiverStaff(selectedStaff.id);
+      const response = await reactiverStaff(selectedStaff.id, { envoyer_invitation: envoyerInvitation });
       setSelectedStaff(response.data.data);
-      annoncerEnvoi(selectedStaff.name, selectedStaff.email, response.data,
-        `${selectedStaff.name} réactivé. Invitation envoyée à ${selectedStaff.email} (l'ancien mot de passe n'est plus valable).`);
+      if (!envoyerInvitation) {
+        setSuccessMessage(`${selectedStaff.name} réactivé. Aucun email envoyé : accès non envoyé (l'ancien mot de passe n'est plus valable).`);
+      } else {
+        annoncerEnvoi(selectedStaff.name, selectedStaff.email, response.data,
+          `${selectedStaff.name} réactivé. Invitation envoyée à ${selectedStaff.email} (l'ancien mot de passe n'est plus valable).`);
+      }
       staff.reload();
     } catch (err) {
       setSuccessMessage('');
@@ -119,6 +127,12 @@ export default function StaffAdminPage() {
   const lignes = staff.data.filter((s) => correspondAcces(s.acces, valeurs.acces)
     && correspondRecherche([s.name, s.email], valeurs.q));
   const aRelancer = staff.data.filter((s) => s.statut === 'actif' && s.acces?.a_relancer).length;
+  const nonEnvoyes = staff.data.filter((s) => s.statut === 'actif' && estAccesNonEnvoye(s.acces)).length;
+  const eligiblesAffiches = lignes.filter((s) => s.statut === 'actif' && eligibleLot(s.acces));
+  const comptesLot = staff.data
+    .filter((s) => selection.includes(s.id) && s.statut === 'actif' && eligibleLot(s.acces))
+    .map((s) => ({ id: s.id, nom: s.name, email: s.email }));
+  const basculer = (id) => setSelection((sel) => (sel.includes(id) ? sel.filter((i) => i !== id) : sel.length >= LOT_MAX ? sel : [...sel, id]));
   const listeReellementVide = !staff.loading && !staff.error && staff.data.length === 0 && estParDefaut;
 
   const filtresBarre = [
@@ -185,7 +199,18 @@ export default function StaffAdminPage() {
               </Td>
               <Td>
                 {s.statut === 'actif' && s.acces?.statut ? (
-                  <StatutBadge table={STATUTS_ACCES} valeur={s.acces.statut} />
+                  <>
+                    {eligibleLot(s.acces) && (
+                      <input
+                        type="checkbox"
+                        aria-label={`Sélectionner ${s.name} pour l'envoi en lot`}
+                        checked={selection.includes(s.id)}
+                        onChange={() => basculer(s.id)}
+                        style={{ marginRight: '8px' }}
+                      />
+                    )}
+                    <StatutBadge table={STATUTS_ACCES} valeur={cleStatutAcces(s.acces)} />
+                  </>
                 ) : (
                   <span aria-label="Non applicable">—</span>
                 )}
@@ -194,9 +219,9 @@ export default function StaffAdminPage() {
                 <AdminButton onClick={() => ouvrirDetail(s)} small>
                   Modifier
                 </AdminButton>
-                {s.statut === 'actif' && ['invitation_expiree', 'invitation_non_envoyee'].includes(s.acces?.statut) && (
+                {s.statut === 'actif' && (relanceRapide(s.acces) || estAccesNonEnvoye(s.acces)) && (
                   <AdminButton onClick={() => relancer(s)} disabled={envoiEnCoursId === s.id} small variant="secondary" style={{ marginLeft: '6px' }}>
-                    {envoiEnCoursId === s.id ? 'Envoi…' : 'Renvoyer'}
+                    {envoiEnCoursId === s.id ? 'Envoi…' : (estAccesNonEnvoye(s.acces) ? 'Envoyer l’invitation' : 'Renvoyer')}
                   </AdminButton>
                 )}
               </Td>
@@ -262,6 +287,34 @@ export default function StaffAdminPage() {
             {!staff.loading && !staff.error && (
               <ResultCount>{libelleResultats(lignes.length, staff.data.length, ['compte', 'comptes'])}</ResultCount>
             )}
+            {!staff.loading && nonEnvoyes > 0 && valeurs.statut !== 'inactif' && valeurs.acces !== 'non_envoye' && (
+              <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
+                {nonEnvoyes} accès non envoyé{nonEnvoyes > 1 ? 's' : ''}.{' '}
+                <button
+                  type="button"
+                  onClick={() => majFiltre('acces', 'non_envoye')}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--tone-primary-fg)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
+                >
+                  Les afficher
+                </button>
+              </p>
+            )}
+            {!staff.loading && eligiblesAffiches.length > 0 && (
+              <div role="region" aria-label="Envoi en lot des invitations" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', margin: '0 0 12px', fontSize: '14px' }}>
+                <AdminButton small variant="secondary" onClick={() => setSelection(eligiblesAffiches.slice(0, LOT_MAX).map((s) => s.id))}>
+                  Tout sélectionner ({Math.min(eligiblesAffiches.length, LOT_MAX)})
+                </AdminButton>
+                {selection.length > 0 && (
+                  <>
+                    <span role="status">{selection.length} sélectionné{selection.length > 1 ? 's' : ''}</span>
+                    <AdminButton small onClick={() => setShowLot(true)} disabled={comptesLot.length === 0}>
+                      Envoyer {comptesLot.length} invitation{comptesLot.length > 1 ? 's' : ''}…
+                    </AdminButton>
+                    <AdminButton small variant="secondary" onClick={() => setSelection([])}>Désélectionner</AdminButton>
+                  </>
+                )}
+              </div>
+            )}
             {!staff.loading && aRelancer > 0 && valeurs.statut !== 'inactif' && valeurs.acces !== 'relancer' && (
               <p style={{ margin: '0 0 12px', fontSize: '14px' }}>
                 {aRelancer} invitation{aRelancer > 1 ? 's' : ''} à relancer.{' '}
@@ -279,6 +332,14 @@ export default function StaffAdminPage() {
         )}
       </AdminPageContent>
 
+      {showLot && (
+        <EnvoiLotModal
+          comptes={comptesLot}
+          endpoint="/staff/envoyer-invitations"
+          onClose={() => { setShowLot(false); setSelection([]); }}
+          onDone={() => staff.reload()}
+        />
+      )}
       {modaleCreation && <StaffCreateModal onClose={() => setModaleCreation(false)} onCreated={handleStaffCree} />}
       {modaleDetail && selectedStaff && (
         <StaffDetailModal

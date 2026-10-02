@@ -5,7 +5,7 @@ import LienCopiable from '../ui/LienCopiable';
 import { useGenerateStaffLink, useSendStaffLink } from '../../hooks/useStaff';
 import { STATUTS_ACCES, libelleRole } from '../../utils/statuts';
 import { formatDate, formatDateHeure } from '../../utils/dates';
-import { detailAcces, libelleEnvoiLien } from '../../utils/acces';
+import { cleStatutAcces, detailAcces, libelleEnvoiLien, sansMotDePasseDefini } from '../../utils/acces';
 import { getErrorMessage } from '../../api/errors';
 
 const champ = (label, valeur) => (
@@ -19,6 +19,8 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
   const { send, loading: envoiEnCours } = useSendStaffLink();
   const { generate, loading: generationEnCours } = useGenerateStaffLink();
   const [confirmation, setConfirmation] = useState(false);
+  const [confirmReactivation, setConfirmReactivation] = useState(false);
+  const [envoyerApresReactivation, setEnvoyerApresReactivation] = useState(true);
   const [info, setInfo] = useState('');
   const [erreur, setErreur] = useState('');
   const [lien, setLien] = useState('');
@@ -70,10 +72,15 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
         {champ('Statut:', actif ? 'Actif' : 'Désactivé')}
         {actif && acces?.statut && champ('Accès:', (
           <>
-            <strong>{STATUTS_ACCES[acces.statut]?.label ?? acces.statut}</strong>
+            <strong>{STATUTS_ACCES[cleStatutAcces(acces)]?.label ?? acces.statut}</strong>
             <div style={{ fontSize: '13px', color: 'var(--c-text-muted)' }}>{detailAcces(acces)}</div>
           </>
         ))}
+        {actif && sansMotDePasseDefini(acces) && (
+          <p style={{ fontSize: '13px', color: 'var(--c-text-muted)', marginTop: 0 }}>
+            Aucun email ne sera envoyé à cette personne avant la définition de son mot de passe. Ses notifications restent visibles dans l&apos;application.
+          </p>
+        )}
         {staff.date_sortie && champ('Date de sortie:', formatDate(staff.date_sortie))}
       </div>
 
@@ -93,6 +100,24 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
           <div style={{ display: 'flex', gap: '8px' }}>
             <AdminButton onClick={envoyer} disabled={occupe}>Envoyer</AdminButton>
             <button type="button" onClick={() => setConfirmation(false)}>Annuler</button>
+          </div>
+        </div>
+      )}
+
+      {confirmReactivation && (
+        <div style={{ margin: '16px 0', padding: '12px', backgroundColor: 'var(--c-bg)', borderRadius: '4px' }}>
+          <p style={{ marginTop: 0 }}>
+            Le compte sera réactivé ; l&apos;ancien mot de passe ne sera plus valable.
+          </p>
+          <label style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input type="checkbox" checked={envoyerApresReactivation} onChange={(e) => setEnvoyerApresReactivation(e.target.checked)} />
+            Envoyer l&apos;invitation maintenant
+          </label>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <AdminButton onClick={() => onReactiver({ envoyerInvitation: envoyerApresReactivation })}>
+              {envoyerApresReactivation ? 'Réactiver et envoyer' : 'Réactiver sans envoyer'}
+            </AdminButton>
+            <button type="button" onClick={() => setConfirmReactivation(false)}>Annuler</button>
           </div>
         </div>
       )}
@@ -117,7 +142,7 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
             </AdminButton>
           </>
         ) : (
-          <AdminButton onClick={onReactiver} style={{ background: '#4caf50' }}>
+          <AdminButton onClick={() => setConfirmReactivation(true)} disabled={confirmReactivation} style={{ background: '#4caf50' }}>
             Réactiver
           </AdminButton>
         )}

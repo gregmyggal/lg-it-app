@@ -54,9 +54,13 @@ class ProfesseurController extends Controller
             'date_entree' => ['required', 'date'],
             'type_contrat' => ['nullable', 'in:salarie,freelance,prestataire'],
             'photo_path' => ['nullable', 'string'],
+            'envoyer_invitation' => ['sometimes', 'boolean'],
         ]);
 
-        $r = $this->comptes->creer($data);
+        $envoyer = $data['envoyer_invitation'] ?? true;
+        unset($data['envoyer_invitation']);
+
+        $r = $this->comptes->creer($data, $envoyer);
 
         return response()->json($this->reponseEnvoi($r['professeur'], $r['mail_envoye'], $r['lien']), 201);
     }
@@ -118,11 +122,13 @@ class ProfesseurController extends Controller
         return response()->json(['data' => $r['professeur'], 'assignations_terminees' => $r['assignations_terminees']]);
     }
 
-    public function reactiver(Professeur $professeur)
+    public function reactiver(Request $request, Professeur $professeur)
     {
         Gate::authorize('update', $professeur);
 
-        $r = $this->comptes->reactiver($professeur);
+        $options = $request->validate(['envoyer_invitation' => ['sometimes', 'boolean']]);
+
+        $r = $this->comptes->reactiver($professeur, $options['envoyer_invitation'] ?? true);
 
         return response()->json($this->reponseEnvoi($r['professeur'], $r['mail_envoye'], $r['lien']));
     }
@@ -134,6 +140,28 @@ class ProfesseurController extends Controller
         $r = $this->comptes->envoyerLien($professeur);
 
         return response()->json($this->reponseEnvoi($professeur->refresh(), $r['mail_envoye'], $r['lien']));
+    }
+
+    // ADMIN-05 : envoi en lot des invitations « accès non envoyé » (plafond AccesCompteService::LOT_MAX).
+    public function envoyerInvitations(Request $request)
+    {
+        Gate::authorize('create', Professeur::class);
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:'.AccesCompteService::LOT_MAX],
+            'ids.*' => ['integer', 'distinct', 'exists:professeurs,id'],
+        ]);
+
+        $professeurs = Professeur::with('user')->whereIn('id', $data['ids'])->get();
+        $professeurs->each(fn (Professeur $p) => Gate::authorize('update', $p));
+
+        $users = $professeurs->map(function (Professeur $p) {
+            $p->user->setRelation('professeur', $p);
+
+            return $p->user;
+        });
+
+        return response()->json(['data' => $this->acces->envoyerEnLot($users)]);
     }
 
     public function genererLien(Request $request, Professeur $professeur)

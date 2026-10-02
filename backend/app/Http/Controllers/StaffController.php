@@ -43,6 +43,7 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'role' => ['required', 'in:admin,directeur'],
+            'envoyer_invitation' => ['sometimes', 'boolean'],
         ]);
 
         $staff = User::create([
@@ -54,7 +55,9 @@ class StaffController extends Controller
             'statut' => 'actif',
         ]);
 
-        $envoi = $this->acces->envoyer($staff->fresh(), AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
+        $envoi = ($data['envoyer_invitation'] ?? true)
+            ? $this->acces->envoyer($staff->fresh(), AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES)
+            : ['envoye' => false, 'lien' => null];
 
         return response()->json($this->reponseEnvoi($staff->fresh(), $envoi), 201);
     }
@@ -142,9 +145,11 @@ class StaffController extends Controller
         return response()->json(['data' => $this->payload($staff, ['id', 'name', 'email', 'role', 'statut', 'date_sortie'])]);
     }
 
-    public function reactiver(User $staff)
+    public function reactiver(Request $request, User $staff)
     {
         Gate::authorize('update', $staff);
+
+        $options = $request->validate(['envoyer_invitation' => ['sometimes', 'boolean']]);
 
         abort_if($staff->statut === 'actif', 409, 'Ce compte est déjà actif.');
 
@@ -156,10 +161,13 @@ class StaffController extends Controller
             'must_change_password' => false,
             'mot_de_passe_defini_le' => null,
             'invitation_envoyee_le' => null,
+            'invitation_echec_le' => null,
         ]);
         $staff->tokens()->delete();
 
-        $envoi = $this->acces->envoyer($staff->fresh(), AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES);
+        $envoi = ($options['envoyer_invitation'] ?? true)
+            ? $this->acces->envoyer($staff->fresh(), AccesCompteService::INVITATION, AccesCompteService::DUREE_ADMIN_MINUTES)
+            : ['envoye' => false, 'lien' => null];
 
         return response()->json($this->reponseEnvoi($staff->fresh(), $envoi));
     }
@@ -179,6 +187,23 @@ class StaffController extends Controller
         $envoi = $this->acces->envoyer($staff, $this->acces->typePour($staff), AccesCompteService::DUREE_ADMIN_MINUTES, parDirection: true);
 
         return response()->json($this->reponseEnvoi($staff->fresh(), $envoi));
+    }
+
+    /** ADMIN-05 : envoi en lot des invitations « accès non envoyé ». */
+    public function envoyerInvitations(Request $request)
+    {
+        Gate::authorize('create', User::class);
+
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:'.AccesCompteService::LOT_MAX],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $comptes = User::whereIn('role', ['admin', 'directeur'])->whereIn('id', $data['ids'])->get();
+        abort_if($comptes->count() !== count($data['ids']), 422, 'Comptes introuvables.');
+        $comptes->each(fn (User $u) => Gate::authorize('update', $u));
+
+        return response()->json(['data' => $this->acces->envoyerEnLot($comptes)]);
     }
 
     /** Lien à transmettre soi-même (affiché une fois) quand l'email n'arrive pas. */
