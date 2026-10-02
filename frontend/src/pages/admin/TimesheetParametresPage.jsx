@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import client from '../../api/client';
+import { ADMIN_SPACING } from '../../styles/AdminDesignSystem';
 import { AdminPageHeader, AdminPageContent, AdminCard, AdminCardHeader, AdminCardBody } from '../../components/AdminPageLayout';
 import { AdminFormField, AdminInput, AdminSelect } from '../../components/AdminFormField';
 import AdminButton from '../../components/AdminButton';
@@ -151,7 +152,8 @@ export default function TimesheetParametresPage() {
         </AdminCard>
 
         {historique.length > 0 && (
-          <AdminCard style={{ marginTop: 16 }}>
+          <div style={{ marginTop: ADMIN_SPACING.xl }}>
+          <AdminCard>
             <AdminCardHeader title={`Historique ${annee}`} />
             <AdminCardBody>
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
@@ -163,6 +165,7 @@ export default function TimesheetParametresPage() {
               </ul>
             </AdminCardBody>
           </AdminCard>
+          </div>
         )}
       </AdminPageContent>
     </>
