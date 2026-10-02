@@ -37,13 +37,68 @@
   --brand-deep: #0b3550;
   --danger: #c0392b;
   --shadow: 0 1px 2px rgba(11, 53, 80, 0.06);
+  color-scheme: light dark;
+  /* Jetons du portail (UI-01 T2) : ADMIN_COLORS / ADMIN_TONES y renvoient ; valeurs claires = anciennes valeurs. */
+  --c-primary: #2563eb;
+  --c-primary-hover: #1d4ed8;
+  --c-primary-light: #dbeafe;
+  --c-success: #10b981;
+  --c-warning: #f59e0b;
+  --c-error: #ef4444;
+  --c-info: #0891b2;
+  --c-bg: #f9fafb;
+  --c-card: #ffffff;
+  --c-hover: #f3f4f6;
+  --c-text: #111827;
+  --c-text-2: #6b7280;
+  --c-text-3: #9ca3af;
+  --c-text-muted: #4b5563;
+  --c-border: #e5e7eb;
+  --c-border-light: #f3f4f6;
+  --c-focus: #93c5fd;
+  --c-on-solid: #ffffff;
+  --c-danger-hover: #dc2626;
+  --c-success-hover: #059669;
+  --c-overlay: rgba(0, 0, 0, 0.5);
+  --c-shadow: rgba(0, 0, 0, 0.1);
+  --tone-primary-bg: #dbeafe;
+  --tone-primary-fg: #1d4ed8;
+  --tone-primary-bd: #93c5fd;
+  --tone-success-bg: #d1fae5;
+  --tone-success-fg: #047857;
+  --tone-success-bd: #6ee7b7;
+  --tone-warning-bg: #fef3c7;
+  --tone-warning-fg: #92400e;
+  --tone-warning-bd: #fcd34d;
+  --tone-error-bg: #fee2e2;
+  --tone-error-fg: #b91c1c;
+  --tone-error-bd: #fca5a5;
+  --tone-info-bg: #cffafe;
+  --tone-info-fg: #0e7490;
+  --tone-info-bd: #67e8f9;
+  --tone-school-bg: #ede9fe;
+  --tone-school-fg: #5b21b6;
+  --tone-school-bd: #c4b5fd;
+  --tone-neutral-bg: #f3f4f6;
+  --tone-neutral-fg: #4b5563;
+  --tone-neutral-bd: #d1d5db;
+  --b-blue-bg: #dbeafe;
+  --b-blue-fg: #2563eb;
+  --b-green-bg: #d1fae5;
+  --b-green-fg: #10b981;
+  --b-red-bg: #fee2e2;
+  --b-red-fg: #ef4444;
+  --b-amber-bg: #fef3c7;
+  --b-amber-fg: #f59e0b;
+  --b-purple-bg: #e9d5ff;
+  --b-purple-fg: #7c3aed;
   font: 16px/1.55 'Manrope', system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
   background: var(--bg);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --text: #e7ebef;
     --text-muted: #a9b4bf;
     --bg: #0f1620;
@@ -59,7 +114,136 @@
     --teal-bg: #123028;
     --brand-deep: #0b3550;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --c-primary: #5da0d6;
+    --c-primary-hover: #82b8e0;
+    --c-primary-light: #12304a;
+    --c-success: #34d399;
+    --c-warning: #fbbf24;
+    --c-error: #f87171;
+    --c-info: #22d3ee;
+    --c-bg: #0f1620;
+    --c-card: #16212e;
+    --c-hover: #1d2a3a;
+    --c-text: #e7ebef;
+    --c-text-2: #a9b4bf;
+    --c-text-3: #8b98a6;
+    --c-text-muted: #a9b4bf;
+    --c-border: #2f3d4f;
+    --c-border-light: #243244;
+    --c-focus: #82b8e0;
+    --c-on-solid: #0f1620;
+    --c-danger-hover: #fca5a5;
+    --c-success-hover: #6ee7b7;
+    --c-overlay: rgba(0, 0, 0, 0.65);
+    --c-shadow: rgba(0, 0, 0, 0.45);
+    --tone-primary-bg: #12304a;
+    --tone-primary-fg: #9cc9ec;
+    --tone-primary-bd: #2d5f8a;
+    --tone-success-bg: #0f2e25;
+    --tone-success-fg: #6ee7b7;
+    --tone-success-bd: #1f6b55;
+    --tone-warning-bg: #33260a;
+    --tone-warning-fg: #fcd34d;
+    --tone-warning-bd: #7a5b12;
+    --tone-error-bg: #3a1517;
+    --tone-error-fg: #fca5a5;
+    --tone-error-bd: #8a2c31;
+    --tone-info-bg: #0b2f38;
+    --tone-info-fg: #67e8f9;
+    --tone-info-bd: #1d6573;
+    --tone-school-bg: #241a45;
+    --tone-school-fg: #c4b5fd;
+    --tone-school-bd: #5b4a9e;
+    --tone-neutral-bg: #1f2937;
+    --tone-neutral-fg: #cbd5e1;
+    --tone-neutral-bd: #3a4757;
+    --b-blue-bg: #12304a;
+    --b-blue-fg: #9cc9ec;
+    --b-green-bg: #0f2e25;
+    --b-green-fg: #6ee7b7;
+    --b-red-bg: #3a1517;
+    --b-red-fg: #fca5a5;
+    --b-amber-bg: #33260a;
+    --b-amber-fg: #fcd34d;
+    --b-purple-bg: #241a45;
+    --b-purple-fg: #c4b5fd;
   }
+}
+
+/* Bascule manuelle (UI-01 T5) : « Auto » suit le système ; data-theme force clair ou nuit. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --text: #e7ebef;
+  --text-muted: #a9b4bf;
+  --bg: #0f1620;
+  --surface: #16212e;
+  --border: #263241;
+  --accent: #5da0d6;
+  --accent-hover: #82b8e0;
+  --accent-fg: #0f1620;
+  --cta: #e8703f;
+  --cta-hover: #f08a5f;
+  --cta-fg: #14151a;
+  --teal: #35c2a4;
+  --teal-bg: #123028;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --c-primary: #5da0d6;
+  --c-primary-hover: #82b8e0;
+  --c-primary-light: #12304a;
+  --c-success: #34d399;
+  --c-warning: #fbbf24;
+  --c-error: #f87171;
+  --c-info: #22d3ee;
+  --c-bg: #0f1620;
+  --c-card: #16212e;
+  --c-hover: #1d2a3a;
+  --c-text: #e7ebef;
+  --c-text-2: #a9b4bf;
+  --c-text-3: #8b98a6;
+  --c-text-muted: #a9b4bf;
+  --c-border: #2f3d4f;
+  --c-border-light: #243244;
+  --c-focus: #82b8e0;
+  --c-on-solid: #0f1620;
+  --c-danger-hover: #fca5a5;
+  --c-success-hover: #6ee7b7;
+  --c-overlay: rgba(0, 0, 0, 0.65);
+  --c-shadow: rgba(0, 0, 0, 0.45);
+  --tone-primary-bg: #12304a;
+  --tone-primary-fg: #9cc9ec;
+  --tone-primary-bd: #2d5f8a;
+  --tone-success-bg: #0f2e25;
+  --tone-success-fg: #6ee7b7;
+  --tone-success-bd: #1f6b55;
+  --tone-warning-bg: #33260a;
+  --tone-warning-fg: #fcd34d;
+  --tone-warning-bd: #7a5b12;
+  --tone-error-bg: #3a1517;
+  --tone-error-fg: #fca5a5;
+  --tone-error-bd: #8a2c31;
+  --tone-info-bg: #0b2f38;
+  --tone-info-fg: #67e8f9;
+  --tone-info-bd: #1d6573;
+  --tone-school-bg: #241a45;
+  --tone-school-fg: #c4b5fd;
+  --tone-school-bd: #5b4a9e;
+  --tone-neutral-bg: #1f2937;
+  --tone-neutral-fg: #cbd5e1;
+  --tone-neutral-bd: #3a4757;
+  --b-blue-bg: #12304a;
+  --b-blue-fg: #9cc9ec;
+  --b-green-bg: #0f2e25;
+  --b-green-fg: #6ee7b7;
+  --b-red-bg: #3a1517;
+  --b-red-fg: #fca5a5;
+  --b-amber-bg: #33260a;
+  --b-amber-fg: #fcd34d;
+  --b-purple-bg: #241a45;
+  --b-purple-fg: #c4b5fd;
 }
 
 * {
@@ -552,6 +736,10 @@ button[type='submit']:hover {
 }
 
 /* ---------- portail authentifié : sidebar sombre ---------- */
+:root {
+  --page-max: 1760px;
+}
+
 .portal-shell {
   min-height: 100vh;
   display: grid;
@@ -635,10 +823,22 @@ button[type='submit']:hover {
   color: #fff;
 }
 
+/* Largeur du portail (UI-01 T1) : le contenu occupe l'écran jusqu'à --page-max, avec des gouttières fluides. */
 .portal-main {
-  padding: 32px;
-  max-width: 1100px;
+  padding: 24px clamp(16px, 2.5vw, 48px);
   width: 100%;
+  min-width: 0;
+}
+
+.portal-page {
+  max-width: var(--page-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 1536px) {
+  .portal-shell {
+    grid-template-columns: 248px 1fr;
+  }
 }
 
 @media (max-width: 860px) {
@@ -970,4 +1170,104 @@ form input[type='checkbox'] {
 .modal__close:hover {
   background: var(--bg);
   color: var(--text);
+}
+
+/* ---------- tableaux et grilles du portail (UI-01 T4) ---------- */
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: var(--table-min, 720px);
+  font-size: 14px;
+}
+
+.ui-th,
+.ui-td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.ui-th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.ui-td {
+  vertical-align: top;
+}
+
+.col-xl {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .ui-table {
+    min-width: 0;
+  }
+
+  .ui-th,
+  .ui-td {
+    padding: 8px 12px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .col-xl {
+    display: table-cell;
+  }
+}
+
+/* Page de détail à deux colonnes : contenu fluide + colonne latérale collante (≥ 1440 px), une colonne sinon. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.detail-side {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 1440px) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 460px);
+  }
+
+  .detail-side {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* Cartes d'indicateurs : autant de colonnes que la largeur le permet. */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 12vw, 240px), 1fr));
+  gap: 12px;
+}
+
+/* Bascule de thème (UI-01 T5) */
+.theme-toggle {
+  display: flex;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.portal-side__account .theme-toggle button {
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  padding: 5px 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.portal-side__account .theme-toggle button[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--brand-deep);
+  font-weight: 700;
 }

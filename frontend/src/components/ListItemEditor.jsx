@@ -84,7 +84,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
   if (isString) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {label}
         </label>
         <textarea
@@ -94,14 +94,14 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
           style={{
             width: '100%',
             padding: '12px 16px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--c-border)',
             borderRadius: '8px',
             fontFamily: 'inherit',
             fontSize: '14px',
             lineHeight: '1.6',
             resize: 'vertical',
             minHeight: '120px',
-            color: '#111827',
+            color: 'var(--c-text)',
             transition: 'border-color 0.2s ease',
           }}
           onFocus={(e) => {
@@ -109,7 +109,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
             e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = '#e5e7eb';
+            e.target.style.borderColor = 'var(--c-border)';
             e.target.style.boxShadow = 'none';
           }}
         />
@@ -120,7 +120,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
   if (isSimpleList) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {schema.icon} {label}
         </label>
 
@@ -134,18 +134,18 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                   alignItems: 'center',
                   gap: '8px',
                   padding: '12px 16px',
-                  background: '#f9fafb',
-                  border: '1px solid #e5e7eb',
+                  background: 'var(--c-bg)',
+                  border: '1px solid var(--c-border)',
                   borderRadius: '8px',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#f3f4f6';
-                  e.currentTarget.style.borderColor = '#d1d5db';
+                  e.currentTarget.style.background = 'var(--c-hover)';
+                  e.currentTarget.style.borderColor = 'var(--c-border)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#f9fafb';
-                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.background = 'var(--c-bg)';
+                  e.currentTarget.style.borderColor = 'var(--c-border)';
                 }}
               >
                 {editingIndex === index ? (
@@ -171,7 +171,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                   </>
                 ) : (
                   <>
-                    <span style={{ flex: 1, fontSize: '14px', color: '#111827' }}>{item}</span>
+                    <span style={{ flex: 1, fontSize: '14px', color: 'var(--c-text)' }}>{item}</span>
                     <button
                       type="button"
                       onClick={() => setEditingIndex(index)}
@@ -179,16 +179,16 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                         padding: '4px 8px',
                         background: 'transparent',
                         border: 'none',
-                        color: '#6b7280',
+                        color: 'var(--c-text-2)',
                         cursor: 'pointer',
                         fontSize: '14px',
                         transition: 'color 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.color = '#2563eb';
+                        e.target.style.color = 'var(--c-primary)';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.color = '#6b7280';
+                        e.target.style.color = 'var(--c-text-2)';
                       }}
                     >
                       ✎
@@ -200,16 +200,16 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                         padding: '4px 8px',
                         background: 'transparent',
                         border: 'none',
-                        color: '#6b7280',
+                        color: 'var(--c-text-2)',
                         cursor: 'pointer',
                         fontSize: '14px',
                         transition: 'color 0.2s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.color = '#ef4444';
+                        e.target.style.color = 'var(--c-error)';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.color = '#6b7280';
+                        e.target.style.color = 'var(--c-text-2)';
                       }}
                     >
                       ✕
@@ -235,7 +235,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
             style={{
               flex: 1,
               padding: '10px 12px',
-              border: '1px solid #e5e7eb',
+              border: '1px solid var(--c-border)',
               borderRadius: '8px',
               fontSize: '14px',
               transition: 'border-color 0.2s ease',
@@ -246,7 +246,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
               e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#e5e7eb';
+              e.target.style.borderColor = 'var(--c-border)';
               e.target.style.boxShadow = 'none';
             }}
           />
@@ -276,7 +276,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
         </div>
 
         {error && (
-          <div style={{ fontSize: '13px', color: '#991b1b', background: '#fef2f2', padding: '8px 12px', borderRadius: '6px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--tone-error-fg)', background: 'var(--tone-error-bg)', padding: '8px 12px', borderRadius: '6px' }}>
             ⚠️ {error}
           </div>
         )}
@@ -287,7 +287,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
   if (isListOfObjects) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {schema.icon} {label}
         </label>
 
@@ -298,8 +298,8 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                 key={index}
                 style={{
                   padding: '16px',
-                  background: 'white',
-                  border: '1px solid #e5e7eb',
+                  background: 'var(--c-card)',
+                  border: '1px solid var(--c-border)',
                   borderRadius: '8px',
                   transition: 'all 0.2s ease',
                 }}
@@ -314,7 +314,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {schema.fields?.map((field) => (
                       <div key={field.key}>
-                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-2)', display: 'block', marginBottom: '4px' }}>
                           {field.label}
                         </label>
                         {field.type === 'textarea' ? (
@@ -325,21 +325,21 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                             style={{
                               width: '100%',
                               padding: '8px 12px',
-                              border: '1px solid #e5e7eb',
+                              border: '1px solid var(--c-border)',
                               borderRadius: '6px',
                               fontFamily: 'inherit',
                               fontSize: '14px',
                               lineHeight: '1.5',
                               resize: 'vertical',
                               minHeight: '80px',
-                              color: '#111827',
+                              color: 'var(--c-text)',
                               transition: 'border-color 0.2s ease',
                             }}
                             onFocus={(e) => {
                               e.target.style.borderColor = '#2563eb';
                             }}
                             onBlur={(e) => {
-                              e.target.style.borderColor = '#e5e7eb';
+                              e.target.style.borderColor = 'var(--c-border)';
                             }}
                           />
                         ) : (
@@ -351,10 +351,10 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                             style={{
                               width: '100%',
                               padding: '8px 12px',
-                              border: '1px solid #e5e7eb',
+                              border: '1px solid var(--c-border)',
                               borderRadius: '6px',
                               fontSize: '14px',
-                              color: '#111827',
+                              color: 'var(--c-text)',
                               transition: 'border-color 0.2s ease',
                               outline: 'none',
                             }}
@@ -362,7 +362,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                               e.target.style.borderColor = '#2563eb';
                             }}
                             onBlur={(e) => {
-                              e.target.style.borderColor = '#e5e7eb';
+                              e.target.style.borderColor = 'var(--c-border)';
                             }}
                           />
                         )}
@@ -374,9 +374,9 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                     onClick={() => removeObjectItem(index)}
                     style={{
                       padding: '6px 10px',
-                      background: '#fef2f2',
-                      color: '#ef4444',
-                      border: '1px solid #fecaca',
+                      background: 'var(--tone-error-bg)',
+                      color: 'var(--c-error)',
+                      border: '1px solid var(--tone-error-bd)',
                       borderRadius: '6px',
                       cursor: 'pointer',
                       fontSize: '14px',
@@ -384,12 +384,12 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                       transition: 'all 0.2s ease',
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.background = '#fee2e2';
-                      e.target.style.borderColor = '#fca5a5';
+                      e.target.style.background = 'var(--tone-error-bg)';
+                      e.target.style.borderColor = 'var(--tone-error-bd)';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.background = '#fef2f2';
-                      e.target.style.borderColor = '#fecaca';
+                      e.target.style.background = 'var(--tone-error-bg)';
+                      e.target.style.borderColor = 'var(--tone-error-bd)';
                     }}
                   >
                     ✕ Supprimer
@@ -404,9 +404,9 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
           onClick={addObjectItem}
           style={{
             padding: '12px 16px',
-            background: '#f0f9ff',
-            color: '#2563eb',
-            border: '1px dashed #bfdbfe',
+            background: 'var(--tone-primary-bg)',
+            color: 'var(--c-primary)',
+            border: '1px dashed var(--tone-primary-bd)',
             borderRadius: '8px',
             fontWeight: 600,
             cursor: 'pointer',
@@ -414,12 +414,12 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
             transition: 'all 0.2s ease',
           }}
           onMouseEnter={(e) => {
-            e.target.style.background = '#e0f2fe';
-            e.target.style.borderColor = '#7dd3fc';
+            e.target.style.background = 'var(--tone-primary-bg)';
+            e.target.style.borderColor = 'var(--tone-primary-bd)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.background = '#f0f9ff';
-            e.target.style.borderColor = '#bfdbfe';
+            e.target.style.background = 'var(--tone-primary-bg)';
+            e.target.style.borderColor = 'var(--tone-primary-bd)';
           }}
         >
           + Ajouter un élément
@@ -431,13 +431,13 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
   if (isObject) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {schema.icon} {label}
         </label>
 
         {schema.fields?.map((field) => (
           <div key={field.key}>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: '6px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-2)', display: 'block', marginBottom: '6px' }}>
               {field.label}
             </label>
             <input
@@ -448,10 +448,10 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
               style={{
                 width: '100%',
                 padding: '10px 12px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid var(--c-border)',
                 borderRadius: '8px',
                 fontSize: '14px',
-                color: '#111827',
+                color: 'var(--c-text)',
                 transition: 'border-color 0.2s ease',
                 outline: 'none',
               }}
@@ -460,7 +460,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                 e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.borderColor = 'var(--c-border)';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -473,7 +473,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
   if (isObjectWithList) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {schema.icon} {label}
         </label>
 
@@ -481,7 +481,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
           if (field.type === 'list') {
             return (
               <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-2)' }}>
                   {field.label}
                 </label>
 
@@ -495,12 +495,12 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                           alignItems: 'center',
                           gap: '8px',
                           padding: '8px 12px',
-                          background: '#f9fafb',
-                          border: '1px solid #e5e7eb',
+                          background: 'var(--c-bg)',
+                          border: '1px solid var(--c-border)',
                           borderRadius: '6px',
                         }}
                       >
-                        <span style={{ flex: 1, fontSize: '14px', color: '#111827' }}>{item}</span>
+                        <span style={{ flex: 1, fontSize: '14px', color: 'var(--c-text)' }}>{item}</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -512,7 +512,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                             padding: '2px 6px',
                             background: 'transparent',
                             border: 'none',
-                            color: '#6b7280',
+                            color: 'var(--c-text-2)',
                             cursor: 'pointer',
                             fontSize: '12px',
                           }}
@@ -537,7 +537,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                     style={{
                       flex: 1,
                       padding: '8px 10px',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid var(--c-border)',
                       borderRadius: '6px',
                       fontSize: '13px',
                       outline: 'none',
@@ -547,7 +547,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                       e.target.style.borderColor = '#2563eb';
                     }}
                     onBlur={(e) => {
-                      e.target.style.borderColor = '#e5e7eb';
+                      e.target.style.borderColor = 'var(--c-border)';
                     }}
                   />
                   <button
@@ -562,20 +562,20 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                     }}
                     style={{
                       padding: '8px 12px',
-                      background: '#f3f4f6',
-                      border: '1px solid #e5e7eb',
+                      background: 'var(--c-hover)',
+                      border: '1px solid var(--c-border)',
                       borderRadius: '6px',
                       cursor: 'pointer',
                       fontSize: '12px',
                       fontWeight: 600,
-                      color: '#374151',
+                      color: 'var(--c-text-muted)',
                       transition: 'all 0.2s ease',
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.background = '#e5e7eb';
+                      e.target.style.background = 'var(--c-border)';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.background = '#f3f4f6';
+                      e.target.style.background = 'var(--c-hover)';
                     }}
                   >
                     +
@@ -587,7 +587,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
 
           return (
             <div key={field.key}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-2)', display: 'block', marginBottom: '6px' }}>
                 {field.label}
               </label>
               {field.type === 'textarea' ? (
@@ -598,14 +598,14 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid var(--c-border)',
                     borderRadius: '8px',
                     fontFamily: 'inherit',
                     fontSize: '14px',
                     lineHeight: '1.5',
                     resize: 'vertical',
                     minHeight: '100px',
-                    color: '#111827',
+                    color: 'var(--c-text)',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                   }}
@@ -613,7 +613,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                     e.target.style.borderColor = '#2563eb';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.borderColor = 'var(--c-border)';
                   }}
                 />
               ) : (
@@ -625,10 +625,10 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                   style={{
                     width: '100%',
                     padding: '10px 12px',
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid var(--c-border)',
                     borderRadius: '8px',
                     fontSize: '14px',
-                    color: '#111827',
+                    color: 'var(--c-text)',
                     transition: 'border-color 0.2s ease',
                     outline: 'none',
                   }}
@@ -636,7 +636,7 @@ export default function ListItemEditor({ sectionKey, value, onChange, label }) {
                     e.target.style.borderColor = '#2563eb';
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.borderColor = 'var(--c-border)';
                   }}
                 />
               )}

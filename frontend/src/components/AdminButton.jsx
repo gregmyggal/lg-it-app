@@ -37,7 +37,7 @@ export default function AdminButton({
   const variantMap = {
     primary: {
       background: ADMIN_COLORS.primary,
-      color: 'white',
+      color: 'var(--c-on-solid)',
       border: 'none',
       hoverBg: ADMIN_COLORS.primaryHover,
       hoverShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
@@ -51,16 +51,16 @@ export default function AdminButton({
     },
     danger: {
       background: ADMIN_COLORS.error,
-      color: 'white',
+      color: 'var(--c-on-solid)',
       border: 'none',
-      hoverBg: '#dc2626',
+      hoverBg: 'var(--c-danger-hover)',
       hoverShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
     },
     success: {
       background: ADMIN_COLORS.success,
-      color: 'white',
+      color: 'var(--c-on-solid)',
       border: 'none',
-      hoverBg: '#059669',
+      hoverBg: 'var(--c-success-hover)',
       hoverShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
     },
     ghost: {
@@ -158,8 +158,8 @@ export function AdminIconButton({
   const variantMap = {
     primary: { bg: ADMIN_COLORS.primaryLight, color: ADMIN_COLORS.primary },
     secondary: { bg: ADMIN_COLORS.background, color: ADMIN_COLORS.textSecondary },
-    danger: { bg: '#fee2e2', color: ADMIN_COLORS.error },
-    success: { bg: '#d1fae5', color: ADMIN_COLORS.success },
+    danger: { bg: 'var(--tone-error-bg)', color: ADMIN_COLORS.error },
+    success: { bg: 'var(--tone-success-bg)', color: ADMIN_COLORS.success },
   };
 
   const selected = variantMap[variant] || variantMap.secondary;

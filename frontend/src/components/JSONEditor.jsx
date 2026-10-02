@@ -54,9 +54,9 @@ export default function JSONEditor({ value, onChange, label, section }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <label style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <label style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {label}
-          <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 400, marginLeft: '8px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 400, marginLeft: '8px' }}>
             (JSON)
           </span>
         </label>
@@ -67,9 +67,9 @@ export default function JSONEditor({ value, onChange, label, section }) {
             disabled={!isValid}
             style={{
               padding: '6px 12px',
-              background: '#f3f4f6',
-              color: '#374151',
-              border: '1px solid #e5e7eb',
+              background: 'var(--c-hover)',
+              color: 'var(--c-text-muted)',
+              border: '1px solid var(--c-border)',
               borderRadius: '6px',
               cursor: !isValid ? 'not-allowed' : 'pointer',
               fontSize: '12px',
@@ -79,14 +79,14 @@ export default function JSONEditor({ value, onChange, label, section }) {
             }}
             onMouseEnter={(e) => {
               if (isValid) {
-                e.target.style.background = '#e5e7eb';
-                e.target.style.borderColor = '#d1d5db';
+                e.target.style.background = 'var(--c-border)';
+                e.target.style.borderColor = 'var(--c-border)';
               }
             }}
             onMouseLeave={(e) => {
               if (isValid) {
-                e.target.style.background = '#f3f4f6';
-                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.background = 'var(--c-hover)';
+                e.target.style.borderColor = 'var(--c-border)';
               }
             }}
           >
@@ -98,9 +98,9 @@ export default function JSONEditor({ value, onChange, label, section }) {
             disabled={!isValid}
             style={{
               padding: '6px 12px',
-              background: '#f3f4f6',
-              color: '#374151',
-              border: '1px solid #e5e7eb',
+              background: 'var(--c-hover)',
+              color: 'var(--c-text-muted)',
+              border: '1px solid var(--c-border)',
               borderRadius: '6px',
               cursor: !isValid ? 'not-allowed' : 'pointer',
               fontSize: '12px',
@@ -110,14 +110,14 @@ export default function JSONEditor({ value, onChange, label, section }) {
             }}
             onMouseEnter={(e) => {
               if (isValid) {
-                e.target.style.background = '#e5e7eb';
-                e.target.style.borderColor = '#d1d5db';
+                e.target.style.background = 'var(--c-border)';
+                e.target.style.borderColor = 'var(--c-border)';
               }
             }}
             onMouseLeave={(e) => {
               if (isValid) {
-                e.target.style.background = '#f3f4f6';
-                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.background = 'var(--c-hover)';
+                e.target.style.borderColor = 'var(--c-border)';
               }
             }}
           >
@@ -128,9 +128,9 @@ export default function JSONEditor({ value, onChange, label, section }) {
             onClick={() => setIsExpanded(!isExpanded)}
             style={{
               padding: '6px 12px',
-              background: isExpanded ? '#dbeafe' : '#f3f4f6',
-              color: isExpanded ? '#1e40af' : '#374151',
-              border: `1px solid ${isExpanded ? '#bfdbfe' : '#e5e7eb'}`,
+              background: isExpanded ? 'var(--tone-primary-bg)' : 'var(--c-hover)',
+              color: isExpanded ? 'var(--tone-primary-fg)' : 'var(--c-text-muted)',
+              border: `1px solid ${isExpanded ? 'var(--tone-primary-bd)' : 'var(--c-border)'}`,
               borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '12px',
@@ -138,10 +138,10 @@ export default function JSONEditor({ value, onChange, label, section }) {
               transition: 'all 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              e.target.style.background = isExpanded ? '#bfdbfe' : '#e5e7eb';
+              e.target.style.background = isExpanded ? 'var(--tone-primary-bg)' : 'var(--c-border)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = isExpanded ? '#dbeafe' : '#f3f4f6';
+              e.target.style.background = isExpanded ? 'var(--tone-primary-bg)' : 'var(--c-hover)';
             }}
           >
             {isExpanded ? '⬜ Réduire' : '⬛ Agrandir'}
@@ -150,19 +150,19 @@ export default function JSONEditor({ value, onChange, label, section }) {
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+        <div style={{ background: 'var(--tone-error-bg)', border: '1px solid var(--tone-error-bd)', borderRadius: '6px', padding: '12px', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
           <span style={{ fontSize: '16px', flex: '0 0 auto' }}>⚠️</span>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: 500, color: '#991b1b' }}>JSON invalide</p>
-            <p style={{ margin: 0, fontSize: '12px', color: '#7f1d1d', fontFamily: 'monospace' }}>{error}</p>
+            <p style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: 500, color: 'var(--tone-error-fg)' }}>JSON invalide</p>
+            <p style={{ margin: 0, fontSize: '12px', color: 'var(--tone-error-fg)', fontFamily: 'monospace' }}>{error}</p>
           </div>
         </div>
       )}
 
       {isValid && !error && (
-        <div style={{ background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: '6px', padding: '12px', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div style={{ background: 'var(--tone-success-bg)', border: '1px solid var(--tone-success-bd)', borderRadius: '6px', padding: '12px', marginBottom: '12px', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '16px' }}>✓</span>
-          <p style={{ margin: 0, fontSize: '13px', fontWeight: 500, color: '#047857' }}>JSON valide</p>
+          <p style={{ margin: 0, fontSize: '13px', fontWeight: 500, color: 'var(--tone-success-fg)' }}>JSON valide</p>
         </div>
       )}
 
@@ -223,7 +223,7 @@ export default function JSONEditor({ value, onChange, label, section }) {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'flex', gap: '16px', marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+      <div style={{ display: 'flex', gap: '16px', marginTop: '12px', fontSize: '12px', color: 'var(--c-text-2)' }}>
         <span>📏 {value.length} caractères</span>
         <span>📋 {lines.length} lignes</span>
       </div>

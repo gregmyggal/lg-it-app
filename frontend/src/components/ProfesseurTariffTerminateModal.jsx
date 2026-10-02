@@ -69,32 +69,32 @@ export default function ProfesseurTariffTerminateModal({
       zIndex: 1000,
     }}>
       <div style={{
-        background: 'white',
+        background: 'var(--c-card)',
         borderRadius: '8px',
         padding: '24px',
         maxWidth: '500px',
         width: '90%',
         boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
       }}>
-        <h2 style={{ margin: '0 0 16px 0', color: '#1f2937', fontSize: '1.2em' }}>
+        <h2 style={{ margin: '0 0 16px 0', color: 'var(--c-text)', fontSize: '1.2em' }}>
           ⏹️ Arrêter le tarif
         </h2>
 
         <div style={{
-          background: '#fef3c7',
-          border: '1px solid #fcd34d',
+          background: 'var(--tone-warning-bg)',
+          border: '1px solid var(--tone-warning-bd)',
           padding: '12px',
           borderRadius: '6px',
           marginBottom: '20px',
           fontSize: '0.9em',
-          color: '#92400e',
+          color: 'var(--tone-warning-fg)',
         }}>
           <strong>Attention:</strong> Après cette date, ce tarif ne sera plus utilisé.
           Vous pourrez créer un nouveau tarif après cette date si nécessaire.
         </div>
 
         <div style={{
-          background: '#f3f4f6',
+          background: 'var(--c-hover)',
           padding: '12px',
           borderRadius: '6px',
           marginBottom: '20px',
@@ -111,7 +111,7 @@ export default function ProfesseurTariffTerminateModal({
 
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '12px',
             borderRadius: '6px',

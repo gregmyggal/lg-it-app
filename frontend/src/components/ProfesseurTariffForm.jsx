@@ -73,7 +73,7 @@ export default function ProfesseurTariffForm({
 
   return (
     <div style={{
-      background: '#f9fafb',
+      background: 'var(--c-bg)',
       border: `1px solid ${ADMIN_COLORS.border}`,
       padding: '20px',
       borderRadius: '8px',
@@ -81,7 +81,7 @@ export default function ProfesseurTariffForm({
     }}>
       <h3 style={{
         margin: '0 0 16px 0',
-        color: '#1f2937',
+        color: 'var(--c-text)',
         fontSize: '1.1em',
       }}>
         {isEditing ? '✏️ Modifier le tarif' : '➕ Ajouter un nouveau tarif'}
@@ -89,7 +89,7 @@ export default function ProfesseurTariffForm({
 
       {error && (
         <div style={{
-          background: '#fee2e2',
+          background: 'var(--tone-error-bg)',
           color: ADMIN_COLORS.error,
           padding: '12px',
           borderRadius: '6px',
@@ -147,9 +147,9 @@ export default function ProfesseurTariffForm({
 
         {!formData.date_fin && (
           <div style={{
-            background: '#fef3c7',
-            border: '1px solid #fcd34d',
-            color: '#92400e',
+            background: 'var(--tone-warning-bg)',
+            border: '1px solid var(--tone-warning-bd)',
+            color: 'var(--tone-warning-fg)',
             padding: '12px',
             borderRadius: '6px',
             marginBottom: '16px',

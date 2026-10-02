@@ -33,7 +33,7 @@ export default function ProfesseurTariffList({
   }
 
   if (loading) {
-    return <div style={{ padding: '16px', color: '#999' }}>Chargement des tarifs…</div>;
+    return <div style={{ padding: '16px', color: 'var(--c-text-3)' }}>Chargement des tarifs…</div>;
   }
 
   if (error) {
@@ -45,8 +45,8 @@ export default function ProfesseurTariffList({
       <div style={{
         padding: '32px',
         textAlign: 'center',
-        color: '#9ca3af',
-        background: '#f9fafb',
+        color: 'var(--c-text-3)',
+        background: 'var(--c-bg)',
         borderRadius: '8px',
         border: `1px solid ${ADMIN_COLORS.border}`,
       }}>
@@ -65,7 +65,7 @@ export default function ProfesseurTariffList({
 
   return (
     <div style={{
-      background: 'white',
+      background: 'var(--c-card)',
       borderRadius: '8px',
       border: `1px solid ${ADMIN_COLORS.border}`,
       overflow: 'hidden',
@@ -77,7 +77,7 @@ export default function ProfesseurTariffList({
       }}>
         <thead>
           <tr style={{
-            background: '#f9fafb',
+            background: 'var(--c-bg)',
             borderBottom: `1px solid ${ADMIN_COLORS.border}`,
           }}>
             <th style={{
@@ -141,7 +141,7 @@ export default function ProfesseurTariffList({
                 key={tariff.id}
                 style={{
                   borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-                  background: idx % 2 === 0 ? 'white' : '#f9fafb',
+                  background: idx % 2 === 0 ? 'var(--c-card)' : 'var(--c-bg)',
                   opacity: effective ? 1 : 0.7,
                 }}
               >
@@ -149,15 +149,15 @@ export default function ProfesseurTariffList({
                   padding: '16px',
                   fontSize: '16px',
                   fontWeight: '600',
-                  color: effective ? '#059669' : ADMIN_COLORS.textPrimary,
+                  color: effective ? 'var(--c-success)' : ADMIN_COLORS.textPrimary,
                 }}>
                   {parseFloat(tariff.tarif_horaire_eur).toFixed(2)}€/h
                   {effective && (
                     <span style={{
                       marginLeft: '8px',
                       fontSize: '12px',
-                      background: '#d1fae5',
-                      color: '#065f46',
+                      background: 'var(--tone-success-bg)',
+                      color: 'var(--tone-success-fg)',
                       padding: '2px 8px',
                       borderRadius: '4px',
                     }}>
@@ -171,14 +171,14 @@ export default function ProfesseurTariffList({
                   color: ADMIN_COLORS.textPrimary,
                 }}>
                   <div>{dateDebut}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--c-text-2)', marginTop: '4px' }}>
                     jusqu'au {dateFin}
                   </div>
                 </td>
                 <td style={{
                   padding: '16px',
                   fontSize: '14px',
-                  color: effective ? '#059669' : '#9ca3af',
+                  color: effective ? 'var(--c-success)' : 'var(--c-text-3)',
                 }}>
                   {effective ? 'Actif' : 'Historique'}
                 </td>

@@ -125,7 +125,7 @@ export default function StagesAdminPage() {
 
   if (stages === null) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-2)' }}>
         Chargement…
       </div>
     );
@@ -152,7 +152,7 @@ export default function StagesAdminPage() {
       <AdminPageContent>
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '16px',
             borderRadius: '8px',
@@ -167,7 +167,7 @@ export default function StagesAdminPage() {
 
         {success && (
           <div style={{
-            background: '#d1fae5',
+            background: 'var(--tone-success-bg)',
             color: ADMIN_COLORS.success,
             padding: '16px',
             borderRadius: '8px',
@@ -221,12 +221,12 @@ export default function StagesAdminPage() {
                     )}
                   </div>
                   {s.lieu && (
-                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '12px 0' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--c-text-2)', margin: '12px 0' }}>
                       📍 {s.lieu}
                     </p>
                   )}
                   {s.description && (
-                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '12px 0' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--c-text-2)', margin: '12px 0' }}>
                       {s.description.substring(0, 60)}...
                     </p>
                   )}
@@ -259,7 +259,7 @@ export default function StagesAdminPage() {
                 </AdminCardFooter>
 
                 {expandedDatesPanelId === s.id && (
-                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--c-border)' }}>
                     <DatesPanel stage={s} onUpdate={(updatedDates) => {
                       setStages((prev) =>
                         prev.map((stage) =>
@@ -271,7 +271,7 @@ export default function StagesAdminPage() {
                 )}
 
                 {expandedClassesId === s.id && (
-                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--c-border)' }}>
                     <ClasseLiensManager parentType="stages" parentId={s.id} />
                   </div>
                 )}
@@ -470,7 +470,7 @@ function DatesPanel({ stage, onUpdate }) {
 
       {error && (
         <div style={{
-          background: '#fee2e2',
+          background: 'var(--tone-error-bg)',
           color: ADMIN_COLORS.error,
           padding: '12px',
           borderRadius: '6px',
@@ -488,7 +488,7 @@ function DatesPanel({ stage, onUpdate }) {
         marginBottom: '16px',
       }}>
         {dates.length === 0 ? (
-          <p style={{ fontSize: '13px', color: '#9ca3af', fontStyle: 'italic' }}>
+          <p style={{ fontSize: '13px', color: 'var(--c-text-3)', fontStyle: 'italic' }}>
             Aucune date ajoutée
           </p>
         ) : (
@@ -500,7 +500,7 @@ function DatesPanel({ stage, onUpdate }) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '8px 12px',
-                background: '#f9fafb',
+                background: 'var(--c-bg)',
                 borderRadius: '6px',
                 fontSize: '13px',
               }}
@@ -523,7 +523,7 @@ function DatesPanel({ stage, onUpdate }) {
         style={{
           display: 'flex',
           gap: '8px',
-          borderTop: '1px solid #e5e7eb',
+          borderTop: '1px solid var(--c-border)',
           paddingTop: '12px',
         }}
       >
@@ -535,7 +535,7 @@ function DatesPanel({ stage, onUpdate }) {
           style={{
             flex: 1,
             padding: '8px 12px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--c-border)',
             borderRadius: '6px',
             fontSize: '13px',
           }}

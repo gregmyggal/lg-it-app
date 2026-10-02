@@ -7,15 +7,15 @@ export function AdminPageHeader({ icon, title, description, badge, action, bread
   return (
     <div
       style={{
-        background: 'white',
-        borderBottom: '1px solid #e5e7eb',
+        background: 'var(--c-card)',
+        borderBottom: '1px solid var(--c-border)',
         padding: '24px 24px',
         position: 'relative',
       }}
     >
       <div
         style={{
-          maxWidth: '1400px',
+          maxWidth: 'var(--page-max, 1760px)',
           margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
@@ -26,21 +26,21 @@ export function AdminPageHeader({ icon, title, description, badge, action, bread
       >
         <div style={{ flex: '1 1 420px', minWidth: 0 }}>
           {breadcrumb && (
-            <nav aria-label="Fil d'Ariane" style={{ fontSize: '13px', color: '#4b5563', marginBottom: '8px' }}>
+            <nav aria-label="Fil d'Ariane" style={{ fontSize: '13px', color: 'var(--c-text-muted)', marginBottom: '8px' }}>
               {breadcrumb}
             </nav>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             {icon && <span aria-hidden="true" style={{ fontSize: '28px', flex: '0 0 auto' }}>{icon}</span>}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 12px', flex: 1, minWidth: 0 }}>
-              <h1 style={{ margin: 0, fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: 700, color: '#111827' }}>
+              <h1 style={{ margin: 0, fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: 700, color: 'var(--c-text)' }}>
                 {title}
               </h1>
               {badge && (
                 <div
                   style={{
-                    background: '#dbeafe',
-                    color: '#1d4ed8',
+                    background: 'var(--tone-primary-bg)',
+                    color: 'var(--tone-primary-fg)',
                     padding: '4px 12px',
                     borderRadius: '9999px',
                     fontSize: '12px',
@@ -53,7 +53,7 @@ export function AdminPageHeader({ icon, title, description, badge, action, bread
             </div>
           </div>
           {description && (
-            <p style={{ margin: icon ? '0 0 0 40px' : 0, fontSize: '14px', color: '#4b5563' }}>
+            <p style={{ margin: icon ? '0 0 0 40px' : 0, fontSize: '14px', color: 'var(--c-text-muted)' }}>
               {description}
             </p>
           )}
@@ -68,7 +68,7 @@ export function AdminPageContent({ children }) {
   return (
     <div
       style={{
-        maxWidth: '1400px',
+        maxWidth: 'var(--page-max, 1760px)',
         margin: '0 auto',
         padding: '32px 24px',
         minHeight: 'calc(100vh - 200px)',
@@ -89,7 +89,7 @@ export function AdminCardGrid({ children, emptyMessage }) {
         style={{
           textAlign: 'center',
           padding: '60px 24px',
-          color: '#9ca3af',
+          color: 'var(--c-text-3)',
         }}
       >
         <div style={{ fontSize: '48px', marginBottom: '12px' }}>📭</div>
@@ -116,23 +116,23 @@ export function AdminCard({ children, onClick, isActive }) {
     <div
       onClick={onClick}
       style={{
-        background: 'white',
-        border: isActive ? '2px solid #2563eb' : '1px solid #e5e7eb',
+        background: 'var(--c-card)',
+        border: isActive ? '2px solid var(--c-primary)' : '1px solid var(--c-border)',
         borderRadius: '12px',
         padding: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        boxShadow: '0 1px 3px var(--c-shadow)',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.2s ease',
       }}
       onMouseEnter={(e) => {
         if (onClick) {
-          e.currentTarget.style.boxShadow = '0 10px 15px rgba(0,0,0,0.1)';
+          e.currentTarget.style.boxShadow = '0 10px 15px var(--c-shadow)';
           e.currentTarget.style.transform = 'translateY(-2px)';
         }
       }}
       onMouseLeave={(e) => {
         if (onClick) {
-          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          e.currentTarget.style.boxShadow = '0 1px 3px var(--c-shadow)';
           e.currentTarget.style.transform = 'translateY(0)';
         }
       }}
@@ -147,11 +147,11 @@ export function AdminCardHeader({ title, subtitle, actions }) {
     <div style={{ marginBottom: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
-          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 600, color: '#111827' }}>
+          <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 600, color: 'var(--c-text)' }}>
             {title}
           </h3>
           {subtitle && (
-            <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>{subtitle}</p>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-2)' }}>{subtitle}</p>
           )}
         </div>
         {actions && <div style={{ display: 'flex', gap: '8px' }}>{actions}</div>}
@@ -161,7 +161,7 @@ export function AdminCardHeader({ title, subtitle, actions }) {
 }
 
 export function AdminCardBody({ children }) {
-  return <div style={{ fontSize: '14px', color: '#111827', lineHeight: '1.6' }}>{children}</div>;
+  return <div style={{ fontSize: '14px', color: 'var(--c-text)', lineHeight: '1.6' }}>{children}</div>;
 }
 
 export function AdminCardFooter({ children }) {
@@ -170,7 +170,7 @@ export function AdminCardFooter({ children }) {
       style={{
         marginTop: '16px',
         paddingTop: '16px',
-        borderTop: '1px solid #e5e7eb',
+        borderTop: '1px solid var(--c-border)',
         display: 'flex',
         gap: '8px',
         justifyContent: 'flex-end',
@@ -183,11 +183,11 @@ export function AdminCardFooter({ children }) {
 
 export function AdminBadge({ label, color = 'blue', icon }) {
   const colorMap = {
-    blue: { bg: '#dbeafe', text: '#2563eb' },
-    green: { bg: '#d1fae5', text: '#10b981' },
-    red: { bg: '#fee2e2', text: '#ef4444' },
-    amber: { bg: '#fef3c7', text: '#f59e0b' },
-    purple: { bg: '#e9d5ff', text: '#7c3aed' },
+    blue: { bg: 'var(--b-blue-bg)', text: 'var(--b-blue-fg)' },
+    green: { bg: 'var(--b-green-bg)', text: 'var(--b-green-fg)' },
+    red: { bg: 'var(--b-red-bg)', text: 'var(--b-red-fg)' },
+    amber: { bg: 'var(--b-amber-bg)', text: 'var(--b-amber-fg)' },
+    purple: { bg: 'var(--b-purple-bg)', text: 'var(--b-purple-fg)' },
   };
 
   const { bg, text } = colorMap[color] || colorMap.blue;
@@ -232,7 +232,7 @@ export function AdminStat({ label, value, color = 'blue' }) {
       >
         {value}
       </div>
-      <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>
+      <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600 }}>
         {label}
       </div>
     </div>

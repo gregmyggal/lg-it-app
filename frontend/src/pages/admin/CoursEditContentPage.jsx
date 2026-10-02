@@ -4,12 +4,12 @@ import client from '../../api/client';
 import ListItemEditor from '../../components/ListItemEditor';
 
 const SECTIONS = [
-  { id: 'apropos', label: 'À propos', icon: '📖', color: '#2563eb' },
+  { id: 'apropos', label: 'À propos', icon: '📖', color: 'var(--c-primary)' },
   { id: 'apprendras', label: 'Ce que tu apprendras', icon: '✨', color: '#7c3aed' },
   { id: 'format', label: 'Format & horaires', icon: '🕐', color: '#db2777' },
   { id: 'pourqui', label: 'Pour qui ?', icon: '🎯', color: '#ea580c' },
-  { id: 'pratiques', label: 'Infos pratiques', icon: 'ℹ️', color: '#0891b2' },
-  { id: 'benefits', label: 'Pourquoi ce cours ?', icon: '💪', color: '#059669' },
+  { id: 'pratiques', label: 'Infos pratiques', icon: 'ℹ️', color: 'var(--c-info)' },
+  { id: 'benefits', label: 'Pourquoi ce cours ?', icon: '💪', color: 'var(--c-success)' },
 ];
 
 export default function CoursEditContentPage() {
@@ -80,13 +80,13 @@ export default function CoursEditContentPage() {
   if (!cours) return <LoadingState />;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%)' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, var(--c-bg) 0%, var(--c-bg) 100%)' }}>
       {/* Header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '32px 24px', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ background: 'var(--c-card)', borderBottom: '1px solid var(--c-border)', padding: '32px 24px', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 700 }}>Éditer les contenus</h1>
-            <p style={{ margin: 0, fontSize: '15px', color: '#6b7280' }}>Personnalisez chaque section pour {cours.titre}</p>
+            <p style={{ margin: 0, fontSize: '15px', color: 'var(--c-text-2)' }}>Personnalisez chaque section pour {cours.titre}</p>
           </div>
           <button
             onClick={() => navigate(`/admin/cours`)}
@@ -95,7 +95,7 @@ export default function CoursEditContentPage() {
               border: 'none',
               fontSize: '24px',
               cursor: 'pointer',
-              color: '#6b7280',
+              color: 'var(--c-text-2)',
               padding: '8px',
             }}
           >
@@ -109,10 +109,10 @@ export default function CoursEditContentPage() {
       {error && <ErrorMessage message={error} />}
 
       {/* Content */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
+      <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
         {/* Sidebar Navigation */}
         <aside style={{ height: 'fit-content', position: 'sticky', top: '120px' }}>
-          <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: 'var(--c-card)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             {SECTIONS.map((section) => (
               <button
                 key={section.id}
@@ -121,7 +121,7 @@ export default function CoursEditContentPage() {
                   width: '100%',
                   padding: '16px 20px',
                   border: 'none',
-                  background: expandedSection === section.id ? '#f0f9ff' : 'transparent',
+                  background: expandedSection === section.id ? 'var(--tone-primary-bg)' : 'transparent',
                   borderLeft: `4px solid ${expandedSection === section.id ? section.color : 'transparent'}`,
                   cursor: 'pointer',
                   display: 'flex',
@@ -130,11 +130,11 @@ export default function CoursEditContentPage() {
                   transition: 'all 0.2s ease',
                   fontSize: '14px',
                   fontWeight: expandedSection === section.id ? 600 : 500,
-                  color: expandedSection === section.id ? section.color : '#6b7280',
+                  color: expandedSection === section.id ? section.color : 'var(--c-text-2)',
                   textAlign: 'left',
                 }}
                 onMouseEnter={(e) => {
-                  if (expandedSection !== section.id) e.target.style.background = '#f9fafb';
+                  if (expandedSection !== section.id) e.target.style.background = 'var(--c-bg)';
                 }}
                 onMouseLeave={(e) => {
                   if (expandedSection !== section.id) e.target.style.background = 'transparent';
@@ -162,7 +162,7 @@ export default function CoursEditContentPage() {
           ))}
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid var(--c-border)' }}>
             <button
               type="submit"
               disabled={saving}
@@ -192,9 +192,9 @@ export default function CoursEditContentPage() {
               onClick={() => navigate(`/admin/cours`)}
               style={{
                 padding: '12px 24px',
-                background: 'white',
-                color: '#6b7280',
-                border: '1px solid #e5e7eb',
+                background: 'var(--c-card)',
+                color: 'var(--c-text-2)',
+                border: '1px solid var(--c-border)',
                 borderRadius: '8px',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -202,12 +202,12 @@ export default function CoursEditContentPage() {
                 fontSize: '14px',
               }}
               onMouseEnter={(e) => {
-                e.target.style.background = '#f9fafb';
-                e.target.style.borderColor = '#d1d5db';
+                e.target.style.background = 'var(--c-bg)';
+                e.target.style.borderColor = 'var(--c-border)';
               }}
               onMouseLeave={(e) => {
-                e.target.style.background = 'white';
-                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.background = 'var(--c-card)';
+                e.target.style.borderColor = 'var(--c-border)';
               }}
             >
               Annuler
@@ -225,12 +225,12 @@ function EditorSection({ section, isExpanded, onToggle, form, setForm, sectionKe
   return (
     <div
       style={{
-        background: 'white',
+        background: 'var(--c-card)',
         borderRadius: '12px',
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         transition: 'all 0.3s ease',
-        border: `1px solid #e5e7eb`,
+        border: `1px solid var(--c-border)`,
       }}
     >
       <button
@@ -239,7 +239,7 @@ function EditorSection({ section, isExpanded, onToggle, form, setForm, sectionKe
         style={{
           width: '100%',
           padding: '20px 24px',
-          background: isExpanded ? '#f9fafb' : 'white',
+          background: isExpanded ? 'var(--c-bg)' : 'var(--c-card)',
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -248,15 +248,15 @@ function EditorSection({ section, isExpanded, onToggle, form, setForm, sectionKe
           transition: 'all 0.2s ease',
         }}
         onMouseEnter={(e) => {
-          if (!isExpanded) e.currentTarget.style.background = '#f9fafb';
+          if (!isExpanded) e.currentTarget.style.background = 'var(--c-bg)';
         }}
         onMouseLeave={(e) => {
-          if (!isExpanded) e.currentTarget.style.background = 'white';
+          if (!isExpanded) e.currentTarget.style.background = 'var(--c-card)';
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '20px' }}>{section.icon}</span>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#111827' }}>{section.label}</h3>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--c-text)' }}>{section.label}</h3>
         </div>
         <span style={{ fontSize: '18px', transition: 'transform 0.3s ease', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
           ▼
@@ -264,7 +264,7 @@ function EditorSection({ section, isExpanded, onToggle, form, setForm, sectionKe
       </button>
 
       {isExpanded && (
-        <div style={{ padding: '24px', borderTop: '1px solid #e5e7eb', animation: 'slideDown 0.3s ease' }}>
+        <div style={{ padding: '24px', borderTop: '1px solid var(--c-border)', animation: 'slideDown 0.3s ease' }}>
           <ListItemEditor
             sectionKey={sectionKey}
             value={value}
@@ -296,13 +296,13 @@ function SuccessMessage() {
   return (
     <div
       style={{
-        background: '#ecfdf5',
+        background: 'var(--tone-success-bg)',
         borderBottom: '2px solid #10b981',
         padding: '16px 24px',
         animation: 'slideDown 0.3s ease',
       }}
     >
-      <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px', color: '#047857' }}>
+      <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--tone-success-fg)' }}>
         <span style={{ fontSize: '20px' }}>✓</span>
         <p style={{ margin: 0, fontWeight: 500 }}>Contenus sauvegardés avec succès ! Redirection en cours...</p>
       </div>
@@ -314,13 +314,13 @@ function ErrorMessage({ message }) {
   return (
     <div
       style={{
-        background: '#fef2f2',
+        background: 'var(--tone-error-bg)',
         borderBottom: '2px solid #ef4444',
         padding: '16px 24px',
         animation: 'slideDown 0.3s ease',
       }}
     >
-      <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px', color: '#991b1b' }}>
+      <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--tone-error-fg)' }}>
         <span style={{ fontSize: '20px' }}>⚠</span>
         <p style={{ margin: 0, fontWeight: 500 }}>{message}</p>
       </div>
@@ -330,10 +330,10 @@ function ErrorMessage({ message }) {
 
 function LoadingState() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, var(--c-bg) 0%, var(--c-bg) 100%)' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px', animation: 'spin 1s linear infinite' }}>⏳</div>
-        <p style={{ color: '#6b7280', fontSize: '16px' }}>Chargement en cours...</p>
+        <p style={{ color: 'var(--c-text-2)', fontSize: '16px' }}>Chargement en cours...</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

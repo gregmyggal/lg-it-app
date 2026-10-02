@@ -32,19 +32,19 @@ export default function StaffDeactivateModal({ staff, onClose, onConfirm }) {
       <h2>Désactiver {staff.name}</h2>
 
       {isLastAdmin && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#ffcdd2', borderRadius: '4px', color: '#c62828' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--tone-error-bg)', borderRadius: '4px', color: 'var(--tone-error-fg)' }}>
           <strong>❌ Impossible:</strong> Vous ne pouvez pas désactiver le dernier administrateur du système.
         </div>
       )}
 
       {isLastDirecteur && !isLastAdmin && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#fff3cd', borderRadius: '4px', color: '#856404' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--tone-warning-bg)', borderRadius: '4px', color: 'var(--tone-warning-fg)' }}>
           <strong>⚠️ Avertissement:</strong> Ceci est le dernier directeur actif. Assurez-vous d'avoir un administrateur pour remplacer les tâches.
         </div>
       )}
 
       {!isLastAdmin && (
-        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--c-bg)', borderRadius: '4px' }}>
           <strong>Impact de cette désactivation:</strong>
           <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
             <li>Accès immédiatement coupé</li>
@@ -55,7 +55,7 @@ export default function StaffDeactivateModal({ staff, onClose, onConfirm }) {
       )}
 
       {error && (
-        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#ffcdd2', color: '#c62828', borderRadius: '4px' }}>
+        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'var(--tone-error-bg)', color: 'var(--tone-error-fg)', borderRadius: '4px' }}>
           {error}
         </div>
       )}
@@ -68,7 +68,7 @@ export default function StaffDeactivateModal({ staff, onClose, onConfirm }) {
         <button
           onClick={onClose}
           disabled={loading || impactLoading}
-          style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}
+          style={{ background: 'none', border: '1px solid var(--c-border)', padding: '8px 16px', cursor: 'pointer' }}
         >
           Annuler
         </button>

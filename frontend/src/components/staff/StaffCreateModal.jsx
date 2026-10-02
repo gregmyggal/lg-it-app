@@ -69,7 +69,7 @@ export default function StaffCreateModal({ onClose, onCreated }) {
     return (
       <Modal onClose={onClose}>
         <h2>Compte créé, email non envoyé</h2>
-        <div role="alert" style={{ padding: '12px', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '16px' }}>
+        <div role="alert" style={{ padding: '12px', backgroundColor: 'var(--tone-warning-bg)', color: 'var(--tone-warning-fg)', borderRadius: '4px', marginBottom: '16px' }}>
           Le compte de <strong>{resultat.staff.name}</strong> a été créé mais l&apos;email n&apos;a pas pu être envoyé à {resultat.staff.email}.
           Réessayez, ou transmettez vous-même le lien ci-dessous.
         </div>
@@ -128,11 +128,11 @@ export default function StaffCreateModal({ onClose, onCreated }) {
         </FormField>
 
         {errors.general && (
-          <div role="alert" style={{ color: '#d32f2f', marginBottom: '16px', fontSize: '14px' }}>{errors.general}</div>
+          <div role="alert" style={{ color: 'var(--tone-error-fg)', marginBottom: '16px', fontSize: '14px' }}>{errors.general}</div>
         )}
 
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={onClose} disabled={loading} style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} disabled={loading} style={{ background: 'none', border: '1px solid var(--c-border)', padding: '8px 16px', cursor: 'pointer' }}>
             Annuler
           </button>
           <AdminButton type="submit" disabled={loading}>

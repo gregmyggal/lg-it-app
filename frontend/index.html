@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Logiscool Pays Vert</title>
+    <script>
+      // Thème choisi (clair / nuit) appliqué avant le premier affichage pour éviter tout flash ; « auto » = système.
+      try {
+        var t = localStorage.getItem('lgit_theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

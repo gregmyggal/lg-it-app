@@ -98,13 +98,13 @@ export default function CoursAdminPage() {
 
   return (
     <>
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%)' }}>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, var(--c-bg) 0%, var(--c-bg) 100%)' }}>
         {/* Header */}
-        <div style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '32px 24px', marginBottom: '32px' }}>
-          <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ background: 'var(--c-card)', borderBottom: '1px solid var(--c-border)', padding: '32px 24px', marginBottom: '32px' }}>
+          <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 700 }}>Gestion des Cours</h1>
-              <p style={{ margin: 0, fontSize: '15px', color: '#6b7280' }}>Créez, modifiez et organisez vos cours</p>
+              <p style={{ margin: 0, fontSize: '15px', color: 'var(--c-text-2)' }}>Créez, modifiez et organisez vos cours</p>
             </div>
             <AdminButton
               variant="primary"
@@ -117,7 +117,7 @@ export default function CoursAdminPage() {
         </div>
 
         {/* Main Content */}
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px 32px 24px' }}>
+        <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', padding: '0 24px 32px 24px' }}>
           {/* Messages */}
           {success && <SuccessMessage message={success} />}
           {error && <ErrorMessage message={error} />}
@@ -125,9 +125,9 @@ export default function CoursAdminPage() {
           {/* Courses Grid */}
           <div style={{ marginBottom: '48px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#111827' }}>Cours existants</h2>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: 'var(--c-text)' }}>Cours existants</h2>
               {cours.length > 0 && (
-                <span style={{ background: '#dbeafe', color: '#1e40af', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
+                <span style={{ background: 'var(--tone-primary-bg)', color: 'var(--tone-primary-fg)', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
                   {cours.length} cours
                 </span>
               )}
@@ -256,7 +256,7 @@ export default function CoursAdminPage() {
           </div>
         }
       >
-        <p style={{ color: '#6b7280', marginBottom: '16px' }}>
+        <p style={{ color: 'var(--c-text-2)', marginBottom: '16px' }}>
           Êtes-vous sûr de vouloir supprimer ce cours ? Cette action ne peut pas être annulée.
         </p>
       </AdminModal>
@@ -276,18 +276,18 @@ export default function CoursAdminPage() {
 }
 
 function CourseCard({ course, onEdit, onDelete, onNavigateContent, onNavigateLiens }) {
-  const statusColor = course.statut === 'publish' ? '#10b981' : '#f59e0b';
+  const statusColor = course.statut === 'publish' ? 'var(--c-success)' : 'var(--c-warning)';
   const statusLabel = course.statut === 'publish' ? 'Publié' : 'Brouillon';
 
   return (
     <div
       style={{
-        background: 'white',
+        background: 'var(--c-card)',
         borderRadius: '12px',
         padding: '20px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         transition: 'all 0.3s ease',
-        border: '1px solid #e5e7eb',
+        border: '1px solid var(--c-border)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
@@ -299,21 +299,21 @@ function CourseCard({ course, onEdit, onDelete, onNavigateContent, onNavigateLie
       }}
     >
       <div style={{ marginBottom: '16px' }}>
-        <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 600, color: '#111827' }}>{course.titre}</h3>
-        <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>Slug: <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px' }}>{course.slug}</code></p>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 600, color: 'var(--c-text)' }}>{course.titre}</h3>
+        <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-2)' }}>Slug: <code style={{ background: 'var(--c-hover)', padding: '2px 6px', borderRadius: '4px' }}>{course.slug}</code></p>
       </div>
 
       <div style={{ marginBottom: '16px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-        <span style={{ background: statusColor + '20', color: statusColor, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
+        <span style={{ background: `color-mix(in srgb, ${statusColor} 12%, transparent)`, color: statusColor, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
           {statusLabel}
         </span>
       </div>
 
       <div style={{ display: 'grid', gap: '8px' }}>
-        <ActionButton color="#2563eb" onClick={() => onEdit(course)}>📝 Modifier</ActionButton>
-        <ActionButton color="#7c3aed" onClick={onNavigateContent}>📄 Contenus</ActionButton>
-        <ActionButton color="#0891b2" onClick={onNavigateLiens}>🔗 Liens ({(course.liens_generaux_count || 0) + (course.liens_seance_count || 0)})</ActionButton>
-        <ActionButton color="#ef4444" onClick={() => onDelete(course.id)}>🗑️ Supprimer</ActionButton>
+        <ActionButton color="var(--c-primary)" onClick={() => onEdit(course)}>📝 Modifier</ActionButton>
+        <ActionButton color="var(--b-purple-fg)" onClick={onNavigateContent}>📄 Contenus</ActionButton>
+        <ActionButton color="var(--c-info)" onClick={onNavigateLiens}>🔗 Liens ({(course.liens_generaux_count || 0) + (course.liens_seance_count || 0)})</ActionButton>
+        <ActionButton color="var(--c-error)" onClick={() => onDelete(course.id)}>🗑️ Supprimer</ActionButton>
       </div>
     </div>
   );
@@ -325,9 +325,9 @@ function ActionButton({ children, onClick, color }) {
       onClick={onClick}
       style={{
         padding: '10px 14px',
-        background: color + '15',
+        background: `color-mix(in srgb, ${color} 8%, transparent)`,
         color: color,
-        border: `1px solid ${color}30`,
+        border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
         borderRadius: '6px',
         cursor: 'pointer',
         fontWeight: 500,
@@ -335,12 +335,12 @@ function ActionButton({ children, onClick, color }) {
         transition: 'all 0.2s ease',
       }}
       onMouseEnter={(e) => {
-        e.target.style.background = color + '25';
-        e.target.style.borderColor = color + '50';
+        e.target.style.background = `color-mix(in srgb, ${color} 15%, transparent)`;
+        e.target.style.borderColor = `color-mix(in srgb, ${color} 31%, transparent)`;
       }}
       onMouseLeave={(e) => {
-        e.target.style.background = color + '15';
-        e.target.style.borderColor = color + '30';
+        e.target.style.background = `color-mix(in srgb, ${color} 8%, transparent)`;
+        e.target.style.borderColor = `color-mix(in srgb, ${color} 19%, transparent)`;
       }}
     >
       {children}
@@ -352,11 +352,11 @@ function FormField({ label, required, description, children }) {
   return (
     <div>
       <label style={{ display: 'block', marginBottom: '8px' }}>
-        <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)' }}>
           {label}
-          {required && <span style={{ color: '#ef4444' }}> *</span>}
+          {required && <span style={{ color: 'var(--c-error)' }}> *</span>}
         </span>
-        {description && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#6b7280' }}>{description}</p>}
+        {description && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--c-text-2)' }}>{description}</p>}
       </label>
       {children}
     </div>
@@ -366,10 +366,10 @@ function FormField({ label, required, description, children }) {
 const inputStyle = {
   width: '100%',
   padding: '10px 12px',
-  border: '1px solid #e5e7eb',
+  border: '1px solid var(--c-border)',
   borderRadius: '8px',
   fontSize: '14px',
-  color: '#111827',
+  color: 'var(--c-text)',
   transition: 'border-color 0.2s ease',
   fontFamily: 'inherit',
 };
@@ -381,38 +381,38 @@ function SuccessMessage({ message, onClose }) {
   }, [onClose]);
 
   return (
-    <div style={{ background: '#ecfdf5', border: '1px solid #d1fae5', borderRadius: '8px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', animation: 'slideDown 0.3s ease' }}>
+    <div style={{ background: 'var(--tone-success-bg)', border: '1px solid var(--tone-success-bd)', borderRadius: '8px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', animation: 'slideDown 0.3s ease' }}>
       <span style={{ fontSize: '20px' }}>✓</span>
-      <p style={{ margin: 0, fontWeight: 500, color: '#047857' }}>{message}</p>
+      <p style={{ margin: 0, fontWeight: 500, color: 'var(--tone-success-fg)' }}>{message}</p>
     </div>
   );
 }
 
 function ErrorMessage({ message }) {
   return (
-    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', animation: 'slideDown 0.3s ease' }}>
+    <div style={{ background: 'var(--tone-error-bg)', border: '1px solid var(--tone-error-bd)', borderRadius: '8px', padding: '16px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', animation: 'slideDown 0.3s ease' }}>
       <span style={{ fontSize: '20px' }}>⚠</span>
-      <p style={{ margin: 0, fontWeight: 500, color: '#991b1b' }}>{message}</p>
+      <p style={{ margin: 0, fontWeight: 500, color: 'var(--tone-error-fg)' }}>{message}</p>
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div style={{ background: 'white', borderRadius: '12px', padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <div style={{ background: 'var(--c-card)', borderRadius: '12px', padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
       <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
-      <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600, color: '#111827' }}>Aucun cours pour le moment</h3>
-      <p style={{ margin: 0, fontSize: '14px', color: '#6b7280' }}>Créez votre premier cours en utilisant le formulaire ci-dessous</p>
+      <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600, color: 'var(--c-text)' }}>Aucun cours pour le moment</h3>
+      <p style={{ margin: 0, fontSize: '14px', color: 'var(--c-text-2)' }}>Créez votre premier cours en utilisant le formulaire ci-dessous</p>
     </div>
   );
 }
 
 function LoadingState() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, var(--c-bg) 0%, var(--c-bg) 100%)' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px', animation: 'spin 1s linear infinite' }}>⏳</div>
-        <p style={{ color: '#6b7280', fontSize: '16px' }}>Chargement en cours...</p>
+        <p style={{ color: 'var(--c-text-2)', fontSize: '16px' }}>Chargement en cours...</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

@@ -100,7 +100,7 @@ export default function ProfesseurTariffPage() {
 
   if (!professeur) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-2)' }}>
         Chargement…
       </div>
     );
@@ -117,7 +117,7 @@ export default function ProfesseurTariffPage() {
       <AdminPageContent>
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '16px',
             borderRadius: '8px',
@@ -132,7 +132,7 @@ export default function ProfesseurTariffPage() {
 
         {success && (
           <div style={{
-            background: '#d1fae5',
+            background: 'var(--tone-success-bg)',
             color: ADMIN_COLORS.success,
             padding: '16px',
             borderRadius: '8px',
@@ -179,7 +179,7 @@ export default function ProfesseurTariffPage() {
           <h3 style={{
             margin: '0 0 16px 0',
             fontSize: '1.1em',
-            color: '#1f2937',
+            color: 'var(--c-text)',
           }}>
             📊 Historique des tarifs
           </h3>
@@ -195,16 +195,16 @@ export default function ProfesseurTariffPage() {
 
         {/* Info utile */}
         <div style={{
-          background: '#eff6ff',
+          background: 'var(--tone-primary-bg)',
           border: '1px solid #3b82f6',
           padding: '16px',
           borderRadius: '8px',
           marginTop: '24px',
         }}>
-          <h4 style={{ margin: '0 0 12px 0', color: '#1e40af' }}>
+          <h4 style={{ margin: '0 0 12px 0', color: 'var(--tone-primary-fg)' }}>
             ℹ️ Comment ça fonctionne?
           </h4>
-          <ul style={{ margin: 0, paddingLeft: '20px', color: '#1e40af', fontSize: '0.95em' }}>
+          <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--tone-primary-fg)', fontSize: '0.95em' }}>
             <li style={{ marginBottom: '8px' }}>
               <strong>Date de début:</strong> À partir de quand ce tarif est appliqué
             </li>

@@ -120,7 +120,7 @@ export default function AnniversairesAdminPage() {
 
   if (anniversaires === null) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-2)' }}>
         Chargement…
       </div>
     );
@@ -147,7 +147,7 @@ export default function AnniversairesAdminPage() {
       <AdminPageContent>
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '16px',
             borderRadius: '8px',
@@ -162,7 +162,7 @@ export default function AnniversairesAdminPage() {
 
         {success && (
           <div style={{
-            background: '#d1fae5',
+            background: 'var(--tone-success-bg)',
             color: ADMIN_COLORS.success,
             padding: '16px',
             borderRadius: '8px',
@@ -214,7 +214,7 @@ export default function AnniversairesAdminPage() {
                     />
                   </div>
                   {a.description && (
-                    <p style={{ fontSize: '13px', color: '#6b7280', margin: '12px 0' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--c-text-2)', margin: '12px 0' }}>
                       {a.description.substring(0, 80)}...
                     </p>
                   )}
@@ -238,7 +238,7 @@ export default function AnniversairesAdminPage() {
                   </AdminButton>
                 </AdminCardFooter>
                 {expandedId === a.id && (
-                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--c-border)' }}>
                     <ClasseLiensManager parentType="anniversaires" parentId={a.id} />
                   </div>
                 )}

@@ -210,25 +210,25 @@ export default function StaffAdminPage() {
   const bandeaux = (
     <>
       {erreurAction && (
-        <div role="alert" style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#ffcdd2', color: '#c62828', borderRadius: '4px' }}>
+        <div role="alert" style={{ padding: '12px', marginBottom: '16px', backgroundColor: 'var(--tone-error-bg)', color: 'var(--tone-error-fg)', borderRadius: '4px' }}>
           {erreurAction}
           {lienRepli && <LienCopiable lien={lienRepli.lien} />}
           <button
             onClick={() => setErreurAction('')}
             aria-label="Fermer le message"
-            style={{ float: 'right', background: 'none', border: 'none', color: '#c62828', cursor: 'pointer', fontSize: '18px' }}
+            style={{ float: 'right', background: 'none', border: 'none', color: 'var(--tone-error-fg)', cursor: 'pointer', fontSize: '18px' }}
           >
             ×
           </button>
         </div>
       )}
       {successMessage && (
-        <div role="status" style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+        <div role="status" style={{ padding: '12px', marginBottom: '16px', backgroundColor: 'var(--tone-success-bg)', color: 'var(--tone-success-fg)', borderRadius: '4px' }}>
           {successMessage}
           <button
             onClick={() => setSuccessMessage('')}
             aria-label="Fermer le message"
-            style={{ float: 'right', background: 'none', border: 'none', color: '#155724', cursor: 'pointer', fontSize: '18px' }}
+            style={{ float: 'right', background: 'none', border: 'none', color: 'var(--tone-success-fg)', cursor: 'pointer', fontSize: '18px' }}
           >
             ×
           </button>
@@ -268,7 +268,7 @@ export default function StaffAdminPage() {
                 <button
                   type="button"
                   onClick={() => majFiltre('acces', 'relancer')}
-                  style={{ background: 'none', border: 'none', padding: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--tone-primary-fg)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
                 >
                   Les afficher
                 </button>

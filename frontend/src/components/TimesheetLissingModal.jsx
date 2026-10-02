@@ -80,25 +80,25 @@ export default function TimesheetLissingModal({
       zIndex: 1000,
     }}>
       <div style={{
-        background: 'white',
+        background: 'var(--c-card)',
         borderRadius: '8px',
         padding: '24px',
         maxWidth: '500px',
         width: '90%',
         boxShadow: '0 20px 25px rgba(0,0,0,0.15)',
       }}>
-        <h2 style={{ margin: '0 0 16px 0', color: '#1f2937' }}>
+        <h2 style={{ margin: '0 0 16px 0', color: 'var(--c-text)' }}>
           🔄 Lissage des Heures
         </h2>
 
         <div style={{
-          background: '#fef3c7',
-          border: '1px solid #fcd34d',
+          background: 'var(--tone-warning-bg)',
+          border: '1px solid var(--tone-warning-bd)',
           padding: '12px',
           borderRadius: '6px',
           marginBottom: '20px',
           fontSize: '0.9em',
-          color: '#92400e',
+          color: 'var(--tone-warning-fg)',
         }}>
           <strong>Date en dépassement:</strong> {new Date(datePrestation).toLocaleDateString('fr-FR')}
           <br />
@@ -118,7 +118,7 @@ export default function TimesheetLissingModal({
 
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '12px',
             borderRadius: '6px',
@@ -134,12 +134,12 @@ export default function TimesheetLissingModal({
             {proposal.success ? (
               <div>
                 <div style={{
-                  background: '#f0fdf4',
-                  border: '1px solid #bbf7d0',
+                  background: 'var(--tone-success-bg)',
+                  border: '1px solid var(--tone-success-bd)',
                   padding: '12px',
                   borderRadius: '6px',
                   marginBottom: '16px',
-                  color: '#065f46',
+                  color: 'var(--tone-success-fg)',
                   fontSize: '0.9em',
                 }}>
                   {proposal.suggestion.note}
@@ -150,7 +150,7 @@ export default function TimesheetLissingModal({
                     display: 'block',
                     marginBottom: '6px',
                     fontWeight: '500',
-                    color: '#374151',
+                    color: 'var(--c-text-muted)',
                   }}>
                     Montant à déplacer (€)
                   </label>
@@ -164,7 +164,7 @@ export default function TimesheetLissingModal({
                     style={{
                       width: '100%',
                       padding: '8px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--c-border)',
                       borderRadius: '6px',
                       fontSize: '1em',
                     }}
@@ -176,7 +176,7 @@ export default function TimesheetLissingModal({
                     display: 'block',
                     marginBottom: '6px',
                     fontWeight: '500',
-                    color: '#374151',
+                    color: 'var(--c-text-muted)',
                   }}>
                     Date cible
                   </label>
@@ -187,7 +187,7 @@ export default function TimesheetLissingModal({
                     style={{
                       width: '100%',
                       padding: '8px',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid var(--c-border)',
                       borderRadius: '6px',
                       fontSize: '1em',
                     }}

@@ -42,7 +42,7 @@ export default function StaffEditEmailModal({ staff, onClose, onSubmit }) {
           />
         </FormField>
 
-        <div style={{ fontSize: '12px', color: '#666', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--c-text-2)', marginBottom: '16px' }}>
           Après modification, les tokens actuels seront révoqués.
         </div>
 
@@ -51,7 +51,7 @@ export default function StaffEditEmailModal({ staff, onClose, onSubmit }) {
             type="button"
             onClick={onClose}
             disabled={loading}
-            style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}
+            style={{ background: 'none', border: '1px solid var(--c-border)', padding: '8px 16px', cursor: 'pointer' }}
           >
             Annuler
           </button>

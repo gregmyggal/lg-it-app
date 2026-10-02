@@ -98,7 +98,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
     }
   }
 
-  if (items === null) return <p style={{ padding: '24px', color: '#6b7280' }}>Chargement…</p>;
+  if (items === null) return <p style={{ padding: '24px', color: 'var(--c-text-2)' }}>Chargement…</p>;
 
   return (
     <>
@@ -121,7 +121,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
       <AdminPageContent>
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '16px',
             borderRadius: '8px',
@@ -136,7 +136,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
 
         {success && (
           <div style={{
-            background: '#d1fae5',
+            background: 'var(--tone-success-bg)',
             color: ADMIN_COLORS.success,
             padding: '16px',
             borderRadius: '8px',
@@ -150,7 +150,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
         )}
 
         <div style={{
-          background: 'white',
+          background: 'var(--c-card)',
           borderRadius: '8px',
           border: `1px solid ${ADMIN_COLORS.border}`,
           overflow: 'hidden',
@@ -159,7 +159,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{
-                background: '#f9fafb',
+                background: 'var(--c-bg)',
                 borderBottom: `1px solid ${ADMIN_COLORS.border}`,
               }}>
                 <th style={{
@@ -203,7 +203,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
                   <td colSpan="3" style={{
                     padding: '40px',
                     textAlign: 'center',
-                    color: '#9ca3af',
+                    color: 'var(--c-text-3)',
                   }}>
                     Aucun élément
                   </td>
@@ -214,7 +214,7 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
                     key={item.id}
                     style={{
                       borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-                      background: idx % 2 === 0 ? 'white' : '#f9fafb',
+                      background: idx % 2 === 0 ? 'var(--c-card)' : 'var(--c-bg)',
                     }}
                   >
                     <td style={{
@@ -227,9 +227,9 @@ export default function SimpleLookupAdmin({ title, endpoint }) {
                     <td style={{
                       padding: '16px',
                       fontSize: '13px',
-                      color: '#6b7280',
+                      color: 'var(--c-text-2)',
                     }}>
-                      <code style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: '4px' }}>
+                      <code style={{ background: 'var(--c-hover)', padding: '2px 6px', borderRadius: '4px' }}>
                         {item.slug}
                       </code>
                     </td>

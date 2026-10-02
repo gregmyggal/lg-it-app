@@ -1,0 +1,80 @@
+<!doctype html><html lang="fr" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Largeur et mode nuit — Maquette UI-01</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f6f8;--surface:#fff;--surface2:#f3f4f6;--bd:#dee3e8;--t1:#16212e;--t2:#4b5a6b;--t3:#6b7280;--pri:#2563eb;--on-pri:#fff;--pri-bg:#dbeafe;--pri-fg:#1d4ed8;
+--ok-bg:#d1fae5;--ok-fg:#047857;--ok-bd:#6ee7b7;--wa-bg:#fef3c7;--wa-fg:#92400e;--wa-bd:#fcd34d;--er-bg:#fee2e2;--er-fg:#b91c1c;--er-bd:#fca5a5;--in-bg:#cffafe;--in-fg:#0e7490;--ne-bg:#f3f4f6;--ne-fg:#4b5563;--focus:#93c5fd;--side:#0b3550;--shadow:0 1px 3px rgba(0,0,0,.1)}
+:root[data-theme=dark]{--bg:#0f1620;--surface:#16212e;--surface2:#1d2a3a;--bd:#2f3d4f;--t1:#e7ebef;--t2:#a9b4bf;--t3:#8b98a6;--pri:#5da0d6;--on-pri:#0f1620;--pri-bg:#12304a;--pri-fg:#9cc9ec;
+--ok-bg:#0f2e25;--ok-fg:#6ee7b7;--ok-bd:#1f6b55;--wa-bg:#33260a;--wa-fg:#fcd34d;--wa-bd:#7a5b12;--er-bg:#3a1517;--er-fg:#fca5a5;--er-bd:#8a2c31;--in-bg:#0b2f38;--in-fg:#67e8f9;--ne-bg:#1f2937;--ne-fg:#cbd5e1;--focus:#82b8e0;--shadow:none}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;background:var(--bg);color:var(--t1)}
+.bar{position:sticky;top:0;z-index:9;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px}.bar strong{color:#fbbf24}
+.bar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer}.bar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.shell{display:grid;grid-template-columns:248px 1fr;min-height:calc(100vh - 42px)}
+aside{background:var(--side);color:#fff;padding:16px;font-size:13px}aside b{display:block;margin-bottom:14px}aside a{display:block;padding:6px 8px;border-radius:6px;color:#d6e2ec}aside a.on{background:rgba(255,255,255,.14);color:#fff}
+main{padding:24px clamp(16px,2.5vw,48px)}.page{max-width:1760px;margin-inline:auto}
+.guide{outline:1px dashed var(--pri);outline-offset:4px}
+h1{margin:0 0 4px;font-size:22px}.sub{color:var(--t2);margin-bottom:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(clamp(200px,16vw,280px),1fr));gap:12px;margin:16px 0}
+.kpi{background:var(--surface);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}.kpi b{display:block;font-size:24px}.kpi span{color:var(--t3);font-size:12px}
+.card{background:var(--surface);border:1px solid var(--bd);border-radius:10px;box-shadow:var(--shadow)}
+.banner{padding:10px 14px;border-radius:8px;border:1px solid var(--wa-bd);background:var(--wa-bg);color:var(--wa-fg);margin-bottom:10px}
+.btn{border:1px solid var(--bd);background:var(--surface);color:var(--t1);border-radius:7px;padding:6px 12px;cursor:pointer}.btn.pri{background:var(--pri);border-color:var(--pri);color:var(--on-pri);font-weight:600}
+input,select{background:var(--bg);color:var(--t1);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;width:260px;max-width:100%}
+table{width:100%;border-collapse:collapse}th{position:sticky;top:42px;background:var(--surface2);color:var(--t2);font-size:12px;text-align:left;padding:8px 12px;border-bottom:1px solid var(--bd)}
+td{padding:8px 12px;border-bottom:1px solid var(--bd);font-size:13px}tr:hover td{background:var(--surface2)}tr.mod td{background:color-mix(in srgb,var(--wa-bg) 55%,transparent)}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid transparent}
+.b.pri{background:var(--pri-bg);color:var(--pri-fg)}.b.ok{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}.b.wa{background:var(--wa-bg);color:var(--wa-fg);border-color:var(--wa-bd)}.b.er{background:var(--er-bg);color:var(--er-fg);border-color:var(--er-bd)}.b.ne{background:var(--ne-bg);color:var(--ne-fg)}.b.in{background:var(--in-bg);color:var(--in-fg)}
+.alert{color:var(--wa-fg);font-size:12px}
+.detail{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,28vw,460px);gap:20px;align-items:start}@media(max-width:1279px){.detail{grid-template-columns:1fr}}
+.side{position:sticky;top:60px;display:grid;gap:14px}.pad{padding:14px 16px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:11px}.cal div{border:1px solid var(--bd);border-radius:5px;padding:3px;min-height:44px;background:var(--surface)}.cal .h{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok-fg)}.cal .x{background:var(--er-bg);border-color:var(--er-bd);color:var(--er-fg);font-weight:700}
+.screen{display:none}.screen.on{display:block}.note{font-size:12px;color:var(--t3)}
+.modal{margin-top:20px;max-width:480px;background:var(--surface);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.bell{background:var(--surface);color:var(--t1);border:1px solid var(--bd);border-radius:8px;width:300px;box-shadow:0 8px 24px rgba(0,0,0,.35)}.bell div{padding:8px 12px;border-bottom:1px solid var(--bd)}.bell .nl{background:var(--pri-bg)}
+</style></head><body>
+<div class="bar"><strong>MAQUETTE UI-01</strong><span>Largeur d'écran + mode nuit</span>
+<span class="row" style="gap:6px"><button data-s="a" aria-pressed="true">Synthèse du mois</button><button data-s="b" aria-pressed="false">Détail professeur</button><button data-s="c" aria-pressed="false">Modale &amp; cloche</button></span>
+<span class="row" style="gap:6px">Thème : <button data-t="light" aria-pressed="true">☀ Clair</button><button data-t="dark" aria-pressed="false">☾ Nuit</button><button data-t="auto" aria-pressed="false">Auto (système)</button></span>
+<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="g" style="width:auto"> Montrer le conteneur (max 1760 px)</label></div>
+<div class="shell"><aside><b>Logiscool Pays Vert</b><a class="on">📊 Timesheets</a><a>⚙️ Paramètres timesheets</a><a>👨‍🏫 Professeurs &amp; Tarifs</a><a>Classes</a><a>Calendrier</a><p class="note" style="color:#9fb3c4;margin-top:24px">Menu : 248 px (≥1536), identique en clair et en nuit (charte Logiscool). Compte, cloche 🔔 et bascule de thème en bas.</p></aside>
+<main><div class="page" id="page">
+
+<section class="screen on" id="a">
+<div class="row sp"><div><h1>Validation du mois</h1><div class="sub">Octobre 2026 — 6 professeurs</div></div><div class="row"><button class="btn">‹</button><b>octobre 2026</b><button class="btn">›</button><button class="btn">Exporter CSV</button><button class="btn">Générer les PDF (zip)</button><button class="btn pri">Valider la sélection (2)</button></div></div>
+<div class="kpis"><div class="kpi"><b>5</b><span>Profs ayant soumis</span></div><div class="kpi"><b>2</b><span>À valider</span></div><div class="kpi"><b>1</b><span>Attente professeur</span></div><div class="kpi"><b style="color:var(--er-fg)">1</b><span>Contesté</span></div><div class="kpi"><b>1</b><span>Prêt PDF</span></div><div class="kpi"><b>0</b><span>Générés</span></div></div>
+<div class="banner">⚠ Bob Prof : 1 jour au-delà de 44,02 € — lissage proposé.</div>
+<div class="row" style="margin:12px 0"><input placeholder="Rechercher un professeur"><select><option>Tous les statuts</option></select></div>
+<div class="card"><table><thead><tr><th></th><th>Professeur</th><th>Statut du mois</th><th>H. animation</th><th>H. préparation</th><th>Total</th><th>Lignes ajustées</th><th>Alertes</th><th>Dernière action</th><th></th></tr></thead><tbody>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Alice Prof</td><td><span class="b in">À valider</span></td><td>4 h</td><td>1 h</td><td>100,00 €</td><td>—</td><td>—</td><td>—</td><td><button class="btn">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Bob Prof</td><td><span class="b in">À valider</span></td><td>4 h</td><td>—</td><td>80,00 €</td><td>—</td><td class="alert">⚠ 1 jour au-delà de 44,02 €</td><td>—</td><td><button class="btn">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Chloé Dubois</td><td><span class="b wa">Attente professeur</span></td><td>2 h</td><td>2 h</td><td>80,00 €</td><td>1</td><td>—</td><td>01/10/2026 20:18</td><td><button class="btn">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>David Petit</td><td><span class="b er">Contesté</span></td><td>2 h</td><td>—</td><td>40,00 €</td><td>1</td><td>—</td><td>01/10/2026 20:18</td><td><button class="btn">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Emma Roux</td><td><span class="b ok">Prêt PDF</span></td><td>6,5 h</td><td>—</td><td>83,88 €</td><td>—</td><td>—</td><td>01/10/2026 20:18</td><td><button class="btn">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto" disabled></td><td>Félix Moreau</td><td><span class="b ne">Brouillon</span></td><td>—</td><td>1 h</td><td>20,00 €</td><td>—</td><td class="alert">⚠ Compte bancaire manquant</td><td>—</td><td><button class="btn">Ouvrir</button></td></tr></tbody></table></div>
+<p class="note">À 1920 px : les 10 colonnes tiennent sans défilement horizontal, lignes denses (8/12 px), en-tête collant, champs de filtre plafonnés à 260 px. Sous 1280 px : colonnes secondaires (« Dernière action », « H. préparation ») masquées, la ligne reste ouvrable.</p>
+</section>
+
+<section class="screen" id="b">
+<div class="row sp"><div><div class="note">Validation du mois › Bob Prof</div><h1>Bob Prof — octobre 2026 <span class="b in">À valider</span></h1><div class="sub">Total 80,00 € · 4 h</div></div><div class="row"><button class="btn pri">Valider le mois (2)</button><button class="btn">Aperçu PDF</button><button class="btn">Générer le PDF</button></div></div>
+<div class="banner">1 jour(s) dépassent le plafond de 44,02 €. <button class="btn" style="margin-left:8px">Lisser le mois…</button></div>
+<div class="detail"><div class="card"><table><thead><tr><th>Date</th><th>Session / cours</th><th>Type</th><th>Heures</th><th>Montant</th><th>Statut</th><th></th></tr></thead><tbody>
+<tr><td>mer. 07/10/2026</td><td>Heures libres</td><td>Animation</td><td>0,8 h</td><td>16,00 €</td><td><span class="b in">Soumis</span></td><td><button class="btn">Adapter</button> <button class="btn">Lisser</button></td></tr>
+<tr class="mod"><td>jeu. 08/10/2026</td><td>Heures libres</td><td>Animation</td><td>2,2 h</td><td>44,00 €</td><td><span class="b in">Soumis</span> <span class="b wa">✎ modifiée</span></td><td><button class="btn">Adapter</button> <button class="btn">Lisser</button></td></tr>
+<tr><td>ven. 09/10/2026</td><td>Heures libres</td><td>Animation</td><td>1 h</td><td>20,00 €</td><td><span class="b in">Soumis</span></td><td><button class="btn">Adapter</button> <button class="btn">Lisser</button></td></tr></tbody></table></div>
+<div class="side"><div class="card pad"><b>Résumé</b><div class="sub" style="margin:4px 0 0">80,00 € · 4 h · plafond 44,02 €/jour</div></div>
+<div class="card pad"><b>Calendrier</b><div class="cal" style="margin-top:8px"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div class="h">7<br>16,00 €</div><div class="x">8 ⚠<br>60,00 €</div><div class="h">9<br>20,00 €</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div></div><p class="note">Rouge + symbole ⚠ : au-delà du plafond (pas de couleur seule).</p></div>
+<div class="card pad"><b>Historique</b><p class="note" style="margin:6px 0 0">01/10 20:19 — Directrice : lissage 0,8 h → 07/10 — « Respect du plafond »</p></div></div></div>
+<p class="note">À 1920 px : colonne gauche fluide (~1130 px), colonne droite ~460 px et collante. Sous 1280 px : une colonne, résumé en premier.</p>
+</section>
+
+<section class="screen" id="c"><div class="row" style="align-items:flex-start;gap:40px">
+<div class="modal"><h3 style="margin-top:0">Lisser le mois</h3><table><thead><tr><th style="position:static">Jour</th><th style="position:static">Avant</th><th style="position:static">Après</th></tr></thead><tbody><tr><td>mer. 07/10</td><td>0,00 €</td><td>16,00 €</td></tr><tr><td>jeu. 08/10</td><td>60,00 €</td><td>44,00 €</td></tr><tr><td><b>Total du mois</b></td><td><b>80,00 €</b></td><td><b>80,00 € (inchangé ✓)</b></td></tr></tbody></table><p class="note">Motif (obligatoire)</p><input style="width:100%" placeholder="Ex. : respect du plafond journalier"><div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn">Annuler</button><button class="btn pri">Appliquer le lissage</button></div></div>
+<div><div class="bell"><div><b>Notifications</b></div><div class="nl"><b>Votre mois attend votre confirmation</b><br><span class="note">Vos heures ont été validées ou ajustées…</span></div><div><b>Contestation d'un professeur</b><br><span class="note">David Petit conteste ses heures…</span></div></div>
+<p class="note" style="max-width:300px">Non lue = fond bleu nuit ; texte toujours ≥ 4,5:1.</p></div></div></section>
+</div></main></div>
+<script>
+const root=document.documentElement,mq=matchMedia('(prefers-color-scheme: dark)');
+function theme(t){document.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));root.dataset.theme=t==='auto'?(mq.matches?'dark':'light'):t}
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>theme(b.dataset.t));
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s))});
+g.onchange=()=>page.classList.toggle('guide',g.checked);
+</script></body></html>

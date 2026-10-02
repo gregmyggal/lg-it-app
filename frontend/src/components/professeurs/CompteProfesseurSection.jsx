@@ -103,11 +103,11 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         {actif && acces?.statut && (
           <p>
             Accès : <StatutBadge table={STATUTS_ACCES} valeur={acces.statut} />
-            <span style={{ display: 'block', fontSize: '13px', color: '#4b5563', marginTop: '4px' }}>{detailAcces(acces)}</span>
+            <span style={{ display: 'block', fontSize: '13px', color: 'var(--c-text-muted)', marginTop: '4px' }}>{detailAcces(acces)}</span>
           </p>
         )}
         {!actif && (
-          <p style={{ color: '#6b7280' }}>
+          <p style={{ color: 'var(--c-text-2)' }}>
             Ce professeur ne peut plus se connecter. Son historique (heures, tarifs, séances passées) est conservé.
             Réactivez le compte pour envoyer une invitation.
           </p>
@@ -115,7 +115,7 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         {lien && <LienCopiable lien={lien} />}
 
         {confirmation && (
-          <div role="group" aria-label="Confirmation d'envoi" style={{ margin: '12px 0', padding: '12px', background: '#f3f4f6', borderRadius: '6px' }}>
+          <div role="group" aria-label="Confirmation d'envoi" style={{ margin: '12px 0', padding: '12px', background: 'var(--c-hover)', borderRadius: '6px' }}>
             <p style={{ marginTop: 0 }}>
               {confirmation === 'envoi'
                 ? <>Envoyer un email à <strong>{loginEmail}</strong> ? Les liens précédents seront annulés.</>
@@ -158,7 +158,7 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         {actif && (
           <p style={{ marginTop: '12px', fontSize: '13px' }}>
             L&apos;email n&apos;arrive pas ?{' '}
-            <button type="button" onClick={genererLien} disabled={envoi} style={{ background: 'none', border: 'none', padding: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}>
+            <button type="button" onClick={genererLien} disabled={envoi} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--tone-primary-fg)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}>
               Générer un lien à transmettre
             </button>
           </p>

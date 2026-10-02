@@ -1,9 +1,14 @@
-import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
+import { ADMIN_COLORS, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
 
-/** Tableau du design system : conteneur défilant horizontalement (lisible sur tablette et mobile). */
+/**
+ * Tableau du design system (UI-01 T4). La largeur minimale (`minWidth`) ne s'applique que sous 1280 px (défilement
+ * horizontal sur tablette et mobile) ; au-delà, le tableau occupe la largeur disponible, sans défilement inutile.
+ * Cellules compactes dès 1280 px. Les colonnes secondaires (`xl` sur Th et Td) ne s'affichent qu'à partir de 1440 px.
+ */
 export function Table({ children, caption, minWidth = '720px', maxHeight }) {
   return (
     <div
+      className="ui-table-wrap"
       style={{
         overflow: 'auto',
         maxHeight,
@@ -12,7 +17,7 @@ export function Table({ children, caption, minWidth = '720px', maxHeight }) {
         borderRadius: ADMIN_RADIUS.lg,
       }}
     >
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth, fontSize: '14px' }}>
+      <table className="ui-table" style={{ '--table-min': minWidth }}>
         {caption && <caption className="sr-only">{caption}</caption>}
         {children}
       </table>
@@ -20,22 +25,19 @@ export function Table({ children, caption, minWidth = '720px', maxHeight }) {
   );
 }
 
-export function Th({ children, srOnly }) {
+const classes = (...c) => c.filter(Boolean).join(' ');
+
+export function Th({ children, srOnly, xl }) {
   return (
     <th
       scope="col"
+      className={classes('ui-th', xl && 'col-xl')}
       style={{
-        textAlign: 'left',
-        padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.lg}`,
         background: ADMIN_COLORS.background,
         borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-        fontSize: '12px',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
         color: ADMIN_COLORS.textSecondary,
         position: 'sticky',
         top: 0,
-        whiteSpace: 'nowrap',
       }}
     >
       {srOnly ? <span className="sr-only">{children}</span> : children}
@@ -43,13 +45,12 @@ export function Th({ children, srOnly }) {
   );
 }
 
-export function Td({ children, style, ...props }) {
+export function Td({ children, style, xl, className, ...props }) {
   return (
     <td
+      className={classes('ui-td', xl && 'col-xl', className)}
       style={{
-        padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.lg}`,
         borderBottom: `1px solid ${ADMIN_COLORS.borderLight}`,
-        verticalAlign: 'top',
         color: ADMIN_COLORS.textPrimary,
         ...style,
       }}

@@ -71,22 +71,22 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
         {actif && acces?.statut && champ('Accès:', (
           <>
             <strong>{STATUTS_ACCES[acces.statut]?.label ?? acces.statut}</strong>
-            <div style={{ fontSize: '13px', color: '#4b5563' }}>{detailAcces(acces)}</div>
+            <div style={{ fontSize: '13px', color: 'var(--c-text-muted)' }}>{detailAcces(acces)}</div>
           </>
         ))}
         {staff.date_sortie && champ('Date de sortie:', formatDate(staff.date_sortie))}
       </div>
 
       <div role="status">
-        {info && <p style={{ padding: '12px', backgroundColor: '#d4edda', borderRadius: '4px' }}>{info}</p>}
+        {info && <p style={{ padding: '12px', backgroundColor: 'var(--tone-success-bg)', borderRadius: '4px' }}>{info}</p>}
       </div>
       {erreur && (
-        <p role="alert" style={{ padding: '12px', backgroundColor: '#ffcdd2', color: '#c62828', borderRadius: '4px' }}>{erreur}</p>
+        <p role="alert" style={{ padding: '12px', backgroundColor: 'var(--tone-error-bg)', color: 'var(--tone-error-fg)', borderRadius: '4px' }}>{erreur}</p>
       )}
       {lien && <LienCopiable lien={lien} />}
 
       {confirmation && (
-        <div style={{ margin: '16px 0', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+        <div style={{ margin: '16px 0', padding: '12px', backgroundColor: 'var(--c-bg)', borderRadius: '4px' }}>
           <p style={{ marginTop: 0 }}>
             Envoyer un email à <strong>{staff.email}</strong> ? Les liens précédents seront annulés.
           </p>
@@ -98,12 +98,12 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
       )}
 
       {!actif && (
-        <p style={{ fontSize: '13px', color: '#4b5563' }}>
+        <p style={{ fontSize: '13px', color: 'var(--c-text-muted)' }}>
           Réactivez le compte pour envoyer une invitation.
         </p>
       )}
 
-      <div style={{ borderTop: '1px solid #ddd', paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+      <div style={{ borderTop: '1px solid var(--c-border)', paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         {actif ? (
           <>
             <AdminButton onClick={onEditEmail} disabled={occupe} style={{ background: '#2196f3' }}>
@@ -121,7 +121,7 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
             Réactiver
           </AdminButton>
         )}
-        <button type="button" onClick={onClose} style={{ background: 'none', border: '1px solid #ccc', padding: '8px 16px', cursor: 'pointer' }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: '1px solid var(--c-border)', padding: '8px 16px', cursor: 'pointer' }}>
           Fermer
         </button>
       </div>
@@ -129,7 +129,7 @@ export default function StaffDetailModal({ staff, onClose, onDesactiver, onReact
       {actif && (
         <p style={{ marginTop: '12px', fontSize: '13px' }}>
           L&apos;email n&apos;arrive pas ?{' '}
-          <button type="button" onClick={genererLien} disabled={occupe} style={{ background: 'none', border: 'none', padding: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}>
+          <button type="button" onClick={genererLien} disabled={occupe} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--tone-primary-fg)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}>
             Générer un lien à transmettre
           </button>
         </p>

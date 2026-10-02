@@ -120,7 +120,7 @@ export default function AdminProfesseursPage() {
 
   if (!professeurs) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-2)' }}>
         Chargement…
       </div>
     );
@@ -167,7 +167,7 @@ export default function AdminProfesseursPage() {
       <AdminPageContent>
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '16px',
             borderRadius: '8px',
@@ -180,7 +180,7 @@ export default function AdminProfesseursPage() {
 
         {success && (
           <div style={{
-            background: '#d1fae5',
+            background: 'var(--tone-success-bg)',
             color: ADMIN_COLORS.success,
             padding: '16px',
             borderRadius: '8px',
@@ -215,7 +215,7 @@ export default function AdminProfesseursPage() {
                 <button
                   type="button"
                   onClick={() => majFiltre('acces', 'relancer')}
-                  style={{ background: 'none', border: 'none', padding: 0, color: '#1d4ed8', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
+                  style={{ background: 'none', border: 'none', padding: 0, color: 'var(--tone-primary-fg)', textDecoration: 'underline', cursor: 'pointer', fontWeight: 400 }}
                 >
                   Les afficher
                 </button>
@@ -250,7 +250,7 @@ export default function AdminProfesseursPage() {
               <div
                 key={prof.id}
                 style={{
-                  background: 'white',
+                  background: 'var(--c-card)',
                   borderRadius: '8px',
                   border: `1px solid ${ADMIN_COLORS.border}`,
                   overflow: 'hidden',
@@ -258,7 +258,7 @@ export default function AdminProfesseursPage() {
               >
                 {/* En-tête */}
                 <div style={{
-                  background: '#f9fafb',
+                  background: 'var(--c-bg)',
                   padding: '20px',
                   borderBottom: `1px solid ${ADMIN_COLORS.border}`,
                   display: 'flex',
@@ -269,11 +269,11 @@ export default function AdminProfesseursPage() {
                   <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate(`/admin/professeurs/${prof.id}`)}>
                     <h3 style={{ margin: '0 0 8px 0' }}>
                       {prof.prenom} {prof.nom}{' '}
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: prof.statut === 'actif' ? '#047857' : '#6b7280' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: prof.statut === 'actif' ? 'var(--tone-success-fg)' : 'var(--c-text-2)' }}>
                         {prof.statut === 'actif' ? 'Actif' : 'Désactivé'}
                       </span>
                     </h3>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9em' }}>
+                    <p style={{ margin: 0, color: 'var(--c-text-2)', fontSize: '0.9em' }}>
                       {prof.email}
                     </p>
                     {prof.statut === 'actif' && prof.acces?.statut && (
@@ -306,7 +306,7 @@ export default function AdminProfesseursPage() {
                       <div style={{
                         fontSize: '12px',
                         fontWeight: '600',
-                        color: '#6b7280',
+                        color: 'var(--c-text-2)',
                         marginBottom: '4px',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
@@ -316,7 +316,7 @@ export default function AdminProfesseursPage() {
                       <div style={{
                         fontSize: '20px',
                         fontWeight: 'bold',
-                        color: stats.activeTariff ? '#059669' : '#9ca3af',
+                        color: stats.activeTariff ? 'var(--c-success)' : 'var(--c-text-3)',
                       }}>
                         {stats.activeTariff
                           ? `${parseFloat(stats.activeTariff).toFixed(2)}€/h`
@@ -328,7 +328,7 @@ export default function AdminProfesseursPage() {
                 </div>
 
                 {/* Tarifs */}
-                <div style={{ padding: '20px', background: '#fafafa' }}>
+                <div style={{ padding: '20px', background: 'var(--c-bg)' }}>
                   <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -357,9 +357,9 @@ export default function AdminProfesseursPage() {
                   {profTariffs.length === 0 ? (
                     <div style={{
                       textAlign: 'center',
-                      color: '#9ca3af',
+                      color: 'var(--c-text-3)',
                       padding: '20px',
-                      background: 'white',
+                      background: 'var(--c-card)',
                       borderRadius: '6px',
                       border: `1px solid ${ADMIN_COLORS.border}`,
                     }}>
@@ -379,7 +379,7 @@ export default function AdminProfesseursPage() {
                           <div
                             key={tariff.id}
                             style={{
-                              background: 'white',
+                              background: 'var(--c-card)',
                               border: `1px solid ${ADMIN_COLORS.border}`,
                               borderRadius: '6px',
                               padding: '16px',
@@ -393,12 +393,12 @@ export default function AdminProfesseursPage() {
                               <div style={{
                                 fontSize: '18px',
                                 fontWeight: 'bold',
-                                color: active ? '#059669' : ADMIN_COLORS.textPrimary,
+                                color: active ? 'var(--c-success)' : ADMIN_COLORS.textPrimary,
                                 marginBottom: '4px',
                               }}>
                                 {parseFloat(tariff.tarif_horaire_eur).toFixed(2)}€/h
                               </div>
-                              <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                              <div style={{ fontSize: '13px', color: 'var(--c-text-2)' }}>
                                 {new Date(tariff.date_debut).toLocaleDateString('fr-FR')}
                                 {tariff.date_fin && ` → ${new Date(tariff.date_fin).toLocaleDateString('fr-FR')}`}
                                 {!tariff.date_fin && ' → ∞'}
@@ -463,7 +463,7 @@ export default function AdminProfesseursPage() {
           }} onClick={() => setShowTarifForm(false)}>
             <div
               style={{
-                background: 'white',
+                background: 'var(--c-card)',
                 borderRadius: '8px',
                 padding: '24px',
                 maxWidth: '500px',

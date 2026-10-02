@@ -1,33 +1,34 @@
 /**
  * Admin Pages Design System
+ * Les couleurs sont des variables CSS (index.css) : clair/nuit sans toucher aux composants.
  * Professional, modern, consistent UI across all admin pages
  */
 
 export const ADMIN_COLORS = {
   // Primary Actions
-  primary: '#2563eb',        // Blue
-  primaryHover: '#1d4ed8',
-  primaryLight: '#dbeafe',
+  primary: 'var(--c-primary)',        // Blue
+  primaryHover: 'var(--c-primary-hover)',
+  primaryLight: 'var(--c-primary-light)',
 
   // Semantic
-  success: '#10b981',        // Green
-  warning: '#f59e0b',        // Amber
-  error: '#ef4444',          // Red
-  info: '#0891b2',           // Cyan
+  success: 'var(--c-success)',        // Green
+  warning: 'var(--c-warning)',        // Amber
+  error: 'var(--c-error)',          // Red
+  info: 'var(--c-info)',           // Cyan
 
   // Backgrounds
-  background: '#f9fafb',     // Light gray
-  cardBg: '#ffffff',         // White
-  hoverBg: '#f3f4f6',        // Lighter gray
+  background: 'var(--c-bg)',     // Light gray
+  cardBg: 'var(--c-card)',         // White
+  hoverBg: 'var(--c-hover)',        // Lighter gray
 
   // Text
-  textPrimary: '#111827',    // Dark
-  textSecondary: '#6b7280',  // Gray
-  textTertiary: '#9ca3af',   // Light gray
+  textPrimary: 'var(--c-text)',    // Dark
+  textSecondary: 'var(--c-text-2)',  // Gray
+  textTertiary: 'var(--c-text-3)',   // Light gray
 
   // Borders
-  border: '#e5e7eb',         // Gray-200
-  borderLight: '#f3f4f6',    // Gray-100
+  border: 'var(--c-border)',         // Gray-200
+  borderLight: 'var(--c-border-light)',    // Gray-100
 };
 
 /**
@@ -35,16 +36,16 @@ export const ADMIN_COLORS = {
  * Toujours associés à un texte : la couleur ne porte jamais seule l'information.
  */
 export const ADMIN_TONES = {
-  primary: { bg: '#dbeafe', fg: '#1d4ed8', border: '#93c5fd' },
-  success: { bg: '#d1fae5', fg: '#047857', border: '#6ee7b7' },
-  warning: { bg: '#fef3c7', fg: '#92400e', border: '#fcd34d' },
-  error: { bg: '#fee2e2', fg: '#b91c1c', border: '#fca5a5' },
-  info: { bg: '#cffafe', fg: '#0e7490', border: '#67e8f9' },
-  school: { bg: '#ede9fe', fg: '#5b21b6', border: '#c4b5fd' },
-  neutral: { bg: '#f3f4f6', fg: '#4b5563', border: '#d1d5db' },
+  primary: { bg: 'var(--tone-primary-bg)', fg: 'var(--tone-primary-fg)', border: 'var(--tone-primary-bd)' },
+  success: { bg: 'var(--tone-success-bg)', fg: 'var(--tone-success-fg)', border: 'var(--tone-success-bd)' },
+  warning: { bg: 'var(--tone-warning-bg)', fg: 'var(--tone-warning-fg)', border: 'var(--tone-warning-bd)' },
+  error: { bg: 'var(--tone-error-bg)', fg: 'var(--tone-error-fg)', border: 'var(--tone-error-bd)' },
+  info: { bg: 'var(--tone-info-bg)', fg: 'var(--tone-info-fg)', border: 'var(--tone-info-bd)' },
+  school: { bg: 'var(--tone-school-bg)', fg: 'var(--tone-school-fg)', border: 'var(--tone-school-bd)' },
+  neutral: { bg: 'var(--tone-neutral-bg)', fg: 'var(--tone-neutral-fg)', border: 'var(--tone-neutral-bd)' },
 };
 
-export const ADMIN_FOCUS_RING = '0 0 0 3px #93c5fd';
+export const ADMIN_FOCUS_RING = '0 0 0 3px var(--c-focus)';
 
 export const ADMIN_TYPOGRAPHY = {
   h1: {
@@ -139,7 +140,7 @@ export const AdminStyles = {
   },
 
   pageContent: {
-    maxWidth: '1400px',
+    maxWidth: 'var(--page-max, 1760px)',
     margin: '0 auto',
     padding: `${ADMIN_SPACING.xl}`,
   },

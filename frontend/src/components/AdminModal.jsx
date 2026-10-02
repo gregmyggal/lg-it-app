@@ -83,7 +83,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'var(--c-overlay)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -99,9 +99,10 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
         aria-labelledby={titleId}
         tabIndex={-1}
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--c-card)',
+          border: '1px solid var(--c-border)',
           borderRadius: '12px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 20px 25px -5px var(--c-shadow)',
           maxWidth: sizeMap[size],
           width: '90%',
           maxHeight: '90vh',
@@ -115,14 +116,14 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
         <div
           style={{
             padding: '24px',
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom: '1px solid var(--c-border)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             gap: '12px',
           }}
         >
-          <h2 id={titleId} style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
+          <h2 id={titleId} style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--c-text)' }}>
             {title}
           </h2>
           <button
@@ -134,15 +135,15 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
               border: 'none',
               fontSize: '24px',
               cursor: 'pointer',
-              color: '#6b7280',
+              color: 'var(--c-text-2)',
               padding: '0 8px',
               transition: 'color 0.2s ease',
             }}
             onMouseEnter={(e) => {
-              e.target.style.color = '#111827';
+              e.target.style.color = 'var(--c-text)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.color = '#6b7280';
+              e.target.style.color = 'var(--c-text-2)';
             }}
           >
             ✕
@@ -165,7 +166,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
           <div
             style={{
               padding: '24px',
-              borderTop: '1px solid #e5e7eb',
+              borderTop: '1px solid var(--c-border)',
               display: 'flex',
               gap: '12px',
               justifyContent: 'flex-end',

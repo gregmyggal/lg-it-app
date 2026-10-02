@@ -9,12 +9,12 @@ export function FormField({ label, error, required, children, helperText }) {
       )}
       {children}
       {error && (
-        <div style={{ color: '#d32f2f', fontSize: '12px', marginTop: '4px' }}>
+        <div style={{ color: 'var(--tone-error-fg)', fontSize: '12px', marginTop: '4px' }}>
           {Array.isArray(error) ? error.join(', ') : error}
         </div>
       )}
       {helperText && (
-        <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>
+        <div style={{ color: 'var(--c-text-2)', fontSize: '12px', marginTop: '4px' }}>
           {helperText}
         </div>
       )}
