@@ -55,7 +55,7 @@ export default function PortalLayout() {
           {isStaff && (
             <>
               <div className="portal-side__group-label">Gestion Opérationnelle</div>
-              <NavLink to="/admin/timesheets" className={navClass}>
+              <NavLink to="/admin/timesheets" end className={navClass}>
                 📊 Timesheets
               </NavLink>
               <NavLink to="/admin/timesheets/parametres" className={navClass}>
