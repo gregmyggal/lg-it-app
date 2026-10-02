@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTimesheetRequest;
 use App\Http\Resources\TimesheetResource;
 use App\Models\Timesheet;
+use App\Models\TimesheetAudit;
+use App\Services\TimesheetAdaptationService;
 use App\Services\TimesheetLissingService;
-use App\Services\TimesheetPdfService;
+use App\Services\TimesheetNotifier;
 use App\Services\TimesheetService;
 use App\Services\TimesheetSignatureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class TimesheetController extends Controller
@@ -111,8 +112,48 @@ class TimesheetController extends Controller
         return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
     }
 
+    // TS-01 T1 : adaptation par le directeur/admin (heures, date d'une saisie libre, type), motif obligatoire.
+    public function adapter(Request $request, Timesheet $timesheet, TimesheetAdaptationService $service, TimesheetNotifier $notifier)
+    {
+        Gate::authorize('adapt', $timesheet);
+
+        $data = $request->validate([
+            'nombre_heures' => ['sometimes', 'numeric', 'min:0.5', 'max:24'],
+            'date_prestation' => ['sometimes', 'date_format:Y-m-d'],
+            'type_activite' => ['sometimes', Rule::in(TimesheetService::TYPES)],
+            'motif' => ['required', 'string', 'min:3', 'max:1000'],
+        ]);
+
+        $saisie = $service->adapter($timesheet, $request->user(), collect($data)->except('motif')->all(), $data['motif']);
+        $notifier->siMoisAConfirmer($saisie->professeur, (int) $saisie->date_prestation->format('Y'), (int) $saisie->date_prestation->format('n'));
+
+        return new TimesheetResource($saisie->load('professeur', 'cours', 'session.classe.cours'));
+    }
+
+    // TS-01 T1 : historique des adaptations d'une saisie (staff).
+    public function historique(Timesheet $timesheet)
+    {
+        Gate::authorize('viewHistory', $timesheet);
+
+        $lignes = TimesheetAudit::with('auteur:id,name')
+            ->where('timesheet_id', $timesheet->id)
+            ->latest('id')
+            ->get()
+            ->map(fn (TimesheetAudit $a) => [
+                'id' => $a->id,
+                'action' => $a->action,
+                'avant' => $a->avant,
+                'apres' => $a->apres,
+                'motif' => $a->motif,
+                'auteur' => $a->auteur?->name,
+                'created_at' => $a->created_at,
+            ]);
+
+        return response()->json(['data' => $lignes]);
+    }
+
     // Transition soumis → confirmé (US-311), réservée au directeur/admin.
-    public function validateEntry(Request $request, Timesheet $timesheet)
+    public function validateEntry(Request $request, Timesheet $timesheet, TimesheetNotifier $notifier)
     {
         Gate::authorize('validateEntry', $timesheet);
 
@@ -126,6 +167,7 @@ class TimesheetController extends Controller
             'validated_by' => $request->user()->id,
             'lissage_applique' => $data['lissage_applique'] ?? false,
         ]);
+        $notifier->siMoisAConfirmer($timesheet->professeur, (int) $timesheet->date_prestation->format('Y'), (int) $timesheet->date_prestation->format('n'));
 
         return $timesheet;
     }
@@ -158,7 +200,7 @@ class TimesheetController extends Controller
 
         $data = $request->validate([
             'date_to' => ['required', 'date'],
-            'montant_to_move' => ['required', 'numeric', 'min:0.01', 'max:44.02'],
+            'montant_to_move' => ['required', 'numeric', 'min:0.01'],
         ]);
 
         $service = new TimesheetLissingService;
@@ -269,65 +311,14 @@ class TimesheetController extends Controller
             $request->input('month'),
             $user
         )) {
-            return response()->json(['error' => 'Impossible de signer ce mois'], 422);
+            $erreurs = $service->canSignMonth($request->input('professeur_id'), $request->input('year'), $request->input('month'))['errors'];
+
+            return response()->json(['error' => $erreurs[0] ?? 'Impossible de signer ce mois'], 422);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Mois signé avec succès',
         ]);
-    }
-
-    // Phase 2: Génère le PDF de défraiement pour un mois entier
-    public function generatePdf(Request $request)
-    {
-        Gate::authorize('viewAny', Timesheet::class);
-
-        $data = $request->validate([
-            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
-            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'month' => ['required', 'integer', 'min:1', 'max:12'],
-        ]);
-
-        // Vérification: directeur ne peut générer que pour ses propres professeurs
-        $user = $request->user();
-        if (! $user->isAdmin()) {
-            // TODO: vérifier que le directeur gère ce professeur
-        }
-
-        $service = new TimesheetPdfService(new TimesheetLissingService);
-        $result = $service->generateMonthlyPdf(
-            $data['professeur_id'],
-            $data['year'],
-            $data['month'],
-            $user->id
-        );
-
-        return response()->json($result);
-    }
-
-    // Phase 2: Télécharge le PDF généré
-    public function downloadPdf(Request $request)
-    {
-        $data = $request->validate([
-            'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
-            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'month' => ['required', 'integer', 'min:1', 'max:12'],
-        ]);
-
-        Gate::authorize('viewAny', Timesheet::class);
-
-        $service = new TimesheetPdfService(new TimesheetLissingService);
-        $pdfPath = $service->getPdfPath(
-            $data['professeur_id'],
-            $data['year'],
-            $data['month']
-        );
-
-        if (! $pdfPath || ! Storage::disk('local')->exists($pdfPath)) {
-            return response()->json(['error' => 'PDF non trouvé'], 404);
-        }
-
-        return Storage::disk('local')->download($pdfPath);
     }
 }

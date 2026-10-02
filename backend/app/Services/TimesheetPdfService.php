@@ -2,236 +2,253 @@
 
 namespace App\Services;
 
+use App\Exceptions\RegleMetierException;
 use App\Models\Professeur;
+use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
-use Carbon\Carbon;
+use App\Models\TimesheetAudit;
+use App\Models\TimesheetPdf;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Mpdf\Mpdf;
+use ZipArchive;
 
+/**
+ * TS-01 T5 : fiche de défraiement « Fiche de défraiement – Volontariat » (modèle Logiscool) : logo, titre, mois, nom
+ * et compte du volontaire, tableau DATE / OBJET / DÉFRAIEMENT / NOMBRE / TOTAL sur 15 lignes par page (page suivante
+ * au-delà), total, date et signature, pied de page de l'ASBL. Le lissage n'apparaît pas : seules les saisies finales comptent.
+ */
 class TimesheetPdfService
 {
-    private TimesheetLissingService $lissingService;
+    public const LIGNES_PAR_PAGE = 15;
 
-    public function __construct(TimesheetLissingService $lissingService)
+    private const OBJETS = [
+        TimesheetService::TYPE_ANIMATION => 'Animation',
+        TimesheetService::TYPE_COURS => 'Cours',
+        TimesheetService::TYPE_PREPARATION => 'Préparation',
+        TimesheetService::TYPE_DEPLACEMENT => 'Frais de déplacement',
+    ];
+
+    public function __construct(
+        private readonly TimesheetConfirmationService $confirmation,
+        private readonly TarifResolver $tarifs,
+    ) {}
+
+    /** Motifs qui empêchent la génération (liste vide = prêt). */
+    public function bloquants(Professeur $prof, int $annee, int $mois): array
     {
-        $this->lissingService = $lissingService;
+        $statut = $this->confirmation->statutMois($prof, $annee, $mois);
+        $bloquants = [];
+        $messages = [
+            TimesheetSyntheseMoisService::STATUT_BROUILLON => 'Aucune saisie soumise pour ce mois',
+            TimesheetSyntheseMoisService::STATUT_A_VALIDER => 'Saisies à valider par la direction',
+            TimesheetSyntheseMoisService::STATUT_ATTENTE_PROF => 'En attente de la signature du professeur',
+            TimesheetSyntheseMoisService::STATUT_CONTESTE => 'Contestation en cours',
+            TimesheetSyntheseMoisService::STATUT_GENERE => 'PDF déjà généré (déverrouillage admin requis pour en refaire un)',
+        ];
+        if ($statut !== TimesheetSyntheseMoisService::STATUT_PRET_PDF) {
+            $bloquants[] = $messages[$statut] ?? 'Mois non prêt';
+        }
+        if (blank($prof->compte_bancaire)) {
+            $bloquants[] = 'Compte bancaire manquant';
+        }
+        if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF) {
+            $tarifsProf = ProfesseurTarif::where('professeur_id', $prof->id)->get();
+            if ($this->saisies($prof, $annee, $mois)->contains(fn (Timesheet $t) => $this->tarifs->unite($t, $tarifsProf) === null)) {
+                $bloquants[] = 'Saisie sans tarif';
+            }
+        }
+
+        return $bloquants;
     }
 
-    /**
-     * Génère un PDF de défraiement pour un mois complet
-     * Tous les timesheets doivent être en statut "confirme" et signés
-     */
-    public function generateMonthlyPdf(int $professeurId, int $year, int $month, int $userId): array
+    /** Génère et enregistre la fiche (nouvelle version) ; les saisies du mois passent à « généré ». */
+    public function generer(Professeur $prof, int $annee, int $mois, User $auteur): TimesheetPdf
     {
-        $professeur = Professeur::findOrFail($professeurId);
+        return DB::transaction(function () use ($prof, $annee, $mois, $auteur) {
+            $saisies = $this->saisies($prof, $annee, $mois, verrou: true);
+            $bloquants = $this->bloquants($prof, $annee, $mois);
+            if ($bloquants !== []) {
+                throw RegleMetierException::invalide('Génération impossible : '.implode(' ; ', $bloquants).'.', ['pdf' => $bloquants]);
+            }
 
-        // Vérifier que tous les timesheets sont confirmés et signés
-        $timesheets = Timesheet::where('professeur_id', $professeurId)
-            ->whereYear('date_prestation', $year)
-            ->whereMonth('date_prestation', $month)
-            ->where('statut_validation', 'confirme')
-            ->get();
+            $contenu = $this->contenu($prof, $annee, $mois, $saisies);
+            $version = (int) TimesheetPdf::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois])->max('version') + 1;
+            $chemin = sprintf('pdfs/%d/%04d-%02d-v%d.pdf', $prof->id, $annee, $mois, $version);
+            Storage::disk('local')->put($chemin, $contenu['pdf']);
 
-        if ($timesheets->isEmpty()) {
-            return ['success' => false, 'error' => 'Aucun timesheet confirmé pour cette période'];
-        }
-
-        // Vérifier que tous les timesheets sont signés
-        $unsigned = $timesheets->whereNull('signature_professeur');
-        if ($unsigned->isNotEmpty()) {
-            return ['success' => false, 'error' => 'Certains timesheets ne sont pas signés'];
-        }
-
-        // Récupérer les données
-        $pdfData = $this->preparePdfData($professeur, $year, $month, $timesheets);
-
-        // Générer le PDF
-        try {
-            $pdf = new Mpdf([
-                'tempDir' => storage_path('temp'),
-                'default_font' => 'DejaVu',
+            $pdf = TimesheetPdf::create([
+                'professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'version' => $version,
+                'chemin' => $chemin, 'total_eur' => $contenu['total'], 'generated_by' => $auteur->id, 'generated_at' => now(),
             ]);
 
-            $html = $this->generateHtml($pdfData);
-            $pdf->writeHTML($html);
+            Timesheet::whereIn('id', $saisies->pluck('id'))->update([
+                'statut_validation' => Timesheet::STATUT_GENERE,
+                'pdf_generated_at' => now(),
+                'pdf_generated_by' => $auteur->id,
+            ]);
 
-            // Sauvegarder le PDF
-            $filename = "defraiement_{$professeur->id}_{$year}_{$month}.pdf";
-            $path = "pdfs/{$filename}";
+            return $pdf->load('professeur');
+        });
+    }
 
-            Storage::disk('local')->put($path, $pdf->output('', 'S'));
-
-            // Mettre à jour tous les timesheets
-            Timesheet::where('professeur_id', $professeurId)
-                ->whereYear('date_prestation', $year)
-                ->whereMonth('date_prestation', $month)
-                ->update([
-                    'statut_validation' => 'genere',
-                    'pdf_generated_at' => now(),
-                    'pdf_generated_by' => $userId,
-                ]);
-
-            return [
-                'success' => true,
-                'message' => 'PDF généré avec succès',
-                'pdf_path' => $path,
-                'filename' => $filename,
-            ];
-        } catch (\Exception $e) {
-            return ['success' => false, 'error' => 'Erreur lors de la génération: '.$e->getMessage()];
-        }
+    /** Aperçu : mêmes données que la génération, sans rien enregistrer ni changer de statut (accepte un mois non prêt). */
+    public function apercu(Professeur $prof, int $annee, int $mois): string
+    {
+        return $this->contenu($prof, $annee, $mois, $this->saisies($prof, $annee, $mois))['pdf'];
     }
 
     /**
-     * Prépare les données pour le PDF
+     * Génère un lot et renvoie le chemin d'un zip temporaire. Tout est vérifié d'abord : si un professeur bloque,
+     * rien n'est généré et les bloquants sont listés.
+     *
+     * @param  int[]  $professeurIds
+     * @return array{zip: string, nombre: int}
      */
-    private function preparePdfData(Professeur $professeur, int $year, int $month, $timesheets): array
+    public function lot(array $professeurIds, int $annee, int $mois, User $auteur): array
     {
-        $monthData = $this->lissingService->calculateMonthlyMontants($professeur->id, $year, $month);
-
-        $dateDebut = Carbon::createFromDate($year, $month, 1);
-        $dateFin = $dateDebut->clone()->endOfMonth();
-
-        return [
-            'professeur' => [
-                'nom' => $professeur->nom,
-                'prenom' => $professeur->prenom,
-                'email' => $professeur->email,
-                'iban' => $professeur->compte_bancaire ?? 'N/A',
-            ],
-            'periode' => [
-                'annee' => $year,
-                'mois' => $month,
-                'mois_label' => $dateDebut->locale('fr')->translatedFormat('F Y'),
-                'date_debut' => $dateDebut->format('Y-m-d'),
-                'date_fin' => $dateFin->format('Y-m-d'),
-            ],
-            'heures_par_jour' => $monthData['heures_par_jour'] ?? [],
-            'synthese' => [
-                'total_heures' => $monthData['total_heures'] ?? 0,
-                'total_montant' => $monthData['total_montant'] ?? 0,
-                'nombre_jours' => count($monthData['heures_par_jour'] ?? []),
-                'lissages_appliques' => $timesheets->where('lissage_applique', true)->count(),
-            ],
-            'conformite' => [
-                'max_par_jour' => 44.02,
-                'depassements' => $monthData['depassements'] ?? [],
-            ],
-        ];
-    }
-
-    /**
-     * Génère le HTML pour mPDF
-     */
-    private function generateHtml(array $pdfData): string
-    {
-        $prof = $pdfData['professeur'];
-        $periode = $pdfData['periode'];
-        $synthese = $pdfData['synthese'];
-
-        $heuresHtml = '';
-        foreach ($pdfData['heures_par_jour'] as $date => $day) {
-            $montantTotal = $day['montant_total'] ?? 0;
-            $totalHeures = 0;
-            foreach ($day['activites'] ?? [] as $activite) {
-                $totalHeures += $activite['heures'] ?? 0;
+        $profs = Professeur::whereIn('id', $professeurIds)->get();
+        $bloques = [];
+        foreach ($profs as $p) {
+            $b = $this->bloquants($p, $annee, $mois);
+            if ($b !== []) {
+                $bloques[] = ['professeur_id' => $p->id, 'professeur' => trim($p->prenom.' '.$p->nom), 'raisons' => $b];
             }
-            $tarif = isset($day['activites'][0]['tarif']) ? $day['activites'][0]['tarif'] : 0;
-            $heuresHtml .= "
-                <tr>
-                    <td>{$date}</td>
-                    <td style='text-align: right;'>{$totalHeures}h</td>
-                    <td style='text-align: right;'>{$tarif}€</td>
-                    <td style='text-align: right;'>".number_format($montantTotal, 2, ',', '').'€</td>
-                </tr>
-            ';
+        }
+        if ($bloques !== []) {
+            throw RegleMetierException::invalide(count($bloques).' professeur(s) ne sont pas prêts. Aucun PDF n\'a été généré.', ['professeur_ids' => ['Professeurs non prêts.']], ['bloquants' => $bloques]);
         }
 
-        return "
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset='UTF-8'>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-                    .header { text-align: center; margin-bottom: 30px; }
-                    .header h1 { margin: 0; color: #1f2937; }
-                    .info-block { background: #f9fafb; padding: 12px; margin: 15px 0; border-left: 4px solid #3b82f6; }
-                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                    th { background: #f3f4f6; padding: 10px; text-align: left; border-bottom: 2px solid #d1d5db; }
-                    td { padding: 8px; border-bottom: 1px solid #e5e7eb; }
-                    .total-row { font-weight: bold; background: #f0fdf4; }
-                    .footer { margin-top: 30px; font-size: 0.9em; color: #6b7280; }
-                </style>
-            </head>
-            <body>
-                <div class='header'>
-                    <h1>📄 Défraiement des Heures Prestées</h1>
-                    <p>{$periode['mois_label']}</p>
-                </div>
+        $zipChemin = tempnam(sys_get_temp_dir(), 'pdfs');
+        $zip = new ZipArchive;
+        $zip->open($zipChemin, ZipArchive::OVERWRITE);
+        DB::transaction(function () use ($profs, $annee, $mois, $auteur, $zip) {
+            foreach ($profs as $p) {
+                $pdf = $this->generer($p, $annee, $mois, $auteur);
+                $zip->addFromString($pdf->nomFichier(), Storage::disk('local')->get($pdf->chemin));
+            }
+        });
+        $zip->close();
 
-                <div class='info-block'>
-                    <strong>Professeur:</strong> {$prof['prenom']} {$prof['nom']}<br>
-                    <strong>Email:</strong> {$prof['email']}<br>
-                    <strong>IBAN:</strong> {$prof['iban']}<br>
-                </div>
-
-                <div class='info-block'>
-                    <strong>Période:</strong> {$periode['date_debut']} à {$periode['date_fin']}<br>
-                </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Heures</th>
-                            <th>Tarif</th>
-                            <th>Montant</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {$heuresHtml}
-                        <tr class='total-row'>
-                            <td colspan='2'><strong>TOTAL</strong></td>
-                            <td style='text-align: right;'></td>
-                            <td style='text-align: right;'>".number_format($synthese['total_montant'], 2, ',', '')."€</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class='info-block'>
-                    <strong>Synthèse:</strong><br>
-                    Total heures: {$synthese['total_heures']}h<br>
-                    Nombre de jours: {$synthese['nombre_jours']}<br>
-                    Lissages appliqués: {$synthese['lissages_appliques']}<br>
-                </div>
-
-                <div class='footer'>
-                    <p>Document généré le ".now()->format('d/m/Y à H:i').'</p>
-                    <p>Conformité: Max 44,02€/jour ✓</p>
-                </div>
-            </body>
-            </html>
-        ';
+        return ['zip' => $zipChemin, 'nombre' => $profs->count()];
     }
 
-    /**
-     * Récupère le PDF généré (chemin ou contenu)
-     */
-    public function getPdfPath(int $professeurId, int $year, int $month): ?string
+    /** Admin : rouvre un mois généré (saisies → confirmé, signatures conservées) ; la prochaine génération sera une nouvelle version. */
+    public function deverrouiller(Professeur $prof, int $annee, int $mois, string $motif, User $auteur): int
     {
-        $timesheet = Timesheet::where('professeur_id', $professeurId)
-            ->whereYear('date_prestation', $year)
-            ->whereMonth('date_prestation', $month)
-            ->where('statut_validation', 'genere')
-            ->first();
+        return DB::transaction(function () use ($prof, $annee, $mois, $motif, $auteur) {
+            $saisies = $this->saisies($prof, $annee, $mois, verrou: true)->where('statut_validation', Timesheet::STATUT_GENERE);
+            if ($saisies->isEmpty()) {
+                throw RegleMetierException::invalide('Aucun PDF généré à déverrouiller pour ce mois.');
+            }
+            foreach ($saisies as $t) {
+                $t->update(['statut_validation' => Timesheet::STATUT_CONFIRME]);
+                TimesheetAudit::create([
+                    'timesheet_id' => $t->id, 'professeur_id' => $prof->id, 'user_id' => $auteur->id,
+                    'action' => TimesheetAudit::ACTION_DEVERROUILLAGE,
+                    'avant' => ['statut' => Timesheet::STATUT_GENERE], 'apres' => ['statut' => Timesheet::STATUT_CONFIRME], 'motif' => $motif,
+                ]);
+            }
 
-        if (! $timesheet || ! $timesheet->pdf_generated_at) {
-            return null;
+            return $saisies->count();
+        });
+    }
+
+    /** @return Collection<int, Timesheet> */
+    private function saisies(Professeur $prof, int $annee, int $mois, bool $verrou = false): Collection
+    {
+        $debut = Carbon::create($annee, $mois, 1);
+        $q = Timesheet::where('professeur_id', $prof->id)
+            ->whereBetween('date_prestation', [$debut->toDateString(), $debut->copy()->endOfMonth()->toDateString()])
+            ->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)
+            ->orderBy('date_prestation')->orderBy('id');
+
+        return ($verrou ? $q->lockForUpdate() : $q)->get();
+    }
+
+    /** @return array{pdf: string, total: float} */
+    private function contenu(Professeur $prof, int $annee, int $mois, Collection $saisies): array
+    {
+        $tarifsProf = ProfesseurTarif::where('professeur_id', $prof->id)->get();
+
+        // Une ligne par (date, objet, montant unitaire) : les saisies identiques d'un même jour sont regroupées.
+        $lignes = $saisies
+            ->map(fn (Timesheet $t) => ['date' => $t->date_prestation->toDateString(), 'objet' => self::OBJETS[$t->type_activite] ?? ucfirst($t->type_activite), 'unite' => (float) $this->tarifs->unite($t, $tarifsProf), 'nombre' => (float) $t->nombre_heures])
+            ->groupBy(fn ($l) => $l['date'].'|'.$l['objet'].'|'.$l['unite'])
+            ->map(fn ($g) => ['date' => $g[0]['date'], 'objet' => $g[0]['objet'], 'unite' => $g[0]['unite'], 'nombre' => round($g->sum('nombre'), 2)])
+            ->map(fn ($l) => $l + ['total' => round($l['nombre'] * $l['unite'], 2)])
+            ->sortBy(['date', 'objet'])->values();
+
+        $signature = $saisies->whereNotNull('signature_professeur')->max('signature_professeur');
+        $pages = $lignes->chunk(self::LIGNES_PAR_PAGE);
+        if ($pages->isEmpty()) {
+            $pages = collect([collect()]);
         }
 
-        $filename = "defraiement_{$professeurId}_{$year}_{$month}.pdf";
+        $html = $pages->map(fn ($page) => $this->htmlPage($prof, $annee, $mois, $page, $signature))->implode('<pagebreak />');
 
-        return "pdfs/{$filename}";
+        $dir = storage_path('app/mpdf');
+        if (! is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $mpdf = new Mpdf(['tempDir' => $dir, 'format' => 'A4', 'margin_top' => 12, 'margin_bottom' => 38, 'margin_left' => 20, 'margin_right' => 20, 'default_font' => 'dejavusans', 'default_font_size' => 9]);
+        $mpdf->SetTitle('Fiche de défraiement – '.trim($prof->prenom.' '.$prof->nom));
+        $mpdf->SetHTMLFooter($this->htmlPied());
+        $mpdf->WriteHTML($html);
+
+        return ['pdf' => $mpdf->Output('', 'S'), 'total' => round((float) $lignes->sum('total'), 2)];
+    }
+
+    private function htmlPage(Professeur $prof, int $annee, int $mois, Collection $page, ?string $signature): string
+    {
+        $mois = mb_strtoupper(Carbon::create($annee, $mois, 1)->locale('fr')->translatedFormat('F Y'));
+        $nom = mb_strtoupper($prof->nom).' '.$prof->prenom;
+        $compte = trim(chunk_split((string) $prof->compte_bancaire, 4, ' '));
+
+        $corps = '';
+        for ($i = 0; $i < self::LIGNES_PAR_PAGE; $i++) {
+            $l = $page->get($i);
+            $corps .= $l
+                ? '<tr><td>'.Carbon::parse($l['date'])->format('d/m/Y').'</td><td>'.e($l['objet']).'</td><td class="r">'.$this->euro($l['unite']).'</td><td class="c">'.$this->nombre($l['nombre']).'</td><td class="r">'.$this->euro($l['total']).'</td></tr>'
+                : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td class="r">'.$this->euro(0).'</td></tr>';
+        }
+        $totalNombre = $page->sum('nombre');
+        $total = $page->sum('total');
+        $signe = $signature ? Carbon::parse($signature)->format('d/m/Y').' — signé électroniquement par le volontaire' : '';
+        $logo = resource_path('pdf/logo-logiscool.jpg');
+
+        return <<<HTML
+<div style="text-align:center"><img src="{$logo}" style="height:17mm"></div>
+<h1 style="text-align:center;font-size:17pt;text-decoration:underline;margin:10mm 0 6mm">FICHE DE DÉFRAIEMENT - VOLONTARIAT</h1>
+<h2 style="text-align:center;font-size:13pt;margin:0 0 9mm">MOIS DE : {$mois}</h2>
+<p style="margin:0 0 4mm">Nom et Prénom du volontaire : {$nom}</p>
+<p style="margin:0 0 5mm">Compte bancaire n° : {$compte}</p>
+<table style="width:100%;border-collapse:collapse;font-size:8.5pt" border="1" cellpadding="1.2">
+<thead><tr><th style="width:17%">DATE</th><th style="width:33%">OBJET</th><th style="width:17%">DÉFRAIEMENT</th><th style="width:15%">NOMBRE</th><th style="width:18%">TOTAL</th></tr></thead>
+<tbody>{$corps}
+<tr><th style="text-align:left">TOTAL</th><td></td><td></td><th>{$this->nombre($totalNombre)}</th><th class="r" style="text-align:right">{$this->euro($total)}</th></tr></tbody></table>
+<p style="margin-top:9mm">Date et signature : {$signe}</p>
+<style>td.r{text-align:right}td.c{text-align:center}</style>
+HTML;
+    }
+
+    private function htmlPied(): string
+    {
+        $a = config('logiscool.association');
+
+        return '<div style="text-align:center"><b style="font-family:serif;font-size:12pt">'.e($a['nom']).'</b><br><span style="font-family:serif;font-size:8pt">RPM : '.e($a['rpm']).'<br>Banque : '.e($a['banque']).'<br>'.e($a['adresse']).'</span></div>';
+    }
+
+    private function euro(float $v): string
+    {
+        return number_format($v, 2, ',', ' ').' €';
+    }
+
+    private function nombre(float $v): string
+    {
+        return rtrim(rtrim(number_format($v, 2, ',', ''), '0'), ',');
     }
 }

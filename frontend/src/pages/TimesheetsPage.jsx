@@ -13,7 +13,7 @@ import StatutBadge from '../components/ui/StatutBadge';
 import SessionsDuMoisTable from '../components/timesheets/SessionsDuMoisTable';
 import SyntheseMois from '../components/timesheets/SyntheseMois';
 import AjouterHeuresModal from '../components/timesheets/AjouterHeuresModal';
-import TimesheetConfirmationPage from '../components/TimesheetConfirmationPage';
+import ReconfirmationMois from '../components/timesheets/ReconfirmationMois';
 import { creerSaisie, soumettreMois, supprimerSaisie, useMonMois } from '../hooks/useTimesheets';
 import { useCours } from '../hooks/useCours';
 import { useToast } from '../hooks/useToast';
@@ -42,7 +42,6 @@ function MonMois({ user }) {
   const [edition, setEdition] = useState(null);
   const [suppression, setSuppression] = useState(null);
   const [soumission, setSoumission] = useState(false);
-  const [signature, setSignature] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -67,7 +66,6 @@ function MonMois({ user }) {
   function aller(delta) {
     const d = new Date(periode.annee, periode.mois - 1 + delta, 1);
     setPeriode({ annee: d.getFullYear(), mois: d.getMonth() + 1 });
-    setSignature(false);
     setErreur(null);
   }
 
@@ -130,6 +128,7 @@ function MonMois({ user }) {
             <strong>{erreur}</strong>
           </Banner>
         )}
+        <ReconfirmationMois key={`${periode.annee}-${periode.mois}`} professeurId={user.professeur?.id} annee={periode.annee} mois={periode.mois} onChange={mon.reload} />
         {mon.loading && <LoadingBlock message="Chargement de votre mois…" lignes={4} />}
         {mon.error && <ErrorBlock message="Impossible de charger votre mois. Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez." onRetry={mon.reload} />}
 
@@ -235,19 +234,8 @@ function MonMois({ user }) {
                   Soumettre le mois
                 </AdminButton>
               </div>
-              <p style={{ fontSize: '13px', marginBottom: 0 }}>
-                Signature mensuelle : « Confirmer et signer ce mois » puis PDF. Elle est proposée une fois vos heures confirmées par la direction.
-              </p>
-              {!signature && (
-                <AdminButton variant="secondary" onClick={() => setSignature(true)} disabled={!data.peut_signer} style={{ marginTop: '8px' }}>
-                  Confirmer et signer ce mois
-                </AdminButton>
-              )}
             </Section>
 
-            {signature && (
-              <TimesheetConfirmationPage professeurId={user.professeur?.id} year={periode.annee} month={periode.mois} />
-            )}
           </>
         )}
       </AdminPageContent>

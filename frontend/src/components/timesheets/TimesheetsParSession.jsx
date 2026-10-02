@@ -7,7 +7,7 @@ import StatutBadge from '../ui/StatutBadge';
 import LinkButton from '../ui/LinkButton';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '../ui/DataStates';
 import ValiderLotModal from './ValiderLotModal';
-import { useListeSaisies, useSessionsSansHeures } from '../../hooks/useTimesheets';
+import { usePlafondJournalier, useListeSaisies, useSessionsSansHeures } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
 import { STATUTS_TIMESHEET, TYPES_ACTIVITE, getStatut } from '../../utils/statuts';
 import { formatDateCourte } from '../../utils/dates';
@@ -29,6 +29,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
   const toast = useToast();
   const [annee, moisNum] = mois.split('-').map(Number);
   const dates = { date_from: `${mois}-01`, date_to: `${mois}-${String(dernierJour(annee, moisNum)).padStart(2, '0')}` };
+  const plafond = usePlafondJournalier(annee);
   const saisies = useListeSaisies(dates);
   const sansHeures = useSessionsSansHeures(dates);
   const [classeId, setClasseId] = useState('');
@@ -197,8 +198,9 @@ export default function TimesheetsParSession({ mois, onChange }) {
         )}
       </Section>
 
-      {lot && (
+      {lot && plafond != null && (
         <ValiderLotModal
+          plafond={plafond}
           selection={choisies}
           toutesLesSaisies={saisies.data || []}
           annee={annee}

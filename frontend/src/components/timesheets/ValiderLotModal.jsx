@@ -9,9 +9,6 @@ import { getErrorData, getErrorMessage } from '../../api/errors';
 import { formatDateCourte } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 
-/** Plafond journalier de défraiement (même valeur que le serveur : 44,02 €). */
-export const PLAFOND_JOURNALIER = 44.02;
-
 /**
  * Validation en lot avec lissage (mock-up 03, Q21) : récapitulatif, puis, pour chaque jour qui dépasse le plafond,
  * l'aperçu du lissage proposé (montant et date cible modifiables) ; « Lisser puis valider » ou « Valider sans lisser ».
@@ -22,10 +19,11 @@ export const PLAFOND_JOURNALIER = 44.02;
  * @param {object[]} props.toutesLesSaisies saisies du mois (pour détecter les dépassements par professeur et par jour)
  * @param {number} props.annee
  * @param {number} props.mois
+ * @param {number} props.plafond plafond journalier (€) paramétré pour l'année (TS-00)
  * @param {() => void} props.onClose
  * @param {(message: string) => void} props.onDone
  */
-export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mois, onClose, onDone }) {
+export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mois, plafond: PLAFOND_JOURNALIER, onClose, onDone }) {
   const [propositions, setPropositions] = useState(null); // [{ cle, saisie, jour, depassement, date, montant, actif, note }]
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -43,7 +41,7 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
       .map(([cle, total]) => ({ cle, total }))
       .map((d) => ({ ...d, saisie: selection.find((t) => `${t.professeur_id}|${t.date_prestation.slice(0, 10)}` === d.cle) }))
       .filter((d) => d.saisie);
-  }, [selection, toutesLesSaisies]);
+  }, [selection, toutesLesSaisies, PLAFOND_JOURNALIER]);
 
   useEffect(() => {
     let annule = false;

@@ -56,13 +56,15 @@ class Timesheet extends Model
 
     public const STATUT_CONFIRME = 'confirme';
 
+    public const STATUT_CONTESTE = 'conteste';
+
     public const STATUT_GENERE = 'genere';
 
-    public const STATUTS = [self::STATUT_BROUILLON, self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_GENERE];
+    public const STATUTS = [self::STATUT_BROUILLON, self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_CONTESTE, self::STATUT_GENERE];
 
     // Verrouillées : toute saisie qui n'est plus un brouillon (soumise, confirmée, générée).
     public function isLocked(): bool
     {
-        return in_array($this->statut_validation, [self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_GENERE], true);
+        return in_array($this->statut_validation, [self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_CONTESTE, self::STATUT_GENERE], true);
     }
 }

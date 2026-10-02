@@ -19,6 +19,7 @@ class Professeur extends Model
         'nom',
         'email',
         'telephone',
+        'compte_bancaire',
         'statut',
         'date_entree',
         'date_sortie',

@@ -34,6 +34,7 @@ import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
 import SharePage from './pages/SharePage';
 import StaffAdminPage from './pages/admin/StaffAdminPage';
+import TimesheetParametresPage from './pages/admin/TimesheetParametresPage';
 
 const STAFF = ['admin', 'directeur'];
 const PORTAL = ['professeur', 'directeur', 'admin'];
@@ -242,6 +243,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <AdminTimesheetsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/timesheets/parametres"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <TimesheetParametresPage />
                 </ProtectedRoute>
               }
             />

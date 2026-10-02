@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import NotificationsBell from '../components/NotificationsBell';
+import ThemeToggle from '../components/ThemeToggle';
 
 const navClass = ({ isActive }) => (isActive ? 'active' : undefined);
 
@@ -56,6 +58,9 @@ export default function PortalLayout() {
               <NavLink to="/admin/timesheets" className={navClass}>
                 📊 Timesheets
               </NavLink>
+              <NavLink to="/admin/timesheets/parametres" className={navClass}>
+                ⚙️ Paramètres timesheets
+              </NavLink>
               <NavLink to="/admin/professeurs" className={navClass}>
                 👨‍🏫 Professeurs & Tarifs
               </NavLink>
@@ -100,12 +105,16 @@ export default function PortalLayout() {
           <span>
             {user?.name} ({user?.role})
           </span>
+          <ThemeToggle />
+          <NotificationsBell />
           <button onClick={logout}>Déconnexion</button>
         </div>
       </aside>
 
       <main className="portal-main">
-        <Outlet />
+        <div className="portal-page">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

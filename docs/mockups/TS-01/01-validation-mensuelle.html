@@ -1,0 +1,105 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Validation mensuelle des timesheets — Maquette TS-01</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--sch:#7c3aed;--sch-l:#ede9fe}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--t1);background:var(--bg)}
+h1,h2,h3,p{margin:0}button{font:inherit;cursor:pointer}
+.mockbar{position:sticky;top:0;z-index:9;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+main{max-width:1180px;margin:0 auto;padding:20px 16px}
+.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+.kpi{flex:1;min-width:130px;border:1px solid var(--bd);border-radius:8px;padding:10px;background:#fff}.kpi b{font-size:22px;display:block}.kpi span{color:var(--t3);font-size:12px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:13px;vertical-align:middle}th{color:var(--t3);font-weight:600;font-size:12px}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.b.g{background:#f3f4f6;color:var(--t2)}.b.bl{background:var(--primary-l);color:#1d4ed8}.b.o{background:var(--warn-l);color:var(--warn-d)}.b.r{background:var(--err-l);color:var(--err-d)}.b.v{background:var(--ok-l);color:var(--ok-d)}.b.p{background:var(--sch-l);color:var(--sch)}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:7px;padding:6px 12px}.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}.btn.off{opacity:.45;cursor:not-allowed}.btn.sm{padding:3px 9px;font-size:12px}
+.steps{display:flex;gap:4px;flex-wrap:wrap}.steps span{padding:4px 10px;border-radius:99px;background:#f3f4f6;font-size:12px;color:var(--t3)}.steps .d{background:var(--ok-l);color:var(--ok-d)}.steps .c{background:var(--primary);color:#fff;font-weight:700}
+.grid2{display:grid;grid-template-columns:3fr 2fr;gap:16px}@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.old{text-decoration:line-through;color:var(--t3)}.mod{background:var(--warn-l)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-size:11px}.cal div{border:1px solid var(--bd);border-radius:5px;padding:3px;min-height:46px;background:#fff}.cal .h{background:var(--ok-l)}.cal .x{background:var(--err-l);border-color:var(--err)}.cal .e{background:#f9fafb;color:#bbb}
+.modal{border:2px dashed var(--primary);border-radius:10px;padding:16px;background:#fff;margin-top:16px}
+label{display:block;font-size:12px;color:var(--t2);margin:8px 0 3px}input,select,textarea{width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font:inherit}
+.note{font-size:12px;color:var(--t3);margin-top:8px}.alert{padding:10px 12px;border-radius:8px;background:var(--warn-l);color:var(--warn-d);margin-bottom:12px}
+</style></head><body>
+<div class="mockbar"><strong>MAQUETTE TS-01</strong><span>Validation mensuelle — directeur / admin</span>
+<span class="row" style="gap:6px"><button data-s="a" aria-pressed="true">A. Synthèse du mois</button><button data-s="b" aria-pressed="false">B. Détail professeur</button><button data-s="c" aria-pressed="false">C. Côté professeur</button><button data-s="d" aria-pressed="false">D. PDF</button><button data-s="e" aria-pressed="false">E. Paramètres &amp; compte bancaire</button></span></div>
+<main>
+
+<!-- A -->
+<section class="screen on" id="a">
+<div class="row sp"><h1>Timesheets — Validation du mois</h1><div class="row"><button class="btn">‹</button><b>Octobre 2026</b><button class="btn">›</button></div></div>
+<p class="note">Menu : Administration → Timesheets (onglet « Validation du mois » ; l'onglet « Par session » existant reste).</p>
+<div class="row" style="margin:14px 0"><div class="kpi"><b>12</b><span>profs ayant soumis</span></div><div class="kpi"><b>5</b><span>à valider</span></div><div class="kpi"><b>3</b><span>attente professeur</span></div><div class="kpi"><b style="color:var(--err-d)">1</b><span>contesté</span></div><div class="kpi"><b>3</b><span>prêts PDF</span></div></div>
+<div class="card">
+<div class="row sp" style="margin-bottom:10px"><div class="row"><input style="width:200px" placeholder="Rechercher un professeur"><select style="width:190px"><option>Tous les statuts</option><option>À valider</option><option>Attente professeur</option><option>Contesté</option><option>Prêt PDF</option></select></div>
+<div class="row"><button class="btn">Exporter CSV</button><button class="btn pri">Valider la sélection (2)</button><button class="btn off" title="Tous les profs sélectionnés doivent être « Prêt PDF »">Générer les PDF (zip)</button></div></div>
+<table><thead><tr><th></th><th>Professeur</th><th>Statut du mois</th><th>H. animation</th><th>H. préparation</th><th>Total</th><th>Lignes ajustées</th><th>Alertes</th><th>Dernière action</th><th></th></tr></thead><tbody>
+<tr><td><input type="checkbox" checked style="width:auto"></td><td>Alice Martin</td><td><span class="b bl">À valider</span></td><td>18 h</td><td>6 h</td><td>612,40 €</td><td>—</td><td>—</td><td>Soumis 28/10</td><td><button class="btn sm">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" checked style="width:auto"></td><td>Bruno Leroy</td><td><span class="b bl">À valider</span></td><td>22 h</td><td>8 h</td><td>744,00 €</td><td>—</td><td><span class="b o">⚠ 2 dépassements 44,02 €</span></td><td>Soumis 29/10</td><td><button class="btn sm">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Chloé Dubois</td><td><span class="b o">Ajusté – attente prof</span></td><td>16 h</td><td>4 h</td><td>498,20 €</td><td>3</td><td>—</td><td>Lissé par Directeur 30/10</td><td><button class="btn sm">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>David Petit</td><td><span class="b r">Contesté</span></td><td>20 h</td><td>5 h</td><td>655,10 €</td><td>2</td><td><span class="b r">Motif prof</span></td><td>Contesté 31/10</td><td><button class="btn sm">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Emma Roux</td><td><span class="b v">Prêt PDF</span></td><td>14 h</td><td>3 h</td><td>431,60 €</td><td>—</td><td>—</td><td>Signé 30/10</td><td><button class="btn sm">Ouvrir</button></td></tr>
+<tr><td><input type="checkbox" style="width:auto"></td><td>Félix Moreau</td><td><span class="b g">Brouillon</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="b o">⚠ 4 sessions sans heures</span></td><td>—</td><td><button class="btn sm">Ouvrir</button></td></tr>
+</tbody></table>
+<p class="note">Valider en lot : atomique. Si un professeur bloque, la liste des bloquants s'affiche et rien n'est modifié. Vide : « Aucune timesheet soumise pour ce mois ».</p></div>
+</section>
+
+<!-- B -->
+<section class="screen" id="b">
+<div class="card"><div class="row sp"><div><h2>Bruno Leroy — Octobre 2026</h2><div class="steps" style="margin-top:8px"><span class="d">Soumis ✓</span><span class="c">Revue</span><span>Reconfirmation prof</span><span>Prêt</span><span>PDF</span></div></div>
+<div class="row"><span style="text-align:right">Total <b>744,00 €</b> · 30 h</span><button class="btn pri">Valider le mois</button><button class="btn">Demander reconfirmation</button><button class="btn off">Générer PDF</button></div></div></div>
+<div class="alert">⚠ 2 jours dépassent le plafond de 44,02 € (08/10 : 58,00 € · 15/10 : 51,50 €). <button class="btn sm" style="margin-left:8px">Lisser le mois…</button></div>
+<div class="grid2"><div class="card"><h3 style="margin-bottom:8px">Lignes</h3>
+<table><thead><tr><th>Date</th><th>Session / cours</th><th>Type</th><th>Heures</th><th>€</th><th>Statut</th><th></th></tr></thead><tbody>
+<tr><td>08/10</td><td>Scratch – Cl. A / S3</td><td>Animation</td><td>3 h</td><td>58,00 €</td><td><span class="b bl">Soumis</span></td><td><button class="btn sm">Adapter</button> <button class="btn sm">Lisser</button></td></tr>
+<tr class="mod"><td>10/10</td><td>Scratch – Cl. A / S3</td><td>Préparation</td><td><span class="old">1 h</span> 2 h</td><td>30,00 €</td><td><span class="b o">Ajusté</span> <span class="b p">modifié</span></td><td><button class="btn sm">Adapter</button></td></tr>
+<tr><td>15/10</td><td>Python – Cl. C / S2</td><td>Animation</td><td>2,5 h</td><td>51,50 €</td><td><span class="b bl">Soumis</span></td><td><button class="btn sm">Adapter</button> <button class="btn sm">Lisser</button></td></tr>
+<tr><td>22/10</td><td>(libre) Réunion pédagogique</td><td>Préparation</td><td>1 h</td><td>20,00 €</td><td><span class="b bl">Soumis</span></td><td><button class="btn sm">Adapter</button></td></tr></tbody></table>
+<h3 style="margin:14px 0 6px">Historique</h3><table><tbody><tr><td>30/10 14:02</td><td>Directeur</td><td>Modif. heures 10/10</td><td>1 h → 2 h</td><td>« Réunion confirmée avec la direction »</td></tr><tr><td>29/10 09:10</td><td>Bruno Leroy</td><td>Soumission du mois</td><td></td><td></td></tr></tbody></table></div>
+<div class="card"><h3 style="margin-bottom:8px">Calendrier — € par jour</h3><div class="cal"><div class="e">1</div><div class="e">2</div><div class="e">3</div><div class="e">4</div><div class="e">5</div><div class="e">6</div><div class="e">7</div><div class="x">8<br>58,00 €</div><div class="e">9</div><div class="h">10<br>30,00 €</div><div class="e">11</div><div class="e">12</div><div class="e">13</div><div class="e">14</div><div class="x">15<br>51,50 €</div><div class="e">16</div><div class="e">17</div><div class="e">18</div><div class="e">19</div><div class="e">20</div><div class="e">21</div><div class="h">22<br>20,00 €</div></div><p class="note">Rouge : au-delà de 44,02 €/jour.</p></div></div>
+
+<div class="modal"><h3>Modale « Lisser le mois »</h3>
+<div class="row" style="margin:8px 0"><label style="margin:0"><input type="radio" name="m" checked style="width:auto"> Dépassements uniquement (existant)</label><label style="margin:0"><input type="radio" name="m" style="width:auto"> Auto sur le mois</label><label style="margin:0"><input type="radio" name="m" style="width:auto"> Manuel (date + montant)</label></div>
+<table><thead><tr><th>Jour</th><th>Avant</th><th>Après</th></tr></thead><tbody><tr><td>08/10</td><td>58,00 €</td><td>44,02 €</td></tr><tr><td>09/10</td><td>0,00 €</td><td>13,98 €</td></tr><tr><td>15/10</td><td>51,50 €</td><td>44,02 €</td></tr><tr><td>16/10</td><td>0,00 €</td><td>7,48 €</td></tr><tr><th>Total mois</th><th>744,00 €</th><th>744,00 € (inchangé ✓)</th></tr></tbody></table>
+<label>Motif (obligatoire)</label><textarea rows="2" placeholder="Ex. : respect du plafond journalier"></textarea><div class="row" style="margin-top:10px"><button class="btn">Annuler</button><button class="btn pri off">Appliquer et demander reconfirmation</button></div>
+<p class="note">La modale « Adapter » est identique : heures, date, type + aperçu avant/après (ligne, jour, mois) + motif obligatoire.</p></div>
+</section>
+
+<!-- C -->
+<section class="screen" id="c"><h1>Mes timesheets — Octobre 2026</h1><p class="note">Vue professeur (page existante), notification cloche + email « Votre mois a été ajusté ».</p>
+<div class="alert" style="margin-top:12px"><b>Votre mois a été ajusté par la direction.</b> 1 ligne modifiée. Merci de confirmer ou contester.</div>
+<div class="card"><table><thead><tr><th>Date</th><th>Ligne</th><th>Avant</th><th>Après</th><th>Motif</th></tr></thead><tbody><tr><td>10/10</td><td>Préparation Scratch</td><td class="old">1 h · 20,00 €</td><td><b>2 h · 30,00 €</b></td><td>Réunion confirmée avec la direction</td></tr></tbody></table>
+<div class="row" style="margin-top:12px"><button class="btn pri">Accepter et signer</button><button class="btn">Contester…</button></div>
+<div class="modal"><b>Contester</b><label>Motif (obligatoire)</label><textarea rows="2"></textarea><p class="note">Le mois repasse « en revue » et le staff est relancé. Le PDF reste bloqué.</p></div></div>
+<div class="card"><b>Après signature :</b> bandeau « Mois confirmé — en attente du PDF » ; le PDF devient téléchargeable une fois généré.</div></section>
+
+<!-- D -->
+<section class="screen" id="d"><h1>Génération du PDF</h1>
+<div class="grid2"><div class="card"><h3>Depuis le détail professeur (individuel)</h3><p class="note" style="margin-bottom:8px">Bouton actif seulement si toutes les lignes sont validées ET signées.</p>
+<div class="alert">Bouton désactivé : « 2 lignes en attente de la signature du professeur ».</div>
+<div class="row"><button class="btn pri">Aperçu PDF</button><button class="btn pri">Générer et télécharger</button></div>
+<h3 style="margin:16px 0 6px">Depuis la synthèse (lot)</h3><p class="note">« Générer les PDF (zip) » : actif si tous les profs sélectionnés sont « Prêt PDF » ; sinon liste des bloquants. Statut → « Généré » + lien de téléchargement.</p>
+<h3 style="margin:16px 0 6px">Admin seul</h3><button class="btn">Déverrouiller après PDF (motif obligatoire → nouveau PDF versionné)</button></div>
+<div class="card" style="background:#fff;font-family:Arial,sans-serif;max-width:520px;margin:0 auto"><h3 style="color:var(--t3);font-size:11px;font-family:sans-serif">APERÇU — reproduit la « Fiche de défraiement – Volontariat » (modèle 202606)</h3>
+<div style="text-align:center;margin:8px 0 14px"><img src="logo-logiscool.jpg" alt="Logiscool" style="height:44px"></div>
+<div style="text-align:center"><b style="font-size:18px;text-decoration:underline">FICHE DE DÉFRAIEMENT - VOLONTARIAT</b><p style="margin:14px 0"><b>MOIS DE : OCTOBRE 2026</b></p></div>
+<p style="font-size:12px">Nom et Prénom du volontaire : LEROY Bruno</p><p style="font-size:12px;margin:6px 0 10px">Compte bancaire n° : BE00 0000 0000 0000</p>
+<table style="border:1px solid #000;font-size:11px"><thead><tr><th style="color:#000;border:1px solid #000">DATE</th><th style="color:#000;border:1px solid #000">OBJET</th><th style="color:#000;border:1px solid #000">DÉFRAIEMENT</th><th style="color:#000;border:1px solid #000">NOMBRE</th><th style="color:#000;border:1px solid #000">TOTAL</th></tr></thead><tbody>
+<tr><td>08/10/2026</td><td>Animation</td><td>11,75 €</td><td>3</td><td>35,25 €</td></tr><tr><td>10/10/2026</td><td>Cours</td><td>11,75 €</td><td>2</td><td>23,50 €</td></tr><tr><td>12/10/2026</td><td>Préparation</td><td>11,75 €</td><td>1</td><td>11,75 €</td></tr><tr><td>30/10/2026</td><td>Frais de déplacement</td><td>7,50 €</td><td>1</td><td>7,50 €</td></tr>
+<tr><td>&nbsp;</td><td></td><td></td><td></td><td>0,00 €</td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td><td>0,00 €</td></tr><tr><td colspan="5" style="text-align:center;color:#999">… 15 lignes par page (lignes vides à 0,00 €) · page 2 créée au-delà de 15 lignes</td></tr>
+<tr><th style="color:#000">TOTAL</th><td></td><td></td><th style="color:#000">7</th><th style="color:#000">78,00 €</th></tr></tbody></table>
+<p style="font-size:12px;margin:14px 0 40px">Date et signature : <i style="color:#999">30/10/2026 — [signature du professeur]</i></p>
+<div style="text-align:center;font-size:11px"><b style="font-family:serif;font-size:14px">Code IT Bryan ! asbl</b><br>RPM : BE0770.479.710 · Banque : BE02 1431 1606 4140<br>Rampe Sainte Waudru 8 – 7000 MONS</div></div></div></section>
+<section class="screen" id="e"><h1>Paramètres et fiche professeur</h1>
+<div class="grid2"><div class="card"><h3>Paramètres timesheets (directeur et admin)</h3><p class="note">Administration → Paramètres → Timesheets. Valeur par année civile, historisée.</p>
+<label>Année</label><select><option>2026</option><option>2025</option></select>
+<label>Plafond journalier (€/jour)</label><input value="44,02">
+<label>Tarif défraiement horaire par objet (€)</label><table><tbody><tr><td>Animation</td><td>11,75</td></tr><tr><td>Cours</td><td>11,75</td></tr><tr><td>Préparation</td><td>11,75</td></tr><tr><td>Frais de déplacement</td><td>7,50</td></tr></tbody></table>
+<div class="row" style="margin-top:10px"><button class="btn pri">Enregistrer</button></div><p class="note">Le plafond sert aux alertes (écrans A/B) et au lissage. Il n'est pas imprimé sur le PDF. Un changement n'affecte pas les mois déjà « Généré ». Chaque modification est tracée (qui, quand, ancienne valeur).</p></div>
+<div class="card"><h3>Détail professeur — onglet Informations</h3><label>Nom / Prénom</label><input value="Leroy Bruno" disabled><label>Email</label><input value="bruno@exemple.be" disabled>
+<label>Compte bancaire n° (IBAN) <span class="b p">directeur / admin</span></label><input value="BE00 0000 0000 0000"><p class="note">Format IBAN validé (BE…). Imprimé sur la fiche PDF. Si vide : le PDF est bloqué avec « Compte bancaire manquant », et l'alerte apparaît dans la synthèse (écran A) avec lien vers cette fiche. Visible du professeur lui-même en lecture seule ; modification tracée.</p><button class="btn pri">Enregistrer</button></div></div></section>
+</main>
+<script>document.querySelectorAll('.mockbar [data-s]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mockbar [data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s))})</script>
+</body></html>

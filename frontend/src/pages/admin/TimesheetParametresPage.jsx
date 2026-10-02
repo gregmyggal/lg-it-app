@@ -1,0 +1,129 @@
+import { useEffect, useState } from 'react';
+import client from '../../api/client';
+import { AdminPageHeader, AdminPageContent, AdminCard, AdminCardHeader, AdminCardBody } from '../../components/AdminPageLayout';
+import { AdminFormField, AdminInput, AdminSelect } from '../../components/AdminFormField';
+import AdminButton from '../../components/AdminButton';
+import Banner from '../../components/ui/Banner';
+import { LoadingBlock } from '../../components/ui/DataStates';
+import { useToast } from '../../hooks/useToast';
+import { formatDateHeure } from '../../utils/dates';
+import { getErrorMessage, getFieldErrors } from '../../api/errors';
+
+const ANNEE_COURANTE = new Date().getFullYear();
+const ANNEES = [ANNEE_COURANTE + 1, ANNEE_COURANTE, ANNEE_COURANTE - 1, ANNEE_COURANTE - 2];
+
+/** Plafonds de défraiement par année civile (directeur et admin). Le serveur reste la source de vérité. */
+export default function TimesheetParametresPage() {
+  const toast = useToast();
+  const [annee, setAnnee] = useState(ANNEE_COURANTE);
+  const [donnees, setDonnees] = useState(null);
+  const [historique, setHistorique] = useState([]);
+  const [journalier, setJournalier] = useState('');
+  const [annuel, setAnnuel] = useState('');
+  const [deplacement, setDeplacement] = useState('');
+  const [erreurs, setErreurs] = useState({});
+  const [erreurGlobale, setErreurGlobale] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+
+  async function charger(a) {
+    setDonnees(null);
+    try {
+      const res = await client.get(`/timesheet-parametres/${a}`);
+      setDonnees(res.data.data);
+      setHistorique(res.data.historique);
+      setJournalier(String(res.data.data.plafond_journalier_eur));
+      setAnnuel(String(res.data.data.plafond_annuel_eur));
+      setDeplacement(String(res.data.data.frais_deplacement_eur));
+      setErreurGlobale(null);
+    } catch (err) {
+      setErreurGlobale(getErrorMessage(err, 'Impossible de charger les paramètres'));
+    }
+  }
+
+  useEffect(() => {
+    charger(annee);
+  }, [annee]);
+
+  async function enregistrer(e) {
+    e.preventDefault();
+    setEnvoi(true);
+    setErreurs({});
+    setErreurGlobale(null);
+    try {
+      await client.put(`/timesheet-parametres/${annee}`, {
+        plafond_journalier_eur: journalier.replace(',', '.'),
+        plafond_annuel_eur: annuel.replace(',', '.'),
+        frais_deplacement_eur: deplacement.replace(',', '.'),
+      });
+      toast.success(`Plafonds ${annee} enregistrés.`);
+      charger(annee);
+    } catch (err) {
+      setErreurs(getFieldErrors(err));
+      setErreurGlobale(getErrorMessage(err, 'Enregistrement impossible'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  return (
+    <>
+      <AdminPageHeader
+        icon="⚙️"
+        title="Paramètres des timesheets"
+        description="Plafonds de défraiement, adaptés chaque année"
+      />
+      <AdminPageContent>
+        {erreurGlobale && <Banner tone="error" role="alert">{erreurGlobale}</Banner>}
+        <AdminCard>
+          <AdminCardHeader title="Plafonds par année civile" />
+          <AdminCardBody>
+            <AdminFormField label="Année" htmlFor="param-annee">
+              <AdminSelect id="param-annee" value={annee} onChange={(e) => setAnnee(Number(e.target.value))}>
+                {ANNEES.map((a) => <option key={a} value={a}>{a}</option>)}
+              </AdminSelect>
+            </AdminFormField>
+            {!donnees ? (
+              <LoadingBlock />
+            ) : (
+              <form onSubmit={enregistrer} noValidate>
+                {donnees.herite && (
+                  <Banner tone="info">
+                    Aucun paramétrage pour {annee} : les valeurs de l’année précédente s’appliquent. Enregistrez pour les fixer.
+                  </Banner>
+                )}
+                <AdminFormField label="Plafond journalier (€/jour)" htmlFor="param-journalier" error={erreurs.plafond_journalier_eur}>
+                  <AdminInput id="param-journalier" inputMode="decimal" value={journalier} onChange={(e) => setJournalier(e.target.value)} />
+                </AdminFormField>
+                <AdminFormField label="Plafond annuel (€/an)" htmlFor="param-annuel" error={erreurs.plafond_annuel_eur}>
+                  <AdminInput id="param-annuel" inputMode="decimal" value={annuel} onChange={(e) => setAnnuel(e.target.value)} />
+                </AdminFormField>
+                <AdminFormField label="Frais de déplacement (€ par déplacement)" htmlFor="param-deplacement" error={erreurs.frais_deplacement_eur}>
+                  <AdminInput id="param-deplacement" inputMode="decimal" value={deplacement} onChange={(e) => setDeplacement(e.target.value)} />
+                </AdminFormField>
+                <p style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
+                  Les plafonds servent aux alertes et au lissage et ne sont pas imprimés sur le PDF. Le forfait multiplie le nombre de déplacements encodés. Chaque modification est tracée.
+                </p>
+                <AdminButton type="submit" disabled={envoi}>{envoi ? 'Enregistrement…' : 'Enregistrer'}</AdminButton>
+              </form>
+            )}
+          </AdminCardBody>
+        </AdminCard>
+
+        {historique.length > 0 && (
+          <AdminCard style={{ marginTop: 16 }}>
+            <AdminCardHeader title={`Historique ${annee}`} />
+            <AdminCardBody>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                {historique.map((h) => (
+                  <li key={h.id}>
+                    {formatDateHeure(h.created_at)} — {h.auteur || 'Système'} : journalier {h.plafond_journalier_avant} → {h.plafond_journalier_apres} €, annuel {h.plafond_annuel_avant} → {h.plafond_annuel_apres} €
+                  </li>
+                ))}
+              </ul>
+            </AdminCardBody>
+          </AdminCard>
+        )}
+      </AdminPageContent>
+    </>
+  );
+}

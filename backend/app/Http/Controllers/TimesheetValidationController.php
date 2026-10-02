@@ -6,6 +6,7 @@ use App\Exceptions\RegleMetierException;
 use App\Models\CourseSession;
 use App\Models\Timesheet;
 use App\Services\TimesheetLissingService;
+use App\Services\TimesheetNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -67,7 +68,7 @@ class TimesheetValidationController extends Controller
      * R-T3-12 : applique les lissages demandés puis confirme les saisies, en UNE transaction. Aucune saisie n'est
      * exclue pour cause de lissage ; si une saisie n'est pas validable, rien n'est modifié (422 + liste).
      */
-    public function validerLot(Request $request): JsonResponse
+    public function validerLot(Request $request, TimesheetNotifier $notifier): JsonResponse
     {
         $v = $request->validate([
             'ids' => ['required', 'array', 'min:1', 'max:200'],
@@ -75,12 +76,12 @@ class TimesheetValidationController extends Controller
             'lissages' => ['sometimes', 'array', 'max:200'],
             'lissages.*.timesheet_id' => ['required', 'integer', 'exists:timesheets,id'],
             'lissages.*.date_to' => ['required', 'date_format:Y-m-d'],
-            'lissages.*.montant_to_move' => ['required', 'numeric', 'min:0.01', 'max:44.02'],
+            'lissages.*.montant_to_move' => ['required', 'numeric', 'min:0.01'],
         ]);
         $user = $request->user();
         $lissages = $v['lissages'] ?? [];
 
-        return DB::transaction(function () use ($v, $user, $lissages) {
+        $reponse = DB::transaction(function () use ($v, $user, $lissages) {
             $saisies = Timesheet::whereIn('id', $v['ids'])->lockForUpdate()->get()->keyBy('id');
 
             $invalides = [];
@@ -124,5 +125,12 @@ class TimesheetValidationController extends Controller
 
             return response()->json(['validees' => $saisies->count(), 'lissages_appliques' => count($lissages)]);
         });
+
+        // Après validation : prévient chaque professeur dont le mois attend désormais sa signature.
+        Timesheet::with('professeur')->whereIn('id', $v['ids'])->get()
+            ->unique(fn (Timesheet $t) => $t->professeur_id.'|'.$t->date_prestation->format('Y-m'))
+            ->each(fn (Timesheet $t) => $notifier->siMoisAConfirmer($t->professeur, (int) $t->date_prestation->format('Y'), (int) $t->date_prestation->format('n')));
+
+        return $reponse;
     }
 }

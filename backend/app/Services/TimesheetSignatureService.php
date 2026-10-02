@@ -99,7 +99,7 @@ class TimesheetSignatureService
                 'depassements' => $monthData['depassements'],
             ],
             'conformite' => [
-                'max_par_jour' => 44.02,
+                'max_par_jour' => app(TimesheetParametreService::class)->plafondJournalier($year),
                 'conforme' => empty($monthData['depassements']),
                 'depassements_detectes' => count($monthData['depassements']),
             ],
@@ -107,8 +107,9 @@ class TimesheetSignatureService
     }
 
     /**
-     * Vérifie si un mois entier peut être signé
-     * (tous les timesheets confirmés, pas de dépassement)
+     * Vérifie si un mois peut être signé par le professeur : toutes ses saisies sont confirmées (ou déjà générées), au
+     * moins une attend sa signature (une saisie ajustée après signature la perd ; les autres restent signées), aucune
+     * contestation en cours et aucun dépassement du plafond journalier.
      */
     public function canSignMonth(int $professeurId, int $year, int $month): array
     {
@@ -118,23 +119,21 @@ class TimesheetSignatureService
             ->whereMonth('date_prestation', $month)
             ->get();
 
-        $notConfirmed = $timesheets->where('statut_validation', '!==', 'confirme');
-        $alreadySigned = $timesheets->whereNotNull('signature_professeur');
+        $contestees = $timesheets->where('statut_validation', 'conteste');
+        $nonConfirmees = $timesheets->whereNotIn('statut_validation', ['confirme', 'genere']);
+        $aSigner = $timesheets->where('statut_validation', 'confirme')->whereNull('signature_professeur');
 
         $lissingService = new TimesheetLissingService;
         $monthData = $lissingService->calculateMonthlyMontants($professeurId, $year, $month);
 
         return [
-            'can_sign' => (
-                $notConfirmed->isEmpty()
-                && $alreadySigned->isEmpty()
-                && empty($monthData['depassements'])
-            ),
-            'errors' => array_filter([
-                $notConfirmed->count() > 0 ? "{$notConfirmed->count()} entrée(s) non confirmées" : null,
-                $alreadySigned->count() > 0 ? 'Mois déjà signé' : null,
+            'can_sign' => $nonConfirmees->isEmpty() && $aSigner->isNotEmpty() && empty($monthData['depassements']),
+            'errors' => array_values(array_filter([
+                $contestees->isNotEmpty() ? 'Contestation en cours : en attente de la direction' : null,
+                $nonConfirmees->count() > $contestees->count() ? ($nonConfirmees->count() - $contestees->count()).' entrée(s) non confirmées' : null,
+                $nonConfirmees->isEmpty() && $aSigner->isEmpty() && $timesheets->isNotEmpty() ? 'Mois déjà signé' : null,
                 count($monthData['depassements']) > 0 ? 'Dépassements détectés' : null,
-            ]),
+            ])),
             'warnings' => [],
         ];
     }

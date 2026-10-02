@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 import TimesheetsParSession from '../components/timesheets/TimesheetsParSession';
+import DetailProfesseurMois from '../components/timesheets/DetailProfesseurMois';
+import SyntheseValidationMois from '../components/timesheets/SyntheseValidationMois';
+import AdapterSaisieModal from '../components/timesheets/AdapterSaisieModal';
+import { useToast } from '../hooks/useToast';
 import { useAuth } from '../auth/AuthContext';
 import AdminButton from '../components/AdminButton';
 import {
@@ -14,6 +19,7 @@ const STATUT_LABELS = {
   brouillon: 'Brouillon',
   soumis: 'Soumis',
   confirme: 'Confirmé',
+  conteste: 'Contesté',
   genere: 'Généré',
 };
 
@@ -21,6 +27,7 @@ const STATUT_COLORS = {
   brouillon: 'amber',
   soumis: 'blue',
   confirme: 'indigo',
+  conteste: 'red',
   genere: 'green',
 };
 
@@ -30,13 +37,27 @@ export default function AdminTimesheetsPage() {
   const [error, setError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [selectedProfesseur, setSelectedProfesseur] = useState(null);
-  const [viewMode, setViewMode] = useState('monthly'); // 'monthly', 'professor' ou 'session' (CLS-01 T3)
+  const [viewMode, setViewMode] = useState('validation'); // 'validation' (TS-01 T2), 'monthly', 'professor' ou 'session' (CLS-01 T3)
   const [professeurs, setProfesseurs] = useState([]);
   const [pdfGenerationHistory, setPdfGenerationHistory] = useState([]);
+  const [saisieAAdapter, setSaisieAAdapter] = useState(null);
+  const [params] = useSearchParams();
+  const toast = useToast();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Lien d'une notification (« conteste ses heures ») : ouvre directement le détail du professeur et du mois.
+  useEffect(() => {
+    const professeur = Number(params.get('professeur'));
+    const mois = params.get('mois');
+    if (professeur && /^\d{4}-\d{2}$/.test(mois || '')) {
+      setSelectedProfesseur(professeur);
+      setSelectedMonth(mois);
+      setViewMode('detail');
+    }
+  }, [params]);
 
   async function loadData() {
     try {
@@ -57,7 +78,7 @@ export default function AdminTimesheetsPage() {
 
   if (!timesheets) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-2)' }}>
         Chargement…
       </div>
     );
@@ -113,7 +134,7 @@ export default function AdminTimesheetsPage() {
       <AdminPageContent>
         {error && (
           <div style={{
-            background: '#fee2e2',
+            background: 'var(--tone-error-bg)',
             color: ADMIN_COLORS.error,
             padding: '16px',
             borderRadius: '8px',
@@ -125,17 +146,17 @@ export default function AdminTimesheetsPage() {
 
         {/* Contrôles */}
         <div style={{
-          background: 'white',
+          background: 'var(--c-card)',
           borderRadius: '8px',
           border: `1px solid ${ADMIN_COLORS.border}`,
           padding: '20px',
           marginBottom: '24px',
         }}>
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto auto',
+            display: 'flex',
+            flexWrap: 'wrap',
             gap: '16px',
-            alignItems: 'center',
+            alignItems: 'flex-end',
           }}>
             {/* Sélection du mois */}
             <div>
@@ -143,7 +164,7 @@ export default function AdminTimesheetsPage() {
                 display: 'block',
                 fontSize: '12px',
                 fontWeight: '600',
-                color: '#6b7280',
+                color: 'var(--c-text-2)',
                 marginBottom: '6px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
@@ -169,7 +190,7 @@ export default function AdminTimesheetsPage() {
                 display: 'block',
                 fontSize: '12px',
                 fontWeight: '600',
-                color: '#6b7280',
+                color: 'var(--c-text-2)',
                 marginBottom: '6px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
@@ -198,6 +219,13 @@ export default function AdminTimesheetsPage() {
 
             {/* Mode de vue */}
             <div style={{ display: 'flex', gap: '8px' }}>
+              <AdminButton
+                variant={viewMode === 'validation' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => setViewMode('validation')}
+              >
+                ✅ Validation
+              </AdminButton>
               <AdminButton
                 variant={viewMode === 'monthly' ? 'primary' : 'secondary'}
                 size="sm"
@@ -233,14 +261,38 @@ export default function AdminTimesheetsPage() {
           </div>
         </div>
 
+        {viewMode === 'validation' && (
+          <SyntheseValidationMois
+            mois={selectedMonth}
+            onMoisChange={setSelectedMonth}
+            onChange={loadData}
+            onOuvrir={(id) => {
+              setSelectedProfesseur(id);
+              setViewMode('detail');
+            }}
+          />
+        )}
+
+        {viewMode === 'detail' && selectedProfesseur && (
+          <DetailProfesseurMois
+            professeurId={selectedProfesseur}
+            mois={selectedMonth}
+            onRetour={() => {
+              setSelectedProfesseur(null);
+              setViewMode('validation');
+            }}
+            onChange={loadData}
+          />
+        )}
+
         {viewMode === 'session' && <TimesheetsParSession mois={selectedMonth} onChange={loadData} />}
 
-        {viewMode !== 'session' && (
+        {viewMode !== 'session' && viewMode !== 'validation' && viewMode !== 'detail' && (
           <>
         {/* Statistiques */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(180px, 14vw, 260px), 1fr))',
           gap: '16px',
           marginBottom: '24px',
         }}>
@@ -282,14 +334,14 @@ export default function AdminTimesheetsPage() {
         {viewMode === 'monthly' && (
           <>
             <div style={{
-              background: 'white',
+              background: 'var(--c-card)',
               borderRadius: '8px',
               border: `1px solid ${ADMIN_COLORS.border}`,
               overflow: 'hidden',
               marginBottom: '24px',
             }}>
               <div style={{
-                background: '#f9fafb',
+                background: 'var(--c-bg)',
                 padding: '16px',
                 borderBottom: `1px solid ${ADMIN_COLORS.border}`,
                 fontWeight: '600',
@@ -301,7 +353,7 @@ export default function AdminTimesheetsPage() {
                 borderCollapse: 'collapse',
               }}>
                 <thead>
-                  <tr style={{ background: '#f9fafb', borderBottom: `1px solid ${ADMIN_COLORS.border}` }}>
+                  <tr style={{ background: 'var(--c-bg)', borderBottom: `1px solid ${ADMIN_COLORS.border}` }}>
                     <th style={thStyle}>Professeur</th>
                     <th style={thStyle}>Heures</th>
                     <th style={thStyle}>Montant</th>
@@ -329,7 +381,7 @@ export default function AdminTimesheetsPage() {
                       >
                         <td style={tdStyle}>{profName}</td>
                         <td style={tdStyle}><strong>{profHeures.toFixed(1)}h</strong></td>
-                        <td style={{ ...tdStyle, color: '#059669', fontWeight: '600' }}>
+                        <td style={{ ...tdStyle, color: 'var(--c-success)', fontWeight: '600' }}>
                           {profMontant.toFixed(2)}€
                         </td>
                         <td style={tdStyle}>{statusCount.brouillon}</td>
@@ -346,15 +398,15 @@ export default function AdminTimesheetsPage() {
         )}
 
         {/* Vue Détaillée (masquée dans la vue par session, qui a ses propres tableaux) */}
-        {viewMode !== 'session' && (
+        {viewMode !== 'session' && viewMode !== 'validation' && viewMode !== 'detail' && (
         <div style={{
-          background: 'white',
+          background: 'var(--c-card)',
           borderRadius: '8px',
           border: `1px solid ${ADMIN_COLORS.border}`,
           overflow: 'hidden',
         }}>
           <div style={{
-            background: '#f9fafb',
+            background: 'var(--c-bg)',
             padding: '16px',
             borderBottom: `1px solid ${ADMIN_COLORS.border}`,
             fontWeight: '600',
@@ -366,19 +418,20 @@ export default function AdminTimesheetsPage() {
             borderCollapse: 'collapse',
           }}>
             <thead>
-              <tr style={{ background: '#f9fafb', borderBottom: `1px solid ${ADMIN_COLORS.border}` }}>
+              <tr style={{ background: 'var(--c-bg)', borderBottom: `1px solid ${ADMIN_COLORS.border}` }}>
                 <th style={thStyle}>Professeur</th>
                 <th style={thStyle}>Date</th>
                 <th style={thStyle}>Heures</th>
                 <th style={thStyle}>Tarif</th>
                 <th style={thStyle}>Montant</th>
                 <th style={thStyle}>Statut</th>
+                <th style={thStyle}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredTS.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+                  <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: 'var(--c-text-3)' }}>
                     Aucun timesheet pour cette période
                   </td>
                 </tr>
@@ -392,7 +445,7 @@ export default function AdminTimesheetsPage() {
                     <tr
                       key={ts.id}
                       style={{
-                        background: idx % 2 === 0 ? 'white' : '#f9fafb',
+                        background: idx % 2 === 0 ? 'var(--c-card)' : 'var(--c-bg)',
                         borderBottom: `1px solid ${ADMIN_COLORS.border}`,
                       }}
                     >
@@ -400,7 +453,7 @@ export default function AdminTimesheetsPage() {
                       <td style={tdStyle}>{ts.date_prestation?.slice(0, 10)}</td>
                       <td style={tdStyle}><strong>{ts.nombre_heures}h</strong></td>
                       <td style={tdStyle}>{parseFloat(tarif).toFixed(2)}€/h</td>
-                      <td style={{ ...tdStyle, fontWeight: '600', color: '#059669' }}>
+                      <td style={{ ...tdStyle, fontWeight: '600', color: 'var(--c-success)' }}>
                         {montant.toFixed(2)}€
                       </td>
                       <td style={tdStyle}>
@@ -408,6 +461,13 @@ export default function AdminTimesheetsPage() {
                           label={STATUT_LABELS[ts.statut_validation]}
                           color={STATUT_COLORS[ts.statut_validation]}
                         />
+                      </td>
+                      <td style={tdStyle}>
+                        {ts.can?.adapt && (
+                          <AdminButton variant="secondary" size="sm" onClick={() => setSaisieAAdapter(ts)}>
+                            Adapter
+                          </AdminButton>
+                        )}
                       </td>
                     </tr>
                   );
@@ -422,8 +482,8 @@ export default function AdminTimesheetsPage() {
         {monthHistory.length > 0 && (
           <div style={{
             marginTop: '24px',
-            background: '#f0fdf4',
-            border: `1px solid #86efac`,
+            background: 'var(--tone-success-bg)',
+            border: `1px solid var(--tone-success-bd)`,
             borderRadius: '8px',
             padding: '16px',
           }}>
@@ -433,7 +493,7 @@ export default function AdminTimesheetsPage() {
             <div style={{ display: 'grid', gap: '8px' }}>
               {monthHistory.map((h, idx) => (
                 <div key={idx} style={{
-                  background: 'white',
+                  background: 'var(--c-card)',
                   padding: '12px',
                   borderRadius: '6px',
                   display: 'flex',
@@ -457,6 +517,17 @@ export default function AdminTimesheetsPage() {
           </div>
         )}
       </AdminPageContent>
+      {saisieAAdapter && (
+        <AdapterSaisieModal
+          saisie={saisieAAdapter}
+          onClose={() => setSaisieAAdapter(null)}
+          onDone={(message) => {
+            setSaisieAAdapter(null);
+            toast.success(message);
+            loadData();
+          }}
+        />
+      )}
     </>
   );
 }
@@ -465,7 +536,7 @@ export default function AdminTimesheetsPage() {
 function StatCard({ title, value, icon, color }) {
   return (
     <div style={{
-      background: 'white',
+      background: 'var(--c-card)',
       borderRadius: '8px',
       border: `1px solid ${ADMIN_COLORS.border}`,
       padding: '20px',
@@ -480,7 +551,7 @@ function StatCard({ title, value, icon, color }) {
       <div style={{
         fontSize: '12px',
         fontWeight: '600',
-        color: '#6b7280',
+        color: 'var(--c-text-2)',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
         marginBottom: '8px',

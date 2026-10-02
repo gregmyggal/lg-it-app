@@ -22,7 +22,12 @@ class TimesheetService
 
     public const TYPE_PREPARATION = 'preparation';
 
-    public const TYPES = [self::TYPE_ANIMATION, self::TYPE_PREPARATION];
+    public const TYPE_COURS = 'cours';
+
+    /** Frais de déplacement : « nombre » = nombre de déplacements, montant forfaitaire par année (paramètres). */
+    public const TYPE_DEPLACEMENT = 'deplacement';
+
+    public const TYPES = [self::TYPE_ANIMATION, self::TYPE_COURS, self::TYPE_PREPARATION, self::TYPE_DEPLACEMENT];
 
     /**
      * Crée une saisie pour le professeur connecté.

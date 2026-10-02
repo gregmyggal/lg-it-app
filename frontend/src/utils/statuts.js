@@ -131,7 +131,18 @@ export const STATUTS_TIMESHEET = {
   brouillon: { label: 'Brouillon', tone: 'warning' },
   soumis: { label: 'Soumis', tone: 'info' },
   confirme: { label: 'Confirmé', tone: 'primary' },
+  conteste: { label: 'Contesté', tone: 'error' },
   genere: { label: 'Généré', tone: 'success' },
+};
+
+/** Statut du mois d'un professeur, CALCULÉ par le serveur à partir de ses saisies (TS-01 T2). */
+export const STATUTS_MOIS_PROF = {
+  brouillon: { label: 'Brouillon', tone: 'neutral' },
+  a_valider: { label: 'À valider', tone: 'info' },
+  attente_prof: { label: 'Attente professeur', tone: 'warning' },
+  conteste: { label: 'Contesté', tone: 'error' },
+  pret_pdf: { label: 'Prêt PDF', tone: 'success' },
+  genere: { label: 'Généré', tone: 'primary' },
 };
 
 /** État d'encodage CALCULÉ d'une session pour un professeur (pas un statut stocké) ; `a_encoder` = aucune saisie. */
@@ -143,7 +154,9 @@ export const ETATS_ENCODAGE = {
 /** Type d'activité d'une saisie. */
 export const TYPES_ACTIVITE = {
   animation: { label: 'Animation', tone: 'primary' },
+  cours: { label: 'Cours', tone: 'primary' },
   preparation: { label: 'Préparation', tone: 'info' },
+  deplacement: { label: 'Frais de déplacement', tone: 'neutral' },
 };
 
 /** Statuts du staff (admins et directeurs) */

@@ -22,6 +22,13 @@ use App\Http\Controllers\MesClassesController;
 use App\Http\Controllers\ProfesseurClasseController;
 use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\ProfesseurTarifController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\TimesheetConfirmationController;
+use App\Http\Controllers\TimesheetDetailMoisController;
+use App\Http\Controllers\TimesheetLissageController;
+use App\Http\Controllers\TimesheetParametreController;
+use App\Http\Controllers\TimesheetPdfController;
+use App\Http\Controllers\TimesheetSyntheseMoisController;
 use App\Http\Controllers\SessionProfesseurController;
 use App\Http\Controllers\ShareCodeController;
 use App\Http\Controllers\StaffController;
@@ -153,6 +160,10 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/calendar/views', [CalendarController::class, 'saveView']);
     Route::delete('/calendar/views/{view}', [CalendarController::class, 'deleteView']);
 
+    // TS-00 : plafonds de défraiement par année civile (directeur et admin)
+    Route::get('/timesheet-parametres/{annee}', [TimesheetParametreController::class, 'show'])->whereNumber('annee');
+    Route::put('/timesheet-parametres/{annee}', [TimesheetParametreController::class, 'update'])->whereNumber('annee');
+
     // Tarifs horaires des professeurs (admin seulement)
     Route::get('/professeurs/{professeur}/tarifs', [ProfesseurTarifController::class, 'index']);
     Route::post('/professeurs/{professeur}/tarifs', [ProfesseurTarifController::class, 'store']);
@@ -165,6 +176,22 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/timesheets/mon-mois', [TimesheetMoisController::class, 'monMois']);
     Route::post('/timesheets/soumettre-mois', [TimesheetMoisController::class, 'soumettreMois']);
     Route::get('/timesheets/sessions-sans-heures', [TimesheetValidationController::class, 'sessionsSansHeures']);
+    Route::get('/professeurs/{professeur}/timesheets-mois', [TimesheetDetailMoisController::class, 'show']);
+    Route::post('/professeurs/{professeur}/timesheets-mois/lissage/apercu', [TimesheetLissageController::class, 'apercu']);
+    Route::post('/professeurs/{professeur}/timesheets-mois/lissage', [TimesheetLissageController::class, 'appliquer']);
+    Route::post('/professeurs/{professeur}/timesheet-pdfs', [TimesheetPdfController::class, 'generer']);
+    Route::get('/professeurs/{professeur}/timesheet-pdfs', [TimesheetPdfController::class, 'index']);
+    Route::get('/professeurs/{professeur}/timesheet-pdfs/apercu', [TimesheetPdfController::class, 'apercu']);
+    Route::post('/professeurs/{professeur}/timesheets-mois/deverrouiller', [TimesheetPdfController::class, 'deverrouiller']);
+    Route::post('/timesheets-mois/pdf-lot', [TimesheetPdfController::class, 'lot']);
+    Route::get('/timesheet-pdfs/{pdf}/telecharger', [TimesheetPdfController::class, 'telecharger']);
+    Route::get('/timesheets/ma-confirmation', [TimesheetConfirmationController::class, 'etat']);
+    Route::post('/timesheets/contester-mois', [TimesheetConfirmationController::class, 'contester']);
+    Route::post('/professeurs/{professeur}/timesheets-mois/traiter-contestation', [TimesheetConfirmationController::class, 'traiter']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/lues', [NotificationController::class, 'toutesLues']);
+    Route::post('/notifications/{id}/lue', [NotificationController::class, 'lue']);
+    Route::get('/timesheets/mois-synthese', [TimesheetSyntheseMoisController::class, 'show']);
     Route::post('/timesheets/valider-lot', [TimesheetValidationController::class, 'validerLot']);
 
     Route::get('/timesheets', [TimesheetController::class, 'index']);
@@ -173,6 +200,8 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::put('/timesheets/{timesheet}', [TimesheetController::class, 'update']);
     Route::delete('/timesheets/{timesheet}', [TimesheetController::class, 'destroy']);
     Route::post('/timesheets/{timesheet}/submit', [TimesheetController::class, 'submit']);
+    Route::post('/timesheets/{timesheet}/adapter', [TimesheetController::class, 'adapter']);
+    Route::get('/timesheets/{timesheet}/historique', [TimesheetController::class, 'historique']);
     Route::post('/timesheets/{timesheet}/validate', [TimesheetController::class, 'validateEntry']);
 
     // Phase 1B: Lissage, Signature, Aperçu PDF
@@ -183,9 +212,6 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/timesheets/sign-month', [TimesheetController::class, 'signMonth']);
     Route::get('/timesheets/can-sign-month', [TimesheetController::class, 'canSignMonth']);
 
-    // Phase 2: Génération et téléchargement PDF
-    Route::post('/timesheets/generate-pdf', [TimesheetController::class, 'generatePdf']);
-    Route::get('/timesheets/download-pdf', [TimesheetController::class, 'downloadPdf']);
 
     // Liens de classe / réglages — polymorphes, {parentType} ∈ cours|stages|formations|anniversaires.
     // CLS-01 T4 : liens d'un COURS (versionnés), déclarés AVANT les routes génériques par type de parent.

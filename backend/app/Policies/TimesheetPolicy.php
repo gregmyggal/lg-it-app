@@ -71,6 +71,18 @@ class TimesheetPolicy
         return $user->isDirecteur() && $timesheet->statut_validation === Timesheet::STATUT_SOUMIS;
     }
 
+    // TS-01 T1 : le directeur et l'admin adaptent une saisie soumise ou confirmée (motif et trace obligatoires).
+    public function adapt(User $user, Timesheet $timesheet): bool
+    {
+        return $user->isStaff()
+            && in_array($timesheet->statut_validation, [Timesheet::STATUT_SOUMIS, Timesheet::STATUT_CONFIRME, Timesheet::STATUT_CONTESTE], true);
+    }
+
+    public function viewHistory(User $user, Timesheet $timesheet): bool
+    {
+        return $user->isStaff();
+    }
+
     private function isOwner(User $user, Timesheet $timesheet): bool
     {
         return $user->isProfesseur()

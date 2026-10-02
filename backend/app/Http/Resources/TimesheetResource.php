@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
+use App\Services\TarifResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -38,6 +39,7 @@ class TimesheetResource extends JsonResource
                 'delete' => (bool) $user?->can('delete', $this->resource),
                 'submit' => (bool) $user?->can('submit', $this->resource),
                 'validate' => (bool) $user?->can('validateEntry', $this->resource),
+                'adapt' => (bool) $user?->can('adapt', $this->resource),
             ],
         ];
     }
@@ -50,16 +52,16 @@ class TimesheetResource extends JsonResource
         return $titre ? $titre.' — séance '.$session->seance_numero : null;
     }
 
-    /** Montant brut de la saisie (heures × tarif en vigueur à la date), nul si aucun tarif. */
+    /** Montant brut de la saisie (heures × tarif en vigueur, ou nombre × forfait de déplacement), nul si aucun tarif. */
     private function montant(Request $request): ?float
     {
         // Mémo limité à la requête (jamais statique : les identifiants se réutilisent d'un test à l'autre).
-        $memo = $request->attributes->get('tarifs_horaires', []);
-        $cle = $this->professeur_id.'|'.$this->date_prestation->toDateString();
+        $memo = $request->attributes->get('unites_montant', []);
+        $cle = $this->professeur_id.'|'.$this->date_prestation->toDateString().'|'.$this->type_activite;
         if (! array_key_exists($cle, $memo)) {
-            $tarif = ProfesseurTarif::effectiveAt($this->professeur_id, $this->date_prestation);
-            $memo[$cle] = $tarif ? (float) $tarif->tarif_horaire_eur : null;
-            $request->attributes->set('tarifs_horaires', $memo);
+            $resolver = app(TarifResolver::class);
+            $memo[$cle] = $resolver->unite($this->resource, ProfesseurTarif::where('professeur_id', $this->professeur_id)->get());
+            $request->attributes->set('unites_montant', $memo);
         }
 
         return $memo[$cle] === null ? null : round((float) $this->nombre_heures * $memo[$cle], 2);

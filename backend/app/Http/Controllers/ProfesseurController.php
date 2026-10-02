@@ -7,6 +7,7 @@ use App\Services\AccesCompteService;
 use App\Services\ProfesseurCompteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use App\Rules\Iban;
 use Illuminate\Validation\Rule;
 
 class ProfesseurController extends Controller
@@ -69,10 +70,15 @@ class ProfesseurController extends Controller
             'nom' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email'],
             'telephone' => ['nullable', 'string', 'max:255'],
+            'compte_bancaire' => ['nullable', 'string', 'max:50', new Iban],
             'date_entree' => ['sometimes', 'date'],
             'type_contrat' => ['nullable', 'in:salarie,freelance,prestataire'],
             'photo_path' => ['nullable', 'string'],
         ]);
+
+        if (array_key_exists('compte_bancaire', $data)) {
+            $data['compte_bancaire'] = Iban::normaliser($data['compte_bancaire']);
+        }
 
         $professeur->update($data);
 

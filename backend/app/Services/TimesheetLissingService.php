@@ -9,7 +9,16 @@ use Carbon\Carbon;
 
 class TimesheetLissingService
 {
-    private const MAX_MONTANT_PAR_JOUR = 44.02;
+    public function __construct(private ?TimesheetParametreService $parametres = null)
+    {
+        $this->parametres ??= app(TimesheetParametreService::class);
+    }
+
+    /** Plafond journalier (€) paramétré pour l'année civile donnée. */
+    private function maxParJour(int $annee): float
+    {
+        return $this->parametres->plafondJournalier($annee);
+    }
 
     /**
      * Calcule les montants pour tous les timesheets d'un mois
@@ -33,13 +42,13 @@ class TimesheetLissingService
             'total_montant' => 0,
         ];
 
-        foreach ($timesheets as $timesheet) {
-            $tarif = ProfesseurTarif::effectiveAt(
-                $professeurId,
-                $timesheet->date_prestation
-            );
+        $tarifsProf = ProfesseurTarif::where('professeur_id', $professeurId)->get();
+        $resolver = app(TarifResolver::class);
 
-            if (! $tarif) {
+        foreach ($timesheets as $timesheet) {
+            $unite = $resolver->unite($timesheet, $tarifsProf);
+
+            if ($unite === null) {
                 // Pas de tarif disponible — garder le timesheet sans montant
                 $result['timesheets'][] = [
                     'id' => $timesheet->id,
@@ -53,10 +62,7 @@ class TimesheetLissingService
                 continue;
             }
 
-            $montantBrut = round(
-                $timesheet->nombre_heures * $tarif->tarif_horaire_eur,
-                2
-            );
+            $montantBrut = round($timesheet->nombre_heures * $unite, 2);
 
             $day = $timesheet->date_prestation->format('Y-m-d');
             $montantsByDay[$day] = ($montantsByDay[$day] ?? 0) + $montantBrut;
@@ -67,20 +73,21 @@ class TimesheetLissingService
                 'nombre_heures' => $timesheet->nombre_heures,
                 'type_activite' => $timesheet->type_activite,
                 'montant_brut' => $montantBrut,
-                'tarif_horaire' => $tarif->tarif_horaire_eur,
+                'tarif_horaire' => $unite,
             ];
 
             $result['total_montant'] += $montantBrut;
         }
 
         // Détecte les jours qui dépassent le maximum
+        $maxParJour = $this->maxParJour($year);
         foreach ($montantsByDay as $day => $montant) {
-            if ($montant > self::MAX_MONTANT_PAR_JOUR) {
+            if ($montant > $maxParJour) {
                 $result['depassements'][] = [
                     'date' => $day,
                     'montant_total' => $montant,
-                    'depassement' => round($montant - self::MAX_MONTANT_PAR_JOUR, 2),
-                    'max_autorise' => self::MAX_MONTANT_PAR_JOUR,
+                    'depassement' => round($montant - $maxParJour, 2),
+                    'max_autorise' => $maxParJour,
                 ];
             }
         }
@@ -126,7 +133,7 @@ class TimesheetLissingService
             ->filter(fn ($t) => $t['date_prestation']->format('Y-m-d') === $dateDepassement->format('Y-m-d'));
 
         // Cherche un jour proche avec capacité disponible
-        $dayToMove = $this->findCapacitableDay($dateDepassement, $month, $depassement['depassement']);
+        $dayToMove = $this->findCapacitableDay($professeurId, $dateDepassement, $month, $depassement['depassement']);
 
         return [
             'success' => true,
@@ -193,7 +200,7 @@ class TimesheetLissingService
     /**
      * Cherche un jour (±5j autour du jour en dépassement) avec capacité disponible
      */
-    private function findCapacitableDay(Carbon $referenceDate, int $month, float $capacityNeeded): ?Carbon
+    private function findCapacitableDay(int $professeurId, Carbon $referenceDate, int $month, float $capacityNeeded): ?Carbon
     {
         $year = $referenceDate->year;
 
@@ -201,13 +208,13 @@ class TimesheetLissingService
         for ($offset = 1; $offset <= 5; $offset++) {
             // Essaie le jour avant
             $dayBefore = $referenceDate->copy()->subDays($offset);
-            if ($dayBefore->month == $month && $this->dayHasCapacity($dayBefore, $year, $month, $capacityNeeded)) {
+            if ($dayBefore->month == $month && $this->dayHasCapacity($professeurId, $dayBefore, $year, $month, $capacityNeeded)) {
                 return $dayBefore;
             }
 
             // Essaie le jour après
             $dayAfter = $referenceDate->copy()->addDays($offset);
-            if ($dayAfter->month == $month && $this->dayHasCapacity($dayAfter, $year, $month, $capacityNeeded)) {
+            if ($dayAfter->month == $month && $this->dayHasCapacity($professeurId, $dayAfter, $year, $month, $capacityNeeded)) {
                 return $dayAfter;
             }
         }
@@ -218,15 +225,15 @@ class TimesheetLissingService
     /**
      * Vérifie si un jour a assez de capacité disponible
      */
-    private function dayHasCapacity(Carbon $date, int $year, int $month, float $capacityNeeded): bool
+    private function dayHasCapacity(int $professeurId, Carbon $date, int $year, int $month, float $capacityNeeded): bool
     {
-        $monthData = $this->calculateMonthlyMontants($date->day, $year, $month);
+        $monthData = $this->calculateMonthlyMontants($professeurId, $year, $month);
 
         $currentDay = collect($monthData['timesheets'])
             ->filter(fn ($t) => $t['date_prestation']->format('Y-m-d') === $date->format('Y-m-d'))
             ->sum('montant_brut');
 
-        $availableCapacity = self::MAX_MONTANT_PAR_JOUR - $currentDay;
+        $availableCapacity = $this->maxParJour($year) - $currentDay;
 
         return $availableCapacity >= $capacityNeeded;
     }
@@ -236,7 +243,7 @@ class TimesheetLissingService
      */
     public function validateAnnualLimit(int $professeurId, int $year): array
     {
-        $maxAnnuel = 1760.83;
+        $maxAnnuel = $this->parametres->plafondAnnuel($year);
         $totalAnnuel = 0;
 
         for ($month = 1; $month <= 12; $month++) {

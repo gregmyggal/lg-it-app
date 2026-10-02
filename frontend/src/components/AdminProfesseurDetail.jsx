@@ -14,6 +14,7 @@ import {
 import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
 import ClassesProfesseurSection from './professeurs/ClassesProfesseurSection';
 import CompteProfesseurSection from './professeurs/CompteProfesseurSection';
+import CompteBancaireSection from './professeurs/CompteBancaireSection';
 import { getErrorMessage } from '../api/errors';
 
 export default function AdminProfesseurDetail() {
@@ -58,7 +59,7 @@ export default function AdminProfesseurDetail() {
 
   if (loading) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-text-2)' }}>
         Chargement…
       </div>
     );
@@ -66,7 +67,7 @@ export default function AdminProfesseurDetail() {
 
   if (!professeur) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center', color: '#ef4444' }}>
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--c-error)' }}>
         ❌ Professeur non trouvé
       </div>
     );
@@ -87,7 +88,7 @@ export default function AdminProfesseurDetail() {
         {error && (
           <div
             style={{
-              background: '#fee2e2',
+              background: 'var(--tone-error-bg)',
               color: ADMIN_COLORS.error,
               padding: '16px',
               borderRadius: '8px',
@@ -101,7 +102,7 @@ export default function AdminProfesseurDetail() {
         {success && (
           <div
             style={{
-              background: '#d1fae5',
+              background: 'var(--tone-success-bg)',
               color: ADMIN_COLORS.success,
               padding: '16px',
               borderRadius: '8px',
@@ -115,7 +116,7 @@ export default function AdminProfesseurDetail() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))',
             gap: ADMIN_SPACING.xl,
             marginBottom: ADMIN_SPACING.xl,
           }}
@@ -126,7 +127,7 @@ export default function AdminProfesseurDetail() {
             <AdminCardBody>
               <div style={{ display: 'grid', gap: ADMIN_SPACING.lg }}>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                     EMAIL
                   </div>
                   <div>{professeur.email}</div>
@@ -134,7 +135,7 @@ export default function AdminProfesseurDetail() {
 
                 {professeur.telephone && (
                   <div>
-                    <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                       TÉLÉPHONE
                     </div>
                     <div>{professeur.telephone}</div>
@@ -150,7 +151,7 @@ export default function AdminProfesseurDetail() {
             <AdminCardBody>
               <div style={{ display: 'grid', gap: ADMIN_SPACING.lg }}>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                     TYPE DE CONTRAT
                   </div>
                   <div>
@@ -162,7 +163,7 @@ export default function AdminProfesseurDetail() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                     STATUT
                   </div>
                   <AdminBadge
@@ -172,7 +173,7 @@ export default function AdminProfesseurDetail() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                     PÉRIODE D'EMPLOI
                   </div>
                   <div style={{ fontSize: '14px' }}>
@@ -196,6 +197,10 @@ export default function AdminProfesseurDetail() {
               setTimeout(() => setSuccess(null), 4000);
             }}
           />
+        </div>
+
+        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+          <CompteBancaireSection professeur={professeur} onSaved={loadProfesseur} />
         </div>
 
         {/* Classes (CLS-01 T2 : remplace l'assignation de cours) */}
@@ -239,12 +244,12 @@ export default function AdminProfesseurDetail() {
                   €/h
                 </div>
 
-                <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                <div style={{ fontSize: '12px', color: 'var(--c-text-2)' }}>
                   {professeur.tarifs.length} tarif{professeur.tarifs.length > 1 ? 's' : ''} dans l'historique
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#9ca3af' }}>📭 Aucun tarif défini</div>
+              <div style={{ color: 'var(--c-text-3)' }}>📭 Aucun tarif défini</div>
             )}
           </AdminCardBody>
         </AdminCard>
@@ -254,9 +259,9 @@ export default function AdminProfesseurDetail() {
           <AdminCardHeader title="📊 Activité" />
 
           <AdminCardBody>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: ADMIN_SPACING.lg }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', gap: ADMIN_SPACING.lg }}>
               <div>
-                <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                   HEURES ENCODÉES (CE MOIS)
                 </div>
                 <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
@@ -265,7 +270,7 @@ export default function AdminProfesseurDetail() {
               </div>
 
               <div>
-                <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '4px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--c-text-2)', fontWeight: 600, marginBottom: '4px' }}>
                   TIMESHEETS
                 </div>
                 <div style={{ fontSize: '14px' }}>
