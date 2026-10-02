@@ -122,3 +122,19 @@ export function semaineISO(date) {
 export function dernierJourDuMois(annee, mois) {
   return new Date(annee, mois, 0);
 }
+
+/** « 14:00 » + 1,5 h → « 15:30 » (plafonné à 23:59 : une séance ne passe pas minuit). */
+export function ajouterHeures(hhmm, heures) {
+  const [h, m] = String(hhmm).split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return hhmm;
+  const total = Math.min(23 * 60 + 59, Math.round(h * 60 + m + Number(heures) * 60));
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/** Durée entre deux heures « HH:MM » en heures décimales (0 si la fin n'est pas après le début). */
+export function heuresEntre(debut, fin) {
+  const [h1, m1] = String(debut).split(':').map(Number);
+  const [h2, m2] = String(fin).split(':').map(Number);
+  const minutes = h2 * 60 + m2 - (h1 * 60 + m1);
+  return Number.isFinite(minutes) && minutes > 0 ? minutes / 60 : 0;
+}

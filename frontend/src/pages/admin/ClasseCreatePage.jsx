@@ -12,9 +12,11 @@ import { anneeParDefaut, useAnneesScolaires } from '../../hooks/useAnneesScolair
 import { useCours } from '../../hooks/useCours';
 import { useCalendrierScolaire } from '../../hooks/useCalendrierScolaire';
 import { apercuClasse, creerClasse } from '../../hooks/useClasses';
+import { useHeuresDefrayables } from '../../hooks/useHeuresDefrayables';
+import { formatDuree } from '../../utils/format';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
-import { JOURS_SEMAINE, formatHoraire, formatDate, formatDateLongue, libelleClasse, nomJour, parseDate } from '../../utils/dates';
+import { JOURS_SEMAINE, ajouterHeures, heuresEntre, formatHoraire, formatDate, formatDateLongue, libelleClasse, nomJour, parseDate } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
 
 const DELAI_APERCU_MS = 400;
@@ -33,9 +35,10 @@ export default function ClasseCreatePage() {
     jour_semaine: '',
     lieu: '',
     heure_debut: '14:00',
-    heure_fin: '17:00',
+    heure_fin: '15:30',
     date_premiere_session: '',
   });
+  const [finManuelle, setFinManuelle] = useState(false); // tant que la fin n'est pas saisie à la main, elle suit début + durée de séance
   const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null });
   const [envoi, setEnvoi] = useState(false);
   const [echec, setEchec] = useState(null); // { message, champs }
@@ -53,8 +56,24 @@ export default function ClasseCreatePage() {
   const calendrier = useCalendrierScolaire(anneeId);
   const calendrierVide = Boolean(anneeId) && !calendrier.loading && !calendrier.error && calendrier.data?.length === 0;
 
+  // Durée de séance et heures défrayables applicables (défaut global ou valeur du cours) : le serveur décide.
+  const anneeCivile = Number((form.date_premiere_session || annee?.date_debut || '').slice(0, 4)) || new Date().getFullYear();
+  const defrayage = useHeuresDefrayables(form.cours_id, anneeCivile).data;
+  const dureeSeance = defrayage?.duree_seance_defaut;
+
+  useEffect(() => {
+    if (!finManuelle && dureeSeance) {
+      setForm((prev) => ({ ...prev, heure_fin: ajouterHeures(prev.heure_debut, dureeSeance) }));
+    }
+  }, [dureeSeance, finManuelle]);
+
   function maj(champ, valeur) {
-    setForm((prev) => ({ ...prev, [champ]: valeur }));
+    setForm((prev) => {
+      const suivant = { ...prev, [champ]: valeur };
+      if (champ === 'heure_debut' && !finManuelle && dureeSeance) suivant.heure_fin = ajouterHeures(valeur, dureeSeance);
+      return suivant;
+    });
+    if (champ === 'heure_fin') setFinManuelle(true);
     setEchec(null);
   }
 
@@ -292,6 +311,15 @@ export default function ClasseCreatePage() {
                   <AdminInput id="classe-fin" type="time" value={form.heure_fin} onChange={(e) => maj('heure_fin', e.target.value)} error={erreurs.heure_fin} />
                 </AdminFormField>
               </div>
+              {defrayage && (
+                <Banner tone="info">
+                  <strong>
+                    Séance {formatDuree(heuresEntre(form.heure_debut, form.heure_fin))} · Défrayé {formatDuree(defrayage.valeur)}
+                  </strong>{' '}
+                  ({defrayage.source === 'cours' ? 'valeur définie sur le cours' : 'défaut global'}). Les professeurs sont défrayés pour ces heures
+                  (cours + préparation) : 14 séances × {formatDuree(defrayage.valeur)} = {formatDuree(14 * defrayage.valeur)} défrayables.
+                </Banner>
+              )}
               <AdminFormField label="Date de la première session" htmlFor="classe-date" required error={erreurDate}>
                 <AdminInput
                   id="classe-date"

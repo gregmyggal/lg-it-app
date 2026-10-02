@@ -66,6 +66,7 @@ class TimesheetMoisController extends Controller
                 'classe_id' => $s->classe_id,
                 'classe_libelle' => $s->classe->cours->titre,
                 'duree_par_defaut' => $this->service->dureeParDefaut($s),
+                'duree_seance' => $this->service->dureeSeance($s),
                 'encodage' => $this->service->etatEncodage($miennes),
                 'peut_encoder' => $this->service->peutEncoder($professeur, $s),
                 'remplace_par' => $remplaceur ? ['id' => $remplaceur->id, 'nom' => trim($remplaceur->prenom.' '.$remplaceur->nom)] : null,

@@ -96,6 +96,7 @@ class MesClassesController extends Controller
                 'encodage' => $this->timesheets->etatEncodage($miennes),
                 'mes_timesheets' => TimesheetResource::collection($miennes->values())->resolve($request),
                 'duree_par_defaut' => $this->timesheets->dureeParDefaut($s),
+                'duree_seance' => $this->timesheets->dureeSeance($s),
                 'peut_encoder' => $this->timesheets->peutEncoder($professeur, $s),
                 'ma_situation' => $situation,
                 'co_professeurs' => $lignes->reject(fn ($l) => $l->professeur_id === $moi || $l->remplace)

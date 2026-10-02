@@ -19,6 +19,7 @@ class Cours extends Model
         'image_path',
         'url_logiscool',
         'menu_order',
+        'heures_defrayables',
         'statut',
         'section_apropos',
         'section_apprendras',
@@ -29,6 +30,7 @@ class Cours extends Model
     ];
 
     protected $casts = [
+        'heures_defrayables' => 'float',
         'section_apprendras' => 'array',
         'section_format' => 'array',
         'section_pourqui' => 'array',

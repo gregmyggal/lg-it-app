@@ -7,6 +7,7 @@ import { creerSaisie, soumettreSaisie } from '../../hooks/useTimesheets';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 import { optionsStatut, TYPES_ACTIVITE } from '../../utils/statuts';
 import { formatDateLongue, formatHoraire } from '../../utils/dates';
+import { formatDuree } from '../../utils/format';
 
 /**
  * Raccourci d'encodage d'une session depuis « Mes classes » (mock-up 01) : 2 clics (ouvrir, soumettre).
@@ -79,7 +80,13 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
       <AdminFormField label="Type d'activité" htmlFor="enc-type" required error={erreurs.type_activite}>
         <AdminSelect id="enc-type" value={type} options={optionsStatut(TYPES_ACTIVITE)} onChange={(e) => setType(e.target.value)} />
       </AdminFormField>
-      <AdminFormField label="Durée (heures)" htmlFor="enc-duree" required error={erreurs.nombre_heures} description="Préremplie avec la durée de la session ; modifiable (0,5 à 24 h).">
+      <AdminFormField
+        label="Heures défrayées"
+        htmlFor="enc-duree"
+        required
+        error={erreurs.nombre_heures}
+        description={`Préremplies avec les heures défrayables${session.duree_seance != null ? ` (${formatDuree(session.duree_seance)} de séance + préparation)` : ''} ; modifiables (0,5 à 24 h).${Number(heures) !== Number(session.duree_par_defaut) ? ` Valeur standard : ${formatDuree(session.duree_par_defaut)}.` : ''}`}
+      >
         <AdminInput id="enc-duree" type="number" step="0.5" min="0.5" max="24" value={heures} onChange={(e) => setHeures(e.target.value)} />
       </AdminFormField>
       <AdminFormField label="Commentaire (facultatif)" htmlFor="enc-comm" error={erreurs.commentaire}>

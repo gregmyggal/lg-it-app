@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cours;
+use App\Rules\PasDeQuinzeMinutes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -86,6 +87,8 @@ class CoursController extends Controller
             'image_path' => ['nullable', 'string'],
             'url_logiscool' => ['nullable', 'url'],
             'menu_order' => ['nullable', 'integer'],
+            // DEF-01 T2 : heures défrayables par séance de ce cours ; null = défaut global de l'année.
+            'heures_defrayables' => ['nullable', 'numeric', 'between:0.5,8', new PasDeQuinzeMinutes],
             'statut' => ['nullable', 'in:publish,draft'],
         ]);
     }

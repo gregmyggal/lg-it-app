@@ -5,7 +5,7 @@ import { AdminCheckbox, AdminInput } from '../AdminFormField';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 import { ETATS_ENCODAGE, TYPES_ACTIVITE, getStatut } from '../../utils/statuts';
 import { formatDateCourte, formatHoraire } from '../../utils/dates';
-import { formatEuros, formatHeures } from '../../utils/format';
+import { formatDuree, formatEuros, formatHeures } from '../../utils/format';
 
 /**
  * Sessions commencées du mois (mock-up 02, section 1). Une session « à encoder » est préremplie (durée de la
@@ -28,7 +28,7 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
           <Th>Date</Th>
           <Th>Classe · Séance</Th>
           <Th>Activité</Th>
-          <Th>Durée (h)</Th>
+          <Th>Heures défrayées (h)</Th>
           <Th>Montant</Th>
           <Th>État</Th>
         </tr>
@@ -89,16 +89,34 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                     </div>
                   ))
                 ) : aEncoder && local ? (
-                  <AdminInput
-                    type="number"
-                    step="0.5"
-                    min="0.5"
-                    max="24"
-                    aria-label={`Durée de la ${s.libelle.toLowerCase()}`}
-                    value={local.heures}
-                    disabled={!local.inclure}
-                    onChange={(e) => onChange(s.id, { heures: e.target.value })}
-                  />
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AdminInput
+                        type="number"
+                        step="0.5"
+                        min="0.5"
+                        max="24"
+                        aria-label={`Heures défrayées pour la ${s.libelle.toLowerCase()}`}
+                        value={local.heures}
+                        disabled={!local.inclure}
+                        onChange={(e) => onChange(s.id, { heures: e.target.value })}
+                      />
+                      {s.duree_seance != null && (
+                        <span
+                          role="img"
+                          tabIndex={0}
+                          aria-label={`${formatDuree(s.duree_seance)} de séance + préparation`}
+                          title={`${formatDuree(s.duree_seance)} de séance + préparation`}
+                          style={{ cursor: 'help' }}
+                        >
+                          ⓘ
+                        </span>
+                      )}
+                    </div>
+                    {Number(local.heures) !== Number(s.duree_par_defaut) && (
+                      <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>Valeur standard : {formatDuree(s.duree_par_defaut)}</div>
+                    )}
+                  </>
                 ) : (
                   '—'
                 )}

@@ -4,12 +4,16 @@ import client from '../../api/client';
 import AdminModal from '../../components/AdminModal';
 import AdminButton, { AdminIconButton } from '../../components/AdminButton';
 import { AdminFormField, AdminInput, AdminTextarea, AdminSelect } from '../../components/AdminFormField';
+import { formatDuree } from '../../utils/format';
+import ImpactDefrayage from '../../components/ImpactDefrayage';
+import { getFieldErrors } from '../../api/errors';
 
 const emptyForm = {
   titre: '',
   slug: '',
   contenu: '',
   extrait: '',
+  heures_defrayables: '', // vide = défaut global de l'année
   statut: 'draft',
 };
 
@@ -23,14 +27,21 @@ export default function CoursAdminPage() {
   const [success, setSuccess] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [defautGlobal, setDefautGlobal] = useState(null); // heures défrayables par défaut (année courante)
 
   useEffect(() => {
     client.get('/cours').then((res) => setCours(res.data));
+    client
+      .get(`/timesheet-parametres/${new Date().getFullYear()}`)
+      .then((res) => setDefautGlobal(res.data.data.heures_defrayables))
+      .catch(() => setDefautGlobal(null));
   }, []);
 
   function startCreate() {
     setEditingId(null);
     setForm(emptyForm);
+    setFieldErrors({});
     setError(null);
     setIsModalOpen(true);
   }
@@ -42,8 +53,10 @@ export default function CoursAdminPage() {
       slug: c.slug,
       contenu: c.contenu || '',
       extrait: c.extrait || '',
+      heures_defrayables: c.heures_defrayables != null ? String(c.heures_defrayables) : '',
       statut: c.statut,
     });
+    setFieldErrors({});
     setError(null);
     setIsModalOpen(true);
   }
@@ -58,22 +71,27 @@ export default function CoursAdminPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
     setIsSubmitting(true);
+
+    // Heures défrayables : vide = défaut global (null côté serveur) ; virgule décimale acceptée.
+    const payload = { ...form, heures_defrayables: String(form.heures_defrayables).trim() === '' ? null : String(form.heures_defrayables).replace(',', '.') };
 
     try {
       if (editingId) {
-        const res = await client.put(`/cours/${editingId}`, form);
+        const res = await client.put(`/cours/${editingId}`, payload);
         setCours((prev) => prev.map((c) => (c.id === editingId ? { ...c, ...res.data } : c)));
         setSuccess('Cours modifié avec succès !');
       } else {
-        const res = await client.post('/cours', form);
+        const res = await client.post('/cours', payload);
         setCours((prev) => [...prev, { ...res.data, ressources: [] }]);
         setSuccess('Cours créé avec succès !');
       }
       setTimeout(closeModal, 1500);
       setTimeout(() => setSuccess(null), 2500);
-    } catch {
-      setError('Formulaire invalide (slug déjà utilisé ?).');
+    } catch (err) {
+      setFieldErrors(getFieldErrors(err));
+      setError('Formulaire invalide (slug déjà utilisé ? heures défrayables entre 0,5 et 8 h ?).');
     } finally {
       setIsSubmitting(false);
     }
@@ -216,6 +234,49 @@ export default function CoursAdminPage() {
             />
           </AdminFormField>
 
+          <AdminFormField
+            label="Heures défrayables par séance"
+            htmlFor="cours-heures-defrayables"
+            error={fieldErrors.heures_defrayables}
+            description={
+              form.heures_defrayables === ''
+                ? `Laissez vide pour utiliser le défaut global${defautGlobal != null ? ` (${formatDuree(defautGlobal)})` : ''}. Durée payée au professeur par séance de ce cours : cours + préparation.`
+                : `= ${formatDuree(form.heures_defrayables)} par séance. S'applique aux séances non encore encodées ; entre 0,5 h et 8 h, par pas de 15 min.`
+            }
+          >
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: '0 1 180px' }}>
+                <AdminInput
+                  id="cours-heures-defrayables"
+                  inputMode="decimal"
+                  value={form.heures_defrayables}
+                  onChange={(e) => setForm({ ...form, heures_defrayables: e.target.value })}
+                  placeholder={defautGlobal != null ? `Défaut : ${formatDuree(defautGlobal)}` : 'Défaut global'}
+                />
+              </div>
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  padding: '2px 9px',
+                  borderRadius: '99px',
+                  background: form.heures_defrayables === '' ? 'var(--tone-neutral-bg)' : 'var(--tone-primary-bg)',
+                  color: form.heures_defrayables === '' ? 'var(--tone-neutral-fg)' : 'var(--tone-primary-fg)',
+                }}
+              >
+                {form.heures_defrayables === '' ? 'Hérité du défaut' : 'Personnalisé'}
+              </span>
+              {form.heures_defrayables !== '' && (
+                <AdminButton type="button" variant="secondary" size="sm" onClick={() => setForm({ ...form, heures_defrayables: '' })}>
+                  Revenir au défaut
+                </AdminButton>
+              )}
+              <a href="/admin/timesheets/parametres" style={{ fontSize: '12px', color: 'var(--c-primary)' }}>Modifier le défaut global</a>
+            </div>
+          </AdminFormField>
+
+          {editingId && <ImpactDefrayage annee={new Date().getFullYear()} portee="cours" coursId={editingId} heures={form.heures_defrayables} />}
+
           <AdminFormField label="Statut">
             <AdminSelect
               value={form.statut}
@@ -300,6 +361,9 @@ function CourseCard({ course, onEdit, onDelete, onNavigateContent, onNavigateLie
     >
       <div style={{ marginBottom: '16px' }}>
         <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 600, color: 'var(--c-text)' }}>{course.titre}</h3>
+        {course.heures_defrayables != null && (
+          <p style={{ margin: '0 0 6px 0', fontSize: '12px', fontWeight: 600, color: 'var(--tone-primary-fg)' }}>Défrayé {formatDuree(course.heures_defrayables)} par séance</p>
+        )}
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-2)' }}>Slug: <code style={{ background: 'var(--c-hover)', padding: '2px 6px', borderRadius: '4px' }}>{course.slug}</code></p>
       </div>
 

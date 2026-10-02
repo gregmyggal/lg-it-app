@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\CourseSession;
+use App\Services\TimesheetService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -35,6 +36,7 @@ class CourseSessionResource extends JsonResource
             'heure_debut' => substr($this->heure_debut, 0, 5),
             'heure_fin' => substr($this->heure_fin, 0, 5),
             'lieu' => $this->lieu,
+            'heures_defrayables' => app(TimesheetService::class)->heuresDefrayables($this->resource),
             'statut' => $this->statut,
             'motif_annulation' => $this->motif_annulation,
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),

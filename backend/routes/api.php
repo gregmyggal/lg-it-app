@@ -17,6 +17,7 @@ use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\CoursLienController;
 use App\Http\Controllers\CoursRessourceController;
 use App\Http\Controllers\FormationController;
+use App\Http\Controllers\HeuresDefrayablesController;
 use App\Http\Controllers\LienVersionController;
 use App\Http\Controllers\MesClassesController;
 use App\Http\Controllers\ProfesseurClasseController;
@@ -161,6 +162,8 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::delete('/calendar/views/{view}', [CalendarController::class, 'deleteView']);
 
     // TS-00 : plafonds de défraiement par année civile (directeur et admin)
+    Route::get('/heures-defrayables', [HeuresDefrayablesController::class, 'show']);
+    Route::post('/heures-defrayables/impact', [HeuresDefrayablesController::class, 'impact']);
     Route::get('/timesheet-parametres/{annee}', [TimesheetParametreController::class, 'show'])->whereNumber('annee');
     Route::put('/timesheet-parametres/{annee}', [TimesheetParametreController::class, 'update'])->whereNumber('annee');
 

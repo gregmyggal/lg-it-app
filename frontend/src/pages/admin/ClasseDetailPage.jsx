@@ -8,6 +8,7 @@ import Banner from '../../components/ui/Banner';
 import StatutBadge from '../../components/ui/StatutBadge';
 import { Section } from '../../components/ui/Card';
 import { LoadingBlock, ErrorBlock } from '../../components/ui/DataStates';
+import { formatDuree } from '../../utils/format';
 import ClasseSessionsTable from '../../components/classes/ClasseSessionsTable';
 import SessionAdjustModal from '../../components/classes/SessionAdjustModal';
 import ProfesseursClasseSection from '../../components/professeurs/ProfesseursClasseSection';
@@ -169,6 +170,7 @@ export default function ClasseDetailPage() {
           `${c.annee_scolaire?.libelle}, période ${c.periode?.numero} (jusqu'au ${formatDate(c.periode?.date_fin)})`,
           premiere ? `du ${formatDate(premiere)} au ${formatDate(derniere)}` : null,
           `${c.nb_sessions} session${c.nb_sessions > 1 ? 's' : ''} actives${annulees.length ? ` · ${annulees.length} annulée${annulees.length > 1 ? 's' : ''}` : ''}`,
+          c.heures_defrayables ? `Séance ${formatDuree(c.duree_seance)} · Défrayé ${formatDuree(c.heures_defrayables.valeur)} (${c.heures_defrayables.source === 'cours' ? 'valeur du cours' : 'défaut global'})` : null,
         ]
           .filter(Boolean)
           .join(' · ')}

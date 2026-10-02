@@ -91,11 +91,34 @@ class TimesheetService
             || ($date === $maintenant->toDateString() && substr($session->heure_debut, 0, 5) <= $maintenant->format('H:i'));
     }
 
-    /** Durée de la session en heures (arrondie au quart d'heure), bornée à 0,5 – 24 h. */
+    /**
+     * Heures proposées pour une session : les heures DÉFRAYABLES (cours + préparation), distinctes de la durée du
+     * calendrier. Résolution : valeur du cours (DEF-01 T2) puis défaut global de l'année de la séance (DEF-01 T1).
+     * N'affecte jamais une saisie déjà encodée : seules les séances non encodées sont proposées avec cette valeur.
+     */
     public function dureeParDefaut(CourseSession $session): float
     {
-        [$h1, $m1] = array_map('intval', explode(':', $session->heure_debut));
-        [$h2, $m2] = array_map('intval', explode(':', $session->heure_fin));
+        return $this->heuresDefrayables($session)['valeur'];
+    }
+
+    /** @return array{valeur: float, source: string} heures défrayables de la séance et origine de la valeur */
+    public function heuresDefrayables(CourseSession $session): array
+    {
+        $cours = $session->loadMissing('classe.cours')->classe?->cours;
+
+        return app(TimesheetParametreService::class)->heuresDefrayablesPour($cours, (int) $session->date->format('Y'));
+    }
+
+    /** Durée de la séance au calendrier, en heures (arrondie au quart d'heure, bornée à 0,5 – 24 h) : information seulement. */
+    public function dureeSeance(CourseSession $session): float
+    {
+        return self::dureeEntre($session->heure_debut, $session->heure_fin);
+    }
+
+    public static function dureeEntre(string $debut, string $fin): float
+    {
+        [$h1, $m1] = array_map('intval', explode(':', $debut));
+        [$h2, $m2] = array_map('intval', explode(':', $fin));
         $heures = round((($h2 * 60 + $m2) - ($h1 * 60 + $m1)) / 60 * 4) / 4;
 
         return max(0.5, min(24.0, $heures));

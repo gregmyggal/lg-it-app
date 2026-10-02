@@ -3,6 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Models\Classe;
+use App\Services\TimesheetParametreService;
+use App\Services\TimesheetService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -36,6 +38,9 @@ class ClasseResource extends JsonResource
             'heure_debut' => substr($this->heure_debut, 0, 5),
             'heure_fin' => substr($this->heure_fin, 0, 5),
             'lieu' => $this->lieu,
+            'duree_seance' => TimesheetService::dureeEntre($this->heure_debut, $this->heure_fin),
+            'heures_defrayables' => $this->whenLoaded('cours', fn () => app(TimesheetParametreService::class)
+                ->heuresDefrayablesPour($this->cours, (int) $this->date_premiere_session->format('Y'))),
             'date_premiere_session' => $this->date_premiere_session->toDateString(),
             'statut' => $this->statut,
             'nb_sessions' => $this->whenCounted('sessionsActives'),

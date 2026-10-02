@@ -5,6 +5,7 @@ import AdminButton from '../AdminButton';
 import { ADMIN_COLORS, ADMIN_TONES } from '../../styles/AdminDesignSystem';
 import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../../utils/statuts';
 import { formatDate, formatDateCourte, formatHoraire } from '../../utils/dates';
+import { formatDuree } from '../../utils/format';
 
 /**
  * Liste des sessions d'une classe (séances, bis, annulées) avec les actions d'ajustement.
@@ -27,6 +28,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
           <Th>Séance</Th>
           <Th>Date</Th>
           <Th>Horaire</Th>
+          <Th>Défrayé</Th>
           <Th>Professeurs</Th>
           {liens && <Th>Liens</Th>}
           <Th>Statut</Th>
@@ -72,6 +74,15 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
                 )}
               </Td>
               <Td>{formatHoraire(s.heure_debut, s.heure_fin)}</Td>
+              <Td>
+                {barree || !s.heures_defrayables ? (
+                  <span style={{ color: ADMIN_COLORS.textSecondary }}>—</span>
+                ) : (
+                  <span title={s.heures_defrayables.source === 'cours' ? 'Valeur définie sur le cours' : 'Défaut global'}>
+                    <StatutBadge label={formatDuree(s.heures_defrayables.valeur)} tone="primary" />
+                  </span>
+                )}
+              </Td>
               <Td>
                 {(s.professeurs || []).length === 0 ? (
                   <span style={{ color: ADMIN_COLORS.textSecondary }}>—</span>

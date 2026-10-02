@@ -13,3 +13,14 @@ export function formatHeures(valeur) {
   if (Number.isNaN(n)) return '—';
   return `${String(Math.round(n * 100) / 100).replace('.', ',')} h`;
 }
+
+/** Durée en heures décimales → « 1 h 30 », « 2 h », « 45 min » (heures défrayables, durée de séance). */
+export function formatDuree(valeur) {
+  const n = Number(String(valeur).replace(',', '.'));
+  if (!Number.isFinite(n) || n < 0) return '—';
+  const minutes = Math.round(n * 60);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
+}

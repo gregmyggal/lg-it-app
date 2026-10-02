@@ -70,7 +70,7 @@ class TimesheetMoisTest extends TestCase
         $this->assertSame([1, 2], $sessions->pluck('seance_numero')->all());
         $this->assertSame(['a_encoder', 'a_encoder'], $sessions->pluck('encodage')->all());
         $this->assertTrue($sessions[0]['peut_encoder']);
-        $this->assertEquals(3, $sessions[0]['duree_par_defaut']);
+        $this->assertEquals(2, $sessions[0]['duree_par_defaut']); // heures défrayables (séance de 3 h au calendrier)
         $this->assertSame(0, $r->json('synthese.nb_brouillons'));
     }
 
@@ -86,8 +86,8 @@ class TimesheetMoisTest extends TestCase
         $this->assertSame('brouillon', collect($r->json('sessions'))->firstWhere('seance_numero', 1)['encodage']);
         $this->assertSame('a_encoder', collect($r->json('sessions'))->firstWhere('seance_numero', 2)['encodage']);
         $this->assertCount(1, $r->json('libres'));
-        $this->assertEquals(5.0, $r->json('synthese.heures'));
-        $this->assertEquals(50.0, $r->json('synthese.montant')); // Q22 : ses euros (5 h × 10 €)
+        $this->assertEquals(4.0, $r->json('synthese.heures')); // séance 1 : 2 h défrayables + 2 h de préparation
+        $this->assertEquals(40.0, $r->json('synthese.montant')); // Q22 : ses euros (4 h × 10 €)
         $this->assertSame(2, $r->json('synthese.jours'));
         $this->assertSame(2, $r->json('synthese.nb_brouillons'));
         $this->assertFalse($r->json('peut_signer'));
@@ -195,6 +195,6 @@ class TimesheetMoisTest extends TestCase
         $this->assertSame('a_encoder', $sessions[2]['encodage']);
         $this->assertTrue($sessions[2]['peut_encoder']);
         $this->assertFalse($sessions[5]['peut_encoder']); // pas encore commencée
-        $this->assertEquals(3, $sessions[2]['duree_par_defaut']);
+        $this->assertEquals(2, $sessions[2]['duree_par_defaut']);
     }
 }
