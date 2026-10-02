@@ -209,7 +209,8 @@ export default function AdminProfesseurDetail() {
         </div>
 
         {/* Tarifs */}
-        <AdminCard style={{ marginBottom: ADMIN_SPACING.xl }}>
+        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+        <AdminCard>
           <AdminCardHeader
             title={`💰 Tarif Horaire Actuel`}
             actions={
@@ -253,6 +254,7 @@ export default function AdminProfesseurDetail() {
             )}
           </AdminCardBody>
         </AdminCard>
+        </div>
 
         {/* Activité */}
         <AdminCard>
