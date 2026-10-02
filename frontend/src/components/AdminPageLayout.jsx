@@ -181,7 +181,7 @@ export function AdminCardFooter({ children }) {
   );
 }
 
-export function AdminBadge({ label, color = 'blue', icon }) {
+export function AdminBadge({ label, color = 'blue', icon, style }) {
   const colorMap = {
     blue: { bg: 'var(--b-blue-bg)', text: 'var(--b-blue-fg)' },
     green: { bg: 'var(--b-green-bg)', text: 'var(--b-green-fg)' },
@@ -204,6 +204,7 @@ export function AdminBadge({ label, color = 'blue', icon }) {
         borderRadius: '6px',
         fontSize: '12px',
         fontWeight: 600,
+        ...style,
       }}
     >
       {icon && <span>{icon}</span>}
