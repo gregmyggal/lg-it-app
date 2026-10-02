@@ -14,19 +14,38 @@ use Tests\TestCase;
  */
 class MigrationsRollbackTest extends TestCase
 {
-    /** Nombre de migrations à annuler pour revenir AVANT la migration donnée (robuste à l'ajout de nouvelles migrations). */
-    private function etapesDepuis(string $premiere): int
-    {
-        $noms = collect(glob(database_path('migrations/*.php')))->map(fn ($f) => basename($f, '.php'))->sort()->values();
-
-        return $noms->count() - $noms->search($premiere);
-    }
-
     protected function tearDown(): void
     {
         // Laisse la base de test migrée pour les autres tests.
         Artisan::call('migrate:fresh');
         parent::tearDown();
+    }
+
+    /**
+     * Annule toutes les migrations jusqu'à $migration incluse. Le nombre de steps est calculé depuis la table
+     * `migrations` (et non codé en dur) : il reste juste quand de nouvelles migrations sont ajoutées.
+     */
+    private function rollbackJusqua(string $migration): void
+    {
+        $this->assertTrue(DB::table('migrations')->where('migration', $migration)->exists(), "Migration inconnue : {$migration}");
+        $steps = DB::table('migrations')->where('migration', '>=', $migration)->count();
+
+        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => $steps]), Artisan::output());
+        $this->assertFalse(DB::table('migrations')->where('migration', $migration)->exists(), "Migration non annulée : {$migration}");
+    }
+
+    public function test_migrate_reset_complet_puis_remigration(): void
+    {
+        Artisan::call('migrate:fresh');
+
+        // Tous les down() doivent passer (ex. clé étrangère retirée avant sa colonne).
+        $this->assertSame(0, Artisan::call('migrate:reset'), Artisan::output());
+        $this->assertSame(0, DB::table('migrations')->count());
+        $this->assertFalse(Schema::hasTable('users'));
+        $this->assertFalse(Schema::hasTable('timesheets'));
+
+        $this->assertSame(0, Artisan::call('migrate'), Artisan::output());
+        $this->assertTrue(Schema::hasColumn('timesheets', 'pdf_generated_by'));
     }
 
     public function test_migrate_fresh_cree_le_schema_t1(): void
@@ -53,7 +72,7 @@ class MigrationsRollbackTest extends TestCase
         $this->assertTrue(Schema::hasTable('formation_type_formation'));
 
         // Rollback : les trois tables sont recréées (vides) ; puis re-migration propre.
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => $this->etapesDepuis('2026_10_01_200200_make_classe_liens_theme_nullable')]), Artisan::output());
+        $this->rollbackJusqua('2026_10_01_300000_drop_types_cours_tables');
         foreach (['types_cours', 'professeur_type_cours', 'cours_type_cours'] as $table) {
             $this->assertTrue(Schema::hasTable($table), "Table non recréée : {$table}");
         }
@@ -80,7 +99,7 @@ class MigrationsRollbackTest extends TestCase
         DB::table('professeurs')->insert(['id' => 1, 'user_id' => 1, 'prenom' => 'A', 'nom' => 'B', 'email' => 'p@t.test', 'statut' => 'actif', 'date_entree' => '2026-01-01', 'created_at' => now(), 'updated_at' => now()]);
         DB::table('timesheets')->insert(['professeur_id' => 1, 'date_prestation' => '2026-10-01', 'nombre_heures' => 2, 'statut_validation' => 'confirme', 'created_at' => now(), 'updated_at' => now()]);
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => $this->etapesDepuis('2026_09_30_200200_drop_professeur_cours_table')]), Artisan::output());
+        $this->rollbackJusqua('2026_10_01_100000_normalize_timesheet_statuts');
         // Hors enum d'origine : ramené à « valide »
         $this->assertSame('valide', DB::table('timesheets')->value('statut_validation'));
 
@@ -93,7 +112,7 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => $this->etapesDepuis('2026_09_30_200000_create_professeur_classe_table')]), Artisan::output());
+        $this->rollbackJusqua('2026_09_30_200000_create_professeur_classe_table');
 
         $this->assertFalse(Schema::hasTable('professeur_classe'));
         $this->assertFalse(Schema::hasTable('session_professors'));
@@ -109,9 +128,8 @@ class MigrationsRollbackTest extends TestCase
     {
         Artisan::call('migrate:fresh');
 
-        // On revient sur la migration PROF-01, la migration T5, les 3 migrations T4, les 2 migrations T3, les 3 migrations T2 puis les 2 migrations T1 (le rollback complet de l'historique
-        // antérieur à CLS-01 échoue sur des down() plus anciens, hors périmètre).
-        $this->assertSame(0, Artisan::call('migrate:rollback', ['--step' => $this->etapesDepuis('2026_09_29_create_professeur_cours_table')]), Artisan::output());
+        // On revient jusqu'à la première migration T1 incluse (toutes les migrations postérieures sont annulées).
+        $this->rollbackJusqua('2026_09_30_100000_create_annees_scolaires_periodes_calendrier_classes_tables');
 
         // Structure Sprint 2 recréée (vide), tables T1 supprimées.
         $this->assertFalse(Schema::hasTable('classes'));

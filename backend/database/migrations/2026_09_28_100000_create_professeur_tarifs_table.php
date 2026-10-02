@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Index pour recherches: "quel tarif valide pour ce professeur à cette date?"
+            // Nom explicite : le nom auto-généré dépasse 64 caractères avec un DB_PREFIX de 8 caractères.
             $table->index(['professeur_id', 'date_debut', 'date_fin'], 'professeur_tarifs_prof_periode_index');
         });
     }

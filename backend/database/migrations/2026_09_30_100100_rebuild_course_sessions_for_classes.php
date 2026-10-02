@@ -102,6 +102,7 @@ return new class extends Migration
             $table->timestamps();
             $table->index('course_session_id');
             $table->index(['professeur_id', 'created_at']);
+            // Nom explicite : le nom auto-généré dépasse 64 caractères avec un DB_PREFIX de 8 caractères.
             $table->unique(['course_session_id', 'professeur_id', 'role'], 'session_professors_session_prof_role_unique');
         });
 

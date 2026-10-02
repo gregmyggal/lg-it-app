@@ -14,7 +14,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Schema plutôt que du SQL brut : respecte le préfixe de tables (DB_PREFIX, base OVH partagée).
+        // Schema builder (et non SQL brut) : respecte le préfixe de tables DB_PREFIX.
         Schema::table('timesheets', function (Blueprint $table) {
             $table->string('statut_validation', 20)->default('brouillon')->change();
         });
