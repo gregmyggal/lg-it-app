@@ -20,6 +20,8 @@ Enums : année `statut` = `brouillon|active|archivee` · calendrier `type` = `va
 
 ## Années scolaires
 
+> **Mis à jour par CLS-03** : la ressource `AnneeScolaire`, la modification (version optimiste, plus de 422 sur les séances), l'aperçu d'impact, l'archivage, la proposition de dates, la suppression 409 et le code `date_hors_bornes_periode` sont décrits dans [`API_CLS03.md`](API_CLS03.md), qui fait foi. Le texte ci-dessous est conservé pour l'historique T1.
+
 ### `GET /annees-scolaires` — admin, directeur
 Toutes les années (plus récente d'abord), avec `periodes`.
 
@@ -42,10 +44,10 @@ Crée l'année **et ses 2 périodes** (transaction). Ne remplit pas le calendrie
 Une année avec `periodes`. `404` si inconnue.
 
 ### `PUT /annees-scolaires/{annee}` — admin, directeur
-Champs optionnels : `libelle`, `date_debut`, `date_fin`, `statut` (archivage = `archivee`), `periodes` (les 2, mêmes règles qu'à la création). **422** `"Des sessions dépassent la nouvelle fin de la période N."` si une session non annulée dépasserait la nouvelle `date_fin`.
+Champs optionnels : `libelle`, `date_debut`, `date_fin`, `statut` (archivage = `archivee`), `periodes` (les 2, mêmes règles qu'à la création). ~~**422** « Des sessions dépassent la nouvelle fin de la période N. »~~ **supprimé par CLS-03** : plus aucun blocage sur les séances (elles ressortent `hors_periode`) ; `version` requise, 409 possibles — voir `API_CLS03.md`.
 
 ### `DELETE /annees-scolaires/{annee}` — admin, directeur
-**204**. **409** `"Cette année scolaire contient des classes : archivez-la plutôt que de la supprimer."` Périodes et calendrier sont supprimés en cascade.
+**204**. **409** `annee_non_supprimable` avec compteurs (voir `API_CLS03.md`). Périodes et calendrier sont supprimés en cascade.
 
 ---
 
