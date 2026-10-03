@@ -88,6 +88,9 @@ Importe `backend/database/data/calendrier_fwb_{libelle}.json` (vacances FWB + jo
 
 ## Classes
 
+> **CLS-02 (2026-10-03)** : une classe porte 1 ou 2 périodes. Le modèle `Classe`, la création (`periodes[]`), l'aperçu, les bis, les sessions (`hors_periode`, `libelle_complet`, plus de 422 après la fin de période) et les routes `/classes/{classe}/periodes…` sont décrits dans [`API_CLS02.md`](API_CLS02.md), qui fait foi : les sections Classes et Sessions ci-dessous sont obsolètes sur ces points.
+
+
 Objet `ClasseResource` :
 ```json
 { "id": 1, "cours_id": 3, "cours": {"id":3,"titre":"React","slug":"react"},
@@ -151,6 +154,9 @@ Toutes les sessions (bis et annulées incluses), triées `seance_numero`, `bis_r
 ---
 
 ## Sessions
+
+> **CLS-02 (2026-10-03)** : une classe porte 1 ou 2 périodes. Le modèle `Classe`, la création (`periodes[]`), l'aperçu, les bis, les sessions (`hors_periode`, `libelle_complet`, plus de 422 après la fin de période) et les routes `/classes/{classe}/periodes…` sont décrits dans [`API_CLS02.md`](API_CLS02.md), qui fait foi : les sections Classes et Sessions ci-dessous sont obsolètes sur ces points.
+
 
 Objet `CourseSessionResource` :
 ```json
