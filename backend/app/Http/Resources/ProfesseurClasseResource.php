@@ -87,7 +87,8 @@ class ProfesseurClasseResource extends JsonResource
             ->whereIn('session_professors.professeur_id', $assignations->pluck('professeur_id')->unique())
             ->where('session_professors.remplace', false)
             ->where('course_sessions.statut', '!=', CourseSession::STATUT_ANNULEE)
-            ->selectRaw('course_sessions.classe_id, session_professors.professeur_id, count(*) as nb')
+            ->select('course_sessions.classe_id', 'session_professors.professeur_id')
+            ->selectRaw('count(*) as nb')
             ->groupBy('course_sessions.classe_id', 'session_professors.professeur_id')
             ->get()
             ->keyBy(fn ($r) => $r->classe_id.'-'.$r->professeur_id);

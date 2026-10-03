@@ -6,6 +6,7 @@ use App\Models\AnneeScolaire;
 use App\Models\Classe;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Source de vérité unique des règles calculées sur les périodes (CLS-02) : « séance hors période »,
@@ -26,7 +27,10 @@ class PeriodeRegles
     /** Équivalent SQL de horsPeriode() pour une session `course_sessions` rattachée à `classe_periodes`. */
     public static function sqlHorsPeriode(): string
     {
-        return 'course_sessions.date > (select p.date_fin from periodes p where p.id = classe_periodes.periode_id)';
+        // SQL brut : les noms de tables ne sont pas préfixés automatiquement (préfixe de tables en production).
+        $t = DB::getTablePrefix();
+
+        return "{$t}course_sessions.date > (select p.date_fin from {$t}periodes p where p.id = {$t}classe_periodes.periode_id)";
     }
 
     /** Première séance planifiée avant le début officiel de la période. Dates au format Y-m-d. */
