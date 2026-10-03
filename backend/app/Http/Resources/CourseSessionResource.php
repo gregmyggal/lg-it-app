@@ -54,6 +54,7 @@ class CourseSessionResource extends JsonResource
                 ->filter(fn ($l) => $l->relationLoaded('professeur'))
                 ->map(fn ($l) => ProfesseurClasseResource::professeurLeger($l->professeur) + [
                     'role' => $l->role,
+                    'origine' => $l->origine,
                     'remplace' => $l->remplace,
                 ])->values()),
             'can' => [

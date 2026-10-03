@@ -123,6 +123,8 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::delete('/professeurs/{professeur}/classes/{classe}', [ProfesseurClasseController::class, 'destroy']);
 
     Route::get('/sessions/{session}/professeurs', [SessionProfesseurController::class, 'index']);
+    Route::post('/sessions/{session}/professeurs', [SessionProfesseurController::class, 'ajouter']);
+    Route::delete('/sessions/{session}/professeurs/{professeur}', [SessionProfesseurController::class, 'retirer']);
     Route::post('/sessions/{session}/remplacer', [SessionProfesseurController::class, 'remplacer']);
     Route::delete('/sessions/{session}/remplacements/{professeur}', [SessionProfesseurController::class, 'annulerRemplacement']);
 

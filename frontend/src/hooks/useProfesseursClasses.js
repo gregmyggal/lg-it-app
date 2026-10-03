@@ -59,6 +59,16 @@ export function lignesSession(sessionId) {
   return client.get(`/sessions/${sessionId}/professeurs`).then((res) => res.data.data);
 }
 
+/** Ajout ponctuel d'un professeur à une session (même passée). Renvoie { data: session, avertissements: [{ date, message }] }. */
+export function ajouterProfesseurSession(sessionId, payload) {
+  return client.post(`/sessions/${sessionId}/professeurs`, payload).then((res) => res.data);
+}
+
+/** Retire un professeur ajouté ponctuellement (409 si ses heures sont déjà encodées). */
+export function retirerProfesseurSession(sessionId, professeurId) {
+  return client.delete(`/sessions/${sessionId}/professeurs/${professeurId}`).then((res) => res.data.data);
+}
+
 /** Renvoie { data: session, avertissements: [{ date, message }] }. */
 export function remplacerProfesseur(sessionId, payload) {
   return client.post(`/sessions/${sessionId}/remplacer`, payload).then((res) => res.data);

@@ -18,9 +18,9 @@ import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
  * @param {object[]} [props.liens] liens actifs du cours : colonne « Liens » (généraux + ceux de la séance)
  * @param {string} [props.caption]
  * @param {string} [props.legendeId] id de la légende décrivant le verrou 🔒
- * @param {(session: object) => void} [props.onRemplacer] ouvre le remplacement ponctuel d'un professeur (staff)
+ * @param {(session: object) => void} [props.onProfesseurs] ouvre la gestion des professeurs de la session : ajout, retrait, remplacement (staff)
  */
-export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, liens, caption = 'Sessions de la classe', legendeId = 'legende-sessions' }) {
+export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs, liens, caption = 'Sessions de la classe', legendeId = 'legende-sessions' }) {
   const parId = new Map(sessions.map((s) => [s.id, s]));
   const remplacantDe = new Map(sessions.filter((s) => s.remplace_session_id).map((s) => [s.remplace_session_id, s]));
 
@@ -99,6 +99,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
                     {s.professeurs.map((p) => (
                       <li key={p.id} style={{ textDecoration: p.remplace ? 'line-through' : undefined, color: p.remplace ? ADMIN_COLORS.textSecondary : undefined }}>
                         {p.nom}
+                        {p.origine === 'ajout' && !p.remplace && ' (ajouté)'}
                         {p.role === 'remplacant' && !p.remplace && ' (remplaçant)'}
                         {p.remplace && ' (remplacé)'}
                       </li>
@@ -119,9 +120,9 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
                 </div>
               </Td>
               <Td>
-                {onRemplacer && !barree && (
-                  <AdminButton size="sm" variant="secondary" onClick={() => onRemplacer(s)} style={{ marginBottom: '6px' }}>
-                    Remplacer un professeur
+                {onProfesseurs && !barree && (
+                  <AdminButton size="sm" variant="secondary" onClick={() => onProfesseurs(s)} style={{ marginBottom: '6px' }}>
+                    Professeurs
                   </AdminButton>
                 )}
                 {barree ? (

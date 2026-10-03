@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
 use App\Models\CourseSession;
+use App\Models\Professeur;
 use App\Models\ProfesseurClasse;
 use App\Models\SessionProfesseur;
+use App\Models\Timesheet;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Remplacement ponctuel d'un professeur sur UNE session (RG-9, AC-14, AC-25). Possible sur une session
+ * Remplacement (RG-9, AC-14, AC-25) et ajout ponctuel (CLS-04) d'un professeur sur UNE session. Possible sur une session
  * passée ou à venir (pas annulée), sans aucune contrainte liée aux timesheets : aucune timesheet n'est
  * modifiée, bloquée ni transférée.
  */
@@ -62,6 +64,77 @@ class SessionReplacementService
                     $this->assignations->conflits([$session], $professeurRemplacantId)
                 ),
             ];
+        });
+    }
+
+    /**
+     * Ajoute un professeur à UNE session (passée ou à venir, pas annulée), sans remplacer personne.
+     * Aucune timesheet n'est lue ni modifiée. Un conflit d'horaire est un avertissement non bloquant.
+     *
+     * @return array{session: CourseSession, avertissements: list<array<string, mixed>>}
+     *
+     * @throws RegleMetierException 409 session annulée ; 422 professeur invalide ou déjà présent (même remplacé)
+     */
+    public function ajouter(CourseSession $session, int $professeurId, string $role = ProfesseurClasse::ROLE_PRINCIPAL): array
+    {
+        return DB::transaction(function () use ($session, $professeurId, $role) {
+            $session = CourseSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
+
+            if ($session->isAnnulee()) {
+                throw RegleMetierException::conflit('Une session annulée ne peut pas recevoir de professeur.');
+            }
+            if (! Professeur::whereKey($professeurId)->where('statut', '!=', 'inactif')->exists()) {
+                $this->invalide('professeur_id', 'Ce professeur est introuvable ou inactif.');
+            }
+
+            $ligne = SessionProfesseur::where('course_session_id', $session->id)->where('professeur_id', $professeurId)->first();
+            if ($ligne) {
+                $this->invalide('professeur_id', $ligne->remplace
+                    ? 'Ce professeur a été remplacé sur cette session : annulez d\'abord ce remplacement.'
+                    : 'Ce professeur est déjà assigné à cette session.');
+            }
+
+            SessionProfesseur::create([
+                'course_session_id' => $session->id,
+                'professeur_id' => $professeurId,
+                'role' => $role,
+                'origine' => SessionProfesseur::ORIGINE_AJOUT,
+                'remplace' => false,
+            ]);
+
+            return [
+                'session' => $session,
+                'avertissements' => array_map(
+                    fn (array $c) => $c + ['message' => "Ce professeur est déjà assigné à une autre session ce jour-là ({$c['classe']}, {$c['heure_debut']}–{$c['heure_fin']})."],
+                    $this->assignations->conflits([$session], $professeurId)
+                ),
+            ];
+        });
+    }
+
+    /**
+     * Retire un professeur ajouté ponctuellement. Refusé s'il a déjà une timesheet sur cette session,
+     * si la ligne n'est pas un ajout, ou si elle est impliquée dans un remplacement en cours.
+     *
+     * @throws RegleMetierException 409
+     */
+    public function retirerAjout(CourseSession $session, int $professeurId): CourseSession
+    {
+        return DB::transaction(function () use ($session, $professeurId) {
+            $ligne = SessionProfesseur::where('course_session_id', $session->id)->where('professeur_id', $professeurId)->lockForUpdate()->first();
+            if (! $ligne || $ligne->origine !== SessionProfesseur::ORIGINE_AJOUT) {
+                throw RegleMetierException::conflit('Ce professeur n\'a pas été ajouté ponctuellement à cette session : seul un ajout peut être retiré ici.');
+            }
+            if ($ligne->remplace || SessionProfesseur::where('course_session_id', $session->id)->where('remplace_par_professeur_id', $professeurId)->exists()) {
+                throw RegleMetierException::conflit('Ce professeur est impliqué dans un remplacement : annulez d\'abord ce remplacement.');
+            }
+            if (Timesheet::where('course_session_id', $session->id)->where('professeur_id', $professeurId)->exists()) {
+                throw RegleMetierException::conflit('Ce professeur a déjà encodé ses heures pour cette session : il ne peut plus être retiré.');
+            }
+
+            $ligne->delete();
+
+            return $session;
         });
     }
 

@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AjouterProfesseurSessionRequest;
 use App\Http\Requests\RemplacerProfesseurRequest;
 use App\Http\Resources\CourseSessionResource;
 use App\Http\Resources\SessionProfesseurResource;
 use App\Models\CourseSession;
 use App\Models\Professeur;
+use App\Models\ProfesseurClasse;
 use App\Services\CalendrierScolaireService;
 use App\Services\SessionReplacementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
-/** Professeurs d'une session et remplacement ponctuel (RG-9). */
+/** Professeurs d'une session : ajout ponctuel (CLS-04) et remplacement ponctuel (RG-9). */
 class SessionProfesseurController extends Controller
 {
     public function __construct(
@@ -28,6 +30,27 @@ class SessionProfesseurController extends Controller
         return SessionProfesseurResource::collection(
             $session->sessionProfesseurs()->with(['professeur', 'remplacePar'])->get()
         );
+    }
+
+    public function ajouter(AjouterProfesseurSessionRequest $request, CourseSession $session): JsonResponse
+    {
+        $resultat = $this->remplacements->ajouter(
+            $session,
+            $request->integer('professeur_id'),
+            $request->input('role', ProfesseurClasse::ROLE_PRINCIPAL)
+        );
+
+        return response()->json([
+            'data' => $this->session($resultat['session']),
+            'avertissements' => $resultat['avertissements'],
+        ], 201);
+    }
+
+    public function retirer(CourseSession $session, Professeur $professeur): JsonResponse
+    {
+        Gate::authorize('replace', $session);
+
+        return response()->json(['data' => $this->session($this->remplacements->retirerAjout($session, $professeur->id))]);
     }
 
     public function remplacer(RemplacerProfesseurRequest $request, CourseSession $session): JsonResponse

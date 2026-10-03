@@ -38,10 +38,10 @@ class MesClassesController extends Controller
 
         ProfesseurClasseResource::attacherCoProfesseurs($assignations);
 
-        // Sessions à venir où le professeur intervient comme remplaçant ponctuel (sans assignation à la classe).
+        // Sessions à venir où le professeur intervient comme remplaçant ou professeur ajouté ponctuellement (sans assignation à la classe).
         $remplacements = CourseSession::query()
             ->whereHas('sessionProfesseurs', fn ($q) => $q->where('professeur_id', $professeur->id)
-                ->where('origine', SessionProfesseur::ORIGINE_REMPLACEMENT)->where('remplace', false))
+                ->whereIn('origine', [SessionProfesseur::ORIGINE_REMPLACEMENT, SessionProfesseur::ORIGINE_AJOUT])->where('remplace', false))
             ->where('date', '>=', now('Europe/Brussels')->toDateString())
             ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
             ->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
@@ -86,6 +86,7 @@ class MesClassesController extends Controller
             $situation = match (true) {
                 $mienne?->remplace === true => ['type' => 'remplace_par', 'professeur' => $this->nom($lignes->firstWhere('professeur_id', $mienne->remplace_par_professeur_id))],
                 $mienne?->origine === SessionProfesseur::ORIGINE_REMPLACEMENT => ['type' => 'remplacant_de', 'professeur' => $this->nom($remplace)],
+                $mienne?->origine === SessionProfesseur::ORIGINE_AJOUT => ['type' => 'ajoute', 'professeur' => null],
                 $mienne !== null => ['type' => 'assignee', 'professeur' => null],
                 default => null,
             };

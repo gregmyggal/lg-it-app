@@ -63,6 +63,12 @@ Corps optionnel `{ "date_fin": "YYYY-MM-DD" }` (défaut : aujourd'hui). **Termin
 ### `GET /sessions/{session}/professeurs` — staff, ou professeur concerné
 Lignes `session_professors` : `{ id, course_session_id, professeur_id, professeur, role, origine, remplace, remplace_par_professeur_id, remplace_par }`.
 
+### `POST /sessions/{session}/professeurs` — staff (CLS-04)
+`{ "professeur_id": 9, "role"?: "principal" }` (défaut `principal`) → **201** `{ data: <session>, avertissements: [...] }`. Ligne `origine = ajout`, session passée ou à venir, aucune timesheet touchée. **409** session annulée ; **422** professeur inactif, déjà sur la session ou remplacé (annuler d'abord le remplacement). Conflit d'horaire = avertissement non bloquant. Côté professeur : `ma_situation.type = 'ajoute'`, la session apparaît dans `remplacements` de `/mes-classes` si elle est à venir.
+
+### `DELETE /sessions/{session}/professeurs/{professeur}` — staff (CLS-04)
+Retire un professeur **ajouté** (`origine = ajout`). **200** `{ data: <session> }` ; **409** si la ligne n'est pas un ajout, est impliquée dans un remplacement, ou si le professeur a **déjà une timesheet** pour cette session.
+
 ### `POST /sessions/{session}/remplacer`
 `{ "professeur_remplace_id": 4, "professeur_remplacant_id": 9 }` → **200**
 ```json

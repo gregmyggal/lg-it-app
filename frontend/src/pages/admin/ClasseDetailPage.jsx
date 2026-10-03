@@ -12,7 +12,7 @@ import { formatDuree } from '../../utils/format';
 import ClasseSessionsTable from '../../components/classes/ClasseSessionsTable';
 import SessionAdjustModal from '../../components/classes/SessionAdjustModal';
 import ProfesseursClasseSection from '../../components/professeurs/ProfesseursClasseSection';
-import RemplacerProfesseurModal from '../../components/professeurs/RemplacerProfesseurModal';
+import ProfesseursSessionModal from '../../components/professeurs/ProfesseursSessionModal';
 import { useProfesseursListe } from '../../hooks/useProfesseursClasses';
 import { useLiensCours } from '../../hooks/useLiens';
 import LienModifierDates from '../../components/annees/LienModifierDates';
@@ -36,7 +36,7 @@ export default function ClasseDetailPage() {
   const classe = useClasse(id);
   const sessions = useClasseSessions(id);
   const professeursListe = useProfesseursListe();
-  const [remplacement, setRemplacement] = useState(null); // session à remplacer
+  const [remplacement, setRemplacement] = useState(null); // session dont on gère les professeurs
   const [ajustement, setAjustement] = useState(null); // { session, mode }
   const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message }
   const [enCours, setEnCours] = useState(false);
@@ -111,7 +111,7 @@ export default function ClasseDetailPage() {
     sessions.reload();
   }
 
-  function apresRemplacement(message, avertissements = []) {
+  function apresProfesseurs(message, avertissements = []) {
     setRemplacement(null);
     toast.success(message);
     avertissements.forEach((a) => toast.warning(a.message));
@@ -279,7 +279,7 @@ export default function ClasseDetailPage() {
               peutModifier={Boolean(c.can?.update) && !estClasseArchivee(c.statut)}
               peutSupprimer={(c.periodes || []).length > 1}
               onAjuster={(session, mode) => setAjustement({ session, mode: mode ?? undefined, periodeNumero: n })}
-              onRemplacer={c.can?.update ? setRemplacement : undefined}
+              onProfesseurs={c.can?.update ? setRemplacement : undefined}
               onChangerCours={() => setModalePeriode({ type: 'cours', periode: p })}
               onSupprimer={() => setModalePeriode({ type: 'suppression', periode: p })}
               onHistorique={() => setModalePeriode({ type: 'historique', periode: p })}
@@ -321,11 +321,11 @@ export default function ClasseDetailPage() {
       )}
 
       {remplacement && (
-        <RemplacerProfesseurModal
+        <ProfesseursSessionModal
           session={remplacement}
           professeurs={(professeursListe.data || []).filter((p) => p.statut !== 'inactif').map((p) => ({ value: String(p.id), label: p.nom }))}
           onClose={() => setRemplacement(null)}
-          onDone={apresRemplacement}
+          onDone={apresProfesseurs}
         />
       )}
 
@@ -404,7 +404,7 @@ function PeriodeAbsente({ numero, dejaPresente, onAjouter }) {
 }
 
 /** Bloc d'une période : bandeau (cours, dates, hors période), actions de période, tableau des séances. */
-function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSupprimer, onAjuster, onRemplacer, onChangerCours, onSupprimer, onHistorique }) {
+function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSupprimer, onAjuster, onProfesseurs, onChangerCours, onSupprimer, onHistorique }) {
   const liens = useLiensCours(periode.cours_id);
   const annulee = periode.statut === 'annulee';
   const peutBis = sessions.some((s) => s.can?.bis);
@@ -507,7 +507,7 @@ function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSup
           legendeId={`legende-sessions-${periode.numero}`}
           liens={liens.data?.data}
           onAjuster={onAjuster}
-          onRemplacer={onRemplacer}
+          onProfesseurs={onProfesseurs}
         />
       )}
     </Section>

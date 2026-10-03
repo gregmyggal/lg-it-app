@@ -91,10 +91,11 @@ export const ROLES_PROFESSEUR = {
   remplacant: { label: 'Remplaçant', tone: 'warning' },
 };
 
-/** Origine d'une ligne professeur d'une session : héritée de la classe ou remplacement ponctuel. */
+/** Origine d'une ligne professeur d'une session : héritée de la classe, remplacement ou ajout ponctuel. */
 export const ORIGINES_SESSION = {
   classe: { label: 'Assigné par la classe', tone: 'neutral' },
   remplacement: { label: 'Remplacement ponctuel', tone: 'warning' },
+  ajout: { label: 'Ajouté à cette session', tone: 'info' },
 };
 
 /** Assignation d'un professeur à une classe : active ou terminée (champ booléen `actif` de l'API). */
@@ -113,6 +114,7 @@ export const SITUATIONS_SESSION = {
   assignee: { label: 'Assigné', tone: 'success' },
   remplace_par: { label: 'Remplacé', tone: 'warning' },
   remplacant_de: { label: 'Remplaçant', tone: 'info' },
+  ajoute: { label: 'Ajouté', tone: 'info' },
 };
 
 /** Texte complet de la situation : « Vous êtes remplacé par Bob », « Vous remplacez Alice »… */
@@ -120,6 +122,7 @@ export function phraseSituation(situation) {
   const nom = situation?.professeur?.nom;
   if (situation?.type === 'remplace_par') return nom ? `Vous êtes remplacé par ${nom}` : 'Vous êtes remplacé';
   if (situation?.type === 'remplacant_de') return nom ? `Vous remplacez ${nom}` : 'Vous êtes remplaçant';
+  if (situation?.type === 'ajoute') return 'Vous avez été ajouté à cette session';
   return 'Vous êtes assigné à cette session';
 }
 

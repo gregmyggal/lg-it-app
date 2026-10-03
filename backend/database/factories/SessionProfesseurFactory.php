@@ -22,4 +22,9 @@ class SessionProfesseurFactory extends Factory
             'remplace_par_professeur_id' => null,
         ];
     }
+
+    public function ajout(): static
+    {
+        return $this->state(['origine' => SessionProfesseur::ORIGINE_AJOUT]);
+    }
 }

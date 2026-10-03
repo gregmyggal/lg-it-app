@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** Professeur d'une session : propagé depuis la classe (origine classe) ou ajouté par un remplacement. */
+/** Professeur d'une session : propagé depuis la classe (origine classe) ajouté par un remplacement ou ajouté ponctuellement. */
 class SessionProfesseur extends Model
 {
     use HasFactory;
@@ -14,6 +14,9 @@ class SessionProfesseur extends Model
     public const ORIGINE_CLASSE = 'classe';
 
     public const ORIGINE_REMPLACEMENT = 'remplacement';
+
+    /** Professeur ajouté ponctuellement à UNE session (sans remplacer personne, sans être assigné à la classe). */
+    public const ORIGINE_AJOUT = 'ajout';
 
     protected $table = 'session_professors';
 
