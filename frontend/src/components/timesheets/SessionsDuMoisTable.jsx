@@ -6,6 +6,7 @@ import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 import { ETATS_ENCODAGE, TYPES_ACTIVITE, getStatut } from '../../utils/statuts';
 import { formatDateCourte, formatHoraire } from '../../utils/dates';
 import { formatDuree, formatEuros, formatHeures } from '../../utils/format';
+import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 /**
  * Sessions commencées du mois (mock-up 02, section 1). Une session « à encoder » est préremplie (durée de la
@@ -47,7 +48,7 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                   <AdminCheckbox
                     id={`inclure-${s.id}`}
                     label=""
-                    aria-label={`Inclure la ${s.libelle.toLowerCase()} du ${formatDateCourte(s.date)}`}
+                    aria-label={`Inclure la ${libelleSessionPhrase(s)} du ${formatDateCourte(s.date)}`}
                     checked={local.inclure}
                     onChange={(e) => onChange(s.id, { inclure: e.target.checked })}
                   />
@@ -58,7 +59,7 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                 <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>{formatHoraire(s.heure_debut, s.heure_fin)}</div>
               </Td>
               <Td>
-                <strong>{s.classe_libelle}</strong> · {s.libelle}
+                <strong>{s.classe_libelle}</strong> · {libelleSession(s)}
                 {s.remplace_par && (
                   <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>Remplacée par {s.remplace_par.nom}</div>
                 )}
@@ -96,7 +97,7 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                         step="0.5"
                         min="0.5"
                         max="24"
-                        aria-label={`Heures défrayées pour la ${s.libelle.toLowerCase()}`}
+                        aria-label={`Heures défrayées pour la ${libelleSessionPhrase(s)}`}
                         value={local.heures}
                         disabled={!local.inclure}
                         onChange={(e) => onChange(s.id, { heures: e.target.value })}

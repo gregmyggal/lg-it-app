@@ -7,6 +7,7 @@ import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
 import { annulerRemplacement, lignesSession, remplacerProfesseur } from '../../hooks/useProfesseursClasses';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 import { formatDate } from '../../utils/dates';
+import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 /**
  * Remplacement ponctuel d'un professeur sur UNE session (mock-up 03). Possible sur une session passée comme à venir
@@ -41,7 +42,7 @@ export default function RemplacerProfesseurModal({ session, professeurs, onClose
   const remplacables = (lignes || []).filter((l) => !l.remplace);
   const dejaRemplaces = (lignes || []).filter((l) => l.remplace);
   const candidats = professeurs.filter((p) => !presents.has(Number(p.value)));
-  const titreSession = `${session.libelle.toLowerCase()} du ${formatDate(session.date)}`;
+  const titreSession = `${libelleSessionPhrase(session)} du ${formatDate(session.date)}`;
 
   async function soumettre(e) {
     e.preventDefault();
@@ -83,7 +84,7 @@ export default function RemplacerProfesseurModal({ session, professeurs, onClose
   return (
     <AdminModal
       isOpen
-      title={`Remplacer un professeur — ${session.libelle}, ${formatDate(session.date)}`}
+      title={`Remplacer un professeur — ${libelleSession(session)}, ${formatDate(session.date)}`}
       onClose={onClose}
       closeOnBackdrop={false}
       footer={

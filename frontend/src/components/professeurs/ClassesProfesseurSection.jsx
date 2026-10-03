@@ -12,6 +12,8 @@ import { useClasses } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
 import { ROLES_PROFESSEUR, STATUTS_ASSIGNATION, statutAssignation } from '../../utils/statuts';
 import { formatDate, libelleClasse } from '../../utils/dates';
+import PeriodeBadge from '../classes/PeriodeBadge';
+import { resumePeriodes } from '../../utils/classes';
 
 /**
  * Section « Classes » de la fiche professeur (mock-up 04) : classes assignées avec co-professeurs, ajout d'une classe
@@ -31,7 +33,7 @@ export default function ClassesProfesseurSection({ professeur }) {
   const dejaActives = new Set((assignations.data || []).filter((a) => a.actif).map((a) => a.classe_id));
   const options = (classes.data || [])
     .filter((c) => !dejaActives.has(c.id))
-    .map((c) => ({ value: String(c.id), label: `${libelleClasse(c)} (${c.annee_scolaire?.libelle}, P${c.periode?.numero})` }));
+    .map((c) => ({ value: String(c.id), label: `${libelleClasse(c)} (${c.annee_scolaire?.libelle}${resumePeriodes(c) ? `, ${resumePeriodes(c)}` : ''})` }));
 
   function termine(message) {
     toast.success(message);
@@ -61,6 +63,7 @@ export default function ClassesProfesseurSection({ professeur }) {
           <thead>
             <tr>
               <Th>Classe</Th>
+              <Th>Périodes</Th>
               <Th>Rôle (indicatif)</Th>
               <Th>Co-professeurs</Th>
               <Th>Depuis</Th>
@@ -74,6 +77,19 @@ export default function ClassesProfesseurSection({ professeur }) {
                 <Td>
                   <strong>{libelleClasse(a.classe)}</strong>
                   <div style={{ fontSize: '13px' }}>{a.nb_sessions_assignees} session{a.nb_sessions_assignees > 1 ? 's' : ''}</div>
+                </Td>
+                <Td>
+                  {(a.classe?.periodes || []).length === 0 ? (
+                    '—'
+                  ) : (
+                    <div style={{ display: 'grid', gap: '4px', fontSize: '13px' }}>
+                      {a.classe.periodes.map((p) => (
+                        <span key={p.id}>
+                          <PeriodeBadge numero={p.numero} /> {p.cours?.titre}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </Td>
                 <Td>
                   <StatutBadge table={ROLES_PROFESSEUR} valeur={a.role} />

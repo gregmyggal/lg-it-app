@@ -8,7 +8,9 @@ import StatutBadge from '../components/ui/StatutBadge';
 import { AdminCheckbox } from '../components/AdminFormField';
 import { useMesClasses } from '../hooks/useProfesseursClasses';
 import { ROLES_PROFESSEUR, STATUTS_ASSIGNATION, statutAssignation } from '../utils/statuts';
-import { formatDateCourte, formatHoraire, libelleClasse } from '../utils/dates';
+import PeriodeBadge from '../components/classes/PeriodeBadge';
+import { aujourdhuiISO, formatDateCourte, formatHoraire, libelleClasse } from '../utils/dates';
+import { coursDeSession, libelleSession } from '../utils/classes';
 import { ADMIN_COLORS, ADMIN_RADIUS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
 
 const carte = {
@@ -17,6 +19,16 @@ const carte = {
   borderRadius: ADMIN_RADIUS.md,
   padding: ADMIN_SPACING.lg,
 };
+
+/** État d'une période dans la carte classe : démarre le… / en cours / terminée (+ séances hors période). */
+function etatPeriode(p) {
+  const hors = p.nb_hors_periode > 0 ? ` · ${p.nb_hors_periode} séance${p.nb_hors_periode > 1 ? 's' : ''} hors période (rattrapage)` : '';
+  if (p.statut === 'annulee') return `annulée${hors}`;
+  const auj = aujourdhuiISO();
+  if (p.date_premiere_session > auj) return `démarre le ${formatDateCourte(p.date_premiere_session)}${hors}`;
+  if (p.date_derniere_session && p.date_derniere_session < auj) return `terminée (${p.nb_sessions} séances)${hors}`;
+  return `en cours · ${p.nb_sessions} séances${hors}`;
+}
 
 /** Portail professeur « Mes classes » (mock-up 06, mobile-first) : classes, co-professeurs, remplacements à venir. */
 export default function MesClassesPage() {
@@ -43,7 +55,7 @@ export default function MesClassesPage() {
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: ADMIN_SPACING.md }}>
                   {remplacements.map((s) => (
                     <li key={s.id} style={carte}>
-                      <strong>{s.classe?.cours?.titre}</strong> — {s.libelle}
+                      <strong>{coursDeSession(s)?.titre}</strong> — {libelleSession(s)}
                       <div>
                         {formatDateCourte(s.date)} · {formatHoraire(s.heure_debut, s.heure_fin)}
                       </div>
@@ -81,12 +93,20 @@ export default function MesClassesPage() {
                           {!a.actif && <StatutBadge table={STATUTS_ASSIGNATION} valeur={statutAssignation(false)} />}
                         </div>
                         <div style={{ color: ADMIN_COLORS.textSecondary, fontSize: '13px', margin: `${ADMIN_SPACING.xs} 0` }}>
-                          {a.classe.annee_scolaire?.libelle}, période {a.classe.periode?.numero}
+                          {a.classe.annee_scolaire?.libelle}
                         </div>
+                        <ul style={{ listStyle: 'none', margin: `${ADMIN_SPACING.sm} 0`, padding: 0, display: 'grid', gap: ADMIN_SPACING.xs, fontSize: '14px' }}>
+                          {(a.classe.periodes || []).map((p) => (
+                            <li key={p.id} style={{ opacity: p.date_premiere_session > aujourdhuiISO() ? 0.75 : 1 }}>
+                              <PeriodeBadge numero={p.numero} /> <strong>{p.cours?.titre}</strong>{' '}
+                              <span style={{ color: ADMIN_COLORS.textSecondary, fontSize: '13px' }}>{etatPeriode(p)}</span>
+                            </li>
+                          ))}
+                        </ul>
                         <div style={{ margin: `${ADMIN_SPACING.sm} 0` }}>
                           {prochaine ? (
                             <>
-                              Prochaine session : <strong>{prochaine.libelle}</strong>, {formatDateCourte(prochaine.date)}
+                              Prochaine session : <strong>{libelleSession(prochaine)}</strong>, {formatDateCourte(prochaine.date)}
                             </>
                           ) : (
                             'Aucune session à venir'

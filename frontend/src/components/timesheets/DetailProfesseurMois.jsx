@@ -18,6 +18,7 @@ import { STATUTS_MOIS_PROF, STATUTS_TIMESHEET, TYPES_ACTIVITE } from '../../util
 import { formatDateCourte, formatDateHeure } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
+import { libelleSession } from '../../utils/classes';
 
 const LIBELLE_CHAMP = { nombre_heures: 'Heures', date_prestation: 'Date', type_activite: 'Type' };
 
@@ -206,7 +207,7 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                   {d.lignes.map((t) => (
                     <Tr key={t.id} fond={modifiees.has(t.id) ? 'var(--tone-warning-bg)' : undefined}>
                       <Td>{formatDateCourte(t.date_prestation)}</Td>
-                      <Td>{t.session?.libelle || 'Heures libres'}</Td>
+                      <Td>{(t.session ? libelleSession(t.session) : 'Heures libres')}</Td>
                       <Td>{TYPES_ACTIVITE[t.type_activite]?.label || t.type_activite}</Td>
                       <Td>{formatHeures(t.nombre_heures)}</Td>
                       <Td>{formatEuros(t.montant_brut)}</Td>

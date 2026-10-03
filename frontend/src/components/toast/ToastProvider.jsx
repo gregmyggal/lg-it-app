@@ -4,7 +4,7 @@ import { ToastContext } from './ToastContext';
 
 /**
  * Toasts de confirmation/erreur. La région est toujours montée et annoncée
- * (`aria-live="polite"`) ; chaque toast porte `role="status"` (ou `alert` pour une erreur).
+ * (`aria-live="polite"`) ; chaque toast porte `role="status"` (ou `alert` pour une erreur ; `warning` = avertissement non bloquant).
  */
 export default function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
@@ -25,6 +25,7 @@ export default function ToastProvider({ children }) {
   const api = useMemo(
     () => ({
       success: (message) => afficher('success', message, 8000),
+      warning: (message) => afficher('warning', message, 10000),
       error: (message) => afficher('error', message, 10000),
     }),
     [afficher],
@@ -70,7 +71,7 @@ export default function ToastProvider({ children }) {
                 fontWeight: 600,
               }}
             >
-              <span aria-hidden="true">{t.tone === 'error' ? '⚠' : '✔'}</span>
+              <span aria-hidden="true">{t.tone === 'success' ? '✔' : '⚠'}</span>
               <span style={{ flex: 1 }}>{t.message}</span>
               <button
                 type="button"

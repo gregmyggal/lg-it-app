@@ -6,6 +6,7 @@ import { ADMIN_COLORS, ADMIN_TONES } from '../../styles/AdminDesignSystem';
 import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../../utils/statuts';
 import { formatDate, formatDateCourte, formatHoraire } from '../../utils/dates';
 import { formatDuree } from '../../utils/format';
+import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 /**
  * Liste des sessions d'une classe (séances, bis, annulées) avec les actions d'ajustement.
@@ -15,14 +16,16 @@ import { formatDuree } from '../../utils/format';
  * @param {object[]} props.sessions CourseSessionResource[] triées par séance puis bis
  * @param {(session: object, mode: 'deplacer'|'annuler'|'bis') => void} props.onAjuster
  * @param {object[]} [props.liens] liens actifs du cours : colonne « Liens » (généraux + ceux de la séance)
+ * @param {string} [props.caption]
+ * @param {string} [props.legendeId] id de la légende décrivant le verrou 🔒
  * @param {(session: object) => void} [props.onRemplacer] ouvre le remplacement ponctuel d'un professeur (staff)
  */
-export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, liens }) {
+export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, liens, caption = 'Sessions de la classe', legendeId = 'legende-sessions' }) {
   const parId = new Map(sessions.map((s) => [s.id, s]));
   const remplacantDe = new Map(sessions.filter((s) => s.remplace_session_id).map((s) => [s.remplace_session_id, s]));
 
   return (
-    <Table caption="Sessions de la classe" minWidth="760px">
+    <Table caption={caption} minWidth="760px">
       <thead>
         <tr>
           <Th>Séance</Th>
@@ -48,7 +51,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
               fond={alerte ? ADMIN_TONES.warning.bg : barree ? ADMIN_COLORS.background : undefined}
             >
               <Td>
-                <strong>{s.libelle}</strong>
+                <strong>{libelleSession(s)}</strong>
               </Td>
               <Td>
                 <span
@@ -64,7 +67,12 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
                 )}
                 {origine && (
                   <div style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
-                    remplace la {origine.libelle.toLowerCase()} du {formatDate(origine.date)}
+                    remplace la {libelleSessionPhrase(origine)} du {formatDate(origine.date)}
+                  </div>
+                )}
+                {s.hors_periode && (
+                  <div style={{ fontSize: '13px' }}>
+                    <StatutBadge label="⚠ Hors période · rattrapage" tone="warning" />
                   </div>
                 )}
                 {alerte && (
@@ -119,7 +127,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
                 {barree ? (
                   remplacee ? (
                     <span style={{ fontSize: '13px' }}>
-                      Bis : {remplacee.libelle} · {formatDateCourte(remplacee.date)}
+                      Bis : {libelleSession(remplacee)} · {formatDateCourte(remplacee.date)}
                     </span>
                   ) : (
                     s.can?.bis && (
@@ -138,7 +146,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onRemplacer, 
                     variant="secondary"
                     disabled
                     title="Session passée ou terminée : elle ne peut plus être déplacée ni annulée."
-                    aria-describedby="legende-sessions"
+                    aria-describedby={legendeId}
                   >
                     🔒 Ajuster
                   </AdminButton>

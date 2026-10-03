@@ -38,8 +38,13 @@ export function supprimerClasse(id) {
   return client.delete(`/classes/${id}`);
 }
 
+/** Session renvoyée + `avertissements` (non bloquants, ex. « Cette date est après la fin de la période 1 »). */
+function avecAvertissements(res) {
+  return { ...res.data.data, avertissements: res.data.avertissements || res.data.data?.avertissements || [] };
+}
+
 export function deplacerSession(sessionId, payload) {
-  return client.put(`/sessions/${sessionId}`, payload).then((res) => res.data.data);
+  return client.put(`/sessions/${sessionId}`, payload).then(avecAvertissements);
 }
 
 export function annulerSession(sessionId, motif) {
@@ -49,5 +54,34 @@ export function annulerSession(sessionId, motif) {
 }
 
 export function creerBis(classeId, payload) {
-  return client.post(`/classes/${classeId}/sessions/bis`, payload).then((res) => res.data.data);
+  return client.post(`/classes/${classeId}/sessions/bis`, payload).then(avecAvertissements);
+}
+
+/** Périodes d'une classe (CLS-02) : toutes les réponses d'écriture renvoient la `Classe` complète. */
+export function apercuPeriode(classeId, payload) {
+  return client.post(`/classes/${classeId}/periodes/apercu`, payload).then((res) => res.data.data);
+}
+
+export function ajouterPeriode(classeId, payload) {
+  return client.post(`/classes/${classeId}/periodes`, payload).then((res) => res.data.data);
+}
+
+export function changerCoursPeriode(classeId, classePeriodeId, coursId) {
+  return client.put(`/classes/${classeId}/periodes/${classePeriodeId}`, { cours_id: coursId }).then((res) => res.data.data);
+}
+
+export function supprimerPeriode(classeId, classePeriodeId) {
+  return client.delete(`/classes/${classeId}/periodes/${classePeriodeId}`);
+}
+
+export function annulerPeriode(classeId, classePeriodeId, motif) {
+  return client.post(`/classes/${classeId}/periodes/${classePeriodeId}/annuler`, { motif }).then((res) => res.data.data);
+}
+
+/** Historique des changements de cours d'une période (du plus récent au plus ancien). */
+export function useHistoriqueCoursPeriode(classeId, classePeriodeId) {
+  return useApiQuery(
+    () => client.get(`/classes/${classeId}/periodes/${classePeriodeId}/historique-cours`).then((res) => res.data.data),
+    [classeId, classePeriodeId],
+  );
 }

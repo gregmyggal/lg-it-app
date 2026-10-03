@@ -7,6 +7,7 @@ import { ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesi
 import { annulerSession, creerBis, deplacerSession } from '../../hooks/useClasses';
 import { getErrorData, getErrorMessage, getFieldErrors, getStatus } from '../../api/errors';
 import { formatDate, formatDateLongue } from '../../utils/dates';
+import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 const MODES = {
   deplacer: 'Déplacer à une autre date',
@@ -17,6 +18,7 @@ const MODES = {
 /**
  * Ajustement d'une session : déplacer, annuler (motif obligatoire) ou ajouter un bis (mock-up 03).
  * Les actions proposées viennent de `session.can` ; les erreurs 409/422 de l'API sont affichées telles quelles.
+ * Une date après la fin de la période n'est jamais bloquée : avertissement (séance « hors période »).
  * Le dépassement du nombre de sessions (409) demande une confirmation explicite avant de renvoyer la demande.
  *
  * @param {object} props
@@ -24,10 +26,12 @@ const MODES = {
  * @param {object[]} props.sessions toutes les sessions de la classe (pour lister les séances d'un bis)
  * @param {object|null} props.session session ajustée ; `null` = ajout d'un bis sans session de départ
  * @param {'deplacer'|'annuler'|'bis'} [props.modeInitial]
+ * @param {number} [props.periodeInitiale] période présélectionnée pour un bis sans session de départ
  * @param {() => void} props.onClose
- * @param {(message: string) => void} props.onDone appelée après succès, avec le message de confirmation
+ * @param {(message: string, avertissements?: string[]) => void} props.onDone appelée après succès, avec le message de confirmation
+ *   et les avertissements non bloquants du serveur (ex. date après la fin de la période)
  */
-export default function SessionAdjustModal({ classe, sessions, session, modeInitial, onClose, onDone }) {
+export default function SessionAdjustModal({ classe, sessions, session, modeInitial, periodeInitiale, onClose, onDone }) {
   const modesDispo = useMemo(() => {
     const liste = [];
     if (session?.can?.update) liste.push('deplacer');
@@ -41,20 +45,29 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
   const [heureDebut, setHeureDebut] = useState(session?.heure_debut || classe.heure_debut);
   const [heureFin, setHeureFin] = useState(session?.heure_fin || classe.heure_fin);
   const [motif, setMotif] = useState('');
-  const [seance, setSeance] = useState(String(session?.seance_numero || ''));
+  const [seance, setSeance] = useState(session ? `${session.periode_numero || 1}-${session.seance_numero}` : '');
   const [depassement, setDepassement] = useState(null); // { message }
   const [confirme, setConfirme] = useState(false);
   const [erreurs, setErreurs] = useState({});
   const [message, setMessage] = useState(null);
   const [envoi, setEnvoi] = useState(false);
 
-  const numeros = useMemo(
-    () => [...new Set(sessions.map((s) => s.seance_numero))].sort((a, b) => a - b),
-    [sessions],
-  );
-  const periode = classe.periode;
+  // Séances proposables pour un bis : « P1 · Séance 3 » (période + numéro, sans les bis).
+  const seances = useMemo(() => {
+    const vues = new Map();
+    sessions.forEach((s) => {
+      const cle = `${s.periode_numero || 1}-${s.seance_numero}`;
+      if (!vues.has(cle)) vues.set(cle, { cle, periode: s.periode_numero || 1, numero: s.seance_numero });
+    });
+    return [...vues.values()].sort((a, b) => a.periode - b.periode || a.numero - b.numero);
+  }, [sessions]);
   const modeBisSeul = modesDispo.length === 1;
-  const seanceEffective = seance || String(numeros[0] || '');
+  const seanceEffective = seance || seances.find((x) => x.periode === periodeInitiale)?.cle || seances[0]?.cle || '';
+  const [periodeBis, numeroBis] = seanceEffective.split('-').map(Number);
+  // Période concernée par la date saisie : celle de la session déplacée, ou celle de la séance du bis.
+  const numeroPeriode = mode === 'bis' ? periodeBis : session?.periode_numero || 1;
+  const periode = (classe.periodes || []).find((p) => p.numero === numeroPeriode)?.periode || null;
+  const horsPeriode = Boolean(periode && date && date > periode.date_fin && mode !== 'annuler');
 
   function changerMode(nouveau) {
     setMode(nouveau);
@@ -76,8 +89,8 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
   const titre = !session
     ? 'Ajouter un bis à la classe'
     : mode === 'bis'
-      ? `Remplacer la ${session.libelle.toLowerCase()} (${formatDate(session.date)})`
-      : `Ajuster la ${session.libelle.toLowerCase()} — ${formatDateLongue(session.date)}`;
+      ? `Remplacer la ${libelleSessionPhrase(session)} (${formatDate(session.date)})`
+      : `Ajuster la ${libelleSessionPhrase(session)} — ${formatDateLongue(session.date)}`;
 
   const valide =
     (mode === 'deplacer' && Boolean(date)) ||
@@ -85,7 +98,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
     (mode === 'bis' && Boolean(date) && Boolean(seanceEffective) && (!depassement || confirme));
 
   const libelleBouton =
-    mode === 'deplacer' ? 'Déplacer la séance' : mode === 'annuler' ? `Annuler la séance ${session?.seance_numero}` : 'Créer le bis';
+    mode === 'deplacer' ? 'Déplacer la séance' : mode === 'annuler' ? `Annuler la séance ${session ? libelleSession(session) : ''}` : 'Créer le bis';
 
   async function soumettre(e) {
     e.preventDefault();
@@ -96,19 +109,20 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
     try {
       if (mode === 'deplacer') {
         const maj = await deplacerSession(session.id, { date, heure_debut: heureDebut, heure_fin: heureFin });
-        onDone(`${maj.libelle} déplacée au ${formatDate(maj.date)}. Elle garde son numéro de séance.`);
+        onDone(`${libelleSession(maj)} déplacée au ${formatDate(maj.date)}. Elle garde son numéro de séance et sa période.`, maj.avertissements);
       } else if (mode === 'annuler') {
         await annulerSession(session.id, motif.trim());
-        onDone(`${session.libelle} annulée (motif : ${motif.trim()}). Elle garde son numéro et reste visible avec son motif.`);
+        onDone(`${libelleSession(session)} annulée (motif : ${motif.trim()}). Elle garde son numéro et reste visible avec son motif.`);
       } else {
         const bis = await creerBis(classe.id, {
-          seance_numero: Number(seanceEffective),
+          seance_numero: numeroBis,
+          periode_numero: periodeBis,
           date,
           heure_debut: heureDebut,
           heure_fin: heureFin,
           confirmer_depassement: Boolean(depassement && confirme),
         });
-        onDone(`${bis.libelle} créée le ${formatDate(bis.date)}. Les autres sessions de la classe restent inchangées.`);
+        onDone(`${libelleSession(bis)} créée le ${formatDate(bis.date)}. Les autres sessions de la classe restent inchangées.`, bis.avertissements);
       }
     } catch (err) {
       if (mode === 'bis' && getStatus(err) === 409 && getErrorData(err).nb_sessions) {
@@ -123,7 +137,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
   }
 
   const aidePeriode = periode
-    ? `La période ${periode.numero} se termine le ${formatDate(periode.date_fin)}.`
+    ? `La période ${periode.numero} se termine le ${formatDate(periode.date_fin)}. Une date plus tardive reste possible (séance « hors période »).`
     : '';
 
   return (
@@ -185,9 +199,10 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               aide={aidePeriode}
               erreurs={erreurs}
             />
+            <AvertissementHorsPeriode actif={horsPeriode} periode={periode} />
             <Consequence>
-              La {session.libelle.toLowerCase()} est déplacée{date ? ` au ${formatDate(date)}` : ''} et{' '}
-              <strong>garde son numéro de séance {session.seance_numero}</strong>.
+              La {libelleSessionPhrase(session)} est déplacée{date ? ` au ${formatDate(date)}` : ''} et{' '}
+              <strong>garde son numéro de séance {session.seance_numero}</strong> et sa période.
             </Consequence>
           </>
         )}
@@ -198,7 +213,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               <AdminInput id="ajust-motif" value={motif} onChange={(e) => modifier(setMotif)(e.target.value)} error={erreurs.motif_annulation} />
             </AdminFormField>
             <Consequence>
-              La {session.libelle.toLowerCase()} devient <strong>« {session.libelle} — Annulée »</strong> : elle{' '}
+              La {libelleSessionPhrase(session)} devient <strong>« {libelleSession(session)} — Annulée »</strong> : elle{' '}
               <strong>garde son numéro</strong> et reste visible avec son motif. Vous pourrez ensuite la remplacer par un bis à une autre date de la période.
             </Consequence>
           </>
@@ -210,7 +225,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               <AdminSelect
                 id="ajust-seance"
                 value={seanceEffective}
-                options={numeros.map((n) => ({ value: String(n), label: `Séance ${n}` }))}
+                options={seances.map((x) => ({ value: x.cle, label: `P${x.periode} · Séance ${x.numero}` }))}
                 onChange={(e) => modifier(setSeance)(e.target.value)}
                 error={erreurs.seance_numero}
               />
@@ -223,9 +238,10 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               heureFin={heureFin}
               setHeureFin={modifier(setHeureFin)}
               labelDate="Date du bis"
-              aide={`Une session ajoutée est toujours rattachée à l'une des séances : « Séance ${seanceEffective} bis ». ${aidePeriode}`}
+              aide={`Une session ajoutée est toujours rattachée à l'une des séances : « P${periodeBis} · Séance ${numeroBis} bis ». ${aidePeriode}`}
               erreurs={erreurs}
             />
+            <AvertissementHorsPeriode actif={horsPeriode} periode={periode} />
             {depassement && (
               <div
                 role="alert"
@@ -290,5 +306,14 @@ function Consequence({ children }) {
       <strong>Conséquence</strong>
       <div style={{ marginTop: ADMIN_SPACING.xs }}>{children}</div>
     </div>
+  );
+}
+
+function AvertissementHorsPeriode({ actif, periode }) {
+  if (!actif) return null;
+  return (
+    <Banner tone="warning" role="status">
+      <strong>⚠ Après la fin de la période {periode.numero} ({formatDate(periode.date_fin)}) : non bloquant.</strong> La séance sera marquée « Hors période · rattrapage ».
+    </Banner>
   );
 }

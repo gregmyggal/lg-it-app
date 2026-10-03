@@ -8,6 +8,7 @@ import { getErrorMessage, getFieldErrors } from '../../api/errors';
 import { optionsStatut, TYPES_ACTIVITE } from '../../utils/statuts';
 import { formatDateLongue, formatHoraire } from '../../utils/dates';
 import { formatDuree } from '../../utils/format';
+import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 /**
  * Raccourci d'encodage d'une session depuis « Mes classes » (mock-up 01) : 2 clics (ouvrir, soumettre).
@@ -41,7 +42,7 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
         commentaire: commentaire || null,
       });
       if (soumettre) await soumettreSaisie(saisie.id);
-      onDone(soumettre ? `Heures soumises pour la ${session.libelle.toLowerCase()}.` : `Brouillon enregistré pour la ${session.libelle.toLowerCase()}.`);
+      onDone(soumettre ? `Heures soumises pour la ${libelleSessionPhrase(session)}.` : `Brouillon enregistré pour la ${libelleSessionPhrase(session)}.`);
     } catch (err) {
       setErreurs(getFieldErrors(err));
       setMessage(getErrorMessage(err));
@@ -53,7 +54,7 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
   return (
     <AdminModal
       isOpen
-      title={`Encoder mes heures — ${session.libelle}`}
+      title={`Encoder mes heures — ${libelleSession(session)}`}
       onClose={onClose}
       closeOnBackdrop={false}
       footer={
@@ -73,7 +74,7 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
         </Banner>
       )}
       <p style={{ marginTop: 0 }}>
-        <strong>{classeLibelle}</strong> · {session.libelle}
+        <strong>{classeLibelle}</strong> · {libelleSession(session)}
         <br />
         {formatDateLongue(session.date)} · {formatHoraire(session.heure_debut, session.heure_fin)}
       </p>

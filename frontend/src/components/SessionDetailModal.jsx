@@ -4,6 +4,7 @@ import AdminButton from './AdminButton';
 import StatutBadge from './ui/StatutBadge';
 import Banner from './ui/Banner';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
+import { coursDeSession, libelleSession } from '../utils/classes';
 import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../utils/statuts';
 import { formatDateLongue, formatHoraire, nomJour } from '../utils/dates';
 
@@ -12,7 +13,7 @@ import { formatDateLongue, formatHoraire, nomJour } from '../utils/dates';
  * Les ajustements (déplacer, annuler, bis) se font sur la page de la classe.
  *
  * @param {object} props
- * @param {object|null} props.session CourseSessionResource (avec `classe.cours`)
+ * @param {object|null} props.session CourseSessionResource (avec `cours` de sa période)
  * @param {() => void} props.onClose
  */
 export default function SessionDetailModal({ session, onClose }) {
@@ -24,7 +25,7 @@ export default function SessionDetailModal({ session, onClose }) {
     <AdminModal
       isOpen
       size="sm"
-      title={`${classe?.cours?.titre || 'Session'} — ${session.libelle}`}
+      title={`${libelleSession(session)} — ${coursDeSession(session)?.titre || 'Session'}`}
       onClose={onClose}
       footer={
         <>
@@ -75,6 +76,14 @@ export default function SessionDetailModal({ session, onClose }) {
           <>
             <dt style={{ color: ADMIN_COLORS.textSecondary }}>Lieu</dt>
             <dd style={{ margin: 0 }}>{session.lieu}</dd>
+          </>
+        )}
+        {session.hors_periode && (
+          <>
+            <dt style={{ color: ADMIN_COLORS.textSecondary }}>Période</dt>
+            <dd style={{ margin: 0 }}>
+              <StatutBadge label="⚠ Hors période · rattrapage" tone="warning" />
+            </dd>
           </>
         )}
         <dt style={{ color: ADMIN_COLORS.textSecondary }}>Statut</dt>

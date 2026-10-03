@@ -99,10 +99,17 @@ export function libelleCreneau(classe) {
   return `${nomJour(classe.jour_semaine)} ${formatHoraire(classe.heure_debut, classe.heure_fin)}`;
 }
 
-/** « React — mercredi 14h–17h » */
+/** Titre d'une classe : `titre` de l'API (« Cours P1 → Cours P2 »), sinon dérivé de ses périodes. */
+export function titreClasse(classe) {
+  if (classe.titre) return classe.titre;
+  const cours = (classe.periodes || []).map((p) => p.cours?.titre).filter(Boolean);
+  if (cours.length === 0) return classe.cours?.titre || 'Cours';
+  return cours[0] === cours[cours.length - 1] ? cours[0] : cours.join(' → ');
+}
+
+/** « Scratch → Python — mercredi 14h–17h » */
 export function libelleClasse(classe) {
-  const cours = classe.cours?.titre || 'Cours';
-  return `${cours} — ${libelleCreneau(classe)}`;
+  return `${titreClasse(classe)} — ${libelleCreneau(classe)}`;
 }
 
 /** Lundi de la semaine contenant la date. */
@@ -137,4 +144,17 @@ export function heuresEntre(debut, fin) {
   const [h2, m2] = String(fin).split(':').map(Number);
   const minutes = h2 * 60 + m2 - (h1 * 60 + m1);
   return Number.isFinite(minutes) && minutes > 0 ? minutes / 60 : 0;
+}
+
+/** Premier jour de classe strictement après `apres` (ISO) et au plus tôt `minimum` (ISO), pour le jour ISO `jour` (1 = lundi). */
+export function jourDeClasseApres(apres, minimum, jour) {
+  let d = addDays(parseDate(apres), 1);
+  const min = minimum ? parseDate(minimum) : null;
+  if (min && d < min) d = min;
+  for (let i = 0; i < 7; i += 1) {
+    const iso = d.getDay() === 0 ? 7 : d.getDay();
+    if (iso === jour) return toISODate(d);
+    d = addDays(d, 1);
+  }
+  return '';
 }

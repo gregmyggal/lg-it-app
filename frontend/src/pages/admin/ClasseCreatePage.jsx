@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
-import { AdminFormField, AdminInput, AdminSelect } from '../../components/AdminFormField';
+import { AdminFormField, AdminInput, AdminSelect, AdminCheckbox } from '../../components/AdminFormField';
 import Banner from '../../components/ui/Banner';
 import LinkButton from '../../components/ui/LinkButton';
 import { Section } from '../../components/ui/Card';
 import { LoadingBlock, ErrorBlock } from '../../components/ui/DataStates';
 import ClasseApercu from '../../components/classes/ClasseApercu';
+import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import { anneeParDefaut, useAnneesScolaires } from '../../hooks/useAnneesScolaires';
 import { useCours } from '../../hooks/useCours';
 import { useCalendrierScolaire } from '../../hooks/useCalendrierScolaire';
@@ -16,12 +17,12 @@ import { useHeuresDefrayables } from '../../hooks/useHeuresDefrayables';
 import { formatDuree } from '../../utils/format';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
-import { JOURS_SEMAINE, ajouterHeures, heuresEntre, formatHoraire, formatDate, formatDateLongue, libelleClasse, nomJour, parseDate } from '../../utils/dates';
+import { JOURS_SEMAINE, ajouterHeures, heuresEntre, formatDate, formatDateLongue, jourDeClasseApres, libelleClasse, nomJour, parseDate } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
 
 const DELAI_APERCU_MS = 400;
 
-/** Écran « Nouvelle classe » : formulaire + aperçu en direct des 14 dates (mock-up 02). */
+/** Écran « Nouvelle classe » : créneau commun + une ou deux périodes (cours + date), aperçu en direct (mock-up CLS-02/01). */
 export default function ClasseCreatePage() {
   const toast = useToast();
   const [params] = useSearchParams();
@@ -29,15 +30,18 @@ export default function ClasseCreatePage() {
   const cours = useCours();
 
   const [form, setForm] = useState({
-    cours_id: params.get('cours_id') || '',
     annee_scolaire_id: params.get('annee_scolaire_id') || '',
-    periode_id: '',
     jour_semaine: '',
     lieu: '',
     heure_debut: '14:00',
     heure_fin: '15:30',
-    date_premiere_session: '',
   });
+  const [ouvertes, setOuvertes] = useState({ 1: true, 2: false });
+  const [per, setPer] = useState({
+    1: { cours_id: params.get('cours_id') || '', date: '' },
+    2: { cours_id: '', date: '' },
+  });
+  const [dateP2Manuelle, setDateP2Manuelle] = useState(false);
   const [finManuelle, setFinManuelle] = useState(false); // tant que la fin n'est pas saisie à la main, elle suit début + durée de séance
   const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null });
   const [envoi, setEnvoi] = useState(false);
@@ -47,18 +51,16 @@ export default function ClasseCreatePage() {
   const listeAnnees = useMemo(() => annees.data || [], [annees.data]);
   const anneeId = form.annee_scolaire_id || (anneeParDefaut(listeAnnees) ? String(anneeParDefaut(listeAnnees).id) : '');
   const annee = listeAnnees.find((a) => String(a.id) === anneeId);
-  const periodeId = annee?.periodes.some((p) => String(p.id) === form.periode_id)
-    ? form.periode_id
-    : annee?.periodes[0]
-      ? String(annee.periodes[0].id)
-      : '';
-  const periode = annee?.periodes.find((p) => String(p.id) === periodeId) || null;
+  const periodeAnnee = (numero) => annee?.periodes.find((p) => p.numero === numero) || null;
+  const numerosOuverts = [1, 2].filter((n) => ouvertes[n]);
+  const premierOuvert = numerosOuverts[0];
   const calendrier = useCalendrierScolaire(anneeId);
   const calendrierVide = Boolean(anneeId) && !calendrier.loading && !calendrier.error && calendrier.data?.length === 0;
 
   // Durée de séance et heures défrayables applicables (défaut global ou valeur du cours) : le serveur décide.
-  const anneeCivile = Number((form.date_premiere_session || annee?.date_debut || '').slice(0, 4)) || new Date().getFullYear();
-  const defrayage = useHeuresDefrayables(form.cours_id, anneeCivile).data;
+  const coursRef = per[premierOuvert]?.cours_id;
+  const anneeCivile = Number((per[premierOuvert]?.date || annee?.date_debut || '').slice(0, 4)) || new Date().getFullYear();
+  const defrayage = useHeuresDefrayables(coursRef, anneeCivile).data;
   const dureeSeance = defrayage?.duree_seance_defaut;
 
   useEffect(() => {
@@ -77,22 +79,40 @@ export default function ClasseCreatePage() {
     setEchec(null);
   }
 
+  function majPeriode(numero, champ, valeur) {
+    setPer((prev) => ({ ...prev, [numero]: { ...prev[numero], [champ]: valeur } }));
+    if (numero === 2 && champ === 'date') setDateP2Manuelle(true);
+    setEchec(null);
+  }
+
+  function basculer(numero, ouverte) {
+    const autres = numerosOuverts.filter((n) => n !== numero);
+    if (!ouverte && autres.length === 0) return; // au moins une période
+    setOuvertes((prev) => ({ ...prev, [numero]: ouverte }));
+    if (numero === 2 && ouverte) setDateP2Manuelle(false);
+    setEchec(null);
+  }
+
   const charge = useMemo(
     () => ({
-      cours_id: Number(form.cours_id) || '',
       annee_scolaire_id: Number(anneeId) || '',
-      periode_id: Number(periodeId) || '',
       jour_semaine: Number(form.jour_semaine) || '',
       heure_debut: form.heure_debut,
       heure_fin: form.heure_fin,
       lieu: form.lieu.trim() || null,
-      date_premiere_session: form.date_premiere_session,
+      periodes: [1, 2]
+        .filter((n) => ouvertes[n])
+        .map((n) => ({
+          periode_id: Number(annee?.periodes.find((p) => p.numero === n)?.id) || '',
+          cours_id: Number(per[n].cours_id) || '',
+          date_premiere_session: per[n].date,
+        })),
     }),
-    [form, anneeId, periodeId],
+    [form, anneeId, annee, ouvertes, per],
   );
   const complet = Boolean(
-    charge.cours_id && charge.annee_scolaire_id && charge.periode_id && charge.jour_semaine &&
-      charge.heure_debut && charge.heure_fin && charge.date_premiere_session,
+    charge.annee_scolaire_id && charge.jour_semaine && charge.heure_debut && charge.heure_fin && charge.periodes.length > 0 &&
+      charge.periodes.every((p) => p.periode_id && p.cours_id && p.date_premiere_session),
   );
   const cleCharge = JSON.stringify(charge);
 
@@ -118,14 +138,26 @@ export default function ClasseCreatePage() {
     };
   }, [cleCharge, complet, calendrierVide]);
 
-  const blocage = apercu.data?.blocage || null;
-  const erreurs = { ...apercu.erreurs, ...(echec?.champs || {}) };
-  const erreurDate = blocage ? blocage.message : erreurs.date_premiere_session;
+  // Date de la P2 pré-proposée : premier jour de classe après la dernière séance de la P1 (dans la période 2).
+  const derniereP1 = apercu.data?.periodes?.find((p) => p.numero === 1)?.seances?.at(-1)?.date;
+  const debutP2 = periodeAnnee(2)?.date_debut;
+  useEffect(() => {
+    if (!ouvertes[2] || !ouvertes[1] || dateP2Manuelle || !derniereP1 || !form.jour_semaine) return;
+    const proposee = jourDeClasseApres(derniereP1, debutP2, Number(form.jour_semaine));
+    if (proposee) setPer((prev) => (prev[2].date === proposee ? prev : { ...prev, 2: { ...prev[2], date: proposee } }));
+  }, [ouvertes, dateP2Manuelle, derniereP1, debutP2, form.jour_semaine]);
 
-  const dateChoisie = form.date_premiere_session ? parseDate(form.date_premiere_session) : null;
-  const jourChoisi = Number(form.jour_semaine);
-  const jourDeLaDate = dateChoisie ? (dateChoisie.getDay() === 0 ? 7 : dateChoisie.getDay()) : null;
-  const dateRecalee = apercu.data?.recale ? apercu.data.date_premiere_session : null;
+  const planApercu = apercu.data?.periodes || [];
+  const blocages = planApercu.filter((p) => p.blocage).map((p) => p.blocage);
+  const blocage = blocages[0] || null;
+  const nbSeances = planApercu.reduce((n, p) => n + p.seances.length, 0);
+  const nbHors = planApercu.reduce((n, p) => n + p.seances.filter((s) => s.hors_periode).length, 0);
+  const avertissements = planApercu.flatMap((p) => p.avertissements || []);
+  const erreurs = { ...apercu.erreurs, ...(echec?.champs || {}) };
+  const erreurPeriode = (numero, champ) => {
+    const idx = charge.periodes.findIndex((_, i) => numerosOuverts[i] === numero);
+    return erreurs[`periodes.${idx}.${champ}`] || (blocage?.periode_numero === numero && champ === 'date_premiere_session' ? blocage.message : undefined);
+  };
 
   async function soumettre(e) {
     e.preventDefault();
@@ -134,14 +166,17 @@ export default function ClasseCreatePage() {
     setEchec(null);
     try {
       const classe = await creerClasse(charge);
-      const seances = apercu.data?.seances || [];
-      const sautees = apercu.data?.dates_sautees?.length;
-      const resume = seances.length
-        ? `${seances.length} sessions générées du ${formatDate(seances[0].date)} au ${formatDate(seances[seances.length - 1].date)}${
+      const resume = planApercu
+        .map((p) => {
+          const sautees = p.dates_sautees?.length || 0;
+          const debut = p.seances[0]?.date;
+          const fin = p.seances[p.seances.length - 1]?.date;
+          return `P${p.numero} : ${p.seances.length} séances du ${formatDate(debut)} au ${formatDate(fin)}${
             sautees ? ` (${sautees} date${sautees > 1 ? 's' : ''} sautée${sautees > 1 ? 's' : ''})` : ''
-          }`
-        : `${classe.nb_sessions} sessions générées`;
-      toast.success(`Classe « ${libelleClasse(classe)} » créée : ${resume}.`);
+          }`;
+        })
+        .join(' · ') || `${classe.nb_sessions} séances générées`;
+      toast.success(`Classe « ${libelleClasse(classe)} » créée. ${resume}.`);
       setCreee({ classe, resume });
     } catch (err) {
       setEchec({ message: getErrorMessage(err, "La classe n'a pas pu être créée."), champs: getFieldErrors(err) });
@@ -153,7 +188,9 @@ export default function ClasseCreatePage() {
   function recommencer() {
     setCreee(null);
     setEchec(null);
-    setForm((prev) => ({ ...prev, date_premiere_session: '', lieu: '' }));
+    setDateP2Manuelle(false);
+    setPer((prev) => ({ 1: { ...prev[1], date: '' }, 2: { ...prev[2], date: '' } }));
+    setForm((prev) => ({ ...prev, lieu: '' }));
   }
 
   const entete = (
@@ -165,7 +202,7 @@ export default function ClasseCreatePage() {
           Scolarité › <Link to="/admin/classes">Classes</Link> › Nouvelle classe
         </>
       }
-      description="Un seul formulaire : le cours, le créneau et la première date. Les 14 sessions sont générées à la validation."
+      description="Un seul formulaire : le groupe et le créneau, puis une ou deux périodes (cours + date de démarrage). Les 14 séances de chaque période sont générées à la validation."
     />
   );
 
@@ -215,7 +252,7 @@ export default function ClasseCreatePage() {
             }
           >
             <strong>
-              Classe « {libelleClasse(creee.classe)} » créée : {creee.resume}.
+              Classe « {libelleClasse(creee.classe)} » créée. {creee.resume}.
             </strong>
           </Banner>
         </AdminPageContent>
@@ -223,7 +260,16 @@ export default function ClasseCreatePage() {
     );
   }
 
-  const messageBlocage = 'Création bloquée : la 14e session dépasse la période';
+  const libelleCreation = !complet
+    ? 'Créer la classe'
+    : nbHors > 0
+      ? `Créer quand même (${nbSeances} séances, ${nbHors} hors période)`
+      : `Créer la classe (${nbSeances || numerosOuverts.length * 14} séances)`;
+  const coursTitres = Object.fromEntries(
+    numerosOuverts.map((n) => [n, (cours.data || []).find((c) => String(c.id) === String(per[n].cours_id))?.titre]),
+  );
+  const optionsCours = (cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }));
+  const jourChoisi = Number(form.jour_semaine);
 
   return (
     <>
@@ -231,7 +277,7 @@ export default function ClasseCreatePage() {
       <AdminPageContent>
         {echec && (
           <Banner tone="error">
-            <strong>La classe n'a pas pu être créée. Aucune session n'a été générée (l'opération a été annulée en entier).</strong>{' '}
+            <strong>La classe n'a pas pu être créée. Aucune séance n'a été générée (l'opération a été annulée en entier).</strong>{' '}
             {echec.message} Corrigez le formulaire puis réessayez.
           </Banner>
         )}
@@ -244,7 +290,7 @@ export default function ClasseCreatePage() {
               </LinkButton>
             }
           >
-            <strong>Le calendrier scolaire {annee?.libelle} est vide.</strong> Sans lui, les sessions ne pourront pas
+            <strong>Le calendrier scolaire {annee?.libelle} est vide.</strong> Sans lui, les séances ne pourront pas
             sauter les vacances ni les jours fériés. Importez d'abord le calendrier FWB.
           </Banner>
         )}
@@ -258,36 +304,15 @@ export default function ClasseCreatePage() {
           }}
         >
           <form onSubmit={soumettre} noValidate aria-label="Nouvelle classe">
-            <Section title="1 · Quelle classe ?" headingLevel={2}>
-              <AdminFormField label="Cours du catalogue" htmlFor="classe-cours" required error={erreurs.cours_id}>
+            <Section title="1 · Le groupe et le créneau" subtitle="Valables pour toutes les périodes" headingLevel={2}>
+              <AdminFormField label="Année scolaire" htmlFor="classe-annee" required error={erreurs.annee_scolaire_id}>
                 <AdminSelect
-                  id="classe-cours"
-                  value={form.cours_id}
-                  placeholder="Choisir un cours"
-                  options={(cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }))}
-                  onChange={(e) => maj('cours_id', e.target.value)}
-                  error={erreurs.cours_id}
+                  id="classe-annee"
+                  value={anneeId}
+                  options={listeAnnees.map((a) => ({ value: String(a.id), label: a.libelle }))}
+                  onChange={(e) => maj('annee_scolaire_id', e.target.value)}
                 />
               </AdminFormField>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: ADMIN_SPACING.lg }}>
-                <AdminFormField label="Année scolaire" htmlFor="classe-annee" required error={erreurs.annee_scolaire_id}>
-                  <AdminSelect
-                    id="classe-annee"
-                    value={anneeId}
-                    options={listeAnnees.map((a) => ({ value: String(a.id), label: a.libelle }))}
-                    onChange={(e) => maj('annee_scolaire_id', e.target.value)}
-                  />
-                </AdminFormField>
-                <AdminFormField label="Période" htmlFor="classe-periode" required error={erreurs.periode_id}>
-                  <AdminSelect
-                    id="classe-periode"
-                    value={periodeId}
-                    options={(annee?.periodes || []).map((p) => ({ value: String(p.id), label: `Période ${p.numero}` }))}
-                    onChange={(e) => maj('periode_id', e.target.value)}
-                    error={erreurs.periode_id}
-                  />
-                </AdminFormField>
-              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: ADMIN_SPACING.lg }}>
                 <AdminFormField label="Jour" htmlFor="classe-jour" required error={erreurs.jour_semaine}>
                   <AdminSelect
@@ -317,37 +342,110 @@ export default function ClasseCreatePage() {
                     Séance {formatDuree(heuresEntre(form.heure_debut, form.heure_fin))} · Défrayé {formatDuree(defrayage.valeur)}
                   </strong>{' '}
                   ({defrayage.source === 'cours' ? 'valeur définie sur le cours' : 'défaut global'}). Les professeurs sont défrayés pour ces heures
-                  (cours + préparation) : 14 séances × {formatDuree(defrayage.valeur)} = {formatDuree(14 * defrayage.valeur)} défrayables.
+                  (cours + préparation) : 14 séances × {formatDuree(defrayage.valeur)} = {formatDuree(14 * defrayage.valeur)} défrayables par période.
                 </Banner>
               )}
-              <AdminFormField label="Date de la première session" htmlFor="classe-date" required error={erreurDate}>
-                <AdminInput
-                  id="classe-date"
-                  type="date"
-                  value={form.date_premiere_session}
-                  onChange={(e) => maj('date_premiere_session', e.target.value)}
-                  error={erreurDate}
-                  aria-describedby="classe-date-aide"
-                />
-                <div id="classe-date-aide" style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.sm }} aria-live="polite">
-                  {dateChoisie && jourChoisi && dateRecalee
-                    ? `La date du ${formatDate(form.date_premiere_session)} est un ${nomJour(jourDeLaDate)}, pas un ${nomJour(jourChoisi)} : la première session sera recalée au ${formatDateLongue(dateRecalee)}. Choisissez un ${nomJour(jourChoisi)}, ou changez le jour de la classe.`
-                    : dateChoisie && jourChoisi && jourDeLaDate === jourChoisi
-                      ? `${formatDateLongue(form.date_premiere_session)} : correspond au jour choisi.`
-                      : ''}
+            </Section>
+
+            <Section title="2 · Périodes à ouvrir maintenant" headingLevel={2}>
+              <fieldset style={{ border: 0, padding: 0, margin: `0 0 ${ADMIN_SPACING.lg}` }}>
+                <legend style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', marginBottom: ADMIN_SPACING.sm }}>
+                  Périodes à créer
+                </legend>
+                <div style={{ display: 'flex', gap: ADMIN_SPACING.xl, flexWrap: 'wrap' }}>
+                  {[1, 2].map((n) => (
+                    <AdminCheckbox
+                      key={n}
+                      id={`periode-ouverte-${n}`}
+                      label={n === 2 ? 'Ajouter la période 2 maintenant' : 'Période 1'}
+                      checked={ouvertes[n]}
+                      onChange={(e) => basculer(n, e.target.checked)}
+                      disabled={ouvertes[n] && numerosOuverts.length === 1}
+                    />
+                  ))}
                 </div>
-              </AdminFormField>
+                <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.sm }}>
+                  Au moins une période. L'autre pourra être ajoutée plus tard depuis la fiche de la classe (utile pour une classe qui démarre en période 2).
+                </div>
+              </fieldset>
+
+              {[1, 2].map((n) => {
+                const pa = periodeAnnee(n);
+                const planN = planApercu.find((p) => p.numero === n);
+                const dateChoisie = per[n].date ? parseDate(per[n].date) : null;
+                const jourDeLaDate = dateChoisie ? (dateChoisie.getDay() === 0 ? 7 : dateChoisie.getDay()) : null;
+                if (!ouvertes[n]) {
+                  return (
+                    <p key={n} style={{ margin: `0 0 ${ADMIN_SPACING.lg}`, fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
+                      <PeriodeBadge numero={n} /> La période {n} n'est pas ouverte : vous pourrez l'ajouter plus tard depuis la fiche de la classe.
+                    </p>
+                  );
+                }
+                const erreurDate = erreurPeriode(n, 'date_premiere_session');
+                return (
+                  <fieldset
+                    key={n}
+                    style={{
+                      border: `1px solid ${ADMIN_COLORS.border}`,
+                      borderRadius: ADMIN_RADIUS.md,
+                      padding: ADMIN_SPACING.lg,
+                      margin: `0 0 ${ADMIN_SPACING.lg}`,
+                    }}
+                  >
+                    <legend style={{ padding: `0 ${ADMIN_SPACING.sm}` }}>
+                      <PeriodeBadge numero={n} /> <strong>Période {n}</strong> · 14 séances
+                    </legend>
+                    <AdminFormField label={`Cours du catalogue (P${n})`} htmlFor={`classe-cours-${n}`} required error={erreurPeriode(n, 'cours_id')}>
+                      <AdminSelect
+                        id={`classe-cours-${n}`}
+                        value={per[n].cours_id}
+                        placeholder="Choisir un cours"
+                        options={optionsCours}
+                        onChange={(e) => majPeriode(n, 'cours_id', e.target.value)}
+                        error={erreurPeriode(n, 'cours_id')}
+                      />
+                      {n === 2 && (
+                        <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.sm }}>
+                          Peut être identique au cours de la période 1 (les liens par séance sont alors partagés).
+                        </div>
+                      )}
+                    </AdminFormField>
+                    <AdminFormField label={`Date de démarrage de la période ${n}`} htmlFor={`classe-date-${n}`} required error={erreurDate}>
+                      <AdminInput
+                        id={`classe-date-${n}`}
+                        type="date"
+                        value={per[n].date}
+                        min={pa?.date_debut}
+                        max={pa?.date_fin}
+                        onChange={(e) => majPeriode(n, 'date', e.target.value)}
+                        error={erreurDate}
+                        aria-describedby={`classe-date-aide-${n}`}
+                      />
+                      <div id={`classe-date-aide-${n}`} style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.sm }} aria-live="polite">
+                        {dateChoisie && jourChoisi && planApercu.length && planN?.recale
+                          ? `La date du ${formatDate(per[n].date)} est un ${nomJour(jourDeLaDate)}, pas un ${nomJour(jourChoisi)} : la première séance sera recalée au ${formatDateLongue(planN.date_premiere_session)}. Choisissez un ${nomJour(jourChoisi)}, ou changez le jour de la classe.`
+                          : dateChoisie && jourChoisi && jourDeLaDate === jourChoisi
+                            ? `${formatDateLongue(per[n].date)} : correspond au jour choisi.`
+                            : ''}
+                        {pa ? ` Période ${n} : ${formatDate(pa.date_debut)} → ${formatDate(pa.date_fin)}.` : ''}
+                        {n === 2 && ouvertes[1] && !dateP2Manuelle && per[2].date ? ' Proposée : 1er jour de classe après la dernière séance de la P1.' : ''}
+                      </div>
+                    </AdminFormField>
+                  </fieldset>
+                );
+              })}
             </Section>
 
             <div style={{ display: 'flex', gap: ADMIN_SPACING.md, justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
               <LinkButton to="/admin/classes">Annuler</LinkButton>
               <AdminButton
                 type="submit"
+                variant={nbHors > 0 ? 'secondary' : 'primary'}
                 disabled={!complet || Boolean(blocage) || calendrierVide || apercu.loading || !apercu.data}
                 loading={envoi}
                 aria-describedby={blocage ? 'classe-blocage' : undefined}
               >
-                Créer la classe et générer 14 sessions
+                {libelleCreation}
               </AdminButton>
             </div>
           </form>
@@ -356,7 +454,7 @@ export default function ClasseCreatePage() {
             {calendrierVide ? (
               <Section title="Aperçu indisponible">
                 <p style={{ margin: 0 }}>
-                  L'aperçu des 14 dates s'affichera dès que le calendrier scolaire sera renseigné. Le bouton de
+                  L'aperçu des dates s'affichera dès que le calendrier scolaire sera renseigné. Le bouton de
                   création est désactivé d'ici là.
                 </p>
               </Section>
@@ -365,7 +463,6 @@ export default function ClasseCreatePage() {
                 {apercu.message && !apercu.data && Object.keys(apercu.erreurs).length === 0 && (
                   <Banner tone="error">{apercu.message}</Banner>
                 )}
-                <ClasseApercu apercu={apercu.data} chargement={apercu.loading} periode={periode} />
                 {blocage && (
                   <div
                     id="classe-blocage"
@@ -379,66 +476,29 @@ export default function ClasseCreatePage() {
                       marginBottom: ADMIN_SPACING.lg,
                     }}
                   >
-                    <strong>{messageBlocage}</strong>
-                    <ul style={{ margin: `${ADMIN_SPACING.sm} 0 0`, paddingLeft: '20px' }}>
-                      <li>{blocage.message}.</li>
-                      <li>Aucune session ne peut être créée ou déplacée après la fin de la période.</li>
-                      <li>Pour tenir dans la période : avancez la date de première session, ou choisissez la période suivante.</li>
-                    </ul>
+                    <strong>Création impossible : les deux périodes se chevauchent</strong>
+                    <p style={{ margin: `${ADMIN_SPACING.sm} 0 0` }}>{blocage.message}</p>
+                    <p style={{ margin: `${ADMIN_SPACING.sm} 0 0` }}>
+                      Règle : la 1re séance de la P2 doit être après la dernière séance de la P1. Corrigez l'une des deux dates.
+                    </p>
                   </div>
                 )}
-                {apercu.data && !blocage && <Recapitulatif apercu={apercu.data} periode={periode} charge={charge} lieu={form.lieu} />}
+                {nbHors > 0 && !blocage && avertissements.length === 0 && (
+                  <Banner tone="warning">
+                    <strong>Avertissement (non bloquant) :</strong> {nbHors} séance{nbHors > 1 ? 's' : ''} tomberai{nbHors > 1 ? 'ent' : 't'} après la fin de sa période : elle{nbHors > 1 ? 's seront créées' : ' sera créée'} avec le badge « hors période ».
+                  </Banner>
+                )}
+                <ClasseApercu apercu={apercu.data} chargement={apercu.loading} cours={coursTitres} />
+                {numerosOuverts.length === 1 && apercu.data && (
+                  <p style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
+                    Seule la période {numerosOuverts[0]} sera créée (14 séances). La période {numerosOuverts[0] === 1 ? 2 : 1} pourra être ajoutée plus tard.
+                  </p>
+                )}
               </>
             )}
           </div>
         </div>
       </AdminPageContent>
     </>
-  );
-}
-
-function Recapitulatif({ apercu, periode, charge, lieu }) {
-  const seances = apercu.seances;
-  const premiere = seances[0]?.date;
-  const derniere = seances[seances.length - 1]?.date;
-  const sautees = apercu.dates_sautees.filter((d) => !derniere || d.date < derniere);
-  return (
-    <div
-      role="region"
-      aria-label="Récapitulatif avant génération"
-      style={{
-        background: ADMIN_TONES.primary.bg,
-        color: ADMIN_TONES.primary.fg,
-        border: `1px solid ${ADMIN_TONES.primary.border}`,
-        borderRadius: ADMIN_RADIUS.md,
-        padding: ADMIN_SPACING.lg,
-      }}
-    >
-      <strong>Récapitulatif avant génération</strong>
-      <ul style={{ margin: `${ADMIN_SPACING.sm} 0 0`, paddingLeft: '20px' }}>
-        <li>
-          <strong>{seances.length} sessions</strong> hebdomadaires, du {formatDate(premiere)} au {formatDate(derniere)} (
-          {nomJour(charge.jour_semaine)} {formatHoraire(charge.heure_debut, charge.heure_fin)}
-          {lieu.trim() ? `, ${lieu.trim()}` : ''}).
-        </li>
-        <li>
-          {sautees.length === 0 ? (
-            'Aucune date sautée.'
-          ) : (
-            <>
-              <strong>
-                {sautees.length} date{sautees.length > 1 ? 's' : ''} sautée{sautees.length > 1 ? 's' : ''}
-              </strong>{' '}
-              : {sautees.map((d) => formatDate(d.date).slice(0, 5)).join(', ')} (vacances, fériés ou fermetures du calendrier scolaire).
-            </>
-          )}
-        </li>
-        {periode && (
-          <li>
-            Période {periode.numero} : jusqu'au {formatDate(periode.date_fin)} — la séance {seances.length} ({formatDate(derniere)}) est dans la période. ✔
-          </li>
-        )}
-      </ul>
-    </div>
   );
 }

@@ -5,6 +5,8 @@ import AdminButton from '../../components/AdminButton';
 import LinkButton from '../../components/ui/LinkButton';
 import StatutBadge from '../../components/ui/StatutBadge';
 import { Table, Th, Td, Tr } from '../../components/ui/Table';
+import Banner from '../../components/ui/Banner';
+import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import { FilterBar, FilterField } from '../../components/ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../../components/ui/DataStates';
 import AnneeScolaireModal from '../../components/classes/AnneeScolaireModal';
@@ -12,10 +14,18 @@ import { anneeParDefaut, useAnneesScolaires } from '../../hooks/useAnneesScolair
 import { useClasses } from '../../hooks/useClasses';
 import { useCours } from '../../hooks/useCours';
 import { STATUTS_CLASSE, libelleAnneeListe, optionsStatut } from '../../utils/statuts';
-import { JOURS_SEMAINE, libelleCreneau, formatDateCourte, formatHeure } from '../../utils/dates';
+import { JOURS_SEMAINE, libelleCreneau, formatDate, formatDateCourte, formatHeure, titreClasse, aujourdhuiISO } from '../../utils/dates';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 
 const NOUVELLE_ANNEE = '__nouvelle__';
+const TOUTES_PERIODES = 'toutes';
+
+/** Période mise en avant par défaut : celle qui couvre aujourd'hui, sinon la prochaine, sinon toutes. */
+function periodeEnCours(annee) {
+  const aujourdhui = aujourdhuiISO();
+  const p = annee?.periodes.find((x) => x.date_debut <= aujourdhui && aujourdhui <= x.date_fin) || annee?.periodes.find((x) => x.date_fin >= aujourdhui);
+  return p ? String(p.id) : '';
+}
 
 /** Écran « Classes » : liste des classes d'une année scolaire, filtrable (mock-up 01). */
 export default function ClassesAdminPage() {
@@ -27,9 +37,10 @@ export default function ClassesAdminPage() {
   const listeAnnees = useMemo(() => annees.data || [], [annees.data]);
   const anneeId = params.get('annee_scolaire_id') || (anneeParDefaut(listeAnnees) ? String(anneeParDefaut(listeAnnees).id) : '');
   const annee = listeAnnees.find((a) => String(a.id) === anneeId);
+  const periodeParam = params.get('periode_id');
   const filtres = {
     annee_scolaire_id: anneeId,
-    periode_id: params.get('periode_id') || '',
+    periode_id: periodeParam === null ? periodeEnCours(annee) : periodeParam === TOUTES_PERIODES ? '' : periodeParam,
     cours_id: params.get('cours_id') || '',
     jour_semaine: params.get('jour_semaine') || '',
     statut: params.get('statut') || '',
@@ -38,15 +49,16 @@ export default function ClassesAdminPage() {
 
   // La période sélectionnée doit appartenir à l'année choisie.
   useEffect(() => {
-    if (annee && filtres.periode_id && !annee.periodes.some((p) => String(p.id) === filtres.periode_id)) {
+    if (annee && periodeParam && periodeParam !== TOUTES_PERIODES && !annee.periodes.some((p) => String(p.id) === periodeParam)) {
       majFiltre('periode_id', '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [annee, filtres.periode_id]);
+  }, [annee, periodeParam]);
 
   function majFiltre(cle, valeur) {
     const suivant = new URLSearchParams(params);
-    if (valeur) suivant.set(cle, valeur);
+    if (cle === 'periode_id') suivant.set(cle, valeur || TOUTES_PERIODES);
+    else if (valeur) suivant.set(cle, valeur);
     else suivant.delete(cle);
     if (cle === 'annee_scolaire_id') suivant.delete('periode_id');
     setParams(suivant, { replace: true });
@@ -61,6 +73,9 @@ export default function ClassesAdminPage() {
   }
 
   const filtresActifs = Boolean(filtres.periode_id || filtres.cours_id || filtres.jour_semaine || filtres.statut);
+  const numeroMisEnAvant = annee?.periodes.find((p) => String(p.id) === filtres.periode_id)?.numero || null;
+  const periodesAffichees = numeroMisEnAvant ? [numeroMisEnAvant] : [1, 2];
+  const aPlanifier = (classes.data || []).filter((c) => c.alerte_periode_2);
   const libelleAnnee = annee?.libelle || '';
   const optionsAnnee = [
     ...listeAnnees.map((a) => ({ value: String(a.id), label: libelleAnneeListe(a) })),
@@ -100,7 +115,7 @@ export default function ClassesAdminPage() {
         actions={
           <AdminButton
             variant="secondary"
-            onClick={() => setParams(new URLSearchParams({ annee_scolaire_id: anneeId }), { replace: true })}
+            onClick={() => setParams(new URLSearchParams({ annee_scolaire_id: anneeId, periode_id: TOUTES_PERIODES }), { replace: true })}
           >
             Effacer les filtres
           </AdminButton>
@@ -123,8 +138,7 @@ export default function ClassesAdminPage() {
           </>
         }
       >
-        L'année démarre sur un état propre : aucune classe n'a été créée. Choisissez un cours du catalogue, un jour
-        et un créneau : les 14 sessions seront générées en respectant le calendrier scolaire.
+        L'année démarre sur un état propre : aucune classe n'a été créée. Choisissez un jour et un créneau, puis les 14 séances de la période 1 seront générées en respectant le calendrier scolaire ; vous pouvez ajouter la période 2 tout de suite ou plus tard.
       </EmptyBlock>
     );
   } else {
@@ -133,13 +147,35 @@ export default function ClassesAdminPage() {
         <p style={{ margin: '0 0 12px', fontSize: '13px', color: ADMIN_COLORS.textSecondary }} aria-live="polite">
           {classes.data.length} classe{classes.data.length > 1 ? 's' : ''}
         </p>
-        <Table caption={`Classes de ${libelleAnnee}`} minWidth="820px">
+        {aPlanifier.length > 0 && (
+          <Banner tone="warning">
+            <strong>
+              ⏰ {aPlanifier.length} classe{aPlanifier.length > 1 ? 's' : ''} à planifier :
+            </strong>
+            <ul style={{ margin: '4px 0 0', paddingLeft: '20px' }}>
+              {aPlanifier.map((c) => (
+                <li key={c.id}>
+                  <Link to={`/admin/classes/${c.id}`}>
+                    « {titreClasse(c)} — {libelleCreneau(c)} »
+                  </Link>{' '}
+                  : la période 1 se termine le {formatDate(c.alerte_periode_2.date_fin_periode_1)}
+                  {Number.isFinite(c.alerte_periode_2.jours_restants) && c.alerte_periode_2.jours_restants >= 0
+                    ? ` (dans ${c.alerte_periode_2.jours_restants} jour${c.alerte_periode_2.jours_restants > 1 ? 's' : ''})`
+                    : ''}{' '}
+                  et aucune période 2 n'est planifiée.
+                </li>
+              ))}
+            </ul>
+          </Banner>
+        )}
+        <Table caption={`Classes de ${libelleAnnee}`} minWidth="920px">
           <thead>
             <tr>
-              <Th>Cours / créneau</Th>
-              <Th>Période</Th>
+              <Th>Classe / créneau</Th>
+              {periodesAffichees.map((n) => (
+                <Th key={n}>Période {n} · cours</Th>
+              ))}
               <Th>Lieu</Th>
-              <Th>Sessions</Th>
               <Th>Prochaine session</Th>
               <Th>Statut</Th>
               <Th srOnly>Actions</Th>
@@ -149,17 +185,18 @@ export default function ClassesAdminPage() {
             {classes.data.map((c) => (
               <Tr key={c.id}>
                 <Td>
-                  <strong>{c.cours?.titre}</strong>
+                  <strong>{titreClasse(c)}</strong>
                   <div style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>{libelleCreneau(c)}</div>
                 </Td>
-                <Td>Période {c.periode?.numero}</Td>
+                {periodesAffichees.map((n) => (
+                  <Td key={n}>
+                    <CellulePeriode classe={c} numero={n} />
+                  </Td>
+                ))}
                 <Td>{c.lieu || '—'}</Td>
                 <Td>
-                  {c.nb_sessions} session{c.nb_sessions > 1 ? 's' : ''}
-                </Td>
-                <Td>
                   {c.prochaine_session
-                    ? `${formatDateCourte(c.prochaine_session.date)} · ${formatHeure(c.heure_debut)}`
+                    ? `${c.prochaine_session.libelle} · ${formatDateCourte(c.prochaine_session.date)} · ${formatHeure(c.heure_debut)}`
                     : '—'}
                 </Td>
                 <Td>
@@ -185,7 +222,7 @@ export default function ClassesAdminPage() {
         title="Classes"
         badge={libelleAnnee || undefined}
         breadcrumb={<>Scolarité › Classes</>}
-        description="Organisation des cours du catalogue par année scolaire, période et créneau hebdomadaire."
+        description="Une classe regroupe jusqu'à 2 périodes (14 séances chacune) sur un même créneau hebdomadaire."
         action={
           anneeId ? (
             <LinkButton to={`/admin/classes/nouvelle?annee_scolaire_id=${anneeId}`} variant="primary">
@@ -208,17 +245,19 @@ export default function ClassesAdminPage() {
           <FilterField
             id="filtre-periode"
             label="Période"
-            value={filtres.periode_id}
-            onChange={(v) => majFiltre('periode_id', v)}
-            placeholder="Toutes"
-            options={(annee?.periodes || []).map((p) => ({ value: String(p.id), label: `Période ${p.numero}` }))}
+            value={filtres.periode_id || TOUTES_PERIODES}
+            onChange={(v) => majFiltre('periode_id', v === TOUTES_PERIODES ? '' : v)}
+            options={[
+              ...(annee?.periodes || []).map((p) => ({ value: String(p.id), label: `Période ${p.numero}${String(p.id) === periodeEnCours(annee) ? ' (en cours)' : ''}` })),
+              { value: TOUTES_PERIODES, label: 'Toutes les périodes' },
+            ]}
           />
           <FilterField
             id="filtre-cours"
             label="Cours"
             value={filtres.cours_id}
             onChange={(v) => majFiltre('cours_id', v)}
-            placeholder="Tous les cours"
+            placeholder="Tous les cours (P1 et P2)"
             options={(cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }))}
           />
           <FilterField
@@ -259,5 +298,29 @@ export default function ClassesAdminPage() {
         }}
       />
     </>
+  );
+}
+
+/** Cellule d'une période dans la liste : « P1 Scratch », dates, séances, hors période — ou « à planifier » / « à ajouter ». */
+function CellulePeriode({ classe, numero }) {
+  const p = (classe.periodes || []).find((x) => x.numero === numero);
+  if (!p) {
+    const alerte = numero === 2 && classe.alerte_periode_2;
+    return (
+      <span style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
+        <PeriodeBadge numero={numero} /> {numero === 2 ? (alerte ? '⏰ P2 à planifier' : 'P2 à planifier') : 'P1 à ajouter'}
+      </span>
+    );
+  }
+  return (
+    <div style={{ fontSize: '13px' }}>
+      <PeriodeBadge numero={numero} /> <strong>{p.cours?.titre}</strong>
+      <div style={{ color: ADMIN_COLORS.textSecondary }}>
+        {p.nb_sessions} séance{p.nb_sessions > 1 ? 's' : ''}
+        {p.date_premiere_session ? ` · ${formatDateCourte(p.date_premiere_session)}${p.date_derniere_session ? ` → ${formatDateCourte(p.date_derniere_session)}` : ''}` : ''}
+      </div>
+      {p.nb_hors_periode > 0 && <StatutBadge label={`⚠ ${p.nb_hors_periode} hors période`} tone="warning" />}{' '}
+      {p.statut === 'annulee' && <StatutBadge label="Annulée" tone="neutral" />}
+    </div>
   );
 }

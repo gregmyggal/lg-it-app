@@ -13,6 +13,7 @@ import { STATUTS_TIMESHEET, TYPES_ACTIVITE, getStatut } from '../../utils/statut
 import { formatDateCourte } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
+import { libelleSession } from '../../utils/classes';
 
 const SEUIL_RETARD_JOURS = 7;
 const dernierJour = (annee, mois) => new Date(annee, mois, 0).getDate();
@@ -96,7 +97,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
                 .map((s) => (
                   <Tr key={s.session_id}>
                     <Td>
-                      <strong>{s.classe_libelle}</strong> · {s.libelle}
+                      <strong>{s.classe_libelle}</strong> · {libelleSession(s)}
                     </Td>
                     <Td>{formatDateCourte(s.date)}</Td>
                     <Td>{s.professeurs_sans_heures.map((p) => p.nom).join(', ')}</Td>
@@ -174,7 +175,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
                     <Td>
                       {t.session ? (
                         <>
-                          <strong>{t.session.classe_libelle?.split(' — ')[0]}</strong> · {t.session.libelle}
+                          <strong>{t.session.classe_libelle?.split(' — ')[0]}</strong> · {libelleSession(t.session)}
                         </>
                       ) : (
                         <span style={{ color: ADMIN_COLORS.textSecondary }}>Heures hors séance</span>

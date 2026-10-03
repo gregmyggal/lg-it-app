@@ -21,6 +21,7 @@ import { getErrorMessage } from '../api/errors';
 import { STATUTS_TIMESHEET, TYPES_ACTIVITE, getStatut } from '../utils/statuts';
 import { MOIS_LONGS, formatDateCourte } from '../utils/dates';
 import { formatEuros, formatHeures } from '../utils/format';
+import { libelleSession } from '../utils/classes';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -102,7 +103,7 @@ function MonMois({ user }) {
   const vide = data && data.sessions.length === 0 && data.libres.length === 0;
   const seances = (data?.sessions || [])
     .filter((s) => s.peut_encoder && s.encodage === 'a_encoder')
-    .map((s) => ({ value: String(s.id), label: `${formatDateCourte(s.date)} — ${s.classe_libelle} · ${s.libelle}` }));
+    .map((s) => ({ value: String(s.id), label: `${formatDateCourte(s.date)} — ${s.classe_libelle} · ${libelleSession(s)}` }));
   const coursOptions = (cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }));
 
   return (

@@ -1,4 +1,5 @@
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../styles/AdminDesignSystem';
+import { coursDeSession, libelleSession } from '../utils/classes';
 import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../utils/statuts';
 import {
   addDays,
@@ -17,9 +18,9 @@ function entreesDuJour(entrees, iso) {
   return entrees.filter((e) => e.date_debut <= iso && iso <= e.date_fin);
 }
 
-/** Texte court d'une session pour une pastille du calendrier : « 14h React · Séance 5 ». */
+/** Texte court d'une session pour une pastille du calendrier : « 14h P1 · Séance 5 · React ». */
 function texteSession(s) {
-  return `${formatHeure(s.heure_debut)} ${s.classe?.cours?.titre || 'Cours'} · ${s.libelle}`;
+  return `${formatHeure(s.heure_debut)} ${libelleSession(s)} · ${coursDeSession(s)?.titre || 'Cours'}${s.hors_periode ? ' · hors période' : ''}`;
 }
 
 function SessionChip({ session, onClick }) {

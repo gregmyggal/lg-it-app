@@ -15,11 +15,14 @@ import ProfesseursClasseSection from '../../components/professeurs/ProfesseursCl
 import RemplacerProfesseurModal from '../../components/professeurs/RemplacerProfesseurModal';
 import { useProfesseursListe } from '../../hooks/useProfesseursClasses';
 import { useLiensCours } from '../../hooks/useLiens';
+import PeriodeBadge from '../../components/classes/PeriodeBadge';
+import { AjouterPeriodeModal, ChangerCoursModal, SupprimerPeriodeModal, HistoriqueCoursModal } from '../../components/classes/PeriodeModals';
 import { useClasse, useClasseSessions, modifierClasse, supprimerClasse } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getStatus } from '../../api/errors';
 import { STATUTS_CLASSE, STATUT_CLASSE_ARCHIVEE, estClasseArchivee, estSessionBarree } from '../../utils/statuts';
-import { formatDate, formatDateCourte, libelleClasse } from '../../utils/dates';
+import { formatDate, formatDateCourte, jourDeClasseApres, libelleClasse } from '../../utils/dates';
+import { libelleSessionPhrase } from '../../utils/classes';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES } from '../../styles/AdminDesignSystem';
 
 /** Écran « Détail d'une classe » : informations, professeurs, sessions, ajustements et remplacements (mock-up 03). */
@@ -30,11 +33,11 @@ export default function ClasseDetailPage() {
   const classe = useClasse(id);
   const sessions = useClasseSessions(id);
   const professeursListe = useProfesseursListe();
-  const liensCours = useLiensCours(classe.data?.cours?.id);
   const [remplacement, setRemplacement] = useState(null); // session à remplacer
   const [ajustement, setAjustement] = useState(null); // { session, mode }
   const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message }
   const [enCours, setEnCours] = useState(false);
+  const [modalePeriode, setModalePeriode] = useState(null); // { type: 'ajout'|'cours'|'suppression', numero?, periode? }
 
   const entete = (titre, actions) => (
     <AdminPageHeader
@@ -84,7 +87,6 @@ export default function ClasseDetailPage() {
   const premiere = liste[0]?.date;
   const datesTriees = liste.map((s) => s.date).sort();
   const derniere = datesTriees[datesTriees.length - 1];
-  const peutBis = liste.some((s) => s.can?.bis);
 
   function recharger() {
     classe.reload();
@@ -94,12 +96,28 @@ export default function ClasseDetailPage() {
   function apresRemplacement(message, avertissements = []) {
     setRemplacement(null);
     toast.success(message);
-    avertissements.forEach((a) => toast.error(a.message));
+    avertissements.forEach((a) => toast.warning(a.message));
     recharger();
   }
 
-  function apresAjustement(message) {
+  function apresAjustement(message, avertissements = []) {
     setAjustement(null);
+    toast.success(message);
+    avertissements.forEach((a) => toast.warning(typeof a === 'string' ? a : a.message));
+    recharger();
+  }
+
+  function ouvrirAjout(numero) {
+    const autre = (c.periodes || []).find((p) => p.numero !== numero);
+    const dateConseillee =
+      numero === 2 && autre?.date_derniere_session
+        ? jourDeClasseApres(autre.date_derniere_session, null, c.jour_semaine)
+        : '';
+    setModalePeriode({ type: 'ajout', numero, dateConseillee });
+  }
+
+  function apresPeriode(message) {
+    setModalePeriode(null);
     toast.success(message);
     recharger();
   }
@@ -144,7 +162,7 @@ export default function ClasseDetailPage() {
       </LinkButton>
       {c.can?.update && !estClasseArchivee(c.statut) && (
         <AdminButton variant="secondary" size="sm" onClick={archiver} loading={enCours}>
-          Archiver la classe
+          Archiver la classe (P1 et P2)
         </AdminButton>
       )}
       {c.can?.delete && (
@@ -167,10 +185,10 @@ export default function ClasseDetailPage() {
         }
         description={[
           c.lieu,
-          `${c.annee_scolaire?.libelle}, période ${c.periode?.numero} (jusqu'au ${formatDate(c.periode?.date_fin)})`,
+          c.annee_scolaire?.libelle,
           premiere ? `du ${formatDate(premiere)} au ${formatDate(derniere)}` : null,
           `${c.nb_sessions} session${c.nb_sessions > 1 ? 's' : ''} actives${annulees.length ? ` · ${annulees.length} annulée${annulees.length > 1 ? 's' : ''}` : ''}`,
-          c.heures_defrayables ? `Séance ${formatDuree(c.duree_seance)} · Défrayé ${formatDuree(c.heures_defrayables.valeur)} (${c.heures_defrayables.source === 'cours' ? 'valeur du cours' : 'défaut global'})` : null,
+          c.duree_seance ? `Séance ${formatDuree(c.duree_seance)}` : null,
         ]
           .filter(Boolean)
           .join(' · ')}
@@ -188,10 +206,10 @@ export default function ClasseDetailPage() {
             <ul style={{ margin: `${ADMIN_SPACING.sm} 0 0`, paddingLeft: '20px' }}>
               {alertes.map((s) => (
                 <li key={s.id}>
-                  {s.libelle.toLowerCase()}, {formatDateCourte(s.date)} — « {s.alerte_calendrier.libelle} ». Elle n'a pas été déplacée automatiquement.{' '}
+                  {libelleSessionPhrase(s)}, {formatDateCourte(s.date)} — « {s.alerte_calendrier.libelle} ». Elle n'a pas été déplacée automatiquement.{' '}
                   {(s.can?.update || s.can?.cancel) && (
                     <AdminButton size="sm" variant="secondary" onClick={() => setAjustement({ session: s, mode: 'deplacer' })}>
-                      Ajuster la {s.libelle.toLowerCase()}
+                      Ajuster la {libelleSessionPhrase(s)}
                     </AdminButton>
                   )}
                 </li>
@@ -200,47 +218,54 @@ export default function ClasseDetailPage() {
           </Banner>
         )}
 
+        {c.alerte_periode_2 && (
+          <Banner
+            tone="warning"
+            role="status"
+            actions={
+              c.can?.update && (
+                <AdminButton size="sm" onClick={() => ouvrirAjout(2)}>
+                  Ajouter la période 2
+                </AdminButton>
+              )
+            }
+          >
+            <strong>⏰ Période 2 à planifier :</strong>{' '}
+            {c.alerte_periode_2.message || 'la période 2 est à planifier'} — la période 1 se termine le {formatDate(c.alerte_periode_2.date_fin_periode_1)}
+            {Number.isFinite(c.alerte_periode_2.jours_restants)
+              ? c.alerte_periode_2.jours_restants >= 0
+                ? ` (dans ${c.alerte_periode_2.jours_restants} jour${c.alerte_periode_2.jours_restants > 1 ? 's' : ''})`
+                : ' (terminée)'
+              : ''}{' '}
+            et la classe n'a pas de période 2.
+          </Banner>
+        )}
+
         <ProfesseursClasseSection classe={c} titreClasse={titre} onChange={sessions.reload} />
 
-        <Section
-          title="Sessions"
-          subtitle={`${liste.length} session${liste.length > 1 ? 's' : ''} (séances, bis et annulées comprises)`}
-          bodyPadding={false}
-          actions={
-            peutBis && (
-              <AdminButton size="sm" variant="secondary" onClick={() => setAjustement({ session: null, mode: 'bis' })}>
-                ＋ Ajouter un bis
-              </AdminButton>
-            )
+        {[1, 2].map((n) => {
+          const p = (c.periodes || []).find((x) => x.numero === n);
+          if (!p) {
+            if (!c.can?.update || estClasseArchivee(c.statut)) return null;
+            return (
+              <PeriodeAbsente key={n} numero={n} dejaPresente={(c.periodes || [])[0]} onAjouter={() => ouvrirAjout(n)} />
+            );
           }
-        >
-          <div
-            id="legende-sessions"
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: `${ADMIN_SPACING.xs} ${ADMIN_SPACING.xl}`,
-              padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.xl}`,
-              fontSize: '13px',
-              color: ADMIN_COLORS.textSecondary,
-              borderBottom: `1px solid ${ADMIN_COLORS.border}`,
-            }}
-          >
-            <span>🔒 Session passée ou terminée : elle ne peut plus être déplacée ni annulée</span>
-            <span>🔢 Le numéro de séance (1 à 14) est fixe : une session annulée le garde, un bis porte le même numéro</span>
-            <span>⚠ Date en conflit avec le calendrier scolaire</span>
-          </div>
-          {liste.length === 0 ? (
-            <p style={{ padding: ADMIN_SPACING.xl, margin: 0 }}>Cette classe n'a aucune session.</p>
-          ) : (
-            <ClasseSessionsTable
-              sessions={liste}
-              liens={liensCours.data?.data}
-              onAjuster={(session, mode) => setAjustement({ session, mode })}
+          return (
+            <PeriodeBloc
+              key={n}
+              periode={p}
+              sessions={liste.filter((s) => (s.periode_numero || 1) === n)}
+              peutModifier={Boolean(c.can?.update) && !estClasseArchivee(c.statut)}
+              peutSupprimer={(c.periodes || []).length > 1}
+              onAjuster={(session, mode) => setAjustement({ session, mode: mode ?? undefined, periodeNumero: n })}
               onRemplacer={c.can?.update ? setRemplacement : undefined}
+              onChangerCours={() => setModalePeriode({ type: 'cours', periode: p })}
+              onSupprimer={() => setModalePeriode({ type: 'suppression', periode: p })}
+              onHistorique={() => setModalePeriode({ type: 'historique', periode: p })}
             />
-          )}
-        </Section>
+          );
+        })}
       </AdminPageContent>
 
       {ajustement && (
@@ -249,9 +274,29 @@ export default function ClasseDetailPage() {
           sessions={liste}
           session={ajustement.session}
           modeInitial={ajustement.mode}
+          periodeInitiale={ajustement.periodeNumero}
           onClose={() => setAjustement(null)}
           onDone={apresAjustement}
         />
+      )}
+
+      {modalePeriode?.type === 'ajout' && (
+        <AjouterPeriodeModal
+          classe={c}
+          numero={modalePeriode.numero}
+          dateConseillee={modalePeriode.dateConseillee}
+          onClose={() => setModalePeriode(null)}
+          onDone={apresPeriode}
+        />
+      )}
+      {modalePeriode?.type === 'cours' && (
+        <ChangerCoursModal classe={c} periode={modalePeriode.periode} onClose={() => setModalePeriode(null)} onDone={apresPeriode} />
+      )}
+      {modalePeriode?.type === 'historique' && (
+        <HistoriqueCoursModal classe={c} periode={modalePeriode.periode} onClose={() => setModalePeriode(null)} />
+      )}
+      {modalePeriode?.type === 'suppression' && (
+        <SupprimerPeriodeModal classe={c} periode={modalePeriode.periode} onClose={() => setModalePeriode(null)} onDone={apresPeriode} />
       )}
 
       {remplacement && (
@@ -281,7 +326,7 @@ export default function ClasseDetailPage() {
           }
         >
           <p style={{ margin: 0 }}>
-            Les {liste.length} sessions de la classe seront supprimées avec elle. Cette action est définitive.
+            Les {liste.length} sessions de la classe (toutes périodes) seront supprimées avec elle. Cette action est définitive.
           </p>
         </AdminModal>
       )}
@@ -320,5 +365,117 @@ export default function ClasseDetailPage() {
         </AdminModal>
       )}
     </>
+  );
+}
+
+/** Carte pointillée : la classe n'a pas encore cette période (mock-up CLS-02/02). */
+function PeriodeAbsente({ numero, dejaPresente, onAjouter }) {
+  return (
+    <Section title={`Cette classe n'a pas encore de période ${numero}`} headingLevel={2} style={{ borderStyle: 'dashed' }}>
+      <p style={{ marginTop: 0 }}>
+        {numero === 1
+          ? `Elle démarre en période 2. Vous pouvez ajouter la période 1 (cours + date) : les séances P1 devront précéder celles de la P2 sur le même créneau.`
+          : `Choisissez le cours et la date de démarrage : 14 séances seront ajoutées avec les mêmes jour, horaire, lieu et professeurs${dejaPresente ? '' : ''}.`}
+      </p>
+      <AdminButton onClick={onAjouter}>＋ Ajouter la période {numero}</AdminButton>
+    </Section>
+  );
+}
+
+/** Bloc d'une période : bandeau (cours, dates, hors période), actions de période, tableau des séances. */
+function PeriodeBloc({ periode, sessions, peutModifier, peutSupprimer, onAjuster, onRemplacer, onChangerCours, onSupprimer, onHistorique }) {
+  const liens = useLiensCours(periode.cours_id);
+  const annulee = periode.statut === 'annulee';
+  const peutBis = sessions.some((s) => s.can?.bis);
+  const titre = `Période ${periode.numero} · ${periode.cours?.titre || 'Cours'}`;
+  const dateFin = periode.periode?.date_fin;
+  return (
+    <Section
+      title={
+        <span style={{ display: 'inline-flex', gap: ADMIN_SPACING.sm, alignItems: 'center', flexWrap: 'wrap' }}>
+          <PeriodeBadge numero={periode.numero} /> {titre}
+        </span>
+      }
+      subtitle={[
+        periode.date_premiere_session
+          ? `${formatDate(periode.date_premiere_session)} → ${periode.date_derniere_session ? formatDate(periode.date_derniere_session) : '…'}`
+          : null,
+        dateFin ? `fin de période ${formatDate(dateFin)}` : null,
+        `${periode.nb_sessions} séance${periode.nb_sessions > 1 ? 's' : ''}`,
+      ]
+        .filter(Boolean)
+        .join(' · ')}
+      bodyPadding={false}
+      headingLevel={2}
+      actions={
+        <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap', alignItems: 'center' }}>
+          {periode.nb_hors_periode > 0 && (
+            <StatutBadge label={`⚠ ${periode.nb_hors_periode} séance${periode.nb_hors_periode > 1 ? 's' : ''} hors période`} tone="warning" />
+          )}
+          {annulee && <StatutBadge label="Période annulée" tone="neutral" />}
+          {periode.nb_changements_cours > 0 && (
+            <AdminButton size="sm" variant="secondary" onClick={onHistorique}>
+              {periode.nb_changements_cours} changement{periode.nb_changements_cours > 1 ? 's' : ''} de cours
+            </AdminButton>
+          )}
+          {peutModifier && !annulee && (
+            <AdminButton size="sm" variant="secondary" onClick={onChangerCours}>
+              Changer le cours
+            </AdminButton>
+          )}
+          {periode.cours_id && (
+            <LinkButton to={`/admin/cours/${periode.cours_id}/liens`} size="sm">
+              Liens du cours
+            </LinkButton>
+          )}
+          {peutModifier && !annulee && peutBis && (
+            <AdminButton size="sm" variant="secondary" onClick={() => onAjuster(null, 'bis')}>
+              ＋ Séance / bis
+            </AdminButton>
+          )}
+          {peutModifier && !annulee && peutSupprimer && (
+            <AdminButton size="sm" variant="secondary" onClick={onSupprimer} style={{ color: ADMIN_TONES.error.fg }}>
+              Supprimer / annuler la période
+            </AdminButton>
+          )}
+        </div>
+      }
+    >
+      {annulee && periode.motif_annulation && (
+        <div style={{ padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.xl}` }}>
+          <Banner tone="warning">
+            <strong>Période annulée.</strong> Motif : {periode.motif_annulation}
+          </Banner>
+        </div>
+      )}
+      <div
+        id={`legende-sessions-${periode.numero}`}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: `${ADMIN_SPACING.xs} ${ADMIN_SPACING.xl}`,
+          padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.xl}`,
+          fontSize: '13px',
+          color: ADMIN_COLORS.textSecondary,
+          borderBottom: `1px solid ${ADMIN_COLORS.border}`,
+        }}
+      >
+        <span>🔒 Session passée ou terminée : elle ne peut plus être déplacée ni annulée</span>
+        <span>🔢 Le numéro de séance (1 à 14) est fixe dans la période : une session annulée le garde, un bis porte le même numéro</span>
+        <span>⚠ Date en conflit avec le calendrier scolaire ou hors période</span>
+      </div>
+      {sessions.length === 0 ? (
+        <p style={{ padding: ADMIN_SPACING.xl, margin: 0 }}>Cette période n'a aucune session.</p>
+      ) : (
+        <ClasseSessionsTable
+          sessions={sessions}
+          caption={`Sessions de la période ${periode.numero}`}
+          legendeId={`legende-sessions-${periode.numero}`}
+          liens={liens.data?.data}
+          onAjuster={onAjuster}
+          onRemplacer={onRemplacer}
+        />
+      )}
+    </Section>
   );
 }
