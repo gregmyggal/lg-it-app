@@ -8,8 +8,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
- * Seuls le créneau horaire, le lieu et le statut se modifient ici. Changer le cours, la période,
- * le jour ou la date de première séance revient à créer une autre classe (aucune régénération).
+ * Seuls le créneau horaire, le lieu et le statut se modifient ici. Le cours et les périodes se gèrent via
+ * /classes/{classe}/periodes ; changer le jour revient à créer une autre classe (aucune régénération).
  */
 class UpdateClasseRequest extends FormRequest
 {

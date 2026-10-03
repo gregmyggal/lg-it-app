@@ -31,7 +31,9 @@ class TimesheetResource extends JsonResource
                 'libelle' => $session->libelle(),
                 'date' => $session->date->toDateString(),
                 'classe_id' => $session->classe_id,
-                'classe_libelle' => $session->relationLoaded('classe') ? $this->libelleClasse($session) : null,
+                'classe_libelle' => $session->relationLoaded('classePeriode') ? $this->libelleClasse($session) : null,
+                'periode_numero' => $session->relationLoaded('classePeriode') && $session->classePeriode->relationLoaded('periode') ? $session->classePeriode->periode->numero : null,
+                'libelle_complet' => $session->relationLoaded('classePeriode') ? $session->libelleComplet() : $session->libelle(),
             ] : null,
             'montant_brut' => $this->montant($request),
             'can' => [
@@ -46,8 +48,8 @@ class TimesheetResource extends JsonResource
 
     private function libelleClasse($session): ?string
     {
-        $classe = $session->classe;
-        $titre = $classe->relationLoaded('cours') ? $classe->cours?->titre : null;
+        $cp = $session->classePeriode;
+        $titre = $cp->relationLoaded('cours') ? $cp->cours?->titre : null;
 
         return $titre ? $titre.' — séance '.$session->seance_numero : null;
     }

@@ -181,10 +181,10 @@ class CalendarController extends Controller
     {
         $query = CourseSession::query()
             ->visiblePour(auth()->user())
-            ->with(['classe.cours', 'sessionProfesseurs.professeur'])
+            ->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
             ->whereBetween('date', [$debut->toDateString(), $fin->toDateString()])
             ->when(! empty($filtres['classe_id']), fn (Builder $q) => $q->where('classe_id', $filtres['classe_id']))
-            ->when(! empty($filtres['cours_id']), fn (Builder $q) => $q->whereHas('classe', fn ($c) => $c->where('cours_id', $filtres['cours_id'])))
+            ->when(! empty($filtres['cours_id']), fn (Builder $q) => $q->whereHas('classePeriode', fn ($c) => $c->where('cours_id', $filtres['cours_id'])))
             ->when(! empty($filtres['annee_scolaire_id']), fn (Builder $q) => $q->whereHas('classe', fn ($c) => $c->where('annee_scolaire_id', $filtres['annee_scolaire_id'])));
 
         if ($extra) {

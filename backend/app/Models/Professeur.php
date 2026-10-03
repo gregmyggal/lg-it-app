@@ -58,9 +58,9 @@ class Professeur extends Model
      */
     public function cours(): Builder
     {
-        return Cours::query()->whereIn('cours.id', Classe::query()
-            ->select('classes.cours_id')
-            ->whereIn('classes.id', ProfesseurClasse::query()
+        return Cours::query()->whereIn('cours.id', ClassePeriode::query()
+            ->select('classe_periodes.cours_id')
+            ->whereIn('classe_periodes.classe_id', ProfesseurClasse::query()
                 ->select('classe_id')
                 ->where('professeur_id', $this->id)
                 ->actif()));
@@ -94,7 +94,7 @@ class Professeur extends Model
     public function aEuAssignationSurCours(Cours $cours): bool
     {
         return $this->assignations()
-            ->whereIn('classe_id', Classe::query()->select('id')->where('cours_id', $cours->id))
+            ->whereIn('classe_id', ClassePeriode::query()->select('classe_id')->where('cours_id', $cours->id))
             ->exists();
     }
 

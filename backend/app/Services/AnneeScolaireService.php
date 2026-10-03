@@ -40,7 +40,7 @@ class AnneeScolaireService
                 $periode = $annee->periodes()->where('numero', $p['numero'])->firstOrFail();
 
                 $depasse = CourseSession::query()
-                    ->whereHas('classe', fn ($q) => $q->where('periode_id', $periode->id))
+                    ->whereHas('classePeriode', fn ($q) => $q->where('periode_id', $periode->id))
                     ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
                     ->where('date', '>', $p['date_fin'])
                     ->exists();

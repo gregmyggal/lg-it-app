@@ -54,7 +54,7 @@ class TimesheetService
             ]);
         }
 
-        $session = CourseSession::with('classe')->findOrFail($data['course_session_id']);
+        $session = CourseSession::with('classe', 'classePeriode')->findOrFail($data['course_session_id']);
         Gate::forUser($user)->authorize('createForSession', [Timesheet::class, $session]);
 
         return DB::transaction(function () use ($professeur, $session, $type, $data) {
@@ -72,7 +72,7 @@ class TimesheetService
                 'professeur_id' => $professeur->id,
                 'course_session_id' => $session->id,
                 'date_prestation' => $session->date->toDateString(),
-                'cours_id' => $session->classe->cours_id,
+                'cours_id' => $session->classePeriode->cours_id,
                 'type_activite' => $type,
                 'nombre_heures' => $data['nombre_heures'] ?? $this->dureeParDefaut($session),
                 'commentaire' => $data['commentaire'] ?? null,
@@ -104,7 +104,7 @@ class TimesheetService
     /** @return array{valeur: float, source: string} heures défrayables de la séance et origine de la valeur */
     public function heuresDefrayables(CourseSession $session): array
     {
-        $cours = $session->loadMissing('classe.cours')->classe?->cours;
+        $cours = $session->loadMissing('classePeriode.cours')->classePeriode?->cours;
 
         return app(TimesheetParametreService::class)->heuresDefrayablesPour($cours, (int) $session->date->format('Y'));
     }

@@ -35,18 +35,28 @@ trait PrepareScolarite
         return app(FwbCalendarImporter::class)->importer($annee);
     }
 
-    /** @param array<string, mixed> $attrs surcharge du payload de création (mercredi 14h–17h, P1) */
+    /**
+     * Payload de création (mercredi 14h–17h, une période P1). Raccourcis acceptés dans $attrs : `cours_id`,
+     * `periode_id`, `date_premiere_session` (appliqués à l'unique période) ; `periodes` remplace tout le bloc.
+     *
+     * @param  array<string, mixed>  $attrs
+     */
     protected function donneesClasse(AnneeScolaire $annee, array $attrs = []): array
     {
+        $periode = [
+            'periode_id' => $attrs['periode_id'] ?? $annee->periodes->firstWhere('numero', 1)->id,
+            'cours_id' => $attrs['cours_id'] ?? Cours::factory()->create()->id,
+            'date_premiere_session' => $attrs['date_premiere_session'] ?? '2026-10-07',
+        ];
+        unset($attrs['periode_id'], $attrs['cours_id'], $attrs['date_premiere_session']);
+
         return $attrs + [
-            'cours_id' => Cours::factory()->create()->id,
             'annee_scolaire_id' => $annee->id,
-            'periode_id' => $annee->periodes->firstWhere('numero', 1)->id,
             'jour_semaine' => 3,
             'heure_debut' => '14:00',
             'heure_fin' => '17:00',
             'lieu' => 'Salle A',
-            'date_premiere_session' => '2026-10-07',
+            'periodes' => [$periode],
         ];
     }
 

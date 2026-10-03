@@ -32,7 +32,7 @@ class MesClassesController extends Controller
 
         $assignations = $professeur->assignations()
             ->when(! $request->boolean('inclure_terminees'), fn ($q) => $q->actif())
-            ->with(['classe.cours', 'classe.periode', 'classe.anneeScolaire', 'classe.prochaineSession', 'classe.assignationsActives.professeur'])
+            ->with(['classe.anneeScolaire.periodes', 'classe.periodes' => Classe::chargerPeriodes(), 'classe.prochaineSession.classePeriode.periode', 'classe.assignationsActives.professeur'])
             ->orderByDesc('id')
             ->get();
 
@@ -44,7 +44,7 @@ class MesClassesController extends Controller
                 ->where('origine', SessionProfesseur::ORIGINE_REMPLACEMENT)->where('remplace', false))
             ->where('date', '>=', now('Europe/Brussels')->toDateString())
             ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
-            ->with(['classe.cours', 'sessionProfesseurs.professeur'])
+            ->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
             ->orderBy('date')->orderBy('heure_debut')->get();
         $this->calendrier->attachAlerts($remplacements);
 
@@ -66,10 +66,10 @@ class MesClassesController extends Controller
         Gate::authorize('view', $classe);
 
         $moi = $request->user()->professeur->id;
-        $classe->load('cours');
 
         $sessions = $classe->sessions()->visiblePour($request->user())
-            ->with(['sessionProfesseurs.professeur'])->get();
+            ->with(['classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])->get()
+            ->sortBy([fn (CourseSession $a, CourseSession $b) => $a->classePeriode->periode->numero <=> $b->classePeriode->periode->numero, ['seance_numero', 'asc'], ['bis_rang', 'asc']])->values();
         $sessions->each->setRelation('classe', $classe);
         $this->calendrier->attachAlerts($sessions);
 

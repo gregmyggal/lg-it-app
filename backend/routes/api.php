@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureCompteActif;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendrierScolaireController;
 use App\Http\Controllers\ClasseController;
+use App\Http\Controllers\ClassePeriodeController;
 use App\Http\Controllers\ClasseLienController;
 use App\Http\Controllers\ClasseProfesseurController;
 use App\Http\Controllers\ClasseSessionController;
@@ -147,6 +148,13 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/classes/{classe}', [ClasseController::class, 'show']);
     Route::put('/classes/{classe}', [ClasseController::class, 'update']);
     Route::delete('/classes/{classe}', [ClasseController::class, 'destroy']);
+    // CLS-02 : périodes d'une classe
+    Route::post('/classes/{classe}/periodes/apercu', [ClassePeriodeController::class, 'apercu']);
+    Route::post('/classes/{classe}/periodes', [ClassePeriodeController::class, 'store']);
+    Route::put('/classes/{classe}/periodes/{classePeriode}', [ClassePeriodeController::class, 'update']);
+    Route::delete('/classes/{classe}/periodes/{classePeriode}', [ClassePeriodeController::class, 'destroy']);
+    Route::get('/classes/{classe}/periodes/{classePeriode}/historique-cours', [ClassePeriodeController::class, 'historiqueCours']);
+    Route::post('/classes/{classe}/periodes/{classePeriode}/annuler', [ClassePeriodeController::class, 'annuler']);
     Route::get('/classes/{classe}/sessions', [ClasseSessionController::class, 'index']);
     Route::post('/classes/{classe}/sessions/bis', [ClasseSessionController::class, 'bis']);
 

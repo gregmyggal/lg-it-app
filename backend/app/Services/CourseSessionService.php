@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
 use App\Models\Classe;
+use App\Models\ClassePeriode;
 use App\Models\CourseSession;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Ajustement des sessions d'une classe : déplacer, annuler (le numéro de séance est conservé),
- * ajouter un « bis » (RG-2). Jamais de renumérotation, jamais après la fin de la période.
+ * ajouter un « bis » (RG-2). Jamais de renumérotation. Plus de blocage après la fin de période (CLS-02,
+ * RG-4) : la séance est marquée `hors_periode` et la réponse porte un avertissement.
  */
 class CourseSessionService
 {
@@ -25,10 +27,6 @@ class CourseSessionService
             throw RegleMetierException::conflit('Une session passée ne peut pas être déplacée.');
         }
         $this->refuserSiHeuresEncodees($session, 'déplacée');
-
-        if (isset($data['date'])) {
-            $this->assertDansLaPeriode($session->classe()->with('periode')->first(), $data['date']);
-        }
 
         $session->update($data);
 
@@ -66,39 +64,37 @@ class CourseSessionService
     }
 
     /**
-     * Crée un « bis » rattaché à l'une des séances de la classe.
+     * Crée un « bis » rattaché à l'une des séances d'une période de la classe.
      *
-     * @param  array{seance_numero: int, date: string, heure_debut?: ?string, heure_fin?: ?string, lieu?: ?string}  $data
+     * @param  array{seance_numero: int, date: string, periode_numero?: ?int, classe_periode_id?: ?int, heure_debut?: ?string, heure_fin?: ?string, lieu?: ?string}  $data
      *
-     * @throws RegleMetierException 422 séance inconnue / date hors période ; 409 dépassement non confirmé
+     * @throws RegleMetierException 422 période/séance inconnue ; 409 dépassement non confirmé
      */
     public function ajouterBis(Classe $classe, array $data, bool $confirmerDepassement = false): CourseSession
     {
-        $classe->loadMissing('periode');
+        $classePeriode = $this->periodeCible($classe, $data);
 
-        return DB::transaction(function () use ($classe, $data, $confirmerDepassement) {
+        return DB::transaction(function () use ($classe, $classePeriode, $data, $confirmerDepassement) {
             $seance = CourseSession::query()
-                ->where('classe_id', $classe->id)
+                ->where('classe_periode_id', $classePeriode->id)
                 ->where('seance_numero', $data['seance_numero'])
                 ->orderByDesc('bis_rang')
                 ->lockForUpdate()
                 ->get();
 
             if ($seance->isEmpty()) {
-                $message = "La séance {$data['seance_numero']} n'existe pas dans cette classe : un bis doit se rattacher à l'une de ses séances.";
+                $message = "La séance {$data['seance_numero']} n'existe pas dans cette période : un bis doit se rattacher à l'une de ses séances.";
                 throw RegleMetierException::invalide($message, ['seance_numero' => [$message]]);
             }
 
-            $this->assertDansLaPeriode($classe, $data['date']);
-
-            $nbActives = CourseSession::where('classe_id', $classe->id)
+            $nbActives = CourseSession::where('classe_periode_id', $classePeriode->id)
                 ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
                 ->count();
 
             if ($nbActives + 1 > ClasseSessionGenerator::NB_SEANCES && ! $confirmerDepassement) {
                 $nb = $nbActives + 1;
                 throw RegleMetierException::conflit(
-                    "Cette classe passera à {$nb} sessions",
+                    "Cette période passera à {$nb} sessions",
                     ['nb_sessions' => $nb]
                 );
             }
@@ -111,6 +107,7 @@ class CourseSessionService
 
             $bis = CourseSession::create([
                 'classe_id' => $classe->id,
+                'classe_periode_id' => $classePeriode->id,
                 'seance_numero' => $data['seance_numero'],
                 'bis_rang' => $seance->max('bis_rang') + 1,
                 'remplace_session_id' => $remplacee?->id,
@@ -128,14 +125,24 @@ class CourseSessionService
         });
     }
 
-    /** Aucune session ne peut être créée ni déplacée après la fin de la période (RG-2). */
-    private function assertDansLaPeriode(Classe $classe, string $date): void
+    /** Période visée par un bis : `classe_periode_id`, sinon `periode_numero`, sinon P1 (ou l'unique période de la classe). */
+    private function periodeCible(Classe $classe, array $data): ClassePeriode
     {
-        $periode = $classe->periode;
+        $periodes = $classe->periodes()->with('periode')->get();
 
-        if ($date > $periode->date_fin->toDateString()) {
-            $message = "Cette date est après la fin de la période {$periode->numero}";
-            throw RegleMetierException::invalide($message, ['date' => [$message]]);
+        if (! empty($data['classe_periode_id'])) {
+            $cible = $periodes->firstWhere('id', (int) $data['classe_periode_id']);
+        } elseif (! empty($data['periode_numero'])) {
+            $cible = $periodes->first(fn (ClassePeriode $p) => $p->periode->numero === (int) $data['periode_numero']);
+        } else {
+            $cible = $periodes->count() === 1 ? $periodes->first() : $periodes->first(fn (ClassePeriode $p) => $p->periode->numero === 1);
         }
+
+        if (! $cible) {
+            $message = "Cette classe n'a pas cette période.";
+            throw RegleMetierException::invalide($message, ['periode_numero' => [$message]]);
+        }
+
+        return $cible;
     }
 }

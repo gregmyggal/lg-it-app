@@ -30,7 +30,7 @@ class TimesheetMoisController extends Controller
 
         $saisies = Timesheet::where('professeur_id', $professeur->id)
             ->whereYear('date_prestation', $v['annee'])->whereMonth('date_prestation', $v['mois'])
-            ->with('professeur', 'cours', 'session.classe.cours')
+            ->with('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode')
             ->orderBy('date_prestation')->orderBy('id')->get();
 
         $parSession = $saisies->whereNotNull('course_session_id')->groupBy('course_session_id');
@@ -41,7 +41,7 @@ class TimesheetMoisController extends Controller
             ->where(fn ($q) => $q
                 ->whereHas('sessionProfesseurs', fn ($l) => $l->where('professeur_id', $professeur->id))
                 ->orWhereIn('id', $parSession->keys()))
-            ->with(['classe.cours', 'sessionProfesseurs.professeur'])
+            ->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
             ->orderBy('date')->orderBy('heure_debut')->get()
             ->filter(fn (CourseSession $s) => $this->service->aCommence($s) || $parSession->has($s->id))
             ->values();
@@ -64,7 +64,9 @@ class TimesheetMoisController extends Controller
                 'statut' => $s->statut,
                 'annulee' => $s->isAnnulee(),
                 'classe_id' => $s->classe_id,
-                'classe_libelle' => $s->classe->cours->titre,
+                'classe_libelle' => $s->classePeriode->cours->titre,
+                'periode_numero' => $s->classePeriode->periode->numero,
+                'libelle_complet' => $s->libelleComplet(),
                 'duree_par_defaut' => $this->service->dureeParDefaut($s),
                 'duree_seance' => $this->service->dureeSeance($s),
                 'encodage' => $this->service->etatEncodage($miennes),

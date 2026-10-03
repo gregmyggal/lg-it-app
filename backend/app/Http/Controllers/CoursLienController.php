@@ -7,6 +7,7 @@ use App\Http\Resources\ClasseLienResource;
 use App\Models\ClasseLien;
 use App\Models\ClasseLienVersion;
 use App\Models\Cours;
+use App\Models\CourseSession;
 use App\Services\CoursLienService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,8 +23,17 @@ class CoursLienController extends Controller
         Gate::authorize('viewAny', [ClasseLien::class, $cours]);
         $user = $request->user();
 
-        $classes = $cours->classes()->where('statut', 'active')->with(['anneeScolaire:id,libelle', 'prochaineSession'])
-            ->orderBy('annee_scolaire_id')->orderBy('periode_id')->orderBy('jour_semaine')->orderBy('heure_debut')->get();
+        $classes = $cours->classes()->where('statut', 'active')->with(['anneeScolaire:id,libelle'])
+            ->orderBy('annee_scolaire_id')->orderBy('jour_semaine')->orderBy('heure_debut')->get();
+
+        // Séance courante = prochaine séance non annulée des périodes de ce cours (une classe peut porter un autre cours en P1/P2).
+        $prochaines = CourseSession::query()
+            ->whereIn('classe_id', $classes->pluck('id'))
+            ->whereHas('classePeriode', fn ($q) => $q->where('cours_id', $cours->id))
+            ->where('date', '>=', now('Europe/Brussels')->toDateString())
+            ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
+            ->with('classePeriode.periode')
+            ->orderBy('date')->orderBy('id')->get()->groupBy('classe_id')->map->first();
 
         return response()->json([
             'cours' => ['id' => $cours->id, 'titre' => $cours->titre],
@@ -34,7 +44,7 @@ class CoursLienController extends Controller
                 'heure_debut' => substr($c->heure_debut, 0, 5),
                 'heure_fin' => substr($c->heure_fin, 0, 5),
                 'annee_scolaire' => $c->anneeScolaire?->libelle,
-                'seance_courante' => $c->prochaineSession ? ['seance_numero' => $c->prochaineSession->seance_numero, 'bis' => $c->prochaineSession->bis_rang > 0, 'date' => $c->prochaineSession->date->toDateString()] : null,
+                'seance_courante' => ($p = $prochaines->get($c->id)) ? ['seance_numero' => $p->seance_numero, 'bis' => $p->bis_rang > 0, 'periode_numero' => $p->classePeriode?->periode?->numero, 'libelle' => $p->libelleComplet(), 'date' => $p->date->toDateString()] : null,
             ])->values(),
             'data' => ClasseLienResource::collection($this->service->liste($cours))->resolve($request),
             'peut_modifier' => $user->can('create', [ClasseLien::class, $cours]),

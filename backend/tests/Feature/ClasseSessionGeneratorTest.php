@@ -54,9 +54,10 @@ class ClasseSessionGeneratorTest extends TestCase
 
         $apercu = app(ClasseSessionGenerator::class)->preview($this->donneesClasse($annee));
 
-        $this->assertCount(14, $apercu['seances']);
-        $this->assertNull($apercu['blocage']);
-        $sautees = collect($apercu['dates_sautees'])->keyBy('date');
+        $plan = $apercu['periodes'][0];
+        $this->assertCount(14, $plan['seances']);
+        $this->assertNull($plan['blocage']);
+        $sautees = collect($plan['dates_sautees'])->keyBy('date');
         $this->assertSame(['2026-10-21', '2026-10-28', '2026-11-11', '2026-12-23', '2026-12-30'], $sautees->keys()->all());
         $this->assertSame('Armistice', $sautees['2026-11-11']['libelle']);
         $this->assertSame('ferie', $sautees['2026-11-11']['type']);
@@ -84,31 +85,26 @@ class ClasseSessionGeneratorTest extends TestCase
         // 2026-10-06 est un mardi ; la classe a lieu le mercredi (3).
         $classe = $this->classeAvecSessions($annee, ['date_premiere_session' => '2026-10-06']);
 
-        $this->assertSame('2026-10-07', $classe->date_premiere_session->toDateString());
+        $this->assertSame('2026-10-07', $classe->periodes()->first()->date_premiere_session->toDateString());
         $this->assertSame('2026-10-07', $classe->sessions()->first()->date->toDateString());
 
         $apercu = app(ClasseSessionGenerator::class)->preview($this->donneesClasse($annee, ['date_premiere_session' => '2026-10-06']));
-        $this->assertTrue($apercu['recale']);
-        $this->assertSame('2026-10-07', $apercu['date_premiere_session']);
+        $this->assertTrue($apercu['periodes'][0]['recale']);
+        $this->assertSame('2026-10-07', $apercu['periodes'][0]['date_premiere_session']);
     }
 
-    public function test_refuse_si_la_14e_seance_depasse_la_fin_de_la_periode(): void
+    public function test_la_14e_seance_hors_periode_n_est_pas_bloquante_et_avertit(): void
     {
         $annee = $this->annee(); // P1 se termine le 2027-02-19
 
-        try {
-            $this->classeAvecSessions($annee, ['date_premiere_session' => '2027-01-13']);
-            $this->fail('Une RegleMetierException était attendue.');
-        } catch (RegleMetierException $e) {
-            $this->assertSame(422, $e->status);
-            $this->assertSame('La séance 14 dépasse la fin de la période 1', $e->getMessage());
-        }
+        $classe = $this->classeAvecSessions($annee, ['date_premiere_session' => '2027-01-13']);
 
-        $this->assertSame(0, Classe::count(), 'Rien ne doit être persisté (transaction).');
-        $this->assertSame(0, CourseSession::count());
+        $this->assertSame(14, $classe->sessions()->count());
+        $this->assertTrue($classe->sessions()->get()->last()->load('classePeriode.periode')->isHorsPeriode());
 
         $apercu = app(ClasseSessionGenerator::class)->preview($this->donneesClasse($annee, ['date_premiere_session' => '2027-01-13']));
-        $this->assertSame(1, $apercu['blocage']['periode_numero']);
+        $this->assertNull($apercu['periodes'][0]['blocage']);
+        $this->assertStringContainsString('La séance 14 dépasse la fin de la période 1', $apercu['periodes'][0]['avertissements'][0]);
     }
 
     public function test_refuse_une_periode_dune_autre_annee(): void
@@ -126,14 +122,14 @@ class ClasseSessionGeneratorTest extends TestCase
         $generator = app(ClasseSessionGenerator::class);
         $classe = $this->classeAvecSessions($this->annee());
 
-        $this->assertSame(0, $generator->generateSessions($classe));
+        $this->assertSame(0, $generator->generateSessions($classe->periodes()->first()));
         $this->assertSame(14, $classe->sessions()->count());
 
         // Une séance déplacée à la main et une séance supprimée.
         $classe->sessions()->where('seance_numero', 2)->update(['date' => '2026-10-15']);
         $classe->sessions()->where('seance_numero', 5)->delete();
 
-        $this->assertSame(1, $generator->generateSessions($classe));
+        $this->assertSame(1, $generator->generateSessions($classe->periodes()->first()));
         $this->assertSame(14, $classe->sessions()->count());
         $this->assertSame('2026-10-15', $classe->sessions()->where('seance_numero', 2)->first()->date->toDateString());
         $this->assertSame('2026-11-04', $classe->sessions()->where('seance_numero', 5)->first()->date->toDateString());

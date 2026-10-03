@@ -30,7 +30,7 @@ class TimesheetDetailMoisController extends Controller
         $debut = Carbon::create((int) $v['annee'], (int) $v['mois'], 1);
         $fin = $debut->copy()->endOfMonth();
 
-        $lignes = Timesheet::with('professeur', 'cours', 'session.classe.cours')
+        $lignes = Timesheet::with('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode')
             ->where('professeur_id', $professeur->id)
             ->whereBetween('date_prestation', [$debut->toDateString(), $fin->toDateString()])
             ->orderBy('date_prestation')->orderBy('id')->get();

@@ -114,7 +114,7 @@ class IsolationProfesseurTest extends TestCase
 
     public function test_can_access_cours_depend_d_une_assignation_active(): void
     {
-        $cours = $this->mercredi->cours;
+        $cours = $this->mercredi->periodes()->first()->cours;
         $this->assertTrue($this->alice->canAccessCours($cours));
         $this->assertFalse($this->bob->canAccessCours(Cours::factory()->create()));
 
@@ -126,7 +126,7 @@ class IsolationProfesseurTest extends TestCase
 
     public function test_un_professeur_sans_classe_du_cours_ne_gere_pas_ses_liens(): void
     {
-        $cours = $this->mercredi->cours;
+        $cours = $this->mercredi->periodes()->first()->cours;
         $sansClasse = Professeur::factory()->create();
 
         Sanctum::actingAs($sansClasse->user);
@@ -143,6 +143,6 @@ class IsolationProfesseurTest extends TestCase
         $this->actingAsRole('admin');
 
         $this->postJson("/api/professeurs/{$this->alice->id}/cours", ['courses' => []])->assertStatus(404)->assertJsonMissingPath('professeur');
-        $this->getJson("/api/cours/{$this->mercredi->cours_id}/professeurs")->assertStatus(404);
+        $this->getJson("/api/cours/{$this->mercredi->periodes()->first()->cours_id}/professeurs")->assertStatus(404);
     }
 }

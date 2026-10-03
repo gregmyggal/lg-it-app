@@ -138,11 +138,11 @@ class HeuresDefrayablesTest extends TestCase
         $this->assertEquals(2.0, $this->heuresProposees($alice, $classe)); // défaut global
 
         $this->actingAsRole('directeur');
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => 2.5])->assertOk()->assertJsonPath('heures_defrayables', 2.5);
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => 2.5])->assertOk()->assertJsonPath('heures_defrayables', 2.5);
         $this->assertEquals(2.5, $this->heuresProposees($alice, $classe));
 
         $this->actingAsRole('admin');
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => null])->assertOk()->assertJsonPath('heures_defrayables', null);
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => null])->assertOk()->assertJsonPath('heures_defrayables', null);
         $this->assertEquals(2.0, $this->heuresProposees($alice, $classe)); // retour au défaut
     }
 
@@ -150,7 +150,7 @@ class HeuresDefrayablesTest extends TestCase
     {
         [$classe, $alice, $session] = $this->sessionEncodable();
         $this->actingAsRole('admin');
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => 1.75])->assertOk();
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => 1.75])->assertOk();
         $this->putJson('/api/timesheet-parametres/'.$session->date->year, $this->params(['heures_defrayables' => 4]))->assertOk();
 
         $this->assertEquals(1.75, $this->heuresProposees($alice, $classe));
@@ -163,7 +163,7 @@ class HeuresDefrayablesTest extends TestCase
         $this->postJson('/api/timesheets', ['course_session_id' => $session->id])->assertCreated();
 
         $this->actingAsRole('directeur');
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => 5])->assertOk();
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => 5])->assertOk();
 
         $this->assertEquals(2.0, (float) Timesheet::firstOrFail()->nombre_heures);
     }
@@ -174,12 +174,12 @@ class HeuresDefrayablesTest extends TestCase
         $this->actingAsRole('directeur');
 
         foreach ([0.25, 9, 2.1, 'abc'] as $mauvaise) {
-            $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => $mauvaise])
+            $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => $mauvaise])
                 ->assertStatus(422)->assertJsonValidationErrors('heures_defrayables');
         }
 
         $this->actingAsRole('professeur');
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => 3])->assertForbidden();
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => 3])->assertForbidden();
     }
 
     // ---- DEF-01 T3 : affichage (création de classe, détail, encodage) ----
@@ -192,8 +192,8 @@ class HeuresDefrayablesTest extends TestCase
         $this->getJson('/api/heures-defrayables?annee=2026')->assertOk()
             ->assertJsonPath('data.duree_seance_defaut', 1.5)->assertJsonPath('data.valeur', 2)->assertJsonPath('data.source', 'defaut');
 
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => 2.5])->assertOk();
-        $this->getJson("/api/heures-defrayables?annee=2026&cours_id={$classe->cours_id}")->assertOk()
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => 2.5])->assertOk();
+        $this->getJson("/api/heures-defrayables?annee=2026&cours_id={$classe->periodes()->first()->cours_id}")->assertOk()
             ->assertJsonPath('data.valeur', 2.5)->assertJsonPath('data.source', 'cours');
 
         $this->actingAsRole('professeur');
@@ -209,11 +209,11 @@ class HeuresDefrayablesTest extends TestCase
         $this->assertEquals(2, $s['heures_defrayables']['valeur']);
         $this->assertSame('defaut', $s['heures_defrayables']['source']);
 
-        $this->putJson("/api/cours/{$classe->cours_id}", ['heures_defrayables' => 2.25])->assertOk();
+        $this->putJson("/api/cours/{$classe->periodes()->first()->cours_id}", ['heures_defrayables' => 2.25])->assertOk();
         $c = $this->getJson("/api/classes/{$classe->id}")->assertOk()->json('data');
         $this->assertEquals(3, $c['duree_seance']); // séance 14 h–17 h au calendrier de tests
-        $this->assertEquals(2.25, $c['heures_defrayables']['valeur']);
-        $this->assertSame('cours', $c['heures_defrayables']['source']);
+        $this->assertEquals(2.25, $c['periodes'][0]['heures_defrayables']['valeur']);
+        $this->assertSame('cours', $c['periodes'][0]['heures_defrayables']['source']);
     }
 
     public function test_le_professeur_recoit_la_duree_de_seance_pour_l_info_bulle(): void
@@ -265,13 +265,13 @@ class HeuresDefrayablesTest extends TestCase
         $this->postJson('/api/heures-defrayables/impact', ['annee' => $annee, 'portee' => 'cours', 'cours_id' => $autre->id, 'heures' => 3])
             ->assertOk()->assertJsonPath('data.apres', 0); // ce cours n'a aucune classe
 
-        $total = $this->postJson('/api/heures-defrayables/impact', ['annee' => $annee, 'portee' => 'cours', 'cours_id' => $classe->cours_id, 'heures' => 2.5])
+        $total = $this->postJson('/api/heures-defrayables/impact', ['annee' => $annee, 'portee' => 'cours', 'cours_id' => $classe->periodes()->first()->cours_id, 'heures' => 2.5])
             ->assertOk()->json('data.apres');
         $this->assertGreaterThan(0, $total);
 
         // Une séance déjà encodée par le professeur n'est plus concernée.
         Timesheet::create(['professeur_id' => $alice->id, 'course_session_id' => $session->id, 'date_prestation' => $session->date->toDateString(), 'nombre_heures' => 2, 'type_activite' => 'animation', 'statut_validation' => 'brouillon']);
-        $apres = $this->postJson('/api/heures-defrayables/impact', ['annee' => $annee, 'portee' => 'cours', 'cours_id' => $classe->cours_id, 'heures' => 2.5])->json('data.apres');
+        $apres = $this->postJson('/api/heures-defrayables/impact', ['annee' => $annee, 'portee' => 'cours', 'cours_id' => $classe->periodes()->first()->cours_id, 'heures' => 2.5])->json('data.apres');
         $this->assertSame($total - 1, $apres);
     }
 

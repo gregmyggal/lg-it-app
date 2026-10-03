@@ -21,13 +21,16 @@ class CourseSessionController extends Controller
     /** Base du calendrier : sessions filtrées (classe, cours, période de dates, statut). */
     public function index(ListSessionsRequest $request): AnonymousResourceCollection
     {
-        $query = CourseSession::query()->visiblePour($request->user())->with(['classe.cours', 'sessionProfesseurs.professeur']);
+        $query = CourseSession::query()->visiblePour($request->user())->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur']);
 
         if ($request->filled('classe_id')) {
             $query->where('classe_id', $request->integer('classe_id'));
         }
         if ($request->filled('cours_id')) {
-            $query->whereHas('classe', fn ($q) => $q->where('cours_id', $request->integer('cours_id')));
+            $query->whereHas('classePeriode', fn ($q) => $q->where('cours_id', $request->integer('cours_id')));
+        }
+        if ($request->filled('periode_numero')) {
+            $query->whereHas('classePeriode.periode', fn ($q) => $q->where('numero', $request->integer('periode_numero')));
         }
         if ($request->filled('date_from')) {
             $query->where('date', '>=', $request->input('date_from'));
@@ -59,7 +62,7 @@ class CourseSessionController extends Controller
 
     private function reponse(CourseSession $session): CourseSessionResource
     {
-        $session->load('classe.cours');
+        $session->load(['classe', 'classePeriode.cours', 'classePeriode.periode']);
         $this->calendrier->attachAlerts([$session]);
 
         return new CourseSessionResource($session);

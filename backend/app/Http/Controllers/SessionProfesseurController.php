@@ -54,7 +54,7 @@ class SessionProfesseurController extends Controller
     /** @return array<string, mixed> */
     private function session(CourseSession $session): array
     {
-        $session->load(['classe.cours', 'sessionProfesseurs.professeur', 'sessionProfesseurs.remplacePar']);
+        $session->load(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur', 'sessionProfesseurs.remplacePar']);
         $this->calendrier->attachAlerts([$session]);
 
         return (new CourseSessionResource($session))->resolve();

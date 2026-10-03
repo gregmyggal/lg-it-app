@@ -29,8 +29,8 @@ class Periode extends Model
         return $this->belongsTo(AnneeScolaire::class);
     }
 
-    public function classes(): HasMany
+    public function classePeriodes(): HasMany
     {
-        return $this->hasMany(Classe::class);
+        return $this->hasMany(ClassePeriode::class);
     }
 }

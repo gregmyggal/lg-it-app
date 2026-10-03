@@ -57,7 +57,7 @@ class ProfesseurCompteService
      */
     public function impact(Professeur $professeur): array
     {
-        $actives = $professeur->assignations()->actif()->with('classe.cours')->get();
+        $actives = $professeur->assignations()->actif()->with('classe.periodes.cours')->get();
 
         $seances = SessionProfesseur::query()
             ->where('professeur_id', $professeur->id)
@@ -67,7 +67,7 @@ class ProfesseurCompteService
 
         $seuls = $actives->filter(fn (ProfesseurClasse $a) => ! ProfesseurClasse::query()
             ->where('classe_id', $a->classe_id)->where('professeur_id', '!=', $professeur->id)->actif()->exists())
-            ->map(fn (ProfesseurClasse $a) => ($a->classe->cours->titre ?? "Classe")." (#{$a->classe_id})")->values()->all();
+            ->map(fn (ProfesseurClasse $a) => (\App\Http\Resources\ClasseResource::titreDe($a->classe) ?: "Classe")." (#{$a->classe_id})")->values()->all();
 
         return [
             'classes_actives' => $actives->count(),

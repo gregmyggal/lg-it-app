@@ -184,7 +184,7 @@ class ClasseProfesseurAssignmentService
             ->where('session_professors.remplace', false)
             ->where('course_sessions.statut', '!=', CourseSession::STATUT_ANNULEE)
             ->whereIn('course_sessions.date', $sessions->map(fn ($s) => $s->date->toDateString())->unique()->values())
-            ->with('classe.cours')
+            ->with('classePeriode.cours')
             ->get()
             ->groupBy(fn (CourseSession $s) => $s->date->toDateString());
 
@@ -197,7 +197,7 @@ class ClasseProfesseurAssignmentService
                         'session_id' => $session->id,
                         'session_en_conflit_id' => $autre->id,
                         'classe_id' => $autre->classe_id,
-                        'classe' => $autre->classe->cours->titre ?? null,
+                        'classe' => $autre->classePeriode->cours->titre ?? null,
                         'heure_debut' => substr($autre->heure_debut, 0, 5),
                         'heure_fin' => substr($autre->heure_fin, 0, 5),
                     ];
@@ -262,6 +262,7 @@ class ClasseProfesseurAssignmentService
         $aujourdhui = $this->aujourdhui();
 
         $fenetre = $this->sessionsAVenir($classe)
+            ->with('classePeriode.periode')
             ->where('date', '>=', max($debut, $aujourdhui))
             ->when($fin !== null, fn ($q) => $q->where('date', '<=', $fin))
             ->get();
@@ -296,11 +297,15 @@ class ClasseProfesseurAssignmentService
 
     /**
      * @param  array{a_assigner: Collection<int, CourseSession>, deja: int, passees: int}  $plan
-     * @return array{sessions_assignees: int, sessions_passees_ignorees: int, sessions_deja_assignees: int}
+     * @return array{sessions_assignees: int, sessions_passees_ignorees: int, sessions_deja_assignees: int, par_periode: list<array{periode_numero: int, sessions_assignees: int}>}
      */
     private function recapitulatif(array $plan): array
     {
         return [
+            'par_periode' => $plan['a_assigner']
+                ->groupBy(fn (CourseSession $x) => $x->classePeriode?->periode?->numero)
+                ->map(fn ($g, $numero) => ['periode_numero' => (int) $numero, 'sessions_assignees' => $g->count()])
+                ->sortBy('periode_numero')->values()->all(),
             'sessions_assignees' => $plan['a_assigner']->count(),
             'sessions_passees_ignorees' => $plan['passees'],
             'sessions_deja_assignees' => $plan['deja'],

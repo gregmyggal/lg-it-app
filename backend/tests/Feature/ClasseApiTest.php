@@ -62,36 +62,36 @@ class ClasseApiTest extends TestCase
             ->assertJsonPath('data.nb_sessions', 14)
             ->assertJsonPath('data.jour_semaine', 3)
             ->assertJsonPath('data.heure_debut', '14:00')
-            ->assertJsonPath('data.periode.numero', 1)
+            ->assertJsonPath('data.periodes.0.numero', 1)
+            ->assertJsonCount(1, 'data.periodes')
             ->assertJsonPath('data.annee_scolaire.libelle', '2026-2027')
-            ->assertJsonPath('data.prochaine_session.libelle', 'Séance 1')
+            ->assertJsonPath('data.prochaine_session.libelle', 'P1 · Séance 1')
             ->assertJsonPath('data.prochaine_session.date', '2026-10-07')
             ->assertJsonPath('data.can.delete', true);
 
         $this->assertSame(14, CourseSession::where('classe_id', $reponse->json('data.id'))->count());
     }
 
-    public function test_creation_422_validation_et_blocage_fin_de_periode(): void
+    public function test_creation_422_validation_et_bornes(): void
     {
         $annee = $this->annee();
         $this->actingAsRole('admin');
 
         $this->postJson('/api/classes', [])->assertStatus(422)
-            ->assertJsonValidationErrors(['cours_id', 'annee_scolaire_id', 'periode_id', 'jour_semaine', 'heure_debut', 'heure_fin', 'date_premiere_session']);
+            ->assertJsonValidationErrors(['periodes', 'annee_scolaire_id', 'jour_semaine', 'heure_debut', 'heure_fin']);
 
         $this->postJson('/api/classes', $this->donneesClasse($annee, ['heure_fin' => '13:00']))
             ->assertStatus(422)->assertJsonValidationErrors(['heure_fin']);
         $this->postJson('/api/classes', $this->donneesClasse($annee, ['jour_semaine' => 8]))
             ->assertStatus(422)->assertJsonValidationErrors(['jour_semaine']);
 
-        $this->postJson('/api/classes', $this->donneesClasse($annee, ['date_premiere_session' => '2027-01-13']))
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'La séance 14 dépasse la fin de la période 1')
-            ->assertJsonPath('errors.date_premiere_session.0', 'La séance 14 dépasse la fin de la période 1');
+        // Date hors des bornes de la période : 422 sur periodes.0.date_premiere_session
+        $this->postJson('/api/classes', $this->donneesClasse($annee, ['date_premiere_session' => '2027-03-10']))
+            ->assertStatus(422)->assertJsonValidationErrors(['periodes.0.date_premiere_session']);
 
         $autre = AnneeScolaire::factory()->avecPeriodes()->create();
         $this->postJson('/api/classes', $this->donneesClasse($annee, ['periode_id' => $autre->periodes()->first()->id]))
-            ->assertStatus(422)->assertJsonValidationErrors(['periode_id']);
+            ->assertStatus(422)->assertJsonValidationErrors(['periodes.0.periode_id']);
 
         $this->assertSame(0, Classe::count());
         $this->assertSame(0, CourseSession::count());
@@ -105,15 +105,16 @@ class ClasseApiTest extends TestCase
 
         $this->postJson('/api/classes/apercu', $this->donneesClasse($annee, ['date_premiere_session' => '2026-10-06']))
             ->assertOk()
-            ->assertJsonCount(14, 'data.seances')
-            ->assertJsonPath('data.recale', true)
-            ->assertJsonPath('data.date_premiere_session', '2026-10-07')
-            ->assertJsonPath('data.dates_sautees.0.date', '2026-10-21')
-            ->assertJsonPath('data.dates_sautees.0.libelle', "Vacances d'automne (Toussaint)")
-            ->assertJsonPath('data.blocage', null);
+            ->assertJsonCount(14, 'data.periodes.0.seances')
+            ->assertJsonPath('data.periodes.0.recale', true)
+            ->assertJsonPath('data.periodes.0.date_premiere_session', '2026-10-07')
+            ->assertJsonPath('data.periodes.0.dates_sautees.0.date', '2026-10-21')
+            ->assertJsonPath('data.periodes.0.dates_sautees.0.libelle', "Vacances d'automne (Toussaint)")
+            ->assertJsonPath('data.periodes.0.blocage', null);
 
         $this->postJson('/api/classes/apercu', $this->donneesClasse($annee, ['date_premiere_session' => '2027-01-13']))
-            ->assertOk()->assertJsonPath('data.blocage.periode_numero', 1);
+            ->assertOk()->assertJsonPath('data.periodes.0.blocage', null)
+            ->assertJsonPath('data.periodes.0.seances.13.hors_periode', true);
 
         $this->postJson('/api/classes/apercu', [])->assertStatus(422);
         $this->assertSame(0, Classe::count());
@@ -152,7 +153,7 @@ class ClasseApiTest extends TestCase
 
         $this->getJson("/api/classes/{$classe->id}")->assertOk()
             ->assertJsonPath('data.nb_sessions', 14) // 13 actives + 1 bis
-            ->assertJsonPath('data.cours.id', $classe->cours_id);
+            ->assertJsonPath('data.periodes.0.cours.id', $classe->periodes()->first()->cours_id);
         $this->getJson('/api/classes/9999')->assertStatus(404);
 
         $sessions = $this->getJson("/api/classes/{$classe->id}/sessions")->assertOk()->assertJsonCount(15, 'data');

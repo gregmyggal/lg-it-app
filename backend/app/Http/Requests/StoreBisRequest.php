@@ -17,6 +17,8 @@ class StoreBisRequest extends FormRequest
     {
         return [
             'seance_numero' => ['required', 'integer', 'between:1,'.ClasseSessionGenerator::NB_SEANCES],
+            'periode_numero' => ['sometimes', 'nullable', 'integer', 'in:1,2'],
+            'classe_periode_id' => ['sometimes', 'nullable', 'integer'],
             'date' => ['required', 'date_format:Y-m-d'],
             'heure_debut' => ['nullable', 'date_format:H:i'],
             'heure_fin' => ['nullable', 'date_format:H:i'],

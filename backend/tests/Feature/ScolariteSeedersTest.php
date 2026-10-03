@@ -26,12 +26,12 @@ class ScolariteSeedersTest extends TestCase
         $this->assertSame(2, Classe::count());
         $this->assertSame(28, CourseSession::count());
 
-        $classes = Classe::with('periode')->orderBy('jour_semaine')->get();
+        $classes = Classe::with('periodes.periode')->orderBy('jour_semaine')->get();
         $this->assertSame([3, 6], $classes->pluck('jour_semaine')->all());
         $this->assertSame(['14:00:00', '09:00:00'], $classes->pluck('heure_debut')->all());
         foreach ($classes as $classe) {
             $derniere = $classe->sessions()->get()->last();
-            $this->assertTrue($derniere->date <= $classe->periode->date_fin);
+            $this->assertTrue($derniere->date <= $classe->periodes->first()->periode->date_fin);
         }
     }
 }

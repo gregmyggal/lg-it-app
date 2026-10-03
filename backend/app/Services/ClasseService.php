@@ -60,7 +60,8 @@ class ClasseService
         }
 
         DB::transaction(function () use ($classe) {
-            // Les FK sont en restrict : on retire d'abord les sessions (bis remplaçants avant remplacés).
+            // Les FK sont en restrict : on retire d'abord les sessions (bis remplaçants avant remplacés) ;
+            // les périodes de classe partent en cascade avec la classe.
             CourseSession::where('classe_id', $classe->id)->whereNotNull('remplace_session_id')->delete();
             CourseSession::where('classe_id', $classe->id)->delete();
             $classe->delete();

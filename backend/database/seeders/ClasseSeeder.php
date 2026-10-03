@@ -33,19 +33,17 @@ class ClasseSeeder extends Seeder
         ];
 
         foreach ($definitions as $def) {
-            $existe = Classe::where([
-                'cours_id' => $react->id,
-                'annee_scolaire_id' => $annee->id,
-                'periode_id' => $periode1->id,
-                'jour_semaine' => $def['jour_semaine'],
-            ])->exists();
+            $existe = Classe::where(['annee_scolaire_id' => $annee->id, 'jour_semaine' => $def['jour_semaine']])
+                ->whereHas('periodes', fn ($q) => $q->where(['cours_id' => $react->id, 'periode_id' => $periode1->id]))
+                ->exists();
 
             if (! $existe) {
+                $date = $def['date_premiere_session'];
+                unset($def['date_premiere_session']);
                 $generator->create($def + [
-                    'cours_id' => $react->id,
                     'annee_scolaire_id' => $annee->id,
-                    'periode_id' => $periode1->id,
                     'lieu' => null,
+                    'periodes' => [['periode_id' => $periode1->id, 'cours_id' => $react->id, 'date_premiere_session' => $date]],
                 ]);
             }
         }

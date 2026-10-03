@@ -58,7 +58,7 @@ class TimesheetValidationTest extends TestCase
         $s = $this->seance($seance);
 
         return Timesheet::create([
-            'professeur_id' => $p->id, 'course_session_id' => $s->id, 'cours_id' => $this->classe->cours_id,
+            'professeur_id' => $p->id, 'course_session_id' => $s->id, 'cours_id' => $this->classe->periodes()->first()->cours_id,
             'date_prestation' => $s->date->toDateString(), 'nombre_heures' => $heures, 'type_activite' => 'animation',
             'statut_validation' => Timesheet::STATUT_SOUMIS,
         ]);

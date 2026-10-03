@@ -51,9 +51,15 @@ class Cours extends Model
     /**
      * Classes (organisations de ce cours pour une année scolaire).
      */
-    public function classes(): HasMany
+    public function classePeriodes(): HasMany
     {
-        return $this->hasMany(Classe::class);
+        return $this->hasMany(ClassePeriode::class);
+    }
+
+    /** Classes ayant ce cours sur au moins une de leurs périodes. */
+    public function classes(): \Illuminate\Database\Eloquent\Builder
+    {
+        return Classe::query()->whereHas('periodes', fn ($q) => $q->where('cours_id', $this->id));
     }
 
     public function liensClasse(): MorphMany

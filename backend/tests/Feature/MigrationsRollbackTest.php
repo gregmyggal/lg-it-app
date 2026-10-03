@@ -144,4 +144,39 @@ class MigrationsRollbackTest extends TestCase
         $this->assertTrue(Schema::hasColumn('course_sessions', 'classe_id'));
         $this->assertFalse(Schema::hasTable('course_recurrences'));
     }
+
+    public function test_cls02_rollback_recopie_vers_classes_puis_backfill_a_la_remigration(): void
+    {
+        Artisan::call('migrate:fresh');
+        $this->assertTrue(Schema::hasTable('classe_periodes'));
+        $this->assertTrue(Schema::hasTable('classe_periode_cours_historique'));
+        $this->assertFalse(Schema::hasColumn('classes', 'cours_id'));
+        $this->assertTrue(Schema::hasColumn('course_sessions', 'classe_periode_id'));
+
+        $now = now();
+        $coursId = DB::table('cours')->insertGetId(['titre' => 'Scratch', 'slug' => 'scratch', 'created_at' => $now, 'updated_at' => $now]);
+        $anneeId = DB::table('annees_scolaires')->insertGetId(['libelle' => '2026-2027', 'date_debut' => '2026-08-24', 'date_fin' => '2027-07-02', 'created_at' => $now, 'updated_at' => $now]);
+        $p1 = DB::table('periodes')->insertGetId(['annee_scolaire_id' => $anneeId, 'numero' => 1, 'date_debut' => '2026-08-24', 'date_fin' => '2027-02-19', 'created_at' => $now, 'updated_at' => $now]);
+        $p2 = DB::table('periodes')->insertGetId(['annee_scolaire_id' => $anneeId, 'numero' => 2, 'date_debut' => '2027-02-22', 'date_fin' => '2027-07-02', 'created_at' => $now, 'updated_at' => $now]);
+        $classeId = DB::table('classes')->insertGetId(['annee_scolaire_id' => $anneeId, 'jour_semaine' => 3, 'heure_debut' => '14:00', 'heure_fin' => '17:00', 'statut' => 'active', 'created_at' => $now, 'updated_at' => $now]);
+        $cp2 = DB::table('classe_periodes')->insertGetId(['classe_id' => $classeId, 'periode_id' => $p2, 'cours_id' => $coursId, 'date_premiere_session' => '2027-03-03', 'statut' => 'active', 'created_at' => $now, 'updated_at' => $now]);
+        $cp1 = DB::table('classe_periodes')->insertGetId(['classe_id' => $classeId, 'periode_id' => $p1, 'cours_id' => $coursId, 'date_premiere_session' => '2026-10-07', 'statut' => 'active', 'created_at' => $now, 'updated_at' => $now]);
+        DB::table('course_sessions')->insert(['classe_id' => $classeId, 'classe_periode_id' => $cp1, 'seance_numero' => 1, 'bis_rang' => 0, 'date' => '2026-10-07', 'heure_debut' => '14:00', 'heure_fin' => '17:00', 'statut' => 'planifiee', 'created_at' => $now, 'updated_at' => $now]);
+
+        $this->rollbackJusqua('2026_10_07_100000_create_classe_periodes_table');
+
+        $this->assertFalse(Schema::hasTable('classe_periodes'));
+        $classe = DB::table('classes')->first();
+        $this->assertSame($coursId, (int) $classe->cours_id);
+        $this->assertSame($p1, (int) $classe->periode_id, 'la période de plus petit numéro est recopiée');
+        $this->assertSame('2026-10-07', substr((string) $classe->date_premiere_session, 0, 10));
+        $this->assertFalse(Schema::hasColumn('course_sessions', 'classe_periode_id'));
+
+        $this->assertSame(0, Artisan::call('migrate'), Artisan::output());
+        $cp = DB::table('classe_periodes')->get();
+        $this->assertCount(1, $cp);
+        $this->assertSame($p1, (int) $cp[0]->periode_id);
+        $this->assertSame((int) $cp[0]->id, (int) DB::table('course_sessions')->value('classe_periode_id'));
+        $this->assertFalse(Schema::hasColumn('classes', 'periode_id'));
+    }
 }

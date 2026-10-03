@@ -34,7 +34,7 @@ class TimesheetController extends Controller
 
         $user = $request->user();
 
-        $query = Timesheet::with('professeur', 'cours', 'session.classe.cours');
+        $query = Timesheet::with('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode');
 
         if (! $user->isStaff()) {
             $query->where('professeur_id', $user->professeur?->id ?? 0);
@@ -59,7 +59,7 @@ class TimesheetController extends Controller
     {
         $timesheet = $service->creer($request->user(), $request->validated());
 
-        return (new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours')))
+        return (new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode')))
             ->response()->setStatusCode(201);
     }
 
@@ -67,7 +67,7 @@ class TimesheetController extends Controller
     {
         Gate::authorize('view', $timesheet);
 
-        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
+        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode'));
     }
 
     // Verrouillé (US-302/311) : seul l'admin modifie une saisie soumise/validée,
@@ -90,7 +90,7 @@ class TimesheetController extends Controller
 
         $timesheet->update($data);
 
-        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
+        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode'));
     }
 
     public function destroy(Timesheet $timesheet)
@@ -109,7 +109,7 @@ class TimesheetController extends Controller
 
         $timesheet->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
 
-        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe.cours'));
+        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode'));
     }
 
     // TS-01 T1 : adaptation par le directeur/admin (heures, date d'une saisie libre, type), motif obligatoire.
@@ -127,7 +127,7 @@ class TimesheetController extends Controller
         $saisie = $service->adapter($timesheet, $request->user(), collect($data)->except('motif')->all(), $data['motif']);
         $notifier->siMoisAConfirmer($saisie->professeur, (int) $saisie->date_prestation->format('Y'), (int) $saisie->date_prestation->format('n'));
 
-        return new TimesheetResource($saisie->load('professeur', 'cours', 'session.classe.cours'));
+        return new TimesheetResource($saisie->load('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode'));
     }
 
     // TS-01 T1 : historique des adaptations d'une saisie (staff).

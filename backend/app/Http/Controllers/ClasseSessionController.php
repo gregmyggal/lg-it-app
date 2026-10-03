@@ -26,8 +26,15 @@ class ClasseSessionController extends Controller
         Gate::authorize('view', $classe);
         Gate::authorize('viewAny', CourseSession::class);
 
-        $classe->load('cours');
-        $sessions = $classe->sessions()->visiblePour($request->user())->with('sessionProfesseurs.professeur')->get();
+        $sessions = $classe->sessions()->visiblePour($request->user())
+            ->with(['classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
+            ->when($request->filled('periode_numero'), fn ($q) => $q->whereHas('classePeriode.periode', fn ($p) => $p->where('numero', $request->integer('periode_numero'))))
+            ->get()
+            ->sortBy([
+                fn (CourseSession $a, CourseSession $b) => $a->classePeriode->periode->numero <=> $b->classePeriode->periode->numero,
+                ['seance_numero', 'asc'],
+                ['bis_rang', 'asc'],
+            ])->values();
         $sessions->each->setRelation('classe', $classe);
         $this->calendrier->attachAlerts($sessions);
 
@@ -43,6 +50,7 @@ class ClasseSessionController extends Controller
         );
 
         $session->setRelation('classe', $classe);
+        $session->load(['classePeriode.cours', 'classePeriode.periode']);
         $this->calendrier->attachAlerts([$session]);
 
         return (new CourseSessionResource($session))->response()->setStatusCode(201);

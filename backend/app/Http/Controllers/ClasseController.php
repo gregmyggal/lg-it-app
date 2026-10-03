@@ -23,17 +23,23 @@ class ClasseController extends Controller
     public function index(ListClassesRequest $request): AnonymousResourceCollection
     {
         $query = Classe::query()->visiblePour($request->user())
-            ->with(['cours', 'periode', 'anneeScolaire', 'prochaineSession', 'assignationsActives.professeur'])
+            ->with(Classe::relationsResource())
             ->withCount('sessionsActives');
 
-        foreach (['annee_scolaire_id', 'periode_id', 'cours_id', 'jour_semaine', 'statut'] as $champ) {
+        foreach (['annee_scolaire_id', 'jour_semaine', 'statut'] as $champ) {
             if ($request->filled($champ)) {
                 $query->where($champ, $request->input($champ));
             }
         }
+        // cours_id : P1 ou P2 ; periode_id : classes ayant cette période (CLS-02).
+        foreach (['cours_id', 'periode_id'] as $champ) {
+            if ($request->filled($champ)) {
+                $query->whereHas('periodes', fn ($q) => $q->where($champ, $request->integer($champ)));
+            }
+        }
 
         return ClasseResource::collection(
-            $query->orderBy('annee_scolaire_id')->orderBy('periode_id')->orderBy('jour_semaine')->orderBy('heure_debut')->orderBy('id')
+            $query->orderBy('annee_scolaire_id')->orderBy('jour_semaine')->orderBy('heure_debut')->orderBy('id')
                 ->paginate((int) $request->input('per_page', 25))
         );
     }
@@ -42,10 +48,10 @@ class ClasseController extends Controller
     {
         $classe = $this->generator->create($request->validated());
 
-        return (new ClasseResource($this->charger($classe)))->response()->setStatusCode(201);
+        return (new ClasseResource(self::charger($classe)))->response()->setStatusCode(201);
     }
 
-    /** Aperçu sans persistance : 14 dates, dates sautées, blocage éventuel. */
+    /** Aperçu sans persistance : par période, 14 dates, dates sautées, avertissements, blocage éventuel. */
     public function apercu(StoreClasseRequest $request): JsonResponse
     {
         return response()->json(['data' => $this->generator->preview($request->validated())]);
@@ -55,12 +61,12 @@ class ClasseController extends Controller
     {
         Gate::authorize('view', $classe);
 
-        return new ClasseResource($this->charger($classe));
+        return new ClasseResource(self::charger($classe));
     }
 
     public function update(UpdateClasseRequest $request, Classe $classe): ClasseResource
     {
-        return new ClasseResource($this->charger($this->service->modifier($classe, $request->validated())));
+        return new ClasseResource(self::charger($this->service->modifier($classe, $request->validated())));
     }
 
     public function destroy(Classe $classe): JsonResponse
@@ -72,9 +78,8 @@ class ClasseController extends Controller
         return response()->json(null, 204);
     }
 
-    private function charger(Classe $classe): Classe
+    public static function charger(Classe $classe): Classe
     {
-        return $classe->load(['cours', 'periode', 'anneeScolaire', 'prochaineSession', 'assignationsActives.professeur'])
-            ->loadCount('sessionsActives');
+        return $classe->unsetRelations()->load(Classe::relationsResource())->loadCount('sessionsActives');
     }
 }

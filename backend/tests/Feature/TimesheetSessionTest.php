@@ -70,7 +70,7 @@ class TimesheetSessionTest extends TestCase
 
         $r->assertJsonPath('professeur_id', $this->alice->id)
             ->assertJsonPath('course_session_id', $s->id)
-            ->assertJsonPath('cours_id', $this->classe->cours_id)
+            ->assertJsonPath('cours_id', $this->classe->periodes()->first()->cours_id)
             ->assertJsonPath('type_activite', 'animation')
             ->assertJsonPath('statut_validation', 'brouillon')
             ->assertJsonPath('session.libelle', 'Séance 2');

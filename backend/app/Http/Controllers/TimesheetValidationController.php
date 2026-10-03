@@ -40,7 +40,7 @@ class TimesheetValidationController extends Controller
             ->when(isset($f['date_from']), fn ($q) => $q->where('date', '>=', $f['date_from']))
             ->when(isset($f['date_to']), fn ($q) => $q->where('date', '<=', $f['date_to']))
             ->whereHas('sessionProfesseurs', fn ($l) => $l->where('remplace', false))
-            ->with(['classe.cours', 'sessionProfesseurs' => fn ($l) => $l->where('remplace', false)->with('professeur'), 'timesheets:id,course_session_id,professeur_id'])
+            ->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs' => fn ($l) => $l->where('remplace', false)->with('professeur'), 'timesheets:id,course_session_id,professeur_id'])
             ->orderBy('date')->orderBy('heure_debut')->limit(500)->get();
 
         $items = $sessions->map(function (CourseSession $s) use ($aujourdhui) {
@@ -55,7 +55,9 @@ class TimesheetValidationController extends Controller
                 'libelle' => $s->libelle(),
                 'date' => $s->date->toDateString(),
                 'classe_id' => $s->classe_id,
-                'classe_libelle' => $s->classe->cours->titre,
+                'classe_libelle' => $s->classePeriode->cours->titre,
+                'periode_numero' => $s->classePeriode->periode->numero,
+                'libelle_complet' => $s->libelleComplet(),
                 'professeurs_sans_heures' => $sans,
                 'jours_de_retard' => (int) $s->date->startOfDay()->diffInDays($aujourdhui),
             ];

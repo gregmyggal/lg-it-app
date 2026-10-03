@@ -31,6 +31,7 @@ class CourseSession extends Model
 
     protected $fillable = [
         'classe_id',
+        'classe_periode_id',
         'seance_numero',
         'bis_rang',
         'remplace_session_id',
@@ -59,6 +60,11 @@ class CourseSession extends Model
     public function classe(): BelongsTo
     {
         return $this->belongsTo(Classe::class);
+    }
+
+    public function classePeriode(): BelongsTo
+    {
+        return $this->belongsTo(ClassePeriode::class);
     }
 
     public function remplace(): BelongsTo
@@ -139,5 +145,29 @@ class CourseSession extends Model
         return $this->bis_rang > 0
             ? "Séance {$this->seance_numero} bis".($this->bis_rang > 1 ? " {$this->bis_rang}" : '')
             : "Séance {$this->seance_numero}";
+    }
+
+    /** « P1 · Séance 3 » / « P1 · Séance 3 bis » (période requise : classePeriode.periode chargé). */
+    public function libelleComplet(): string
+    {
+        $numero = $this->classePeriode?->periode?->numero;
+
+        return $numero ? "P{$numero} · ".$this->libelle() : $this->libelle();
+    }
+
+    /** Séance datée après la fin de la période de classe (rattrapage, retard) ; calculé, jamais persisté. */
+    public function isHorsPeriode(): bool
+    {
+        $fin = $this->classePeriode?->periode?->date_fin;
+
+        return $fin !== null && $this->date->toDateString() > $fin->toDateString();
+    }
+
+    /** @return list<string> avertissements non bloquants (jamais d'erreur après la fin de période). */
+    public function avertissements(): array
+    {
+        return $this->isHorsPeriode()
+            ? ["Cette date est après la fin de la période {$this->classePeriode->periode->numero}"]
+            : [];
     }
 }

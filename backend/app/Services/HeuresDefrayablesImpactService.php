@@ -30,7 +30,7 @@ class HeuresDefrayablesImpactService
         $sessions = CourseSession::query()
             ->whereBetween('date', ["{$annee}-01-01", "{$annee}-12-31"])
             ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
-            ->with(['classe.cours', 'sessionProfesseurs' => fn ($q) => $q->where('remplace', false), 'timesheets:id,course_session_id,professeur_id'])
+            ->with(['classePeriode.cours', 'sessionProfesseurs' => fn ($q) => $q->where('remplace', false), 'timesheets:id,course_session_id,professeur_id'])
             ->get();
 
         $profIds = $sessions->flatMap(fn (CourseSession $s) => $s->sessionProfesseurs->pluck('professeur_id'))->unique();
@@ -40,7 +40,7 @@ class HeuresDefrayablesImpactService
         // [professeur][jour] => ['avant' => €, 'apres' => €]
         $jours = [];
         foreach ($sessions as $s) {
-            $cours = $s->classe?->cours;
+            $cours = $s->classePeriode?->cours;
             $actuelle = $this->parametres->heuresDefrayablesPour($cours, $annee)['valeur'];
             $nouvelle = match (true) {
                 $portee === 'cours' && $cours?->id === $coursId => $heures,

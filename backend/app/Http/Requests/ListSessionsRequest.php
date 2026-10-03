@@ -18,6 +18,7 @@ class ListSessionsRequest extends FormRequest
         return [
             'classe_id' => ['sometimes', 'integer'],
             'cours_id' => ['sometimes', 'integer'],
+            'periode_numero' => ['sometimes', 'integer', 'in:1,2'],
             'date_from' => ['sometimes', 'date_format:Y-m-d'],
             'date_to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:date_from'],
             'statut' => ['sometimes', Rule::in(CourseSession::STATUTS)],

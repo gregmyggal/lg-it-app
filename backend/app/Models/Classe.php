@@ -24,14 +24,11 @@ class Classe extends Model
     protected $table = 'classes';
 
     protected $fillable = [
-        'cours_id',
         'annee_scolaire_id',
-        'periode_id',
         'jour_semaine',
         'heure_debut',
         'heure_fin',
         'lieu',
-        'date_premiere_session',
         'statut',
     ];
 
@@ -39,13 +36,7 @@ class Classe extends Model
     {
         return [
             'jour_semaine' => 'integer',
-            'date_premiere_session' => 'date:Y-m-d',
         ];
-    }
-
-    public function cours(): BelongsTo
-    {
-        return $this->belongsTo(Cours::class);
     }
 
     public function anneeScolaire(): BelongsTo
@@ -53,9 +44,18 @@ class Classe extends Model
         return $this->belongsTo(AnneeScolaire::class);
     }
 
-    public function periode(): BelongsTo
+    /** Périodes de la classe (1 ou 2), triées par numéro de période. */
+    public function periodes(): HasMany
     {
-        return $this->belongsTo(Periode::class);
+        return $this->hasMany(ClassePeriode::class)
+            ->orderBy(Periode::select('numero')->whereColumn('periodes.id', 'classe_periodes.periode_id'))
+            ->orderBy('id');
+    }
+
+    /** Périodes non annulées. */
+    public function periodesActives(): HasMany
+    {
+        return $this->periodes()->where('statut', ClassePeriode::STATUT_ACTIVE);
     }
 
     public function sessions(): HasMany
@@ -78,6 +78,33 @@ class Classe extends Model
                 ->where('date', '>=', now('Europe/Brussels')->toDateString())
                 ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
         );
+    }
+
+    /**
+     * Relations (et agrégats par période) nécessaires à ClasseResource : à passer à with() / load().
+     * Le compteur global `sessions_actives_count` s'ajoute avec withCount()/loadCount('sessionsActives').
+     *
+     * @return array<int|string, mixed>
+     */
+    public static function relationsResource(): array
+    {
+        return [
+            'anneeScolaire.periodes',
+            'periodes' => self::chargerPeriodes(),
+            'prochaineSession.classePeriode.periode',
+            'assignationsActives.professeur',
+        ];
+    }
+
+    /** Eager load des périodes de classe avec leur période, leur cours et leurs agrégats de sessions. */
+    public static function chargerPeriodes(): \Closure
+    {
+        return fn ($q) => $q->with(['periode', 'cours'])
+            ->withCount(['sessionsActives', 'historiqueCours'])
+            ->withMax('sessionsActives as derniere_session_date', 'date')
+            ->withCount(['sessionsActives as nb_hors_periode' => fn ($s) => $s->whereRaw(
+                'course_sessions.date > (select p.date_fin from periodes p where p.id = classe_periodes.periode_id)'
+            )]);
     }
 
     public function assignations(): HasMany

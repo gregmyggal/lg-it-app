@@ -61,17 +61,17 @@ class CourseSessionServiceTest extends TestCase
         $this->assertSame(3, $session->seance_numero); // aucune renumérotation
     }
 
-    public function test_deplacer_apres_la_fin_de_la_periode_est_refuse_422(): void
+    public function test_deplacer_apres_la_fin_de_la_periode_est_accepte_hors_periode(): void
     {
         $classe = $this->classeAvecSessions($this->annee());
 
-        $this->assertRegle(422, 'Cette date est après la fin de la période 1', fn () => $this->service->deplacer(
-            $this->seance($classe, 3), ['date' => '2027-02-20']
-        ));
-
-        // Le dernier jour de la période reste accepté (borne incluse).
         $session = $this->service->deplacer($this->seance($classe, 3), ['date' => '2027-02-19']);
-        $this->assertSame('2027-02-19', $session->date->toDateString());
+        $this->assertFalse($session->load('classePeriode.periode')->isHorsPeriode()); // borne incluse
+
+        $session = $this->service->deplacer($this->seance($classe, 3), ['date' => '2027-02-20']);
+        $this->assertSame('2027-02-20', $session->date->toDateString());
+        $this->assertTrue($session->load('classePeriode.periode')->isHorsPeriode());
+        $this->assertSame(['Cette date est après la fin de la période 1'], $session->avertissements());
     }
 
     public function test_deplacer_une_session_passee_est_refuse_409(): void
@@ -137,7 +137,7 @@ class CourseSessionServiceTest extends TestCase
             $this->fail('Une RegleMetierException 409 était attendue.');
         } catch (RegleMetierException $e) {
             $this->assertSame(409, $e->status);
-            $this->assertSame('Cette classe passera à 15 sessions', $e->getMessage());
+            $this->assertSame('Cette période passera à 15 sessions', $e->getMessage());
             $this->assertSame(15, $e->extra['nb_sessions']);
         }
         $this->assertSame(14, $classe->sessions()->count());
@@ -158,13 +158,12 @@ class CourseSessionServiceTest extends TestCase
     {
         $classe = $this->classeAvecSessions($this->annee());
 
-        $this->assertRegle(422, "La séance 9 n'existe pas dans cette classe : un bis doit se rattacher à l'une de ses séances.", function () use ($classe) {
+        $this->assertRegle(422, "La séance 9 n'existe pas dans cette période : un bis doit se rattacher à l'une de ses séances.", function () use ($classe) {
             $classe->sessions()->where('seance_numero', 9)->delete();
             $this->service->ajouterBis($classe, ['seance_numero' => 9, 'date' => '2027-01-20']);
         });
-        $this->assertRegle(422, 'Cette date est après la fin de la période 1', fn () => $this->service->ajouterBis(
-            $classe, ['seance_numero' => 2, 'date' => '2027-02-22'], confirmerDepassement: true
-        ));
+        $bis = $this->service->ajouterBis($classe, ['seance_numero' => 2, 'date' => '2027-02-22'], confirmerDepassement: true);
+        $this->assertTrue($bis->load('classePeriode.periode')->isHorsPeriode());
     }
 
     public function test_alerte_calendrier_apres_ajout_dune_fermeture(): void

@@ -72,7 +72,7 @@ class ClasseProfesseurController extends Controller
     /** @param array{assignation: ProfesseurClasse, recapitulatif: array<string, int>} $resultat */
     private function reponse(array $resultat, int $status = 200): JsonResponse
     {
-        $assignation = $resultat['assignation']->load(['professeur', 'classe.cours']);
+        $assignation = $resultat['assignation']->load(['professeur', 'classe.periodes.periode', 'classe.periodes.cours']);
         ProfesseurClasseResource::hydrater([$assignation]);
 
         return response()->json([

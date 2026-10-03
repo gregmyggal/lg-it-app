@@ -29,7 +29,7 @@ class ProfesseurClasseController extends Controller
             'Action non autorisée.'
         );
 
-        $assignations = $professeur->assignations()->with(['professeur', 'classe.cours'])->orderByDesc('id')->get();
+        $assignations = $professeur->assignations()->with(['professeur', 'classe.periodes.periode', 'classe.periodes.cours'])->orderByDesc('id')->get();
         ProfesseurClasseResource::hydrater($assignations);
         ProfesseurClasseResource::attacherCoProfesseurs($assignations, false);
 
@@ -74,7 +74,7 @@ class ProfesseurClasseController extends Controller
     /** @param array{assignation: ProfesseurClasse, recapitulatif: array<string, int>} $resultat */
     private function reponse(array $resultat, int $status = 200): JsonResponse
     {
-        $assignation = $resultat['assignation']->load(['professeur', 'classe.cours']);
+        $assignation = $resultat['assignation']->load(['professeur', 'classe.periodes.periode', 'classe.periodes.cours']);
         ProfesseurClasseResource::hydrater([$assignation]);
 
         return response()->json([

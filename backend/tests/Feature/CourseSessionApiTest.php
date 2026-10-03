@@ -59,7 +59,7 @@ class CourseSessionApiTest extends TestCase
 
         $this->getJson('/api/sessions?per_page=100')->assertOk()->assertJsonCount(28, 'data')->assertJsonPath('meta.total', 28);
         $this->getJson("/api/sessions?classe_id={$autre->id}&per_page=100")->assertOk()->assertJsonCount(14, 'data');
-        $this->getJson("/api/sessions?cours_id={$this->classe->cours_id}&per_page=100")->assertOk()->assertJsonCount(14, 'data');
+        $this->getJson("/api/sessions?cours_id={$this->classe->periodes()->first()->cours_id}&per_page=100")->assertOk()->assertJsonCount(14, 'data');
         $this->getJson('/api/sessions?date_from=2026-10-07&date_to=2026-10-14&classe_id='.$this->classe->id)->assertOk()->assertJsonCount(2, 'data');
         $this->getJson("/api/sessions?statut=annulee&classe_id={$this->classe->id}")->assertOk()->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.seance_numero', 2);
@@ -80,20 +80,20 @@ class CourseSessionApiTest extends TestCase
             ->assertJsonPath('data.seance_numero', 3)
             ->assertJsonPath('data.libelle', 'Séance 3')
             ->assertJsonPath('data.can', ['update' => true, 'cancel' => true, 'bis' => true])
-            ->assertJsonPath('data.classe.cours.id', $this->classe->cours_id);
+            ->assertJsonPath('data.cours.id', $this->classe->periodes()->first()->cours_id);
     }
 
-    public function test_deplacer_422_validation_et_fin_de_periode(): void
+    public function test_deplacer_apres_fin_de_periode_accepte_avec_avertissement(): void
     {
         $session = $this->seance(3);
         $this->actingAsRole('directeur');
 
         $this->putJson("/api/sessions/{$session->id}", ['date' => 'demain'])->assertStatus(422)->assertJsonValidationErrors(['date']);
         $this->putJson("/api/sessions/{$session->id}", ['heure_fin' => '10:00'])->assertStatus(422)->assertJsonValidationErrors(['heure_fin']);
-        $this->putJson("/api/sessions/{$session->id}", ['date' => '2027-02-20'])
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'Cette date est après la fin de la période 1')
-            ->assertJsonPath('errors.date.0', 'Cette date est après la fin de la période 1');
+        $this->putJson("/api/sessions/{$session->id}", ['date' => '2027-02-24'])
+            ->assertOk()
+            ->assertJsonPath('data.hors_periode', true)
+            ->assertJsonPath('data.avertissements.0', 'Cette date est après la fin de la période 1');
         $this->putJson('/api/sessions/99999', ['date' => '2026-10-22'])->assertStatus(404);
     }
 
@@ -141,7 +141,7 @@ class CourseSessionApiTest extends TestCase
         // 409 : la classe a déjà 14 sessions actives → confirmation requise.
         $this->postJson($url, ['seance_numero' => 3, 'date' => '2027-01-20'])
             ->assertStatus(409)
-            ->assertJsonPath('message', 'Cette classe passera à 15 sessions')
+            ->assertJsonPath('message', 'Cette période passera à 15 sessions')
             ->assertJsonPath('nb_sessions', 15);
 
         $this->postJson($url, ['seance_numero' => 3, 'date' => '2027-01-20', 'confirmer_depassement' => true])
@@ -153,13 +153,16 @@ class CourseSessionApiTest extends TestCase
         // 422 : séance hors 1..14, date hors période, champs manquants
         $this->postJson($url, ['seance_numero' => 15, 'date' => '2027-01-20'])->assertStatus(422)->assertJsonValidationErrors(['seance_numero']);
         $this->postJson($url, ['seance_numero' => 3, 'date' => '2027-02-22', 'confirmer_depassement' => true])
-            ->assertStatus(422)->assertJsonPath('message', 'Cette date est après la fin de la période 1');
+            ->assertStatus(201)->assertJsonPath('data.hors_periode', true)
+            ->assertJsonPath('data.avertissements.0', 'Cette date est après la fin de la période 1');
         $this->postJson($url, [])->assertStatus(422)->assertJsonValidationErrors(['seance_numero', 'date']);
 
         // Annulation puis bis : le rang et remplace_session_id sont renseignés, sans confirmation.
         $session = $this->seance(6);
         $this->postJson("/api/sessions/{$session->id}/cancel", ['motif_annulation' => 'Panne'])->assertOk();
         $this->postJson('/api/sessions/'.$this->seance(7)->id.'/cancel', ['motif_annulation' => 'Panne'])->assertOk();
+        // 16 sessions - 2 annulées = 14 actives : un nouveau bis dépasserait → on retire d'abord le bis hors période
+        CourseSession::where('date', '2027-02-22')->delete();
         // 15 sessions - 2 annulées = 13 actives : le bis ramène à 14, sans dépassement.
         $this->postJson($url, ['seance_numero' => 6, 'date' => '2027-01-27', 'lieu' => 'Salle B'])
             ->assertStatus(201)->assertJsonPath('data.remplace_session_id', $session->id)->assertJsonPath('data.lieu', 'Salle B');
@@ -191,7 +194,7 @@ class CourseSessionApiTest extends TestCase
         $mois = $this->getJson('/api/calendar/month?year=2026&month=10')->assertOk();
         $this->assertSame(4, $mois->json('summary.total_sessions')); // 7, 14, 21, 28 octobre
         $this->assertSame('Séance 1', $mois->json('data.2026-10-07.0.libelle'));
-        $this->assertNotNull($mois->json('data.2026-10-07.0.classe.cours.titre'));
+        $this->assertNotNull($mois->json('data.2026-10-07.0.cours.titre'));
 
         $semaine = $this->getJson('/api/calendar/week?year=2026&week=41')->assertOk(); // 5–11 octobre 2026
         $this->assertSame(1, $semaine->json('summary.total_sessions'));
@@ -224,8 +227,8 @@ class CourseSessionApiTest extends TestCase
 
         $this->postJson("/api/sessions/{$session->id}/in-progress")->assertStatus(404);
         $this->getJson("/api/sessions/{$session->id}/professors")->assertStatus(404);
-        $this->getJson("/api/cours/{$this->classe->cours_id}/recurrences")->assertStatus(404);
-        $this->getJson("/api/cours/{$this->classe->cours_id}/sessions")->assertStatus(404);
+        $this->getJson("/api/cours/{$this->classe->periodes()->first()->cours_id}/recurrences")->assertStatus(404);
+        $this->getJson("/api/cours/{$this->classe->periodes()->first()->cours_id}/sessions")->assertStatus(404);
     }
 
     private function annee2()
