@@ -160,7 +160,7 @@ class CourseSession extends Model
     {
         $fin = $this->classePeriode?->periode?->date_fin;
 
-        return $fin !== null && $this->date->toDateString() > $fin->toDateString();
+        return $fin !== null && \App\Services\PeriodeRegles::horsPeriode($this->date->toDateString(), $fin->toDateString());
     }
 
     /** @return list<string> avertissements non bloquants (jamais d'erreur après la fin de période). */

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Classe;
 use App\Models\ClassePeriode;
+use App\Services\PeriodeRegles;
 use App\Services\TimesheetParametreService;
 use App\Services\TimesheetService;
 use Illuminate\Http\Request;
@@ -107,33 +108,19 @@ class ClasseResource extends JsonResource
     }
 
     /**
-     * RG-8 : P1 présente, P2 absente, année avec une P2 définie, classe active, dernière séance P1 active à ≤ 28 jours.
+     * RG-8 : P1 présente, P2 absente, année active/brouillon avec une P2 définie, classe active, dernière séance P1 active à ≤ 28 jours (règle : PeriodeRegles).
      *
      * @return array{date_fin_periode_1: string, jours_restants: int, message: string}|null
      */
     private function alertePeriode2(): ?array
     {
-        if ($this->statut !== Classe::STATUT_ACTIVE) {
-            return null;
-        }
-
-        $numeros = $this->periodes->map(fn (ClassePeriode $p) => $p->periode?->numero);
-        if (! $numeros->contains(1) || $numeros->contains(2) || ! $this->anneeScolaire->periodes->contains('numero', 2)) {
-            return null;
-        }
-
         $p1 = $this->periodes->first(fn (ClassePeriode $p) => $p->periode?->numero === 1);
-        $derniere = $p1->getAttributes()['derniere_session_date'] ?? null;
-        if (! $derniere) {
-            return null;
-        }
 
-        $derniere = substr((string) $derniere, 0, 10);
-        $aujourdhui = now('Europe/Brussels')->startOfDay();
-        $jours = (int) $aujourdhui->diffInDays(\Illuminate\Support\Carbon::parse($derniere, 'Europe/Brussels')->startOfDay(), false);
-
-        return $jours <= 28
-            ? ['date_fin_periode_1' => $derniere, 'jours_restants' => $jours, 'message' => 'La période 2 est à planifier']
-            : null;
+        return PeriodeRegles::alertePeriode2(
+            $this->resource,
+            $this->anneeScolaire,
+            $this->periodes->map(fn (ClassePeriode $p) => $p->periode?->numero),
+            $p1?->getAttributes()['derniere_session_date'] ?? null,
+        );
     }
 }

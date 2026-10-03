@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
+use App\Models\AnneeScolaire;
 use App\Models\Classe;
 use App\Models\ClassePeriode;
 use App\Models\CourseSession;
@@ -65,7 +66,7 @@ class ClasseSessionGenerator
             if ($entree) {
                 $sautees[] = ['date' => $date, 'libelle' => $entree->libelle, 'type' => $entree->type];
             } else {
-                $seances[] = ['seance_numero' => count($seances) + 1, 'date' => $date, 'hors_periode' => $date > $fin];
+                $seances[] = ['seance_numero' => count($seances) + 1, 'date' => $date, 'hors_periode' => PeriodeRegles::horsPeriode($date, $fin)];
             }
 
             $courante->addWeek();
@@ -240,6 +241,7 @@ class ClasseSessionGenerator
     private function plansCreation(array $data): array
     {
         $annee = (int) $data['annee_scolaire_id'];
+        $this->refuserSiArchivee($annee, 'annee_scolaire_id');
         $plans = [];
         foreach (array_values($data['periodes']) as $i => $p) {
             $periode = $this->periodeDeLAnnee($annee, (int) $p['periode_id'], "periodes.{$i}.periode_id");
@@ -263,6 +265,7 @@ class ClasseSessionGenerator
     /** @return array{0: Periode, 1: array<string, mixed>} */
     private function planAjout(Classe $classe, array $data): array
     {
+        $this->refuserSiArchivee($classe->annee_scolaire_id, 'periode_id');
         $periode = $this->periodeDeLAnnee($classe->annee_scolaire_id, (int) $data['periode_id'], 'periode_id');
 
         if ($classe->periodes()->where('periode_id', $periode->id)->exists()) {
@@ -314,7 +317,28 @@ class ClasseSessionGenerator
     {
         if ($date < $periode->date_debut->toDateString() || $date > $periode->date_fin->toDateString()) {
             $message = "La date de démarrage doit être comprise dans la période {$periode->numero} (".$periode->date_debut->format('d/m/Y').' → '.$periode->date_fin->format('d/m/Y').').';
-            throw RegleMetierException::invalide($message, [$champ => [$message]]);
+            $periode->loadMissing('anneeScolaire');
+
+            // Code stable + bornes : le front en tire le lien « Modifier les dates de la période N » (CLS-03 RG-8).
+            throw RegleMetierException::invalide($message, [$champ => [$message]], [
+                'code' => 'date_hors_bornes_periode',
+                'contexte' => [
+                    'annee_id' => $periode->annee_scolaire_id,
+                    'annee_libelle' => $periode->anneeScolaire->libelle,
+                    'numero' => $periode->numero,
+                    'debut' => $periode->date_debut->toDateString(),
+                    'fin' => $periode->date_fin->toDateString(),
+                ],
+            ]);
+        }
+    }
+
+    /** @throws RegleMetierException 422 : on ne crée plus de classe ni de période sur une année archivée (CLS-03 RG-5) */
+    private function refuserSiArchivee(int $anneeScolaireId, string $champ): void
+    {
+        if (AnneeScolaire::whereKey($anneeScolaireId)->where('statut', AnneeScolaire::STATUT_ARCHIVEE)->exists()) {
+            $message = 'Cette année scolaire est archivée.';
+            throw RegleMetierException::invalide($message, [$champ => [$message]], ['code' => 'annee_archivee']);
         }
     }
 

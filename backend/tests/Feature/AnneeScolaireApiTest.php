@@ -77,7 +77,7 @@ class AnneeScolaireApiTest extends TestCase
         ]]);
         $this->postJson('/api/annees-scolaires', $chevauche)
             ->assertStatus(422)
-            ->assertJsonPath('errors.periodes.0', 'La période 2 doit commencer après la fin de la période 1.');
+            ->assertJsonPath('errors.periodes.0', 'La période 2 doit commencer après la fin de la période 1 (18/02/2028). Au plus tôt le 19/02/2028.');
 
         // période hors de l'année
         $hors = $this->payload(['periodes' => [
@@ -109,29 +109,32 @@ class AnneeScolaireApiTest extends TestCase
         $this->actingAsRole('admin');
 
         $this->putJson("/api/annees-scolaires/{$annee->id}", [
-            'statut' => 'archivee',
+            'statut' => 'brouillon',
+            'version' => $annee->updated_at->toIso8601String(),
             'periodes' => [
                 ['numero' => 1, 'date_debut' => '2026-08-24', 'date_fin' => '2027-02-12'],
                 ['numero' => 2, 'date_debut' => '2027-02-22', 'date_fin' => '2027-07-02'],
             ],
-        ])->assertOk()->assertJsonPath('data.statut', 'archivee')->assertJsonPath('data.periodes.0.date_fin', '2027-02-12');
+        ])->assertOk()->assertJsonPath('data.statut', 'brouillon')->assertJsonPath('data.periodes.0.date_fin', '2027-02-12');
 
-        $this->putJson("/api/annees-scolaires/{$annee->id}", ['date_fin' => '2026-01-01'])->assertStatus(422)->assertJsonValidationErrors(['date_fin']);
+        $version = $annee->fresh()->updated_at->toIso8601String();
+        $this->putJson("/api/annees-scolaires/{$annee->id}", ['date_fin' => '2026-01-01', 'version' => $version])->assertStatus(422)->assertJsonValidationErrors(['date_fin']);
         $this->putJson("/api/annees-scolaires/{$annee->id}", ['statut' => 'inconnu'])->assertStatus(422);
     }
 
-    public function test_422_si_raccourcir_une_periode_fait_depasser_des_sessions(): void
+    public function test_raccourcir_une_periode_avec_des_sessions_nest_plus_bloque(): void
     {
         $annee = $this->annee();
-        $this->classeAvecSessions($annee); // dernière séance le 2027-01-06
+        $classe = $this->classeAvecSessions($annee); // dernière séance le 2027-01-06
         $this->actingAsRole('admin');
 
-        $this->putJson("/api/annees-scolaires/{$annee->id}", ['periodes' => [
+        $this->putJson("/api/annees-scolaires/{$annee->id}", ['version' => $annee->updated_at->toIso8601String(), 'periodes' => [
             ['numero' => 1, 'date_debut' => '2026-08-24', 'date_fin' => '2026-12-18'],
             ['numero' => 2, 'date_debut' => '2027-02-22', 'date_fin' => '2027-07-02'],
-        ]])->assertStatus(422)->assertJsonPath('message', 'Des sessions dépassent la nouvelle fin de la période 1.');
+        ]])->assertOk();
 
-        $this->assertSame('2027-02-19', $annee->periodes()->where('numero', 1)->first()->date_fin->toDateString());
+        $this->assertSame('2026-12-18', $annee->periodes()->where('numero', 1)->first()->date_fin->toDateString());
+        $this->getJson("/api/classes/{$classe->id}")->assertJsonPath('data.periodes.0.nb_hors_periode', 3);
     }
 
     public function test_suppression_409_avec_classes_puis_204_sans(): void
@@ -142,7 +145,10 @@ class AnneeScolaireApiTest extends TestCase
 
         $this->deleteJson("/api/annees-scolaires/{$annee->id}")
             ->assertStatus(409)
-            ->assertJsonPath('message', 'Cette année scolaire contient des classes : archivez-la plutôt que de la supprimer.');
+            ->assertJsonPath('code', 'annee_non_supprimable')
+            ->assertJsonPath('classes_count', 1)
+            ->assertJsonPath('sessions_count', 14)
+            ->assertJsonPath('message', 'Contient 1 classe (14 séances) : archivez-la plutôt.');
 
         $vide = AnneeScolaire::factory()->avecPeriodes()->create();
         $this->deleteJson("/api/annees-scolaires/{$vide->id}")->assertStatus(204);

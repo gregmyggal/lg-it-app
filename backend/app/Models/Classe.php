@@ -102,9 +102,7 @@ class Classe extends Model
         return fn ($q) => $q->with(['periode', 'cours'])
             ->withCount(['sessionsActives', 'historiqueCours'])
             ->withMax('sessionsActives as derniere_session_date', 'date')
-            ->withCount(['sessionsActives as nb_hors_periode' => fn ($s) => $s->whereRaw(
-                'course_sessions.date > (select p.date_fin from periodes p where p.id = classe_periodes.periode_id)'
-            )]);
+            ->withCount(['sessionsActives as nb_hors_periode' => fn ($s) => $s->whereRaw(\App\Services\PeriodeRegles::sqlHorsPeriode())]);
     }
 
     public function assignations(): HasMany

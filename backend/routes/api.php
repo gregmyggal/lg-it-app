@@ -132,7 +132,11 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     // CLS-01 T1 : années scolaires, calendrier scolaire, classes, sessions (admin/directeur).
     Route::get('/annees-scolaires', [AnneeScolaireController::class, 'index']);
     Route::post('/annees-scolaires', [AnneeScolaireController::class, 'store']);
+    Route::get('/annees-scolaires/proposition', [AnneeScolaireController::class, 'proposition']);
     Route::get('/annees-scolaires/{annee}', [AnneeScolaireController::class, 'show']);
+    Route::post('/annees-scolaires/{annee}/apercu-impact', [AnneeScolaireController::class, 'apercuImpact']);
+    Route::post('/annees-scolaires/{annee}/archiver', [AnneeScolaireController::class, 'archiver']);
+    Route::post('/annees-scolaires/{annee}/reactiver', [AnneeScolaireController::class, 'reactiver']);
     Route::put('/annees-scolaires/{annee}', [AnneeScolaireController::class, 'update']);
     Route::delete('/annees-scolaires/{annee}', [AnneeScolaireController::class, 'destroy']);
 

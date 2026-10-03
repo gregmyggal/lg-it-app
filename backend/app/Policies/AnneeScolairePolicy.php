@@ -35,4 +35,10 @@ class AnneeScolairePolicy
     {
         return $user->isStaff();
     }
+
+    /** Archiver / réactiver une année (CLS-03). */
+    public function archiver(User $user, AnneeScolaire $model): bool
+    {
+        return $user->isStaff();
+    }
 }

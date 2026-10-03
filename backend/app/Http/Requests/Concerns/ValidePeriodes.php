@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Concerns;
 
+use App\Services\AnneePeriodesRegles;
 use Illuminate\Validation\Validator;
 
 /** Règles de cohérence année scolaire ⇄ périodes (RG-3). */
@@ -21,10 +22,11 @@ trait ValidePeriodes
     }
 
     /**
-     * @param  string  $debutAnnee  date de début effective de l'année (Y-m-d)
-     * @param  string  $finAnnee  date de fin effective de l'année (Y-m-d)
+     * @param  ?string  $debutAnnee  début de l'année à contrôler (null = déduit de P1)
+     * @param  ?string  $finAnnee  fin de l'année à contrôler (null = déduite de P2)
+     * @param  bool  $bornesExplicites  les périodes doivent être comprises dans $debutAnnee/$finAnnee
      */
-    protected function verifierPeriodes(Validator $validator, ?string $debutAnnee, ?string $finAnnee): void
+    protected function verifierPeriodes(Validator $validator, ?string $debutAnnee, ?string $finAnnee, ?int $ignoreAnneeId = null, bool $bornesExplicites = true): void
     {
         $periodes = collect($this->input('periodes', []))->keyBy('numero');
 
@@ -32,17 +34,14 @@ trait ValidePeriodes
             return;
         }
 
-        foreach ($periodes as $numero => $p) {
-            if ($p['date_fin'] < $p['date_debut']) {
-                $validator->errors()->add('periodes', "La fin de la période {$numero} doit être postérieure à son début.");
-            }
-            if ($debutAnnee && $finAnnee && ($p['date_debut'] < $debutAnnee || $p['date_fin'] > $finAnnee)) {
-                $validator->errors()->add('periodes', "La période {$numero} doit être comprise dans l'année scolaire.");
-            }
-        }
-
-        if ($periodes[2]['date_debut'] <= $periodes[1]['date_fin']) {
-            $validator->errors()->add('periodes', 'La période 2 doit commencer après la fin de la période 1.');
+        $messages = app(AnneePeriodesRegles::class)->bloquants(
+            $periodes->values()->all(),
+            $ignoreAnneeId,
+            $bornesExplicites ? $debutAnnee : null,
+            $bornesExplicites ? $finAnnee : null,
+        );
+        foreach ($messages as $message) {
+            $validator->errors()->add('periodes', $message);
         }
     }
 }
