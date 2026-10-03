@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
 import AdminModal from '../../components/AdminModal';
@@ -8,7 +8,8 @@ import StatutBadge from '../../components/ui/StatutBadge';
 import { Table, Th, Td, Tr } from '../../components/ui/Table';
 import { FilterBar, FilterField } from '../../components/ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../../components/ui/DataStates';
-import AnneeScolaireModal from '../../components/classes/AnneeScolaireModal';
+import LinkButton from '../../components/ui/LinkButton';
+import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import CalendrierEntreeModal from '../../components/calendrier/CalendrierEntreeModal';
 import { anneeParDefaut, useAnneesScolaires, importerCalendrierFwb } from '../../hooks/useAnneesScolaires';
 import { useCalendrierScolaire, supprimerEntreeCalendrier } from '../../hooks/useCalendrierScolaire';
@@ -23,6 +24,7 @@ import {
   optionsStatut,
 } from '../../utils/statuts';
 import { formatPlage } from '../../utils/dates';
+import { lienModifierPeriodes, lienNouvelleAnnee } from '../../utils/annees';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
 
 const NOUVELLE_ANNEE = '__nouvelle__';
@@ -38,7 +40,7 @@ export default function CalendrierScolaireAdminPage() {
   const filtres = { type: params.get('type') || '', source: params.get('source') || '' };
   const calendrier = useCalendrierScolaire(anneeId, filtres);
 
-  const [modaleAnnee, setModaleAnnee] = useState(false);
+  const navigate = useNavigate();
   const [entreeModale, setEntreeModale] = useState(null); // { entree | null }
   const [aSupprimer, setASupprimer] = useState(null);
   const [envoi, setEnvoi] = useState(false);
@@ -53,7 +55,7 @@ export default function CalendrierScolaireAdminPage() {
 
   function changerAnnee(valeur) {
     if (valeur === NOUVELLE_ANNEE) {
-      setModaleAnnee(true);
+      navigate(lienNouvelleAnnee({ retour: '/admin/calendrier-scolaire' }));
       return;
     }
     setParams(valeur ? new URLSearchParams({ annee_scolaire_id: valeur }) : new URLSearchParams(), { replace: true });
@@ -108,7 +110,11 @@ export default function CalendrierScolaireAdminPage() {
       <EmptyBlock
         icon="📅"
         title="Aucune année scolaire"
-        actions={<AdminButton onClick={() => setModaleAnnee(true)}>Créer une année scolaire</AdminButton>}
+        actions={
+          <LinkButton to={lienNouvelleAnnee({ retour: '/admin/calendrier-scolaire' })} variant="primary">
+            Créer une année scolaire
+          </LinkButton>
+        }
       >
         Le calendrier scolaire appartient à une année. Créez d'abord l'année scolaire (avec ses 2 périodes).
       </EmptyBlock>
@@ -254,9 +260,7 @@ export default function CalendrierScolaireAdminPage() {
                 Importer le calendrier FWB
               </AdminButton>
             )}
-            <AdminButton variant="secondary" onClick={() => setModaleAnnee(true)}>
-              Nouvelle année scolaire
-            </AdminButton>
+            <LinkButton to={lienNouvelleAnnee({ retour: '/admin/calendrier-scolaire' })}>Nouvelle année scolaire</LinkButton>
             {annee && <AdminButton onClick={() => setEntreeModale({ entree: null })}>＋ Ajouter une date</AdminButton>}
           </>
         }
@@ -293,6 +297,25 @@ export default function CalendrierScolaireAdminPage() {
           />
         </FilterBar>
 
+        {annee && (
+          <p style={{ margin: `0 0 ${ADMIN_SPACING.lg}`, fontSize: '13px', display: 'flex', flexWrap: 'wrap', gap: `${ADMIN_SPACING.sm} ${ADMIN_SPACING.lg}`, alignItems: 'center' }}>
+            {[1, 2].map((n) => {
+              const p = annee.periodes?.find((x) => x.numero === n);
+              return p ? (
+                <span key={n}>
+                  <PeriodeBadge numero={n} /> {formatPlage(p.date_debut, p.date_fin)}
+                </span>
+              ) : null;
+            })}
+            {annee.can?.update && annee.statut !== 'archivee' && (
+              <Link to={lienModifierPeriodes(annee.id, { retour: `/admin/calendrier-scolaire?annee_scolaire_id=${annee.id}` })}>
+                Modifier les dates des périodes
+              </Link>
+            )}
+            <Link to="/admin/annees-scolaires">Gérer les années scolaires</Link>
+          </p>
+        )}
+
         {dernierImport && dernierImport.anneeId === annee?.id && !dernierImport.verifie && (
           <Banner tone="warning">
             <strong>Dates FWB à confirmer.</strong> Le fichier importé n'a pas encore été vérifié par la direction
@@ -302,17 +325,6 @@ export default function CalendrierScolaireAdminPage() {
 
         {contenu}
       </AdminPageContent>
-
-      <AnneeScolaireModal
-        isOpen={modaleAnnee}
-        onClose={() => setModaleAnnee(false)}
-        peutImporterFwb={listeAnnees.some((a) => a.can?.import_fwb)}
-        onCreated={(nouvelle) => {
-          setModaleAnnee(false);
-          annees.reload();
-          setParams(new URLSearchParams({ annee_scolaire_id: String(nouvelle.id) }), { replace: true });
-        }}
-      />
 
       {entreeModale && (
         <CalendrierEntreeModal

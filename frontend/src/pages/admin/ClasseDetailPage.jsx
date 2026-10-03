@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
 import AdminModal from '../../components/AdminModal';
@@ -15,6 +15,9 @@ import ProfesseursClasseSection from '../../components/professeurs/ProfesseursCl
 import RemplacerProfesseurModal from '../../components/professeurs/RemplacerProfesseurModal';
 import { useProfesseursListe } from '../../hooks/useProfesseursClasses';
 import { useLiensCours } from '../../hooks/useLiens';
+import LienModifierDates from '../../components/annees/LienModifierDates';
+import { useAnneesScolaires } from '../../hooks/useAnneesScolaires';
+import { effacerBrouillon, lireBrouillon } from '../../utils/annees';
 import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import { AjouterPeriodeModal, ChangerCoursModal, SupprimerPeriodeModal, HistoriqueCoursModal } from '../../components/classes/PeriodeModals';
 import { useClasse, useClasseSessions, modifierClasse, supprimerClasse } from '../../hooks/useClasses';
@@ -38,6 +41,20 @@ export default function ClasseDetailPage() {
   const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message }
   const [enCours, setEnCours] = useState(false);
   const [modalePeriode, setModalePeriode] = useState(null); // { type: 'ajout'|'cours'|'suppression', numero?, periode? }
+  const annees = useAnneesScolaires();
+  const [params] = useSearchParams();
+  const location = useLocation();
+
+  // Retour de « Modifier les dates » : message de confirmation et réouverture de la modale « Ajouter la période » avec la saisie conservée.
+  useEffect(() => {
+    if (location.state?.datesMisesAJour) toast.success(location.state.datesMisesAJour);
+    if (!params.get('restaurer_periode')) return;
+    const cle = `periode-${id}`;
+    const brouillon = lireBrouillon(cle);
+    effacerBrouillon(cle);
+    if (brouillon) setModalePeriode({ type: 'ajout', numero: brouillon.numero, dateConseillee: brouillon.date, coursIdInitial: brouillon.coursId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const entete = (titre, actions) => (
     <AdminPageHeader
@@ -81,6 +98,7 @@ export default function ClasseDetailPage() {
 
   const c = classe.data;
   const liste = sessions.data;
+  const anneeClasse = (annees.data || []).find((a) => a.id === c.annee_scolaire_id) || null;
   const titre = libelleClasse(c);
   const annulees = liste.filter((s) => estSessionBarree(s.statut));
   const alertes = liste.filter((s) => s.alerte_calendrier);
@@ -255,6 +273,8 @@ export default function ClasseDetailPage() {
             <PeriodeBloc
               key={n}
               periode={p}
+              annee={anneeClasse}
+              classeId={c.id}
               sessions={liste.filter((s) => (s.periode_numero || 1) === n)}
               peutModifier={Boolean(c.can?.update) && !estClasseArchivee(c.statut)}
               peutSupprimer={(c.periodes || []).length > 1}
@@ -285,6 +305,7 @@ export default function ClasseDetailPage() {
           classe={c}
           numero={modalePeriode.numero}
           dateConseillee={modalePeriode.dateConseillee}
+          coursIdInitial={modalePeriode.coursIdInitial}
           onClose={() => setModalePeriode(null)}
           onDone={apresPeriode}
         />
@@ -383,7 +404,7 @@ function PeriodeAbsente({ numero, dejaPresente, onAjouter }) {
 }
 
 /** Bloc d'une période : bandeau (cours, dates, hors période), actions de période, tableau des séances. */
-function PeriodeBloc({ periode, sessions, peutModifier, peutSupprimer, onAjuster, onRemplacer, onChangerCours, onSupprimer, onHistorique }) {
+function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSupprimer, onAjuster, onRemplacer, onChangerCours, onSupprimer, onHistorique }) {
   const liens = useLiensCours(periode.cours_id);
   const annulee = periode.statut === 'annulee';
   const peutBis = sessions.some((s) => s.can?.bis);
@@ -441,6 +462,19 @@ function PeriodeBloc({ periode, sessions, peutModifier, peutSupprimer, onAjuster
         </div>
       }
     >
+      {periode.periode?.date_debut && periode.periode?.date_fin && (
+        <p style={{ margin: 0, padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.xl} 0`, fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
+          Bornes : {formatDate(periode.periode.date_debut)} → {formatDate(periode.periode.date_fin)}
+          {annee?.can?.update && annee.statut !== 'archivee' && (
+            <>
+              {' · '}
+              <LienModifierDates annee={annee} numero={periode.numero} retour={`/admin/classes/${classeId}`} />
+            </>
+          )}
+          <br />
+          Ces bornes viennent de l'année scolaire {annee?.libelle || ''} et valent pour toutes les classes de l'année.
+        </p>
+      )}
       {annulee && periode.motif_annulation && (
         <div style={{ padding: `${ADMIN_SPACING.md} ${ADMIN_SPACING.xl}` }}>
           <Banner tone="warning">

@@ -5,21 +5,24 @@ import { AdminFormField, AdminInput, AdminSelect } from '../AdminFormField';
 import Banner from '../ui/Banner';
 import LinkButton from '../ui/LinkButton';
 import ClasseApercu from './ClasseApercu';
+import LienModifierDates from '../annees/LienModifierDates';
 import { useAnneesScolaires } from '../../hooks/useAnneesScolaires';
 import { useCours } from '../../hooks/useCours';
 import { LoadingBlock, ErrorBlock } from '../ui/DataStates';
 import { ajouterPeriode, annulerPeriode, apercuPeriode, changerCoursPeriode, supprimerPeriode, useHistoriqueCoursPeriode } from '../../hooks/useClasses';
+import { contexteHorsBornes, sauverBrouillon } from '../../utils/annees';
 import { getErrorData, getErrorMessage, getFieldErrors, getStatus } from '../../api/errors';
 import { addDays, formatDate, jourDeClasseApres, libelleCreneau, nomJour, parseDate, toISODate } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
 
 /** Modale « Ajouter la période N » : cours, date de démarrage, aperçu des 14 séances, professeurs hérités (mock-up CLS-02/02). */
-export function AjouterPeriodeModal({ classe, numero, dateConseillee, onClose, onDone }) {
+export function AjouterPeriodeModal({ classe, numero, dateConseillee, coursIdInitial, onClose, onDone }) {
   const annees = useAnneesScolaires();
   const cours = useCours();
-  const [coursId, setCoursId] = useState('');
+  const [coursId, setCoursId] = useState(coursIdInitial ? String(coursIdInitial) : '');
   const [date, setDate] = useState(dateConseillee || '');
-  const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null });
+  const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null, contexte: null });
+  const [contexteSoumission, setContexteSoumission] = useState(null);
   const [erreurs, setErreurs] = useState({});
   const [message, setMessage] = useState(null);
   const [envoi, setEnvoi] = useState(false);
@@ -42,15 +45,15 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, onClose, o
 
   useEffect(() => {
     if (!pret) {
-      setApercu({ data: null, loading: false, erreurs: {}, message: null });
+      setApercu({ data: null, loading: false, erreurs: {}, message: null, contexte: null });
       return undefined;
     }
     let annule = false;
     setApercu((prev) => ({ ...prev, loading: true }));
     const t = setTimeout(() => {
       apercuPeriode(classe.id, { periode_id: periodeAnnee.id, cours_id: Number(coursId), date_premiere_session: date })
-        .then((data) => !annule && setApercu({ data, loading: false, erreurs: {}, message: null }))
-        .catch((err) => !annule && setApercu({ data: null, loading: false, erreurs: getFieldErrors(err), message: getErrorMessage(err) }));
+        .then((data) => !annule && setApercu({ data, loading: false, erreurs: {}, message: null, contexte: null }))
+        .catch((err) => !annule && setApercu({ data: null, loading: false, erreurs: getFieldErrors(err), message: getErrorMessage(err), contexte: contexteHorsBornes(getErrorData(err)) }));
     }, 400);
     return () => {
       annule = true;
@@ -60,7 +63,21 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, onClose, o
 
   const plan = apercu.data?.periodes?.[0];
   const blocage = plan?.blocage || null;
-  const erreurDate = apercu.erreurs.date_premiere_session || erreurs.date_premiere_session || blocage?.message;
+  const messageDate = apercu.erreurs.date_premiere_session || erreurs.date_premiere_session || blocage?.message;
+  const contexteBornes = apercu.contexte || contexteSoumission;
+  const sauverSaisie = () => sauverBrouillon(`periode-${classe.id}`, { numero, coursId, date });
+  // Lien contextuel : fermeture de la modale (changement de page), saisie conservée puis restaurée au retour.
+  const erreurDate =
+    messageDate && contexteBornes && annee?.can?.update ? (
+      <>
+        {messageDate}{' '}
+        <LienModifierDates annee={annee} numero={numero} retour={`/admin/classes/${classe.id}?restaurer_periode=1`} avantNavigation={sauverSaisie}>
+          Modifier les dates de la période {numero} ({contexteBornes.annee_libelle || annee.libelle})
+        </LienModifierDates>
+      </>
+    ) : (
+      messageDate
+    );
 
   async function soumettre(e) {
     e.preventDefault();
@@ -76,6 +93,7 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, onClose, o
       );
     } catch (err) {
       setErreurs(getFieldErrors(err));
+      setContexteSoumission(contexteHorsBornes(getErrorData(err)));
       setMessage(getErrorMessage(err, "La période n'a pas pu être ajoutée."));
     } finally {
       setEnvoi(false);

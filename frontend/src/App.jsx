@@ -30,6 +30,9 @@ import ClassesAdminPage from './pages/admin/ClassesAdminPage';
 import ClasseCreatePage from './pages/admin/ClasseCreatePage';
 import ClasseDetailPage from './pages/admin/ClasseDetailPage';
 import CalendrierScolaireAdminPage from './pages/admin/CalendrierScolaireAdminPage';
+import AnneesScolairesPage from './pages/admin/AnneesScolairesPage';
+import AnneeCreatePage from './pages/admin/AnneeCreatePage';
+import AnneePeriodesPage from './pages/admin/AnneePeriodesPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
 import SharePage from './pages/SharePage';
@@ -170,6 +173,30 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <ClasseDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/annees-scolaires"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AnneesScolairesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/annees-scolaires/nouvelle"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AnneeCreatePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/annees-scolaires/:id/periodes"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <AnneePeriodesPage />
                 </ProtectedRoute>
               }
             />

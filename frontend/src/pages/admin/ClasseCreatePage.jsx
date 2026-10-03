@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
 import { AdminFormField, AdminInput, AdminSelect, AdminCheckbox } from '../../components/AdminFormField';
 import Banner from '../../components/ui/Banner';
 import LinkButton from '../../components/ui/LinkButton';
 import { Section } from '../../components/ui/Card';
-import { LoadingBlock, ErrorBlock } from '../../components/ui/DataStates';
+import { LoadingBlock, ErrorBlock, EmptyBlock } from '../../components/ui/DataStates';
+import LienModifierDates from '../../components/annees/LienModifierDates';
 import ClasseApercu from '../../components/classes/ClasseApercu';
 import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import { anneeParDefaut, useAnneesScolaires } from '../../hooks/useAnneesScolaires';
@@ -16,39 +17,53 @@ import { apercuClasse, creerClasse } from '../../hooks/useClasses';
 import { useHeuresDefrayables } from '../../hooks/useHeuresDefrayables';
 import { formatDuree } from '../../utils/format';
 import { useToast } from '../../hooks/useToast';
-import { getErrorMessage, getFieldErrors } from '../../api/errors';
+import { getErrorData, getErrorMessage, getFieldErrors } from '../../api/errors';
+import { contexteHorsBornes, effacerBrouillon, lienNouvelleAnnee, lireBrouillon, sauverBrouillon } from '../../utils/annees';
 import { JOURS_SEMAINE, ajouterHeures, heuresEntre, formatDate, formatDateLongue, jourDeClasseApres, libelleClasse, nomJour, parseDate } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
 
 const DELAI_APERCU_MS = 400;
+const CLE_BROUILLON = 'classe-nouvelle';
+const CHEMIN_RETOUR = '/admin/classes/nouvelle?restaurer=1';
 
 /** Écran « Nouvelle classe » : créneau commun + une ou deux périodes (cours + date), aperçu en direct (mock-up CLS-02/01). */
 export default function ClasseCreatePage() {
   const toast = useToast();
   const [params] = useSearchParams();
+  const location = useLocation();
   const annees = useAnneesScolaires();
   const cours = useCours();
+  // Saisie conservée pendant un détour par la gestion des années scolaires (restaurée une seule fois au retour).
+  const [brouillon] = useState(() => (params.get('restaurer') ? lireBrouillon(CLE_BROUILLON) : null));
+  const [datesMisesAJour] = useState(() => location.state?.datesMisesAJour || null);
+  useEffect(() => {
+    effacerBrouillon(CLE_BROUILLON);
+  }, []);
 
-  const [form, setForm] = useState({
-    annee_scolaire_id: params.get('annee_scolaire_id') || '',
-    jour_semaine: '',
-    lieu: '',
-    heure_debut: '14:00',
-    heure_fin: '15:30',
-  });
-  const [ouvertes, setOuvertes] = useState({ 1: true, 2: false });
-  const [per, setPer] = useState({
-    1: { cours_id: params.get('cours_id') || '', date: '' },
-    2: { cours_id: '', date: '' },
-  });
-  const [dateP2Manuelle, setDateP2Manuelle] = useState(false);
-  const [finManuelle, setFinManuelle] = useState(false); // tant que la fin n'est pas saisie à la main, elle suit début + durée de séance
-  const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null });
+  const [form, setForm] = useState(
+    brouillon?.form || {
+      annee_scolaire_id: params.get('annee_scolaire_id') || '',
+      jour_semaine: '',
+      lieu: '',
+      heure_debut: '14:00',
+      heure_fin: '15:30',
+    },
+  );
+  const [ouvertes, setOuvertes] = useState(brouillon?.ouvertes || { 1: true, 2: false });
+  const [per, setPer] = useState(
+    brouillon?.per || {
+      1: { cours_id: params.get('cours_id') || '', date: '' },
+      2: { cours_id: '', date: '' },
+    },
+  );
+  const [dateP2Manuelle, setDateP2Manuelle] = useState(brouillon?.dateP2Manuelle ?? false);
+  const [finManuelle, setFinManuelle] = useState(brouillon?.finManuelle ?? false); // tant que la fin n'est pas saisie à la main, elle suit début + durée de séance
+  const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null, contexte: null });
   const [envoi, setEnvoi] = useState(false);
   const [echec, setEchec] = useState(null); // { message, champs }
   const [creee, setCreee] = useState(null); // { classe, resume }
 
-  const listeAnnees = useMemo(() => annees.data || [], [annees.data]);
+  const listeAnnees = useMemo(() => (annees.data || []).filter((a) => a.statut !== 'archivee'), [annees.data]);
   const anneeId = form.annee_scolaire_id || (anneeParDefaut(listeAnnees) ? String(anneeParDefaut(listeAnnees).id) : '');
   const annee = listeAnnees.find((a) => String(a.id) === anneeId);
   const periodeAnnee = (numero) => annee?.periodes.find((p) => p.numero === numero) || null;
@@ -119,17 +134,17 @@ export default function ClasseCreatePage() {
   // Aperçu en direct : recalculé (avec un court délai) à chaque changement du formulaire.
   useEffect(() => {
     if (!complet || calendrierVide) {
-      setApercu({ data: null, loading: false, erreurs: {}, message: null });
+      setApercu({ data: null, loading: false, erreurs: {}, message: null, contexte: null });
       return undefined;
     }
     let annule = false;
     setApercu((prev) => ({ ...prev, loading: true }));
     const minuteur = setTimeout(() => {
       apercuClasse(JSON.parse(cleCharge))
-        .then((data) => !annule && setApercu({ data, loading: false, erreurs: {}, message: null }))
+        .then((data) => !annule && setApercu({ data, loading: false, erreurs: {}, message: null, contexte: null }))
         .catch((err) => {
           if (annule) return;
-          setApercu({ data: null, loading: false, erreurs: getFieldErrors(err), message: getErrorMessage(err) });
+          setApercu({ data: null, loading: false, erreurs: getFieldErrors(err), message: getErrorMessage(err), contexte: contexteHorsBornes(getErrorData(err)) });
         });
     }, DELAI_APERCU_MS);
     return () => {
@@ -154,6 +169,8 @@ export default function ClasseCreatePage() {
   const nbHors = planApercu.reduce((n, p) => n + p.seances.filter((s) => s.hors_periode).length, 0);
   const avertissements = planApercu.flatMap((p) => p.avertissements || []);
   const erreurs = { ...apercu.erreurs, ...(echec?.champs || {}) };
+  const contexteBornes = apercu.contexte || echec?.contexte || null;
+  const sauverSaisie = () => sauverBrouillon(CLE_BROUILLON, { form, ouvertes, per, dateP2Manuelle, finManuelle });
   const erreurPeriode = (numero, champ) => {
     const idx = charge.periodes.findIndex((_, i) => numerosOuverts[i] === numero);
     return erreurs[`periodes.${idx}.${champ}`] || (blocage?.periode_numero === numero && champ === 'date_premiere_session' ? blocage.message : undefined);
@@ -179,7 +196,7 @@ export default function ClasseCreatePage() {
       toast.success(`Classe « ${libelleClasse(classe)} » créée. ${resume}.`);
       setCreee({ classe, resume });
     } catch (err) {
-      setEchec({ message: getErrorMessage(err, "La classe n'a pas pu être créée."), champs: getFieldErrors(err) });
+      setEchec({ message: getErrorMessage(err, "La classe n'a pas pu être créée."), champs: getFieldErrors(err), contexte: contexteHorsBornes(getErrorData(err)) });
     } finally {
       setEnvoi(false);
     }
@@ -260,6 +277,27 @@ export default function ClasseCreatePage() {
     );
   }
 
+  if (listeAnnees.length === 0) {
+    return (
+      <>
+        {entete}
+        <AdminPageContent>
+          <EmptyBlock
+            icon="🗓️"
+            title="Aucune année scolaire disponible"
+            actions={
+              <LinkButton to={lienNouvelleAnnee({ retour: CHEMIN_RETOUR })} variant="primary">
+                Créer une année scolaire
+              </LinkButton>
+            }
+          >
+            Une classe appartient à une année scolaire. Créez l'année (avec ses deux périodes) puis revenez ici : votre saisie est conservée.
+          </EmptyBlock>
+        </AdminPageContent>
+      </>
+    );
+  }
+
   const libelleCreation = !complet
     ? 'Créer la classe'
     : nbHors > 0
@@ -275,6 +313,12 @@ export default function ClasseCreatePage() {
     <>
       {entete}
       <AdminPageContent>
+        {datesMisesAJour && (
+          <Banner tone="success">
+            <strong>{datesMisesAJour}</strong>
+            {brouillon ? ' Votre saisie a été conservée : vérifiez la date de démarrage puis créez la classe.' : ''}
+          </Banner>
+        )}
         {echec && (
           <Banner tone="error">
             <strong>La classe n'a pas pu être créée. Aucune séance n'a été générée (l'opération a été annulée en entier).</strong>{' '}
@@ -395,6 +439,17 @@ export default function ClasseCreatePage() {
                     <legend style={{ padding: `0 ${ADMIN_SPACING.sm}` }}>
                       <PeriodeBadge numero={n} /> <strong>Période {n}</strong> · 14 séances
                     </legend>
+                    {pa && (
+                      <p style={{ margin: `0 0 ${ADMIN_SPACING.lg}`, fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
+                        Bornes de la période : {formatDate(pa.date_debut)} → {formatDate(pa.date_fin)}
+                        {annee?.can?.update && (
+                          <>
+                            {' · '}
+                            <LienModifierDates annee={annee} numero={n} retour={CHEMIN_RETOUR} avantNavigation={sauverSaisie} />
+                          </>
+                        )}
+                      </p>
+                    )}
                     <AdminFormField label={`Cours du catalogue (P${n})`} htmlFor={`classe-cours-${n}`} required error={erreurPeriode(n, 'cours_id')}>
                       <AdminSelect
                         id={`classe-cours-${n}`}
@@ -427,9 +482,16 @@ export default function ClasseCreatePage() {
                           : dateChoisie && jourChoisi && jourDeLaDate === jourChoisi
                             ? `${formatDateLongue(per[n].date)} : correspond au jour choisi.`
                             : ''}
-                        {pa ? ` Période ${n} : ${formatDate(pa.date_debut)} → ${formatDate(pa.date_fin)}.` : ''}
                         {n === 2 && ouvertes[1] && !dateP2Manuelle && per[2].date ? ' Proposée : 1er jour de classe après la dernière séance de la P1.' : ''}
                       </div>
+                      {contexteBornes && contexteBornes.numero === n && annee?.can?.update && (
+                        <div style={{ fontSize: '13px', marginTop: ADMIN_SPACING.sm }}>
+                          <LienModifierDates annee={annee} numero={n} retour={CHEMIN_RETOUR} avantNavigation={sauverSaisie}>
+                            Modifier les dates de la période {n} ({contexteBornes.annee_libelle || annee.libelle})
+                          </LienModifierDates>{' '}
+                          · ou choisissez une date comprise entre {formatDate(contexteBornes.debut)} et {formatDate(contexteBornes.fin)}.
+                        </div>
+                      )}
                     </AdminFormField>
                   </fieldset>
                 );

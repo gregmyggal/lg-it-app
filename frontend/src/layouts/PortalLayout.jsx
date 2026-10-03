@@ -77,6 +77,9 @@ export default function PortalLayout() {
               <NavLink to="/admin/calendrier" className={navClass}>
                 Calendrier
               </NavLink>
+              <NavLink to="/admin/annees-scolaires" className={navClass}>
+                Années scolaires
+              </NavLink>
               <NavLink to="/admin/calendrier-scolaire" className={navClass}>
                 Calendrier scolaire
               </NavLink>

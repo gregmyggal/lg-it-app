@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
 import LinkButton from '../../components/ui/LinkButton';
@@ -9,10 +9,10 @@ import Banner from '../../components/ui/Banner';
 import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import { FilterBar, FilterField } from '../../components/ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../../components/ui/DataStates';
-import AnneeScolaireModal from '../../components/classes/AnneeScolaireModal';
 import { anneeParDefaut, useAnneesScolaires } from '../../hooks/useAnneesScolaires';
 import { useClasses } from '../../hooks/useClasses';
 import { useCours } from '../../hooks/useCours';
+import { lienNouvelleAnnee } from '../../utils/annees';
 import { STATUTS_CLASSE, libelleAnneeListe, optionsStatut } from '../../utils/statuts';
 import { JOURS_SEMAINE, libelleCreneau, formatDate, formatDateCourte, formatHeure, titreClasse, aujourdhuiISO } from '../../utils/dates';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
@@ -30,7 +30,7 @@ function periodeEnCours(annee) {
 /** Écran « Classes » : liste des classes d'une année scolaire, filtrable (mock-up 01). */
 export default function ClassesAdminPage() {
   const [params, setParams] = useSearchParams();
-  const [modaleAnnee, setModaleAnnee] = useState(false);
+  const navigate = useNavigate();
   const annees = useAnneesScolaires();
   const cours = useCours();
 
@@ -66,7 +66,7 @@ export default function ClassesAdminPage() {
 
   function changerAnnee(valeur) {
     if (valeur === NOUVELLE_ANNEE) {
-      setModaleAnnee(true);
+      navigate(lienNouvelleAnnee());
       return;
     }
     majFiltre('annee_scolaire_id', valeur);
@@ -81,7 +81,6 @@ export default function ClassesAdminPage() {
     ...listeAnnees.map((a) => ({ value: String(a.id), label: libelleAnneeListe(a) })),
     { value: NOUVELLE_ANNEE, label: '＋ Nouvelle année scolaire…' },
   ];
-  const peutImporterFwb = listeAnnees.some((a) => a.can?.import_fwb);
 
   let contenu;
   if (annees.loading || (anneeId && classes.loading)) {
@@ -94,7 +93,9 @@ export default function ClassesAdminPage() {
         icon="🏫"
         title="Aucune année scolaire"
         actions={
-          <AdminButton onClick={() => setModaleAnnee(true)}>＋ Créer une année scolaire</AdminButton>
+          <LinkButton to={lienNouvelleAnnee()} variant="primary">
+            ＋ Créer une année scolaire
+          </LinkButton>
         }
       >
         Une classe appartient à une année scolaire. Créez d'abord l'année (avec ses 2 périodes), puis ses classes.
@@ -286,17 +287,6 @@ export default function ClassesAdminPage() {
           </p>
         )}
       </AdminPageContent>
-
-      <AnneeScolaireModal
-        isOpen={modaleAnnee}
-        onClose={() => setModaleAnnee(false)}
-        peutImporterFwb={peutImporterFwb}
-        onCreated={(nouvelle) => {
-          setModaleAnnee(false);
-          annees.reload();
-          majFiltre('annee_scolaire_id', String(nouvelle.id));
-        }}
-      />
     </>
   );
 }
