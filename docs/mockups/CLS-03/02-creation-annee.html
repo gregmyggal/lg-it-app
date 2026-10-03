@@ -1,0 +1,230 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nouvelle année scolaire — Maquette CLS-03</title><style>
+:root{--primary:#2563eb;--primary-h:#1d4ed8;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info:#0891b2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550;--cta:#d9531e;--school:#7c3aed;--school-l:#ede9fe}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--primary)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+/* barre de maquette */
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar .sw{display:flex;flex-wrap:wrap;gap:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar a{color:#93c5fd;margin-left:auto}
+/* etats */
+/* coque */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;margin-bottom:28px}
+.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block}
+.side nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.side nav a{color:rgba(255,255,255,.8);text-decoration:none;font-size:14px;font-weight:500;padding:8px 10px;border-radius:5px}
+.side nav a:hover{color:#fff}
+.side nav a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.side nav a.new::after{content:"nouveau";margin-left:8px;font-size:10px;text-transform:uppercase;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side nav a.chg::after{content:"renommé";margin-left:8px;font-size:10px;text-transform:uppercase;background:#0891b2;color:#fff;border-radius:9999px;padding:1px 6px;letter-spacing:.04em}
+.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.65);font-weight:600;margin:16px 0 4px;padding:0 10px}
+.side .acct{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:14px;font-size:13px;color:rgba(255,255,255,.85)}
+.main{min-width:0}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:28px 24px}
+.phead .in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.phead h1{font-size:32px;font-weight:700;line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.phead p.d{color:var(--t3);margin-top:6px}
+.crumb{font-size:13px;color:var(--t3);margin-bottom:8px}
+.crumb a{color:var(--t3)}
+.content{max-width:1400px;margin:0 auto;padding:24px}
+/* atomes */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-blue{background:var(--primary-l);color:#1e40af}.b-ok{background:var(--ok-l);color:var(--ok-d)}.b-warn{background:var(--warn-l);color:var(--warn-d)}.b-err{background:var(--err-l);color:var(--err-d)}.b-gray{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}.b-info{background:var(--info-l);color:var(--info-d)}.b-school{background:var(--school-l);color:#5b21b6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;min-height:36px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-s{background:var(--bg);color:var(--t1);border-color:var(--bd)}.btn-s:hover{background:var(--hover)}
+.btn-d{background:var(--err);color:#fff}.btn-d:hover{background:#dc2626}
+.btn-g{background:transparent;color:var(--primary)}.btn-g:hover{background:var(--primary-l)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled],.btn.dis{opacity:.5;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3)}
+.sect .body{padding:16px}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
+label,.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=time],input[type=search],select,textarea{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;color:var(--t1);min-height:38px}
+.filters .f{min-width:160px}
+.help{font-size:13px;color:var(--t3);margin-top:4px}
+.err-t{font-size:13px;color:var(--err-d);margin-top:4px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.muted{color:var(--t3)}.small{font-size:13px}.strike{text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;border:1px solid}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:#155e75}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.banner.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.recap{background:var(--primary-l);border:1px solid #93c5fd;border-radius:8px;padding:12px 16px;color:#1e3a8a}
+.recap strong{font-weight:700}
+.recap ul{margin:6px 0 0 18px;padding:0}
+.recap.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.recap.ok{background:var(--ok-l);border-color:#6ee7b7;color:var(--ok-d)}
+.empty{text-align:center;padding:48px 24px}
+.empty .ic{font-size:40px}.empty h2{font-size:20px;margin:8px 0}.empty p{color:var(--t3);max-width:520px;margin:0 auto 16px}
+.sk{display:block;border-radius:6px;background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.toast{position:fixed;right:16px;bottom:16px;z-index:400;background:#065f46;color:#fff;border-radius:10px;padding:12px 16px;max-width:420px;box-shadow:0 10px 15px -3px rgba(0,0,0,.2);display:flex;gap:12px;align-items:flex-start}
+.toast button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer}
+.modal{display:none;position:fixed;inset:0;background:rgba(17,24,39,.55);z-index:600;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.2)}
+.mbox header{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mbox header h2{font-size:18px}
+.mbox .mb{padding:20px;display:flex;flex-direction:column;gap:14px}
+.mbox footer{padding:14px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;background:var(--bg)}
+.x{background:transparent;border:0;font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--hover)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:9999px;padding:2px 10px;font-size:13px}
+.av{width:24px;height:24px;border-radius:50%;background:var(--primary-l);color:#1e40af;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--t2)}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hl{background:#fffbeb}
+.note-m{font-size:12px;color:var(--t3);border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;background:#f8fafc;margin-bottom:16px}
+@media (max-width:860px){.shell{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.phead h1{font-size:24px}.content{padding:16px}.phead{padding:20px 16px}}
+
+.p1b{background:var(--primary-l);color:#1e40af}.p2b{background:var(--school-l);color:#5b21b6}
+.pt{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap}
+.pt.p1{background:var(--primary-l);color:#1e40af}.pt.p2{background:var(--school-l);color:#5b21b6}
+.pband{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;font-weight:700}
+.pband.p1{background:var(--primary-l);color:#1e40af;border-top:1px solid #93c5fd}.pband.p2{background:var(--school-l);color:#5b21b6;border-top:1px solid #c4b5fd}
+.pblock{border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:16px;background:#fff}
+.pblock.p1{border-left:6px solid var(--primary)}.pblock.p2{border-left:6px solid var(--school)}
+.pblock>header{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.pblock>header h2{font-size:16px}
+.pblock .body{padding:16px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dates{margin:0;padding:0;list-style:none;columns:2;font-size:13px}.dates li{padding:1px 0}
+.skip{font-size:13px;color:var(--warn-d);background:var(--warn-l);border-radius:6px;padding:6px 10px;margin-top:8px}
+.todo{border:2px dashed #c4b5fd;background:#faf5ff;border-radius:12px;padding:20px;text-align:center}
+.phone{width:375px;max-width:100%;margin:0 auto;border:10px solid #1f2937;border-radius:32px;background:var(--bg);overflow:hidden}
+.ph-h{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.ph-b{padding:16px}
+.pcard{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-top:12px}
+.prog{height:6px;border-radius:3px;background:#e5e7eb;overflow:hidden;margin-top:6px}.prog i{display:block;height:100%}
+.mut{opacity:.6}
+.row-sk td{background:#fffbeb;color:var(--warn-d);font-size:13px}
+.passed td{color:var(--t3)}
+.warn-t{font-size:13px;color:var(--warn-d);margin-top:4px;font-weight:600}
+
+[hidden]{display:none!important}
+.modal[hidden]{display:none!important}
+.modal:not([hidden]){display:flex}
+.tl{position:relative;height:30px;border-radius:8px;background:#f3f4f6;border:1px solid var(--bd);overflow:hidden}
+.tl i{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-style:normal;white-space:nowrap;overflow:hidden}
+.tl i.a{background:var(--primary-l);color:#1e40af;border-right:2px solid var(--primary)}
+.tl i.b{background:var(--school-l);color:#5b21b6;border-left:2px solid var(--school)}
+.tl i.g{background:repeating-linear-gradient(45deg,#fff,#fff 4px,#e5e7eb 4px,#e5e7eb 8px);color:var(--t2)}
+.tl i.o{background:var(--err);color:#fff}
+.tl i.ghost{opacity:.55}
+.tlab{display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-top:4px}
+.tlrow{margin-bottom:14px}.tlrow .lbl{margin-bottom:6px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.tile{border:1px solid var(--bd);border-radius:10px;padding:10px 14px;background:#fff}
+.tile b{display:block;font-size:24px;line-height:1.2}.tile span{font-size:13px;color:var(--t2)}
+.tile.w{background:var(--warn-l);border-color:#fcd34d}.tile.w b{color:var(--warn-d)}
+.tile.k{background:var(--ok-l);border-color:#6ee7b7}.tile.k b{color:var(--ok-d)}
+.tile.e{background:var(--err-l);border-color:#fca5a5}.tile.e b{color:var(--err-d)}
+.strip{background:var(--deep);color:#fff;border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.strip a{color:#fff;font-weight:700}
+.old{color:var(--t3);text-decoration:line-through}.new{font-weight:700;color:var(--primary-h)}
+.chg td,.chg{background:#eff6ff}
+.ro{background:#f3f4f6;color:var(--t2)}
+.lnk{font-size:13px;font-weight:600}
+.dgr{color:var(--err-d)}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:var(--cta);color:#fff;border-radius:9999px;padding:1px 8px;margin-left:6px}
+.sub{font-size:13px;color:var(--t2)}
+.steps{margin:6px 0 0 18px;padding:0}
+.ck{display:flex;gap:10px;align-items:flex-start;border:1px solid #fcd34d;background:var(--warn-l);border-radius:8px;padding:10px 12px;color:var(--warn-d);font-weight:600}
+.ck input{margin-top:4px;width:18px;height:18px}
+.sticky-act{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center;margin-top:8px}
+.fld{margin-bottom:12px}
+.inl{font-size:13px;color:var(--err-d);font-weight:600;margin-top:4px}
+.inl a{color:var(--err-d);text-decoration:underline}
+input.bad{border-color:var(--err);background:#fff7f7}
+</style></head><body data-state="defaut"><div class="mockbar" role="region" aria-label="Contrôles de la maquette"><strong>MAQUETTE CLS-03</strong><span>État affiché :</span><div class="sw"><button type="button" data-s="defaut" aria-pressed="false" onclick="setState('defaut')">Dates proposées</button><button type="button" data-s="manuel" aria-pressed="false" onclick="setState('manuel')">Dates ajustées</button><button type="button" data-s="trou" aria-pressed="false" onclick="setState('trou')">Trou long (avertissement)</button><button type="button" data-s="chevauche" aria-pressed="false" onclick="setState('chevauche')">Chevauchement P1/P2 (bloquant)</button><button type="button" data-s="autre-annee" aria-pressed="false" onclick="setState('autre-annee')">Chevauche 2026-2027 (bloquant)</button><button type="button" data-s="erreur" aria-pressed="false" onclick="setState('erreur')">Erreur serveur</button><button type="button" data-s="succes" aria-pressed="false" onclick="setState('succes')">Succès</button></div><a href="index.html">← Sommaire</a></div><div class="shell"><aside class="side"><div class="brand"><i></i>Logiscool Pays Vert</div><nav aria-label="Navigation principale"><a href="#">Mes classes</a><a href="#">Timesheets</a><div class="grp">Gestion Opérationnelle</div><a href="#">📊 Timesheets</a><a href="#">👨‍🏫 Professeurs &amp; Tarifs</a><div class="grp">Scolarité</div><a href="#" class="">Classes</a><a href="#" class="">Calendrier</a><a href="#" class="active new">Années scolaires</a><a href="#" class="">Calendrier scolaire</a><div class="grp">Contenu</div><a href="#">Cours</a><a href="#">Stages</a><a href="#">Formations</a><a href="#">Anniversaires</a></nav><div class="acct">Sophie Martin (directeur)</div></aside><main class="main"><div class="phead"><div class="in"><div><div class="crumb">Scolarité › <a href="01-liste-annees.html">Années scolaires</a> › Nouvelle année</div><h1>Nouvelle année scolaire</h1><p class="d">Deux périodes à dates pré-remplies d'après le calendrier FWB : vérifiez, ajustez, créez.</p></div><div class="row"></div></div></div><div class="content">
+<div class="note-m">États : dates proposées · ajustées à la main · trou long entre périodes (jaune) · chevauchement P1/P2 (rouge) · chevauchement avec l'année précédente (rouge) · erreur serveur · succès. <strong>Les champs sont modifiables</strong> : la frise et les messages se recalculent en direct (essayez de changer « P2 du »).</div>
+<div data-show="defaut manuel trou chevauche autre-annee erreur" style="max-width:980px">
+ <div class="banner info" id="prop"><span aria-hidden="true">✨</span><div class="tx"><strong>Dates proposées d'après le calendrier FWB 2027-2028</strong> : P1 de la rentrée au vendredi avant les vacances de Carnaval, P2 de la reprise à la fin de l'année. Ajustez-les si besoin.</div><button class="btn btn-s btn-sm" type="button" onclick="reset()">↺ Rétablir la proposition</button></div>
+ <div class="banner err" data-show="erreur" role="alert"><span aria-hidden="true">⛔</span><div class="tx"><strong>L'année n'a pas pu être créée.</strong> Le serveur n'a pas répondu. Votre saisie est conservée : réessayez.</div></div>
+ <form onsubmit="return false" aria-label="Nouvelle année scolaire">
+ <div class="sect"><header><div><h2>1 · L'année</h2></div></header><div class="body">
+  <div class="grid2"><div class="fld"><label for="lib">Libellé</label><input type="text" id="lib" value="2027-2028"><div class="help">Proposé : année suivante de 2026-2027.</div></div>
+  <div class="fld"><label for="st">Statut à la création</label><select id="st"><option>Active (proposée à la création de classes)</option><option>Brouillon (en préparation)</option></select></div></div>
+  <p class="help">L'année s'étend <strong>du début de la période 1 à la fin de la période 2</strong> : <span id="ybornes"></span></p></div></div>
+ <div class="pblock p1"><header><h2><span class="pt p1">P1</span> Période 1</h2><span class="muted small">Séances de septembre à février</span></header><div class="body"><div class="grid2">
+  <div><label for="p1s">Du</label><input type="date" id="p1s" oninput="ev()" aria-describedby="e1"></div><div><label for="p1e">Au</label><input type="date" id="p1e" oninput="ev()"></div></div></div></div>
+ <div class="pblock p2"><header><h2><span class="pt p2">P2</span> Période 2</h2><span class="muted small">Séances de mars à juin</span></header><div class="body"><div class="grid2">
+  <div><label for="p2s">Du</label><input type="date" id="p2s" oninput="ev()" aria-describedby="e1"></div><div><label for="p2e">Au</label><input type="date" id="p2e" oninput="ev()"></div></div></div></div>
+ <div class="sect"><header><div><h2>Aperçu de l'année</h2></div></header><div class="body">
+  <div class="tlrow"><div class="tl" id="tl" role="img" aria-label="Frise de l'année avec les périodes 1 et 2"></div><div class="tlab"><span id="la"></span><span id="lb"></span></div></div>
+  <div id="msg" role="status" aria-live="polite"></div></div></div>
+ <div class="sect"><div class="body"><label style="text-transform:none;font-size:14px;font-weight:600;margin:0"><input type="checkbox" checked> Importer le calendrier FWB 2027-2028 à la création (vacances, jours fériés), si le fichier est disponible</label></div></div>
+ <div class="sticky-act"><a class="btn btn-s" href="01-liste-annees.html">Annuler</a><button class="btn btn-p" id="go" type="button" onclick="setState('succes')">Créer l'année 2027-2028</button></div>
+ </form>
+</div>
+<div data-show="succes" style="max-width:760px"><div class="recap ok" role="status"><strong>Année 2027-2028 créée.</strong> P1 : 01/09/2027 → 18/02/2028 · P2 : 28/02/2028 → 30/06/2028. Calendrier FWB importé : 41 dates.</div>
+ <div class="sect" style="margin-top:16px"><header><h2>Et maintenant ?</h2></header><div class="body row"><a class="btn btn-p" href="#">Créer une classe sur 2027-2028</a><a class="btn btn-s" href="#">Voir le calendrier scolaire 2027-2028</a><a class="btn btn-g" href="01-liste-annees.html">Retour à la liste des années</a></div></div></div>
+</div></main></div><script>
+function setState(s){document.body.setAttribute('data-state',s);
+ document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===s?'true':'false')});
+ document.querySelectorAll('[data-show]').forEach(function(e){e.hidden=e.dataset.show.split(' ').indexOf(s)<0});
+ if(window.onState)window.onState(s);}
+var lastFocus=null;
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var o=document.querySelector('.modal:not([hidden])');if(o&&window.DEF)setState(window.DEF);}});
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m&&window.DEF)setState(window.DEF);});});
+function D(x){return Date.parse(x)}
+function pct(d,a,b){return (D(d)-D(a))/(D(b)-D(a))*100}
+function fmt(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function tl(el,ys,ye,p1s,p1e,p2s,p2e,ghost){
+ var h='';function seg(c,a,b,t){var l=pct(a,ys,ye),w=pct(b,ys,ye)-l;if(w<=0)return;h+='<i class="'+c+(ghost?' ghost':'')+'" style="left:'+l+'%;width:'+w+'%">'+(w>7?t:'')+'</i>'}
+ seg('a',p1s,p1e,'P1');seg('b',p2s,p2e,'P2');
+ if(D(p1e)<D(p2s))seg('g',p1e,p2s,'');
+ if(D(p2s)<=D(p1e))seg('o',p2s,p1e<p2e?p1e:p2e,'⚠');
+ el.innerHTML=h;}
+
+var ST={defaut:['2027-09-01','2028-02-18','2028-02-28','2028-06-30'],manuel:['2027-09-01','2028-02-18','2028-02-21','2028-06-30'],trou:['2027-09-01','2028-02-18','2028-04-03','2028-06-30'],chevauche:['2027-09-01','2028-02-18','2028-02-14','2028-06-30'],'autre-annee':['2027-06-15','2028-02-18','2028-02-28','2028-06-30'],erreur:['2027-09-01','2028-02-18','2028-02-28','2028-06-30']};
+var PREV_END='2027-07-02',PROP=ST.defaut;
+function g(i){return document.getElementById(i).value}
+function days(a,b){return Math.round((D(b)-D(a))/864e5)}
+function draw(){var v=[g('p1s'),g('p1e'),g('p2s'),g('p2e')];if(v.some(function(x){return!x}))return;
+ var ys=v[0],ye=v[3];tl(document.getElementById('tl'),ys,ye,v[0],v[1],v[2],v[3]);
+ document.getElementById('la').textContent=fmt(ys);document.getElementById('lb').textContent=fmt(ye);
+ document.getElementById('ybornes').textContent='du '+fmt(ys)+' au '+fmt(ye)+'.';
+ var m='',bad=false;
+ if(D(v[1])<D(v[0])||D(v[3])<D(v[2])){m='<div class="banner err"><span>⛔</span><div class="tx"><strong>La fin d\'une période est avant son début.</strong></div></div>';bad=true}
+ else if(D(v[0])<=D(PREV_END)){m='<div class="banner err"><span>⛔</span><div class="tx"><strong>Cette année chevauche 2026-2027</strong> (qui se termine le 02/07/2027). Choisissez un début de période 1 postérieur, ou <a href="03-modifier-periodes-impact.html">modifiez la fin de 2026-2027</a>.</div></div>';bad=true}
+ else if(D(v[2])<=D(v[1])){m='<div class="banner err"><span>⛔</span><div class="tx"><strong>La période 2 doit commencer après la fin de la période 1</strong> (18/02/2028). Au plus tôt : '+fmt(new Date(D(v[1])+864e5).toISOString().slice(0,10))+'.</div></div>';bad=true}
+ else{var n=days(v[1],v[2])-1;
+  if(n>42)m='<div class="banner warn"><span>⚠</span><div class="tx"><strong>'+n+' jours sans période</strong> entre le '+fmt(v[1])+' et le '+fmt(v[2])+' (plus de 6 semaines). Aucune classe ne pourra démarrer dans cet intervalle. Non bloquant.</div></div>';
+  else m='<div class="banner ok"><span>✓</span><div class="tx">Dates cohérentes : P1 avant P2, pas de chevauchement'+(n>0?' · '+n+' jour'+(n>1?'s':'')+' entre les périodes (vacances de Carnaval)':'')+'.</div></div>'}
+ document.getElementById('msg').innerHTML=m;
+ var go=document.getElementById('go');go.disabled=bad;go.classList.toggle('dis',bad);
+ ['p1s','p1e','p2s','p2e'].forEach(function(i){document.getElementById(i).classList.remove('bad')});
+ if(bad){document.getElementById(D(v[0])<=D(PREV_END)?'p1s':'p2s').classList.add('bad')}}
+function load(a){['p1s','p1e','p2s','p2e'].forEach(function(id,i){document.getElementById(id).value=a[i]});draw()}
+function reset(){load(PROP);setState('defaut')}
+function ev(){draw();var v=[g('p1s'),g('p1e'),g('p2s'),g('p2e')],st='manuel';
+ if(D(v[0])<=D(PREV_END))st='autre-annee';else if(D(v[2])<=D(v[1]))st='chevauche';else if(days(v[1],v[2])-1>42)st='trou';else if(v.join()===PROP.join())st='defaut';
+ document.body.setAttribute('data-state',st);document.querySelectorAll('.mockbar .sw button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.s===st?'true':'false')})}
+window.onState=function(s){if(ST[s])load(ST[s]);document.getElementById('prop').hidden=(s==='manuel'||s==='trou'||s==='chevauche'||s==='autre-annee')&&false}
+
+var DEF="defaut";setState("defaut");</script></body></html>
