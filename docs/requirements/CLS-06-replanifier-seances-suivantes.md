@@ -316,3 +316,16 @@ Jeu de données : celui du §5.2.
 - Service : `backend/app/Services/SessionReplanificationService.php` ; tests : `backend/tests/Feature/SessionReplanificationApiTest.php` (17 tests).
 - Front : `frontend/src/components/classes/SessionAdjustModal.jsx` (case, bouton, conséquence, message de succès, 409 → aperçu recalculé) et `frontend/src/components/classes/DeplacementApercu.jsx` (aperçu avant → après, cases Forcer, lignes verrouillées/figées, avertissements). Écart : le tableau d'aperçu défile au-delà de 320 px au lieu d'être repliable au-delà de 6 lignes.
 
+---
+
+## Évolution v0.4 (2026-10-04) — séances passées
+
+Demande du directeur : « Le décalage doit également fonctionner sur une séance dans le passé, sauf si un timesheet a été validé. » Arbitrages :
+
+- **RG-15 — Séance passée déplaçable.** Une séance passée se déplace (seule ou avec décalage), et les séances suivantes passées sont recalculées comme les autres. Le bouton « Ajuster › Déplacer » est proposé sur les séances passées.
+- **RG-16 — Verrou = heures soumises ou validées.** Une séance est verrouillée si une timesheet rattachée est **soumise, contestée, confirmée ou générée** (tout sauf brouillon, définition `Timesheet::isLocked`). Cela vaut pour la séance déplacée (409) et pour l'arrêt du décalage (motif `heures_validees`, remplace `heures_encodees` / `terminee`). Le statut « terminée » ne verrouille plus.
+- **RG-17 — Heures en brouillon.** Leur `date_prestation` suit la nouvelle date de la séance (déplacement simple et décalage).
+- **RG-18 — Déplacement simple.** Même règle que le décalage (arbitrage : oui).
+- Inchangé : l'annulation reste refusée dès qu'une heure est encodée, brouillon compris (AC-33 de CLS-01 T3).
+- Tests : `CourseSessionServiceTest`, `CourseSessionApiTest` et `SessionReplanificationApiTest` (séance passée déplacée, heures brouillon qui suivent, heures soumises qui bloquent).
+

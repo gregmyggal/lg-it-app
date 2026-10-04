@@ -6,6 +6,7 @@ use App\Exceptions\RegleMetierException;
 use App\Models\Classe;
 use App\Models\ClassePeriode;
 use App\Models\CourseSession;
+use App\Models\Timesheet;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -22,21 +23,38 @@ class CourseSessionService
     {
         $this->verifierDeplacable($session);
 
-        $session->update($data);
+        return DB::transaction(function () use ($session, $data) {
+            $session->update($data);
+            $this->reporterHeuresBrouillon($session->id, $session->date->toDateString());
 
-        return $session->refresh();
+            return $session->refresh();
+        });
     }
 
-    /** @throws RegleMetierException 409 si la session est annulée, passée ou a des heures encodées */
+    /**
+     * Une séance, même passée, se déplace tant qu'aucune heure n'y est soumise ou validée (CLS-06).
+     *
+     * @throws RegleMetierException 409 si la session est annulée ou a des heures soumises ou validées
+     */
     public function verifierDeplacable(CourseSession $session): void
     {
         if ($session->isAnnulee()) {
             throw RegleMetierException::conflit('Une session annulée ne peut pas être déplacée.');
         }
-        if ($session->isPassee()) {
-            throw RegleMetierException::conflit('Une session passée ne peut pas être déplacée.');
+        $nb = $session->timesheets()->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->count();
+        if ($nb > 0) {
+            throw RegleMetierException::conflit(
+                "Cette session ne peut pas être déplacée : {$nb} saisie".($nb > 1 ? 's' : '')." d'heures ".($nb > 1 ? 'soumises ou validées y sont rattachées' : 'soumise ou validée y est rattachée').'. Le remplacement d\'un professeur reste possible.'
+            );
         }
-        $this->refuserSiHeuresEncodees($session, 'déplacée');
+    }
+
+    /** Les heures encore en brouillon suivent la nouvelle date de leur séance. */
+    public function reporterHeuresBrouillon(int $sessionId, string $date): void
+    {
+        Timesheet::where('course_session_id', $sessionId)
+            ->where('statut_validation', Timesheet::STATUT_BROUILLON)
+            ->update(['date_prestation' => $date]);
     }
 
     public function annuler(CourseSession $session, string $motif): CourseSession

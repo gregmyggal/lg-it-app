@@ -69,6 +69,7 @@ class SessionReplanificationApiTest extends TestCase
             'date_prestation' => $session->date->toDateString(),
             'nombre_heures' => 2,
             'course_session_id' => $session->id,
+            'statut_validation' => Timesheet::STATUT_SOUMIS,
         ]);
     }
 
@@ -200,7 +201,7 @@ class SessionReplanificationApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('replanification.decalees.p1', 7)
             ->assertJsonPath('replanification.periodes.0.arret.seance', 'P1 · Séance 9')
-            ->assertJsonPath('replanification.periodes.0.arret.motif', 'heures_encodees');
+            ->assertJsonPath('replanification.periodes.0.arret.motif', 'heures_validees');
 
         $this->assertSame(
             ['14/10', '04/11', '18/11', '25/11', '02/12', '09/12', '16/12', '06/01', '06/01', '13/01', '20/01', '27/01', '03/02', '10/02'],
@@ -209,18 +210,41 @@ class SessionReplanificationApiTest extends TestCase
         $this->assertContains('ordre_inverse', array_column($reponse->json('replanification.avertissements'), 'code'));
     }
 
-    public function test_ac10b_arret_sur_seance_terminee_sans_avertissement_si_l_ordre_est_respecte(): void
+    public function test_heures_en_brouillon_ne_verrouillent_pas_et_suivent_la_seance(): void
     {
         $this->actingAsRole('directeur');
         $classe = $this->classe();
-        $this->seance($classe, 10)->update(['statut' => CourseSession::STATUT_TERMINEE]); // 13/01
+        $brouillon = Timesheet::create([
+            'professeur_id' => Professeur::factory()->create()->id, 'date_prestation' => '2026-11-18', 'nombre_heures' => 2,
+            'course_session_id' => $this->seance($classe, 4)->id, 'statut_validation' => Timesheet::STATUT_BROUILLON,
+        ]);
+        $this->seance($classe, 10)->update(['statut' => CourseSession::STATUT_TERMINEE]);
 
-        $reponse = $this->postJson('/api/sessions/'.$this->seance($classe, 1)->id.'/deplacement/apercu', ['date' => '2026-10-14', 'dates_forcees' => ['2026-11-11']])
+        $this->putJson('/api/sessions/'.$this->seance($classe, 1)->id, ['date' => '2026-10-14', 'decaler_suivantes' => true])
             ->assertOk()
-            ->assertJsonPath('data.periodes.0.arret.motif', 'terminee')
-            ->assertJsonPath('data.decalees.p1', 2);
+            ->assertJsonPath('replanification.decalees.p1', 13)
+            ->assertJsonPath('replanification.periodes.0.arret', null);
 
-        $this->assertNotContains('ordre_inverse', array_column($reponse->json('data.avertissements'), 'code'));
+        $this->assertSame('2026-11-25', $this->seance($classe, 4)->date->toDateString());
+        $this->assertSame('2026-11-25', $brouillon->fresh()->date_prestation->toDateString());
+    }
+
+    public function test_decalage_depuis_une_seance_passee(): void
+    {
+        $this->actingAsRole('directeur');
+        $classe = $this->classe();
+        $this->travelTo('2026-11-20 10:00:00'); // P1 · 1 à 4 passées
+
+        $this->getJson("/api/classes/{$classe->id}/sessions")->assertOk()->assertJsonPath('data.1.can.update', true);
+        // P1 · 2 (14/10, passée) → 04/11 : P1 · 3 et 4, passées elles aussi, sont recalculées.
+        $this->putJson('/api/sessions/'.$this->seance($classe, 2)->id, ['date' => '2026-11-04', 'decaler_suivantes' => true])
+            ->assertOk()
+            ->assertJsonPath('replanification.decalees.p1', 12);
+
+        $this->assertSame(
+            ['07/10', '04/11', '18/11', '25/11', '02/12', '09/12', '16/12', '06/01', '13/01', '20/01', '27/01', '03/02', '10/02', '17/02'],
+            $this->dates($classe)
+        );
     }
 
     public function test_ac23_ac24_chevauchement_autorise_avec_avertissement_et_levee_par_forcage(): void
@@ -232,7 +256,7 @@ class SessionReplanificationApiTest extends TestCase
 
         $avertissements = $this->postJson("/api/sessions/{$id}/deplacement/apercu", ['date' => '2026-10-14'])->assertOk()->json('data.avertissements');
         $this->assertContains(
-            "La P1 · Séance 3 tombera le 18/11, le même jour que la P1 · Séance 4 (18/11, heures encodées) : l'ordre des séances ne suivra plus leur numéro.",
+            "La P1 · Séance 3 tombera le 18/11, le même jour que la P1 · Séance 4 (18/11, heures soumises ou validées) : l'ordre des séances ne suivra plus leur numéro.",
             array_column($avertissements, 'message')
         );
 

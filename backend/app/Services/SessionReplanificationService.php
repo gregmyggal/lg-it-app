@@ -11,9 +11,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * CLS-06 : déplacer une séance et replanifier les séances suivantes (une par semaine, au jour de la classe,
- * congés sautés sauf dates forcées), sans jamais renuméroter. Arrêt sur la première séance verrouillée
- * (heures encodées ou terminée) ; cascade vers la P2 si la P1 déborde sur sa 1re séance.
+ * CLS-06 : déplacer une séance, même passée, et replanifier les séances suivantes (une par semaine, au jour de
+ * la classe, congés sautés sauf dates forcées), sans jamais renuméroter. Arrêt sur la première séance verrouillée
+ * (heures soumises ou validées) ; cascade vers la P2 si la P1 déborde sur sa 1re séance. Les heures en brouillon
+ * suivent la nouvelle date de leur séance.
  */
 class SessionReplanificationService
 {
@@ -61,6 +62,7 @@ class SessionReplanificationService
                 foreach ($bloc['lignes'] as $ligne) {
                     if ($ligne['etat'] === 'decalee') {
                         CourseSession::whereKey($ligne['id'])->update(['date' => $ligne['date_apres']]);
+                        $this->sessions->reporterHeuresBrouillon($ligne['id'], $ligne['date_apres']);
                     }
                 }
                 if ($bloc['cascade']) {
@@ -72,6 +74,7 @@ class SessionReplanificationService
             }
 
             $session->update(array_intersect_key($data, array_flip(['date', 'heure_debut', 'heure_fin', 'lieu'])));
+            $this->sessions->reporterHeuresBrouillon($session->id, $data['date']);
 
             return $plan;
         });
@@ -92,7 +95,7 @@ class SessionReplanificationService
 
         $periodes = $classe->periodes()->with('periode')->get()->sortBy(fn (ClassePeriode $cp) => $cp->periode->numero)->values();
         $parPeriode = CourseSession::where('classe_id', $classe->id)
-            ->withCount('timesheets')
+            ->avecHeuresVerrouillees()
             ->with('sessionProfesseurs.professeur')
             ->orderBy('seance_numero')->orderBy('bis_rang')
             ->get()
@@ -168,9 +171,9 @@ class SessionReplanificationService
                 $lignes[] = $this->ligne($s, $cp, $avant, 'inchangee');
             } elseif ($s->bis_rang > 0 || $s->isAnnulee()) {
                 $lignes[] = $this->ligne($s, $cp, $avant, 'figee');
-            } elseif ($s->timesheets_count > 0 || $s->statut === CourseSession::STATUT_TERMINEE) {
+            } elseif ($s->aHeuresVerrouillees()) {
                 $verrou = $s;
-                $lignes[] = $this->ligne($s, $cp, $avant, 'verrouillee') + ['motif' => $s->timesheets_count > 0 ? 'heures_encodees' : 'terminee'];
+                $lignes[] = $this->ligne($s, $cp, $avant, 'verrouillee') + ['motif' => 'heures_validees'];
             } else {
                 $apres = $this->prochainCreneau($creneau, $contexte, $sautees);
                 $lignes[] = $this->ligne($s, $cp, $apres, $apres === $avant ? 'inchangee' : 'decalee');
@@ -186,7 +189,7 @@ class SessionReplanificationService
             'declencheur' => null,
             'lignes' => $lignes,
             'dates_sautees' => $sautees,
-            'arret' => $verrou ? ['seance' => $this->libelle($verrou, $cp), 'motif' => $verrou->timesheets_count > 0 ? 'heures_encodees' : 'terminee'] : null,
+            'arret' => $verrou ? ['seance' => $this->libelle($verrou, $cp), 'motif' => 'heures_validees'] : null,
             'decalees' => count(array_filter($lignes, fn ($l) => $l['etat'] === 'decalee')),
         ];
     }
@@ -258,10 +261,9 @@ class SessionReplanificationService
         foreach ($bougees as $l) {
             if ($verrou && $l['date_apres'] >= $verrou->date->toDateString()) {
                 $position = $l['date_apres'] === $verrou->date->toDateString() ? 'le même jour que' : 'après';
-                $motif = $verrou->timesheets_count > 0 ? 'heures encodées' : 'terminée';
                 $avertissements[] = [
                     'code' => 'ordre_inverse',
-                    'message' => "La {$l['libelle']} tombera le {$this->court($l['date_apres'])}, {$position} la ".$this->libelle($verrou, $cp)." ({$this->court($verrou->date->toDateString())}, {$motif}) : l'ordre des séances ne suivra plus leur numéro.",
+                    'message' => "La {$l['libelle']} tombera le {$this->court($l['date_apres'])}, {$position} la ".$this->libelle($verrou, $cp)." ({$this->court($verrou->date->toDateString())}, heures soumises ou validées) : l'ordre des séances ne suivra plus leur numéro.",
                 ];
             }
             if ($l['date_apres'] > $finAnnee) {

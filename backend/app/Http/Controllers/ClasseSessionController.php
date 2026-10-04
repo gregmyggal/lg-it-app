@@ -26,7 +26,7 @@ class ClasseSessionController extends Controller
         Gate::authorize('view', $classe);
         Gate::authorize('viewAny', CourseSession::class);
 
-        $sessions = $classe->sessions()->visiblePour($request->user())
+        $sessions = $classe->sessions()->visiblePour($request->user())->avecHeuresVerrouillees()
             ->with(['classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
             ->when($request->filled('periode_numero'), fn ($q) => $q->whereHas('classePeriode.periode', fn ($p) => $p->where('numero', $request->integer('periode_numero'))))
             ->get()

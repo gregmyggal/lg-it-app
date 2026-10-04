@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PeriodeRegles;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -123,16 +124,28 @@ class CourseSession extends Model
         return ! $this->isAnnulee();
     }
 
-    public function isPassee(): bool
-    {
-        return $this->statut === self::STATUT_TERMINEE
-            || $this->date->toDateString() < now('Europe/Brussels')->toDateString();
-    }
-
-    /** Déplaçable : ni passée, ni annulée. */
+    /** Déplaçable, même passée (CLS-06) : ni annulée, ni avec des heures soumises ou validées. */
     public function isMovable(): bool
     {
-        return ! $this->isAnnulee() && ! $this->isPassee();
+        return ! $this->isAnnulee() && ! $this->aHeuresVerrouillees();
+    }
+
+    /**
+     * Heures soumises, contestées, confirmées ou générées sur la séance. Utilise l'attribut `heures_verrouillees`
+     * s'il a été chargé (`avecHeuresVerrouillees()`), sinon une requête.
+     */
+    public function aHeuresVerrouillees(): bool
+    {
+        if (array_key_exists('heures_verrouillees', $this->attributes)) {
+            return (bool) $this->attributes['heures_verrouillees'];
+        }
+
+        return $this->timesheets()->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->exists();
+    }
+
+    public function scopeAvecHeuresVerrouillees(Builder $query): Builder
+    {
+        return $query->withExists(['timesheets as heures_verrouillees' => fn ($q) => $q->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)]);
     }
 
     public function isCancellable(): bool
@@ -160,7 +173,7 @@ class CourseSession extends Model
     {
         $fin = $this->classePeriode?->periode?->date_fin;
 
-        return $fin !== null && \App\Services\PeriodeRegles::horsPeriode($this->date->toDateString(), $fin->toDateString());
+        return $fin !== null && PeriodeRegles::horsPeriode($this->date->toDateString(), $fin->toDateString());
     }
 
     /** @return list<string> avertissements non bloquants (jamais d'erreur après la fin de période). */

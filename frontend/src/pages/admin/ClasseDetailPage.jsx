@@ -494,7 +494,7 @@ function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSup
           borderBottom: `1px solid ${ADMIN_COLORS.border}`,
         }}
       >
-        <span>🔒 Session passée ou terminée : elle ne peut plus être déplacée ni annulée</span>
+        <span>🔒 Heures soumises ou validées : la séance ne peut plus être déplacée ni annulée (une séance passée reste déplaçable)</span>
         <span>🔢 Le numéro de séance (1 à 14) est fixe dans la période : une session annulée le garde, un bis porte le même numéro</span>
         <span>⚠ Date en conflit avec le calendrier scolaire ou hors période</span>
       </div>

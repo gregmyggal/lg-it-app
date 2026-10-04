@@ -24,7 +24,7 @@ class CourseSessionController extends Controller
     /** Base du calendrier : sessions filtrées (classe, cours, période de dates, statut). */
     public function index(ListSessionsRequest $request): AnonymousResourceCollection
     {
-        $query = CourseSession::query()->visiblePour($request->user())->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur']);
+        $query = CourseSession::query()->visiblePour($request->user())->avecHeuresVerrouillees()->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur']);
 
         if ($request->filled('classe_id')) {
             $query->where('classe_id', $request->integer('classe_id'));

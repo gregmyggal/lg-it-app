@@ -97,17 +97,16 @@ class CourseSessionApiTest extends TestCase
         $this->putJson('/api/sessions/99999', ['date' => '2026-10-22'])->assertStatus(404);
     }
 
-    public function test_deplacer_409_session_passee_ou_annulee(): void
+    public function test_session_passee_deplacable_session_annulee_409(): void
     {
         $this->actingAsRole('directeur');
         Carbon::setTestNow('2026-10-20 10:00:00');
         $passee = $this->seance(2);
 
-        $this->putJson("/api/sessions/{$passee->id}", ['date' => '2026-10-30'])->assertStatus(409)
-            ->assertJsonPath('message', 'Une session passée ne peut pas être déplacée.');
+        $this->putJson("/api/sessions/{$passee->id}", ['date' => '2026-10-15'])->assertOk()->assertJsonPath('data.date', '2026-10-15');
 
         $reponse = $this->getJson('/api/sessions?classe_id='.$this->classe->id.'&per_page=100');
-        $this->assertFalse($reponse->json('data.1.can.update'));
+        $this->assertTrue($reponse->json('data.1.can.update'));
 
         $annulee = $this->seance(5);
         $annulee->update(['statut' => 'annulee']);

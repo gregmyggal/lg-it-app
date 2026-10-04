@@ -146,7 +146,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
                     size="sm"
                     variant="secondary"
                     disabled
-                    title="Session passée ou terminée : elle ne peut plus être déplacée ni annulée."
+                    title="Des heures soumises ou validées sont rattachées à cette séance : elle ne peut plus être déplacée ni annulée."
                     aria-describedby={legendeId}
                   >
                     🔒 Ajuster

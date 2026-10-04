@@ -6,6 +6,8 @@ use App\Exceptions\RegleMetierException;
 use App\Models\CalendrierScolaire;
 use App\Models\Classe;
 use App\Models\CourseSession;
+use App\Models\Professeur;
+use App\Models\Timesheet;
 use App\Services\CalendrierScolaireService;
 use App\Services\CourseSessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,16 +76,35 @@ class CourseSessionServiceTest extends TestCase
         $this->assertSame(['Cette date est après la fin de la période 1'], $session->avertissements());
     }
 
-    public function test_deplacer_une_session_passee_est_refuse_409(): void
+    public function test_une_session_passee_se_deplace_et_ses_heures_brouillon_suivent(): void
     {
         $classe = $this->classeAvecSessions($this->annee());
         Carbon::setTestNow('2026-10-20 10:00:00'); // séances 1 (07/10) et 2 (14/10) sont passées
+        $brouillon = Timesheet::create([
+            'professeur_id' => Professeur::factory()->create()->id, 'date_prestation' => '2026-10-14', 'nombre_heures' => 2,
+            'course_session_id' => $this->seance($classe, 2)->id, 'statut_validation' => Timesheet::STATUT_BROUILLON,
+        ]);
 
-        $this->assertRegle(409, 'Une session passée ne peut pas être déplacée.', fn () => $this->service->deplacer(
-            $this->seance($classe, 2), ['date' => '2026-10-30']
+        $this->service->deplacer($this->seance($classe, 2), ['date' => '2026-10-15']);
+
+        $this->assertSame('2026-10-15', $this->seance($classe, 2)->date->toDateString());
+        $this->assertSame('2026-10-15', $brouillon->fresh()->date_prestation->toDateString());
+    }
+
+    public function test_deplacer_refuse_409_si_des_heures_sont_soumises_ou_validees(): void
+    {
+        $classe = $this->classeAvecSessions($this->annee());
+        Carbon::setTestNow('2026-10-20 10:00:00');
+        foreach ([Timesheet::STATUT_SOUMIS, Timesheet::STATUT_CONFIRME] as $i => $statut) {
+            Timesheet::create([
+                'professeur_id' => Professeur::factory()->create()->id, 'date_prestation' => '2026-10-07', 'nombre_heures' => 2,
+                'course_session_id' => $this->seance($classe, 1)->id, 'statut_validation' => $statut,
+            ]);
+        }
+
+        $this->assertRegle(409, "Cette session ne peut pas être déplacée : 2 saisies d'heures soumises ou validées y sont rattachées. Le remplacement d'un professeur reste possible.", fn () => $this->service->deplacer(
+            $this->seance($classe, 1), ['date' => '2026-10-08']
         ));
-        $this->service->deplacer($this->seance($classe, 3), ['date' => '2026-10-23']); // 21/10 : à venir
-        $this->assertSame('2026-10-23', $this->seance($classe, 3)->date->toDateString());
     }
 
     public function test_deplacer_une_session_annulee_est_refuse_409(): void

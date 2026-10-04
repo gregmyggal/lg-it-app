@@ -4,7 +4,7 @@ import Banner from '../ui/Banner';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES } from '../../styles/AdminDesignSystem';
 import { formatDate, formatDateCourte } from '../../utils/dates';
 
-const MOTIFS = { heures_encodees: 'heures encodées', terminee: 'terminée' };
+const MOTIFS = { heures_validees: 'heures soumises ou validées' };
 
 /**
  * Aperçu « avant → après » du déplacement d'une séance avec décalage des suivantes (CLS-06,
