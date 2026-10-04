@@ -56,6 +56,7 @@ export default function ClasseCreatePage() {
       2: { cours_id: '', date: '' },
     },
   );
+  const [datesForcees, setDatesForcees] = useState(brouillon?.datesForcees || { 1: [], 2: [] });
   const [dateP2Manuelle, setDateP2Manuelle] = useState(brouillon?.dateP2Manuelle ?? false);
   const [finManuelle, setFinManuelle] = useState(brouillon?.finManuelle ?? false); // tant que la fin n'est pas saisie à la main, elle suit début + durée de séance
   const [apercu, setApercu] = useState({ data: null, loading: false, erreurs: {}, message: null, contexte: null });
@@ -100,6 +101,14 @@ export default function ClasseCreatePage() {
     setEchec(null);
   }
 
+  function forcerDate(numero, date, forcer) {
+    setDatesForcees((prev) => {
+      const autres = prev[numero].filter((d) => d !== date);
+      return { ...prev, [numero]: forcer ? [...autres, date].sort() : autres };
+    });
+    setEchec(null);
+  }
+
   function basculer(numero, ouverte) {
     const autres = numerosOuverts.filter((n) => n !== numero);
     if (!ouverte && autres.length === 0) return; // au moins une période
@@ -121,9 +130,10 @@ export default function ClasseCreatePage() {
           periode_id: Number(annee?.periodes.find((p) => p.numero === n)?.id) || '',
           cours_id: Number(per[n].cours_id) || '',
           date_premiere_session: per[n].date,
+          dates_forcees: datesForcees[n],
         })),
     }),
-    [form, anneeId, annee, ouvertes, per],
+    [form, anneeId, annee, ouvertes, per, datesForcees],
   );
   const complet = Boolean(
     charge.annee_scolaire_id && charge.jour_semaine && charge.heure_debut && charge.heure_fin && charge.periodes.length > 0 &&
@@ -170,7 +180,7 @@ export default function ClasseCreatePage() {
   const avertissements = planApercu.flatMap((p) => p.avertissements || []);
   const erreurs = { ...apercu.erreurs, ...(echec?.champs || {}) };
   const contexteBornes = apercu.contexte || echec?.contexte || null;
-  const sauverSaisie = () => sauverBrouillon(CLE_BROUILLON, { form, ouvertes, per, dateP2Manuelle, finManuelle });
+  const sauverSaisie = () => sauverBrouillon(CLE_BROUILLON, { form, ouvertes, per, datesForcees, dateP2Manuelle, finManuelle });
   const erreurPeriode = (numero, champ) => {
     const idx = charge.periodes.findIndex((_, i) => numerosOuverts[i] === numero);
     return erreurs[`periodes.${idx}.${champ}`] || (blocage?.periode_numero === numero && champ === 'date_premiere_session' ? blocage.message : undefined);
@@ -188,8 +198,11 @@ export default function ClasseCreatePage() {
           const sautees = p.dates_sautees?.length || 0;
           const debut = p.seances[0]?.date;
           const fin = p.seances[p.seances.length - 1]?.date;
+          const forcees = p.seances.filter((s) => s.forcee).length;
           return `P${p.numero} : ${p.seances.length} séances du ${formatDate(debut)} au ${formatDate(fin)}${
             sautees ? ` (${sautees} date${sautees > 1 ? 's' : ''} sautée${sautees > 1 ? 's' : ''})` : ''
+          }${
+            forcees ? `, dont ${forcees} forcée${forcees > 1 ? 's' : ''} sur un congé` : ''
           }`;
         })
         .join(' · ') || `${classe.nb_sessions} séances générées`;
@@ -208,6 +221,7 @@ export default function ClasseCreatePage() {
     setDateP2Manuelle(false);
     setPer((prev) => ({ 1: { ...prev[1], date: '' }, 2: { ...prev[2], date: '' } }));
     setForm((prev) => ({ ...prev, lieu: '' }));
+    setDatesForcees({ 1: [], 2: [] });
   }
 
   const entete = (
@@ -550,7 +564,12 @@ export default function ClasseCreatePage() {
                     <strong>Avertissement (non bloquant) :</strong> {nbHors} séance{nbHors > 1 ? 's' : ''} tomberai{nbHors > 1 ? 'ent' : 't'} après la fin de sa période : elle{nbHors > 1 ? 's seront créées' : ' sera créée'} avec le badge « hors période ».
                   </Banner>
                 )}
-                <ClasseApercu apercu={apercu.data} chargement={apercu.loading} cours={coursTitres} />
+                <ClasseApercu
+                  apercu={apercu.data}
+                  chargement={apercu.loading}
+                  cours={coursTitres}
+                  onForcer={forcerDate}
+                />
                 {numerosOuverts.length === 1 && apercu.data && (
                   <p style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
                     Seule la période {numerosOuverts[0]} sera créée (14 séances). La période {numerosOuverts[0] === 1 ? 2 : 1} pourra être ajoutée plus tard.

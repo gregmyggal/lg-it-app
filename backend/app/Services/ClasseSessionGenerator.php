@@ -34,18 +34,19 @@ class ClasseSessionGenerator
     /**
      * Calcul pur (sans écriture) du plan d'UNE période.
      *
+     * @param  list<string>  $datesForcees  dates (Y-m-d) couvertes par le calendrier où la séance est maintenue (CLS-05)
      * @return array{
      *     periode_id: int,
      *     numero: int,
      *     date_premiere_session: string,
      *     recale: bool,
-     *     seances: list<array{seance_numero: int, date: string, hors_periode: bool}>,
+     *     seances: list<array{seance_numero: int, date: string, hors_periode: bool, forcee: bool, conge: ?array{libelle: string, type: string}}>,
      *     dates_sautees: list<array{date: string, libelle: string, type: string}>,
      *     avertissements: list<string>,
      *     blocage: ?array{message: string, periode_numero: int}
      * }
      */
-    public function plan(int $anneeScolaireId, Periode $periode, int $jourSemaine, string $datePremiere): array
+    public function plan(int $anneeScolaireId, Periode $periode, int $jourSemaine, string $datePremiere, array $datesForcees = []): array
     {
         $demandee = Carbon::parse($datePremiere)->startOfDay();
         $courante = $demandee->copy();
@@ -62,11 +63,18 @@ class ClasseSessionGenerator
         for ($i = 0; $i < self::MAX_SEMAINES && count($seances) < self::NB_SEANCES; $i++) {
             $date = $courante->toDateString();
             $entree = $this->calendrier->entreeCouvrant($entrees, $date);
+            $forcee = $entree !== null && in_array($date, $datesForcees, true);
 
-            if ($entree) {
+            if ($entree && ! $forcee) {
                 $sautees[] = ['date' => $date, 'libelle' => $entree->libelle, 'type' => $entree->type];
             } else {
-                $seances[] = ['seance_numero' => count($seances) + 1, 'date' => $date, 'hors_periode' => PeriodeRegles::horsPeriode($date, $fin)];
+                $seances[] = [
+                    'seance_numero' => count($seances) + 1,
+                    'date' => $date,
+                    'hors_periode' => PeriodeRegles::horsPeriode($date, $fin),
+                    'forcee' => $forcee,
+                    'conge' => $forcee ? ['libelle' => $entree->libelle, 'type' => $entree->type] : null,
+                ];
             }
 
             $courante->addWeek();
@@ -98,7 +106,7 @@ class ClasseSessionGenerator
     /**
      * Aperçu sans persistance de la création d'une classe (1 ou 2 périodes).
      *
-     * @param  array{annee_scolaire_id: int, jour_semaine: int, periodes: list<array{periode_id: int, cours_id: int, date_premiere_session: string}>}  $data
+     * @param  array{annee_scolaire_id: int, jour_semaine: int, periodes: list<array{periode_id: int, cours_id: int, date_premiere_session: string, dates_forcees?: list<string>}>}  $data
      * @return array{periodes: list<array<string, mixed>>}
      */
     public function preview(array $data): array
@@ -109,7 +117,7 @@ class ClasseSessionGenerator
     /**
      * Aperçu de l'ajout d'une période à une classe existante.
      *
-     * @param  array{periode_id: int, cours_id?: int, date_premiere_session: string}  $data
+     * @param  array{periode_id: int, cours_id?: int, date_premiere_session: string, dates_forcees?: list<string>}  $data
      * @return array{periodes: list<array<string, mixed>>}
      */
     public function previewAjout(Classe $classe, array $data): array
@@ -246,7 +254,7 @@ class ClasseSessionGenerator
         foreach (array_values($data['periodes']) as $i => $p) {
             $periode = $this->periodeDeLAnnee($annee, (int) $p['periode_id'], "periodes.{$i}.periode_id");
             $this->assertDansLesBornes($periode, $p['date_premiere_session'], "periodes.{$i}.date_premiere_session");
-            $plans[$periode->id] = $this->plan($annee, $periode, (int) $data['jour_semaine'], $p['date_premiere_session']);
+            $plans[$periode->id] = $this->plan($annee, $periode, (int) $data['jour_semaine'], $p['date_premiere_session'], $p['dates_forcees'] ?? []);
         }
         uasort($plans, fn ($a, $b) => $a['numero'] <=> $b['numero']);
 
@@ -274,7 +282,7 @@ class ClasseSessionGenerator
         }
 
         $this->assertDansLesBornes($periode, $data['date_premiere_session'], 'date_premiere_session');
-        $plan = $this->plan($classe->annee_scolaire_id, $periode, $classe->jour_semaine, $data['date_premiere_session']);
+        $plan = $this->plan($classe->annee_scolaire_id, $periode, $classe->jour_semaine, $data['date_premiere_session'], $data['dates_forcees'] ?? []);
 
         if (! $plan['blocage'] && $plan['seances']) {
             $derniere = end($plan['seances'])['date'];

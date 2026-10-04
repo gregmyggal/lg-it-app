@@ -6,6 +6,7 @@ use App\Exceptions\RegleMetierException;
 use App\Models\AnneeScolaire;
 use App\Models\CalendrierScolaire;
 use App\Models\Classe;
+use App\Models\Cours;
 use App\Models\CourseSession;
 use App\Services\ClasseSessionGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -133,5 +134,75 @@ class ClasseSessionGeneratorTest extends TestCase
         $this->assertSame(14, $classe->sessions()->count());
         $this->assertSame('2026-10-15', $classe->sessions()->where('seance_numero', 2)->first()->date->toDateString());
         $this->assertSame('2026-11-04', $classe->sessions()->where('seance_numero', 5)->first()->date->toDateString());
+    }
+
+    public function test_cls05_date_forcee_cree_la_seance_le_jour_de_conge_et_garde_14_seances_numerotees(): void
+    {
+        $annee = $this->annee();
+        $this->importFwb($annee);
+        $donnees = $this->donneesClasse($annee);
+        $donnees['periodes'][0]['dates_forcees'] = ['2026-11-11'];
+
+        $plan = app(ClasseSessionGenerator::class)->preview($donnees)['periodes'][0];
+
+        $this->assertSame(range(1, 14), array_column($plan['seances'], 'seance_numero'));
+        $forcee = collect($plan['seances'])->firstWhere('date', '2026-11-11');
+        $this->assertSame(4, $forcee['seance_numero']);
+        $this->assertTrue($forcee['forcee']);
+        $this->assertSame('Armistice', $forcee['conge']['libelle']);
+        $this->assertFalse(collect($plan['seances'])->firstWhere('date', '2026-10-07')['forcee']);
+        $this->assertSame(['2026-10-21', '2026-10-28', '2026-12-23', '2026-12-30'], array_column($plan['dates_sautees'], 'date'));
+        $this->assertSame('2027-02-03', end($plan['seances'])['date']); // une semaine plus tôt qu'avant
+    }
+
+    public function test_cls05_le_forcage_est_par_date_pas_par_entree_du_calendrier(): void
+    {
+        $annee = $this->annee();
+        $this->importFwb($annee);
+        $donnees = $this->donneesClasse($annee);
+        $donnees['periodes'][0]['dates_forcees'] = ['2026-10-21']; // 1er mercredi des vacances d'automne seulement
+
+        $plan = app(ClasseSessionGenerator::class)->preview($donnees)['periodes'][0];
+
+        $dates = array_column($plan['seances'], 'date');
+        $this->assertContains('2026-10-21', $dates);
+        $this->assertNotContains('2026-10-28', $dates);
+        $this->assertContains('2026-10-28', array_column($plan['dates_sautees'], 'date'));
+    }
+
+    public function test_cls05_date_forcee_hors_conge_ou_hors_plan_est_ignoree(): void
+    {
+        $annee = $this->annee();
+        $this->importFwb($annee);
+        $sans = app(ClasseSessionGenerator::class)->preview($this->donneesClasse($annee))['periodes'][0];
+        $donnees = $this->donneesClasse($annee);
+        $donnees['periodes'][0]['dates_forcees'] = ['2026-10-14', '2026-11-12'];
+
+        $avec = app(ClasseSessionGenerator::class)->preview($donnees)['periodes'][0];
+
+        $this->assertSame(array_column($sans['seances'], 'date'), array_column($avec['seances'], 'date'));
+        $this->assertNotContains(true, array_column($avec['seances'], 'forcee'));
+    }
+
+    public function test_cls05_creation_persiste_la_seance_forcee_et_forcages_independants_par_periode(): void
+    {
+        $annee = $this->annee();
+        $this->importFwb($annee);
+        $p2 = $annee->periodes->firstWhere('numero', 2);
+        $donnees = $this->donneesClasse($annee);
+        $donnees['periodes'][0]['dates_forcees'] = ['2026-11-11'];
+        $donnees['periodes'][] = [
+            'periode_id' => $p2->id,
+            'cours_id' => Cours::factory()->create()->id,
+            'date_premiere_session' => $p2->date_debut->toDateString(),
+        ];
+
+        $classe = app(ClasseSessionGenerator::class)->create($donnees);
+
+        $session = $classe->sessions()->whereDate('date', '2026-11-11')->first();
+        $this->assertNotNull($session);
+        $this->assertSame(4, $session->seance_numero);
+        $this->assertSame('planifiee', $session->statut);
+        $this->assertSame(28, $classe->sessions()->count());
     }
 }

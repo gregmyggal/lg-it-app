@@ -247,4 +247,26 @@ class ClasseApiTest extends TestCase
 
         return $annee->load('periodes');
     }
+
+    public function test_cls05_dates_forcees_transmises_par_l_api_apercu_et_creation(): void
+    {
+        $annee = $this->annee();
+        $this->importFwb($annee);
+        $this->actingAsRole('directeur');
+        $payload = $this->donneesClasse($annee);
+        $payload['periodes'][0]['dates_forcees'] = ['2026-11-11'];
+
+        $this->postJson('/api/classes/apercu', $payload)
+            ->assertOk()
+            ->assertJsonPath('data.periodes.0.seances.3.date', '2026-11-11')
+            ->assertJsonPath('data.periodes.0.seances.3.forcee', true);
+
+        $id = $this->postJson('/api/classes', $payload)->assertStatus(201)->json('data.id');
+        $this->assertTrue(CourseSession::where('classe_id', $id)->whereDate('date', '2026-11-11')->exists());
+
+        $payload['periodes'][0]['dates_forcees'] = ['11/11/2026'];
+        $this->postJson('/api/classes/apercu', $payload)
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('periodes.0.dates_forcees.0');
+    }
 }

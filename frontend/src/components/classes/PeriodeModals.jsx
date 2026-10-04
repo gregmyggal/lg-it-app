@@ -26,6 +26,7 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, coursIdIni
   const [erreurs, setErreurs] = useState({});
   const [message, setMessage] = useState(null);
   const [envoi, setEnvoi] = useState(false);
+  const [datesForcees, setDatesForcees] = useState([]);
 
   const annee = (annees.data || []).find((a) => a.id === classe.annee_scolaire_id);
   const periodeAnnee = annee?.periodes.find((p) => p.numero === numero);
@@ -51,7 +52,7 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, coursIdIni
     let annule = false;
     setApercu((prev) => ({ ...prev, loading: true }));
     const t = setTimeout(() => {
-      apercuPeriode(classe.id, { periode_id: periodeAnnee.id, cours_id: Number(coursId), date_premiere_session: date })
+      apercuPeriode(classe.id, { periode_id: periodeAnnee.id, cours_id: Number(coursId), date_premiere_session: date, dates_forcees: datesForcees })
         .then((data) => !annule && setApercu({ data, loading: false, erreurs: {}, message: null, contexte: null }))
         .catch((err) => !annule && setApercu({ data: null, loading: false, erreurs: getFieldErrors(err), message: getErrorMessage(err), contexte: contexteHorsBornes(getErrorData(err)) }));
     }, 400);
@@ -59,7 +60,7 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, coursIdIni
       annule = true;
       clearTimeout(t);
     };
-  }, [pret, classe.id, periodeAnnee, coursId, date]);
+  }, [pret, classe.id, periodeAnnee, coursId, date, datesForcees]);
 
   const plan = apercu.data?.periodes?.[0];
   const blocage = plan?.blocage || null;
@@ -86,7 +87,7 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, coursIdIni
     setMessage(null);
     setErreurs({});
     try {
-      const maj = await ajouterPeriode(classe.id, { periode_id: periodeAnnee.id, cours_id: Number(coursId), date_premiere_session: date });
+      const maj = await ajouterPeriode(classe.id, { periode_id: periodeAnnee.id, cours_id: Number(coursId), date_premiere_session: date, dates_forcees: datesForcees });
       const p = maj.periodes?.find((x) => x.numero === numero);
       onDone(
         `Période ${numero} ajoutée : ${p?.cours?.titre || ''}, ${p?.nb_sessions ?? 14} séances du ${formatDate(p?.date_premiere_session || date)} au ${formatDate(p?.date_derniere_session)}. Les professeurs de la classe y sont assignés.`,
@@ -153,7 +154,12 @@ export function AjouterPeriodeModal({ classe, numero, dateConseillee, coursIdIni
           />
         </AdminFormField>
         {apercu.message && !apercu.data && Object.keys(apercu.erreurs).length === 0 && <Banner tone="error">{apercu.message}</Banner>}
-        <ClasseApercu apercu={apercu.data} chargement={apercu.loading} titre="Aperçu des 14 séances" />
+        <ClasseApercu
+          apercu={apercu.data}
+          chargement={apercu.loading}
+          titre="Aperçu des 14 séances"
+          onForcer={(_, d, forcer) => setDatesForcees((prev) => (forcer ? [...prev.filter((x) => x !== d), d].sort() : prev.filter((x) => x !== d)))}
+        />
         <p style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary, marginBottom: ADMIN_SPACING.sm }}>
           Mêmes jour, horaire, lieu : {libelleCreneau(classe)}
           {classe.lieu ? `, ${classe.lieu}` : ''}.

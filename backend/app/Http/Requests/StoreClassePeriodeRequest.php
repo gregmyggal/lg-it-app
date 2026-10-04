@@ -20,6 +20,8 @@ class StoreClassePeriodeRequest extends FormRequest
             'periode_id' => ['required', 'integer', 'exists:periodes,id'],
             'cours_id' => [$apercu ? 'sometimes' : 'required', 'integer', 'exists:cours,id'],
             'date_premiere_session' => ['required', 'date_format:Y-m-d'],
+            'dates_forcees' => ['sometimes', 'array'],
+            'dates_forcees.*' => ['date_format:Y-m-d', 'distinct'],
         ];
     }
 }

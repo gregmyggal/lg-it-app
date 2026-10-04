@@ -11,14 +11,16 @@ import { formatDate, formatDateCourte } from '../../utils/dates';
  * ou `POST /classes/{id}/periodes/apercu` : `data.periodes[]`).
  * Une colonne par période : séances numérotées « P1 · 3 », dates sautées avec leur libellé du calendrier,
  * badge « hors période » (non bloquant) et avertissements du serveur.
+ * Avec `onForcer`, chaque date sautée porte une case « Forcer » et chaque séance forcée une case pour l'annuler (CLS-05).
  *
  * @param {object} props
  * @param {{periodes: object[]}|null} props.apercu `data` de l'API
  * @param {boolean} props.chargement
  * @param {Record<number, string>} [props.cours] titre du cours par numéro de période (affiché à côté du badge)
  * @param {string} [props.titre]
+ * @param {(numeroPeriode: number, date: string, forcer: boolean) => void} [props.onForcer]
  */
-export default function ClasseApercu({ apercu, chargement, cours = {}, titre }) {
+export default function ClasseApercu({ apercu, chargement, cours = {}, titre, onForcer }) {
   const periodes = apercu?.periodes || [];
   const total = periodes.reduce((n, p) => n + p.seances.length, 0);
   const sousTitre = 'Calculé avec le calendrier scolaire (FWB + École)';
@@ -49,7 +51,12 @@ export default function ClasseApercu({ apercu, chargement, cours = {}, titre }) 
           }}
         >
           {periodes.map((p) => (
-            <ColonnePeriode key={p.numero ?? p.periode_id} periode={p} cours={cours[p.numero]} />
+            <ColonnePeriode
+              key={p.numero ?? p.periode_id}
+              periode={p}
+              cours={cours[p.numero]}
+              onForcer={onForcer && ((date, forcer) => onForcer(p.numero, date, forcer))}
+            />
           ))}
         </div>
       </div>
@@ -57,11 +64,12 @@ export default function ClasseApercu({ apercu, chargement, cours = {}, titre }) 
   );
 }
 
-function ColonnePeriode({ periode, cours }) {
+function ColonnePeriode({ periode, cours, onForcer }) {
   const seances = periode.seances || [];
   const derniere = seances[seances.length - 1]?.date;
+  const nbForcees = seances.filter((s) => s.forcee).length;
   const lignes = [
-    ...seances.map((s) => ({ type: 'seance', date: s.date, numero: s.seance_numero, hors: s.hors_periode })),
+    ...seances.map((s) => ({ type: 'seance', date: s.date, numero: s.seance_numero, hors: s.hors_periode, forcee: s.forcee, conge: s.conge })),
     ...(periode.dates_sautees || []).map((d) => ({ type: 'sautee', date: d.date, libelle: d.libelle })),
   ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
   // On ne montre que les dates sautées situées avant la dernière séance.
@@ -78,7 +86,13 @@ function ColonnePeriode({ periode, cours }) {
       <div style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary, marginBottom: ADMIN_SPACING.sm }}>
         {seances.length} séances{seances.length ? ` du ${formatDate(seances[0].date)} au ${formatDate(derniere)}` : ''}
         {periode.recale && ' · première date recalée sur le jour de la classe'}
+        {nbForcees > 0 && ` · ${nbForcees} séance${nbForcees > 1 ? 's' : ''} forcée${nbForcees > 1 ? 's' : ''} sur un congé`}
       </div>
+      {onForcer && periode.dates_sautees?.length > 0 && (
+        <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginBottom: ADMIN_SPACING.sm }}>
+          Cochez « Forcer » sur une date sautée pour y maintenir la séance : les suivantes sont renumérotées.
+        </div>
+      )}
       {avertissements.map((a) => (
         <Banner key={a} tone="warning">
           <strong>Avertissement (non bloquant) :</strong> {a}
@@ -96,7 +110,13 @@ function ColonnePeriode({ periode, cours }) {
             l.type === 'sautee' ? (
               <Tr key={`s-${l.date}`} fond={ADMIN_TONES.warning.bg}>
                 <Td>
-                  <span className="sr-only">Sautée</span>—
+                  {onForcer ? (
+                    <CaseForcer date={l.date} coche={false} onForcer={onForcer} libelle="Forcer" />
+                  ) : (
+                    <>
+                      <span className="sr-only">Sautée</span>—
+                    </>
+                  )}
                 </Td>
                 <Td>
                   <span style={{ textDecoration: 'line-through', color: ADMIN_COLORS.textSecondary }}>{formatDateCourte(l.date)}</span>{' '}
@@ -104,12 +124,17 @@ function ColonnePeriode({ periode, cours }) {
                 </Td>
               </Tr>
             ) : (
-              <Tr key={`n-${l.numero}`} fond={l.hors ? ADMIN_TONES.warning.bg : undefined}>
+              <Tr key={`n-${l.numero}`} fond={l.forcee ? ADMIN_TONES.success.bg : l.hors ? ADMIN_TONES.warning.bg : undefined}>
                 <Td>
-                  <strong>P{periode.numero} · {l.numero}</strong>
+                  {onForcer && l.forcee ? (
+                    <CaseForcer date={l.date} coche onForcer={onForcer} libelle={<strong>P{periode.numero} · {l.numero}</strong>} />
+                  ) : (
+                    <strong>P{periode.numero} · {l.numero}</strong>
+                  )}
                 </Td>
                 <Td>
-                  {formatDateCourte(l.date)} {l.hors && <StatutBadge label="⚠ Hors période" tone="warning" />}
+                  {formatDateCourte(l.date)} {l.forcee && <StatutBadge label={`✓ Forcée · ${l.conge?.libelle}`} tone="success" />}{' '}
+                  {l.hors && <StatutBadge label="⚠ Hors période" tone="warning" />}
                 </Td>
               </Tr>
             ),
@@ -117,5 +142,20 @@ function ColonnePeriode({ periode, cours }) {
         </tbody>
       </Table>
     </div>
+  );
+}
+
+function CaseForcer({ date, coche, onForcer, libelle }) {
+  return (
+    <label style={{ display: 'inline-flex', alignItems: 'center', gap: ADMIN_SPACING.sm, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+      <input
+        type="checkbox"
+        checked={coche}
+        onChange={(e) => onForcer(date, e.target.checked)}
+        aria-label={`${coche ? 'Ne plus forcer' : 'Forcer'} la séance du ${formatDate(date)}`}
+        style={{ width: '16px', height: '16px', margin: 0, cursor: 'pointer' }}
+      />
+      {libelle}
+    </label>
   );
 }
