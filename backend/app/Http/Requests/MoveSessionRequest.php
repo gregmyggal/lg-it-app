@@ -14,11 +14,17 @@ class MoveSessionRequest extends FormRequest
 
     public function rules(): array
     {
+        $apercu = str_ends_with($this->path(), '/deplacement/apercu');
+
         return [
-            'date' => ['sometimes', 'date_format:Y-m-d'],
+            'date' => [$apercu ? 'required' : 'sometimes', 'required_if_accepted:decaler_suivantes', 'date_format:Y-m-d'],
             'heure_debut' => ['sometimes', 'date_format:H:i'],
             'heure_fin' => ['sometimes', 'date_format:H:i'],
             'lieu' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'decaler_suivantes' => ['sometimes', 'boolean'],
+            'dates_forcees' => ['sometimes', 'array'],
+            'dates_forcees.*' => ['date_format:Y-m-d', 'distinct'],
+            'empreinte' => ['sometimes', 'string', 'size:40'],
         ];
     }
 

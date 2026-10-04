@@ -166,6 +166,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
 
     Route::get('/sessions', [CourseSessionController::class, 'index']);
     Route::put('/sessions/{session}', [CourseSessionController::class, 'update']);
+    Route::post('/sessions/{session}/deplacement/apercu', [CourseSessionController::class, 'apercuDeplacement']);
     Route::post('/sessions/{session}/cancel', [CourseSessionController::class, 'cancel']);
 
     // Calendrier des sessions (le calendrier par professeur revient en T2)

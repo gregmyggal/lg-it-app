@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AdminModal from '../AdminModal';
 import AdminButton from '../AdminButton';
 import { AdminFormField, AdminInput, AdminSelect, AdminCheckbox } from '../AdminFormField';
 import Banner from '../ui/Banner';
-import { ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
-import { annulerSession, creerBis, deplacerSession } from '../../hooks/useClasses';
+import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
+import { annulerSession, apercuDeplacement, creerBis, deplacerSession } from '../../hooks/useClasses';
+import DeplacementApercu from './DeplacementApercu';
 import { getErrorData, getErrorMessage, getFieldErrors, getStatus } from '../../api/errors';
-import { formatDate, formatDateLongue } from '../../utils/dates';
+import { formatDate, formatDateLongue, nomJour } from '../../utils/dates';
 import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 const MODES = {
@@ -69,6 +70,55 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
   const periode = (classe.periodes || []).find((p) => p.numero === numeroPeriode)?.periode || null;
   const horsPeriode = Boolean(periode && date && date > periode.date_fin && mode !== 'annuler');
 
+  // CLS-06 : décalage des séances suivantes (une par semaine, congés sautés, numéros conservés).
+  const numeroSession = session?.periode_numero || 1;
+  const suivantes = useMemo(
+    () => (session ? sessions.filter((s) => (s.periode_numero || 1) === numeroSession && s.bis_rang === 0 && s.seance_numero > session.seance_numero) : []),
+    [sessions, session, numeroSession],
+  );
+  const premierePeriodeSuivante = useMemo(
+    () => sessions.filter((s) => (s.periode_numero || 1) > numeroSession && s.statut !== 'annulee').map((s) => s.date).sort()[0],
+    [sessions, numeroSession],
+  );
+  const decalable = Boolean(session && session.bis_rang === 0 && (suivantes.length > 0 || (premierePeriodeSuivante && date >= premierePeriodeSuivante)));
+  const [decaler, setDecaler] = useState(true);
+  const [datesForcees, setDatesForcees] = useState([]);
+  const [apercu, setApercu] = useState({ data: null, loading: false });
+  const [versionApercu, setVersionApercu] = useState(0);
+  const avecDecalage = mode === 'deplacer' && decalable && decaler;
+
+  useEffect(() => {
+    if (!avecDecalage || !date) {
+      setApercu({ data: null, loading: false });
+      return undefined;
+    }
+    let annule = false;
+    setApercu((prev) => ({ ...prev, loading: true }));
+    const minuteur = setTimeout(() => {
+      apercuDeplacement(session.id, { date, heure_debut: heureDebut, heure_fin: heureFin, dates_forcees: datesForcees })
+        .then((data) => !annule && setApercu({ data, loading: false }))
+        .catch((err) => {
+          if (annule) return;
+          setApercu({ data: null, loading: false });
+          setErreurs(getFieldErrors(err));
+          setMessage(getErrorMessage(err));
+        });
+    }, 300);
+    return () => {
+      annule = true;
+      clearTimeout(minuteur);
+    };
+  }, [avecDecalage, session?.id, date, heureDebut, heureFin, datesForcees, versionApercu]);
+
+  function forcerDate(d, forcer) {
+    setDatesForcees((prev) => (forcer ? [...prev.filter((x) => x !== d), d].sort() : prev.filter((x) => x !== d)));
+  }
+
+  const blocs = apercu.data?.periodes || [];
+  const nbPropre = (blocs[0]?.decalees || 0) + 1;
+  const nbCascade = blocs[1]?.decalees || 0;
+  const nbSuivantes = nbPropre - 1 + nbCascade;
+
   function changerMode(nouveau) {
     setMode(nouveau);
     setErreurs({});
@@ -93,12 +143,18 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
       : `Ajuster la ${libelleSessionPhrase(session)} — ${formatDateLongue(session.date)}`;
 
   const valide =
-    (mode === 'deplacer' && Boolean(date)) ||
+    (mode === 'deplacer' && Boolean(date) && (!avecDecalage || (Boolean(apercu.data) && !apercu.loading))) ||
     (mode === 'annuler' && motif.trim().length > 0) ||
     (mode === 'bis' && Boolean(date) && Boolean(seanceEffective) && (!depassement || confirme));
 
   const libelleBouton =
-    mode === 'deplacer' ? 'Déplacer la séance' : mode === 'annuler' ? `Annuler la séance ${session ? libelleSession(session) : ''}` : 'Créer le bis';
+    mode === 'deplacer'
+      ? avecDecalage && nbCascade > 0
+        ? `Déplacer ${nbPropre} séances (P${numeroSession}) + ${nbCascade} (P${numeroSession + 1})`
+        : avecDecalage && nbPropre > 1
+          ? `Déplacer ${nbPropre} séances`
+          : 'Déplacer la séance'
+      : mode === 'annuler' ? `Annuler la séance ${session ? libelleSession(session) : ''}` : 'Créer le bis';
 
   async function soumettre(e) {
     e.preventDefault();
@@ -108,8 +164,14 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
     setErreurs({});
     try {
       if (mode === 'deplacer') {
-        const maj = await deplacerSession(session.id, { date, heure_debut: heureDebut, heure_fin: heureFin });
-        onDone(`${libelleSession(maj)} déplacée au ${formatDate(maj.date)}. Elle garde son numéro de séance et sa période.`, maj.avertissements);
+        const payload = { date, heure_debut: heureDebut, heure_fin: heureFin };
+        if (avecDecalage) Object.assign(payload, { decaler_suivantes: true, dates_forcees: datesForcees, empreinte: apercu.data.empreinte });
+        const maj = await deplacerSession(session.id, payload);
+        if (maj.replanification) {
+          onDone(messageDecalage(maj, maj.replanification, numeroSession), maj.replanification.avertissements);
+        } else {
+          onDone(`${libelleSession(maj)} déplacée au ${formatDate(maj.date)}. Elle garde son numéro de séance et sa période.`, maj.avertissements);
+        }
       } else if (mode === 'annuler') {
         await annulerSession(session.id, motif.trim());
         onDone(`${libelleSession(session)} annulée (motif : ${motif.trim()}). Elle garde son numéro et reste visible avec son motif.`);
@@ -125,7 +187,10 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
         onDone(`${libelleSession(bis)} créée le ${formatDate(bis.date)}. Les autres sessions de la classe restent inchangées.`, bis.avertissements);
       }
     } catch (err) {
-      if (mode === 'bis' && getStatus(err) === 409 && getErrorData(err).nb_sessions) {
+      if (mode === 'deplacer' && getStatus(err) === 409 && getErrorData(err).code === 'planning_modifie') {
+        setMessage(getErrorMessage(err));
+        setVersionApercu((v) => v + 1);
+      } else if (mode === 'bis' && getStatus(err) === 409 && getErrorData(err).nb_sessions) {
         setDepassement({ message: getErrorMessage(err) });
       } else {
         setErreurs(getFieldErrors(err));
@@ -200,9 +265,39 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               erreurs={erreurs}
             />
             <AvertissementHorsPeriode actif={horsPeriode} periode={periode} />
+            {decalable && (
+              <div style={{ margin: `${ADMIN_SPACING.lg} 0 ${ADMIN_SPACING.sm}` }}>
+                <AdminCheckbox
+                  id="ajust-decaler"
+                  label={
+                    suivantes.length > 0
+                      ? `Décaler aussi les séances suivantes (P${numeroSession} · ${session.seance_numero + 1} à ${Math.max(...suivantes.map((s) => s.seance_numero))})`
+                      : `Décaler aussi la période ${numeroSession + 1} si nécessaire`
+                  }
+                  checked={decaler}
+                  onChange={(e) => modifier(setDecaler)(e.target.checked)}
+                />
+                <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.xs, marginLeft: '28px' }}>
+                  Une séance par semaine, le {nomJour(classe.jour_semaine)}, en sautant les congés. Les numéros de séance ne changent pas.
+                </div>
+              </div>
+            )}
+            {avecDecalage && date && <DeplacementApercu apercu={apercu.data} chargement={apercu.loading} datesForcees={datesForcees} onForcer={forcerDate} />}
             <Consequence>
-              La {libelleSessionPhrase(session)} est déplacée{date ? ` au ${formatDate(date)}` : ''} et{' '}
-              <strong>garde son numéro de séance {session.seance_numero}</strong> et sa période.
+              {avecDecalage && nbSuivantes > 0 ? (
+                <>
+                  La {libelleSessionPhrase(session)} passe au {formatDate(date)} et{' '}
+                  <strong>
+                    {nbSuivantes === 1 ? 'la séance suivante est décalée' : `les ${nbSuivantes} séances suivantes sont décalées`}
+                  </strong>
+                  . Toutes gardent leur numéro de séance, leur horaire, leur lieu et leurs professeurs.
+                </>
+              ) : (
+                <>
+                  La {libelleSessionPhrase(session)} est déplacée{date ? ` au ${formatDate(date)}` : ''} et{' '}
+                  <strong>garde son numéro de séance {session.seance_numero}</strong> et sa période.
+                </>
+              )}
             </Consequence>
           </>
         )}
@@ -269,6 +364,26 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
       </form>
     </AdminModal>
   );
+}
+
+const MOTIFS = { heures_encodees: 'heures encodées', terminee: 'terminée' };
+
+function messageDecalage(session, rep, numero) {
+  const propres = rep.decalees[`p${numero}`] || 0;
+  const cascade = rep.decalees[`p${numero + 1}`] || 0;
+  const derniere = rep.periodes
+    .flatMap((b) => b.lignes)
+    .filter((l) => l.etat === 'decalee' || l.etat === 'deplacee')
+    .map((l) => l.date_apres)
+    .sort()
+    .at(-1);
+  const arret = rep.periodes.find((b) => b.arret)?.arret;
+  const decalees = cascade
+    ? `${propres} séance${propres > 1 ? 's' : ''} suivante${propres > 1 ? 's' : ''} de la période ${numero} et ${cascade} séance${cascade > 1 ? 's' : ''} de la période ${numero + 1} décalées`
+    : `${propres} séance${propres > 1 ? 's' : ''} suivante${propres > 1 ? 's' : ''} décalée${propres > 1 ? 's' : ''}`;
+  return `${libelleSession(session)} déplacée au ${formatDate(session.date)}. ${decalees}${derniere ? ` (dernière le ${formatDate(derniere)})` : ''}${
+    arret ? ` ; arrêt à la ${arret.seance} (${MOTIFS[arret.motif]}), elle et les suivantes sont inchangées` : ''
+  }. Les numéros de séance sont inchangés.`;
 }
 
 function DateEtHoraire({ date, setDate, heureDebut, setHeureDebut, heureFin, setHeureFin, labelDate, aide, erreurs }) {

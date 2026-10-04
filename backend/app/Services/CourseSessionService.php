@@ -20,6 +20,16 @@ class CourseSessionService
     /** @param array{date?: string, heure_debut?: string, heure_fin?: string, lieu?: ?string} $data */
     public function deplacer(CourseSession $session, array $data): CourseSession
     {
+        $this->verifierDeplacable($session);
+
+        $session->update($data);
+
+        return $session->refresh();
+    }
+
+    /** @throws RegleMetierException 409 si la session est annulée, passée ou a des heures encodées */
+    public function verifierDeplacable(CourseSession $session): void
+    {
         if ($session->isAnnulee()) {
             throw RegleMetierException::conflit('Une session annulée ne peut pas être déplacée.');
         }
@@ -27,10 +37,6 @@ class CourseSessionService
             throw RegleMetierException::conflit('Une session passée ne peut pas être déplacée.');
         }
         $this->refuserSiHeuresEncodees($session, 'déplacée');
-
-        $session->update($data);
-
-        return $session->refresh();
     }
 
     public function annuler(CourseSession $session, string $motif): CourseSession

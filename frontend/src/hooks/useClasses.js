@@ -44,7 +44,11 @@ function avecAvertissements(res) {
 }
 
 export function deplacerSession(sessionId, payload) {
-  return client.put(`/sessions/${sessionId}`, payload).then(avecAvertissements);
+  return client.put(`/sessions/${sessionId}`, payload).then((res) => ({ ...avecAvertissements(res), replanification: res.data.replanification || null }));
+}
+
+export function apercuDeplacement(sessionId, payload) {
+  return client.post(`/sessions/${sessionId}/deplacement/apercu`, payload).then((res) => res.data.data);
 }
 
 export function annulerSession(sessionId, motif) {

@@ -9,6 +9,8 @@ use App\Http\Resources\CourseSessionResource;
 use App\Models\CourseSession;
 use App\Services\CalendrierScolaireService;
 use App\Services\CourseSessionService;
+use App\Services\SessionReplanificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class CourseSessionController extends Controller
@@ -16,6 +18,7 @@ class CourseSessionController extends Controller
     public function __construct(
         private readonly CourseSessionService $service,
         private readonly CalendrierScolaireService $calendrier,
+        private readonly SessionReplanificationService $replanification,
     ) {}
 
     /** Base du calendrier : sessions filtrées (classe, cours, période de dates, statut). */
@@ -52,7 +55,21 @@ class CourseSessionController extends Controller
 
     public function update(MoveSessionRequest $request, CourseSession $session): CourseSessionResource
     {
-        return $this->reponse($this->service->deplacer($session, $request->validated()));
+        if (! $request->boolean('decaler_suivantes')) {
+            return $this->reponse($this->service->deplacer($session, $request->safe()->only(['date', 'heure_debut', 'heure_fin', 'lieu'])));
+        }
+
+        $plan = $this->replanification->appliquer($session, $request->validated());
+
+        return $this->reponse($session->refresh())->additional([
+            'replanification' => array_intersect_key($plan, array_flip(['decalees', 'avertissements', 'periodes'])),
+        ]);
+    }
+
+    /** CLS-06 : aperçu sans écriture du déplacement d'une séance avec décalage des suivantes. */
+    public function apercuDeplacement(MoveSessionRequest $request, CourseSession $session): JsonResponse
+    {
+        return response()->json(['data' => $this->replanification->apercu($session, $request->validated())]);
     }
 
     public function cancel(CancelSessionRequest $request, CourseSession $session): CourseSessionResource
