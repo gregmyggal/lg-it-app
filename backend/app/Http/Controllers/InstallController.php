@@ -229,6 +229,8 @@ class InstallController extends Controller
             'APP_DEBUG' => 'false',
             'APP_TIMEZONE' => $data['app_timezone'],
             'APP_URL' => rtrim($data['app_url'], '/'),
+            // Front et API sur le même domaine : les liens des emails pointent vers ce site, pas vers localhost.
+            'FRONTEND_URL' => rtrim($data['app_url'], '/'),
             'APP_LOCALE' => 'fr',
             'APP_FALLBACK_LOCALE' => 'fr',
             'APP_FAKER_LOCALE' => 'fr_BE',

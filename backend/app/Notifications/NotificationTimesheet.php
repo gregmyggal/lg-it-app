@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\FrontendUrl;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -50,6 +51,6 @@ class NotificationTimesheet extends Notification
             ->subject($this->titre)
             ->greeting('Bonjour,')
             ->line($this->message)
-            ->action('Ouvrir', rtrim(config('app.frontend_url'), '/').$this->chemin);
+            ->action('Ouvrir', FrontendUrl::lien($this->chemin));
     }
 }

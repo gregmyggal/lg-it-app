@@ -54,8 +54,13 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    // Base des liens envoyés par email (invitation, réinitialisation du mot de passe).
-    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+    // Base par défaut des liens envoyés par email (invitation, réinitialisation, notifications).
+    // Sans FRONTEND_URL : APP_URL (en production, front et API sont servis par le même domaine).
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost')),
+
+    // Autres origines du front acceptées comme base des liens (séparées par des virgules, ex. www.).
+    // Voir App\Support\FrontendUrl : le lien suit l'environnement d'où provient l'action.
+    'frontend_origins' => env('FRONTEND_ORIGINS', ''),
 
     /*
     |--------------------------------------------------------------------------
