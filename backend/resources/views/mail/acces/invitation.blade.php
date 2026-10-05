@@ -1,13 +1,19 @@
-<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#16212e;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" style="max-width:600px;background:#ffffff;border-radius:8px;padding:32px;">
-<tr><td style="font-size:15px;line-height:1.6;">
-<p>Bonjour {{ $nom }},</p>
-<p>Un compte <strong>{{ $role }}</strong> vient d'être créé pour vous sur la plateforme Logiscool Pays Vert@if ($role === 'professeur'), qui vous permet de consulter vos classes et d'encoder vos heures@endif. Pour l'activer, choisissez votre mot de passe :</p>
-<p style="text-align:center;margin:28px 0;"><a href="{{ $lien }}" style="background:#d9531e;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;">Définir mon mot de passe</a></p>
-<p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br><span style="word-break:break-all;">{{ $lien }}</span></p>
-<p>Ce lien est valable {{ $validite }} et ne peut être utilisé qu'une seule fois.@if ($role === 'professeur') Ensuite, connectez-vous avec cette adresse email.@endif</p>
-<p style="color:#4b5a6b;font-size:13px;">Si vous n'attendiez pas cet email, ignorez-le : aucun compte n'est actif sans votre action.@if ($role === 'professeur') Une question ? Contactez la direction de votre centre.@endif</p>
-</td></tr></table></td></tr></table></body></html>
+@extends('mail.acces.layout')
+@section('preheader'){{ $par ?? 'La direction de votre école' }} vous a créé un compte. Lien valable jusqu'au {{ $expiration }}.@endsection
+@section('titre'){{ $role === 'professeur' ? "Bienvenue dans l'équipe !" : 'Votre accès est prêt' }}@endsection
+@section('contenu')
+<p style="margin:0 0 16px;">Bonjour {{ $prenom }},<br>
+@if ($role === 'professeur')
+{{ $par ?? 'La direction de votre école' }} a créé votre compte sur <strong>{{ $ecole }}</strong>, l'espace où vous retrouvez vos classes et vos séances, et où vous encodez vos heures.
+@else
+{{ $par ?? 'La direction de votre école' }} vous a donné un accès <strong>{{ $role }}</strong> à {{ $ecole }} : classes, calendrier, professeurs et validation des heures.
+@endif
+Pour l'activer, choisissez votre mot de passe :</p>
+@include('mail.acces._bouton', ['url' => $lien, 'libelle' => 'Choisir mon mot de passe'])
+<div style="background:#e7f5f2;border-left:4px solid #0e8f79;padding:12px 16px;font-size:15px;margin:0 0 16px;">
+<strong>Vos infos de connexion</strong><br>Identifiant : <strong>{{ $email }}</strong><br>Lien valable jusqu'au <strong>{{ $expiration }}</strong>, utilisable une seule fois.</div>
+<p style="font-size:14px;color:#4b5a6b;margin:0 0 12px;"><strong>Le lien a expiré ?</strong> Ouvrez-le quand même : la page vous proposera d'en recevoir un nouveau. Ensuite, connectez-vous sur <a href="{{ $urlConnexion }}" style="color:#14568f;">{{ $urlConnexion }}</a>.</p>
+<p style="font-size:14px;color:#4b5a6b;margin:0 0 12px;">Vous ne vous attendiez pas à cet email ? Ignorez-le : le compte reste inactif tant qu'aucun mot de passe n'est choisi. Nous ne vous demanderons jamais votre mot de passe par email.</p>
+@include('mail.acces._lien-secours')
+@endsection
+@section('pied')Email automatique envoyé à {{ $email }} car un compte a été créé à votre nom.@endsection

@@ -7,7 +7,8 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('');
+  // Après la définition du mot de passe : identifiant pré-rempli, il ne reste qu'à saisir le mot de passe.
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +52,7 @@ export default function LoginPage() {
           Mot de passe
           <input
             type="password"
+            autoFocus={Boolean(location.state?.email)}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

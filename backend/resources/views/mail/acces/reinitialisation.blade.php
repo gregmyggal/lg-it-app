@@ -1,13 +1,24 @@
-<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#16212e;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" style="max-width:600px;background:#ffffff;border-radius:8px;padding:32px;">
-<tr><td style="font-size:15px;line-height:1.6;">
-<p>Bonjour {{ $nom }},</p>
-<p>@if ($parDirection)La direction a demandé la réinitialisation de votre mot de passe.@else Une réinitialisation de votre mot de passe a été demandée.@endif Pour choisir un nouveau mot de passe :</p>
-<p style="text-align:center;margin:28px 0;"><a href="{{ $lien }}" style="background:#d9531e;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-weight:bold;">Choisir un nouveau mot de passe</a></p>
-<p>Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br><span style="word-break:break-all;">{{ $lien }}</span></p>
-<p>Ce lien est valable {{ $validite }} et ne peut être utilisé qu'une seule fois.</p>
-<p style="color:#4b5a6b;font-size:13px;">Vous n'êtes pas à l'origine de cette demande ? Ignorez cet email : votre mot de passe actuel reste inchangé.</p>
-</td></tr></table></td></tr></table></body></html>
+@extends('mail.acces.layout')
+@section('preheader')@if ($parDirection)Lien valable jusqu'au {{ $expiration }}. Votre mot de passe actuel reste valable d'ici là.@else Vous avez demandé un nouveau mot de passe. Lien valable jusqu'à {{ $expiration }}.@endif @endsection
+@section('titre'){{ $parDirection ? 'Choisissez un nouveau mot de passe' : 'Mot de passe oublié ?' }}@endsection
+@section('contenu')
+<p style="margin:0 0 16px;">Bonjour {{ $prenom }},<br>
+@if ($parDirection)
+{{ $par ? $par.' (direction)' : 'La direction de votre école' }} vous a envoyé un lien pour choisir un nouveau mot de passe sur {{ $ecole }}.
+@else
+Vous avez demandé à réinitialiser le mot de passe de votre compte {{ $ecole }}.
+@endif
+</p>
+@include('mail.acces._bouton', ['url' => $lien, 'libelle' => 'Choisir un nouveau mot de passe'])
+<div style="background:#e7f5f2;border-left:4px solid #0e8f79;padding:12px 16px;font-size:15px;margin:0 0 16px;">
+Identifiant : <strong>{{ $email }}</strong><br>
+@if ($parDirection)Lien valable jusqu'au <strong>{{ $expiration }}</strong>, une seule fois.@else Valable <strong>{{ $validite }}</strong>, jusqu'à <strong>{{ $expiration }}</strong>, une seule fois.@endif
+</div>
+@if ($parDirection)
+<p style="font-size:14px;color:#4b5a6b;margin:0 0 12px;">Tant que vous n'avez pas choisi de nouveau mot de passe, l'ancien continue de fonctionner.</p>
+@endif
+<p style="font-size:14px;color:#4b5a6b;margin:0 0 12px;"><strong>Le lien a expiré ?</strong> Demandez-en un nouveau sur la page <a href="{{ $urlOubli }}" style="color:#14568f;">Mot de passe oublié</a>.</p>
+<p style="font-size:14px;color:#4b5a6b;margin:0 0 12px;">Vous n'avez rien demandé ? Ignorez cet email : votre mot de passe actuel ne change pas.</p>
+@include('mail.acces._lien-secours')
+@endsection
+@section('pied')Email automatique envoyé à {{ $email }} suite à une demande sur la plateforme.@endsection

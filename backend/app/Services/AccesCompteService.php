@@ -7,6 +7,7 @@ use App\Mail\MotDePasseModifieMail;
 use App\Mail\ReinitialisationMotDePasseMail;
 use App\Models\AccesToken;
 use App\Models\User;
+use App\Support\FrontendUrl;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -110,6 +111,10 @@ class AccesCompteService
     public function envoyer(User $user, string $type, int $dureeMinutes, bool $parDirection = false): array
     {
         $lien = $this->emettre($user, $type, $dureeMinutes);
+        $expireLe = now()->addMinutes($dureeMinutes);
+        // Auteur de l'envoi (création, relance, lot), cité dans l'email ; aucun en libre-service.
+        $acteur = request()->user();
+        $par = $acteur && $acteur->id !== $user->id ? $acteur->name : null;
 
         if ($type === self::INVITATION) {
             $user->forceFill(['invitation_envoyee_le' => null])->save();
@@ -117,8 +122,8 @@ class AccesCompteService
 
         try {
             $mail = $type === self::INVITATION
-                ? new InvitationCompteMail($user->name, $this->libelleRole($user), $lien, $this->libelleDuree($dureeMinutes))
-                : new ReinitialisationMotDePasseMail($user->name, $lien, $this->libelleDuree($dureeMinutes), $parDirection);
+                ? new InvitationCompteMail($user, $this->libelleRole($user), $lien, $expireLe, $this->libelleDuree($dureeMinutes), $par)
+                : new ReinitialisationMotDePasseMail($user, $lien, $expireLe, $this->libelleDuree($dureeMinutes), $parDirection, $par);
             Mail::to($user->email)->send($mail);
         } catch (Throwable $e) {
             report($e);
@@ -217,6 +222,7 @@ class AccesCompteService
         }
 
         $user = $acces->user;
+        $activation = $acces->type === self::INVITATION;
 
         DB::transaction(function () use ($user, $motDePasse) {
             $user->forceFill([
@@ -231,7 +237,7 @@ class AccesCompteService
         Log::info('acces_compte: mot de passe défini', ['user_id' => $user->id]);
 
         try {
-            Mail::to($user->email)->send(new MotDePasseModifieMail($user->name));
+            Mail::to($user->email)->send(new MotDePasseModifieMail($user, $activation, $user->mot_de_passe_defini_le));
         } catch (Throwable $e) {
             report($e);
         }
@@ -266,7 +272,7 @@ class AccesCompteService
         });
 
         // Token et email en fragment d'URL : absents des journaux serveur et de l'en-tête Referer.
-        return rtrim(config('app.frontend_url'), '/').'/definir-mot-de-passe#token='.$token.'&email='.rawurlencode($user->email);
+        return FrontendUrl::lien('/definir-mot-de-passe').'#token='.$token.'&email='.rawurlencode($user->email);
     }
 
     private function trouver(string $email, string $token): ?AccesToken
@@ -303,7 +309,7 @@ class AccesCompteService
     {
         return match ($user->role) {
             'admin' => 'administrateur',
-            'directeur' => 'directeur',
+            'directeur' => 'direction',
             'professeur' => 'professeur',
             default => $user->role,
         };
@@ -311,6 +317,10 @@ class AccesCompteService
 
     private function libelleDuree(int $minutes): string
     {
-        return ($minutes >= 120 && $minutes % 60 === 0) ? ($minutes / 60).' h' : $minutes.' minutes';
+        return match (true) {
+            $minutes === 60 => '1 heure',
+            $minutes >= 120 && $minutes % 60 === 0 => ($minutes / 60).' h',
+            default => $minutes.' minutes',
+        };
     }
 }

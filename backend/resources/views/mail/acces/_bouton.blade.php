@@ -1,0 +1,1 @@
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px auto 20px;"><tr><td bgcolor="#b84316" style="background:#b84316;border-radius:6px;"><a href="{{ $url }}" style="display:block;padding:14px 28px;color:#ffffff;font-weight:bold;font-size:17px;line-height:20px;text-decoration:none;">{{ $libelle }}</a></td></tr></table>

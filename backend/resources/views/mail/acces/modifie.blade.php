@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#16212e;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px;">
-<table role="presentation" width="100%" style="max-width:600px;background:#ffffff;border-radius:8px;padding:32px;">
-<tr><td style="font-size:15px;line-height:1.6;">
-<p>Bonjour {{ $nom }},</p>
-<p>Le mot de passe de votre compte Logiscool Pays Vert vient d'être modifié.</p>
-<p style="color:#4b5a6b;font-size:13px;">Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement l'administrateur.</p>
-</td></tr></table></td></tr></table></body></html>
+@extends('mail.acces.layout')
+@section('preheader'){{ $activation ? 'Connectez-vous avec '.$email.' et votre nouveau mot de passe.' : 'Modification effectuée le '.$date.'.' }}@endsection
+@section('titre'){{ $activation ? "C'est prêt !" : 'Mot de passe modifié' }}@endsection
+@section('contenu')
+<p style="margin:0 0 16px;">Bonjour {{ $prenom }},<br>Le mot de passe de votre compte <strong>{{ $email }}</strong> a été enregistré le <strong>{{ $date }}</strong>.</p>
+@include('mail.acces._bouton', ['url' => $urlConnexion, 'libelle' => 'Me connecter'])
+<p style="font-size:14px;color:#4b5a6b;margin:0 0 12px;">Par sécurité, vous avez été déconnecté(e) de vos autres appareils.</p>
+<p style="font-size:14px;color:#4b5a6b;margin:0;"><strong>Ce n'était pas vous ?</strong> Choisissez tout de suite un nouveau mot de passe via <a href="{{ $urlOubli }}" style="color:#14568f;">Mot de passe oublié</a>, puis prévenez @if ($contact)<a href="mailto:{{ $contact }}" style="color:#14568f;">{{ $contact }}</a>@else<span>la direction de votre école</span>@endif.</p>
+@endsection
+@section('pied')Email automatique de sécurité envoyé à {{ $email }}.@endsection

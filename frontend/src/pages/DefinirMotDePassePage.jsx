@@ -45,7 +45,7 @@ export default function DefinirMotDePassePage() {
     setErreur('');
     try {
       await client.post('/mot-de-passe/definir', { email, token, ...form });
-      navigate('/connexion', { replace: true, state: { motDePasseDefini: true } });
+      navigate('/connexion', { replace: true, state: { motDePasseDefini: true, email } });
     } catch (err) {
       if (getStatus(err) === 410) {
         setEtat('invalide');
@@ -87,7 +87,7 @@ export default function DefinirMotDePassePage() {
         <p>
           <button type="button" onClick={() => navigate('/mot-de-passe-oublie', { state: { email } })}>Recevoir un nouveau lien</button>
         </p>
-        <p>Si vous venez d&apos;être invité(e), vous pouvez aussi demander une nouvelle invitation à votre administrateur.</p>
+        <p>Si vous venez d&apos;être invité(e), vous pouvez aussi demander une nouvelle invitation à la direction de votre école.</p>
         <p><Link to="/connexion">Retour à la connexion</Link></p>
       </div>
     );

@@ -2,22 +2,29 @@
 
 namespace App\Mail;
 
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
+use App\Models\User;
+use Carbon\CarbonInterface;
 
-/** ADMIN-02 : notification après définition du mot de passe (détection d'abus, sans lien d'action). */
-class MotDePasseModifieMail extends Mailable
+/** ADMIN-02 : confirmation après définition du mot de passe (activation ou modification ; détection d'abus). */
+class MotDePasseModifieMail extends AccesMail
 {
-    public function __construct(public readonly string $nom) {}
+    public readonly string $date;
 
-    public function envelope(): Envelope
+    public function __construct(User $user, public readonly bool $activation, CarbonInterface $modifieLe)
     {
-        return new Envelope(subject: 'Votre mot de passe a été modifié');
+        parent::__construct($user);
+        $this->date = self::dateHeure($modifieLe, annee: true);
     }
 
-    public function content(): Content
+    protected function objet(): string
     {
-        return new Content(view: 'mail.acces.modifie', text: 'mail.acces.modifie-text');
+        return $this->activation
+            ? 'Votre compte '.$this->ecole.' est activé'
+            : 'Votre mot de passe '.$this->ecole.' a été modifié';
+    }
+
+    protected function vue(): string
+    {
+        return 'modifie';
     }
 }

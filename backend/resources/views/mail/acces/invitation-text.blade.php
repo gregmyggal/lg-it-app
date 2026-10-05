@@ -1,11 +1,22 @@
-Bonjour {!! $nom !!},
+{!! mb_strtoupper($role === 'professeur' ? "Bienvenue dans l'équipe !" : 'Votre accès est prêt') !!}
 
-Un compte {!! $role !!} vient d'être créé pour vous sur la plateforme Logiscool Pays Vert@if ($role === 'professeur'), qui vous permet de consulter vos classes et d'encoder vos heures@endif.
-Pour l'activer, choisissez votre mot de passe :
+Bonjour {!! $prenom !!},
 
-{!! $lien !!}
-
-Ce lien est valable {!! $validite !!} et ne peut être utilisé qu'une seule fois.@if ($role === 'professeur') Ensuite, connectez-vous avec cette adresse email.@endif
-Si vous n'attendiez pas cet email, ignorez-le : aucun compte n'est actif sans votre action.@if ($role === 'professeur')
-Une question ? Contactez la direction de votre centre.
+@if ($role === 'professeur')
+{!! $par ?? 'La direction de votre école' !!} a créé votre compte sur {!! $ecole !!}, l'espace où vous retrouvez vos classes et vos séances, et où vous encodez vos heures.
+@else
+{!! $par ?? 'La direction de votre école' !!} vous a donné un accès {!! $role !!} à {!! $ecole !!} : classes, calendrier, professeurs et validation des heures.
 @endif
+
+Choisir mon mot de passe : {!! $lien !!}
+
+Identifiant : {!! $email !!}
+Lien valable jusqu'au {!! $expiration !!}, utilisable une seule fois.
+
+Le lien a expiré ? Ouvrez-le quand même : la page vous proposera d'en recevoir un nouveau. Ensuite, connectez-vous sur {!! $urlConnexion !!}
+
+Vous ne vous attendiez pas à cet email ? Ignorez-le : le compte reste inactif tant qu'aucun mot de passe n'est choisi. Nous ne vous demanderons jamais votre mot de passe par email.
+
+--
+{!! $ecole !!} · Email automatique envoyé à {!! $email !!} car un compte a été créé à votre nom.@if ($contact) Une question ? Écrivez à {!! $contact !!}.@endif
+

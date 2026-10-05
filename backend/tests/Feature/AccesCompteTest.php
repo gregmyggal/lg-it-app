@@ -370,7 +370,7 @@ class AccesCompteTest extends TestCase
         $this->assertCount(1, array_unique($reponses));
 
         Mail::assertSent(ReinitialisationMotDePasseMail::class, 1);
-        Mail::assertSent(ReinitialisationMotDePasseMail::class, fn ($m) => $m->hasTo($actif->email) && $m->validite === '60 minutes');
+        Mail::assertSent(ReinitialisationMotDePasseMail::class, fn ($m) => $m->hasTo($actif->email) && $m->validite === '1 heure');
     }
 
     public function test_oubli_fonctionne_pour_un_professeur_actif_mais_pas_inactif()
@@ -442,10 +442,123 @@ class AccesCompteTest extends TestCase
         [, $lien] = $this->creerDirecteur();
         Mail::assertSent(InvitationCompteMail::class, function ($m) {
             $html = $m->render();
-            $this->assertStringContainsString('Définir mon mot de passe', $html);
+            $this->assertStringContainsString('Choisir mon mot de passe', $html);
             $this->assertStringNotContainsString('Mot de passe provisoire', $html);
 
             return true;
         });
+    }
+
+    // ---- Base des liens : l'environnement d'où provient l'action ----
+
+    public function test_le_lien_suit_l_origine_de_l_action_si_elle_est_connue()
+    {
+        config(['app.url' => 'https://staging.example.be', 'app.frontend_url' => 'http://localhost:5173']);
+
+        $this->actingAs($this->admin)->withHeader('Origin', 'https://staging.example.be')
+            ->postJson('/api/staff', ['name' => 'Nouveau', 'email' => 'nouveau@example.com', 'role' => 'directeur'])->assertCreated();
+
+        $this->assertStringStartsWith('https://staging.example.be/definir-mot-de-passe#token=', $this->lienEnvoye(InvitationCompteMail::class));
+    }
+
+    public function test_une_origine_inconnue_est_ignoree_pour_le_mot_de_passe_oublie()
+    {
+        config(['app.url' => 'https://app.example.be', 'app.frontend_url' => 'https://app.example.be']);
+        User::factory()->create(['role' => 'directeur', 'statut' => 'actif', 'email' => 'cible@example.com']);
+
+        $this->withHeader('Origin', 'https://pirate.example.com')
+            ->postJson('/api/mot-de-passe/oublie', ['email' => 'cible@example.com'])->assertStatus(202);
+
+        $this->assertStringStartsWith('https://app.example.be/definir-mot-de-passe#token=', $this->lienEnvoye(ReinitialisationMotDePasseMail::class));
+    }
+
+    public function test_origines_supplementaires_et_repli_sur_app_url()
+    {
+        config(['app.url' => 'https://app.example.be', 'app.frontend_url' => null, 'app.frontend_origins' => 'https://www.app.example.be']);
+        User::factory()->create(['role' => 'directeur', 'statut' => 'actif', 'email' => 'a@example.com']);
+        User::factory()->create(['role' => 'directeur', 'statut' => 'actif', 'email' => 'b@example.com']);
+
+        $this->withHeader('Origin', 'https://WWW.app.example.be')->postJson('/api/mot-de-passe/oublie', ['email' => 'a@example.com']);
+        $this->withHeader('Origin', '')->postJson('/api/mot-de-passe/oublie', ['email' => 'b@example.com']);
+
+        $liens = [];
+        Mail::assertSent(ReinitialisationMotDePasseMail::class, function ($m) use (&$liens) {
+            $liens[$m->to[0]['address']] = $m->lien;
+
+            return true;
+        });
+        $this->assertStringStartsWith('https://www.app.example.be/definir-mot-de-passe#', $liens['a@example.com']);
+        $this->assertStringStartsWith('https://app.example.be/definir-mot-de-passe#', $liens['b@example.com']);
+    }
+
+    // ---- Contenu des emails (maquettes validées) ----
+
+    /** Version texte d'un email (Mailable n'expose que render() pour le HTML). */
+    private function texte($mail): string
+    {
+        $content = $mail->content();
+
+        return view($content->text, array_merge($mail->buildViewData(), $content->with))->render();
+    }
+
+    public function test_invitation_cite_l_auteur_l_identifiant_l_expiration_et_le_nom_de_l_ecole()
+    {
+        config(['logiscool.ecole.nom' => 'École Test', 'logiscool.ecole.contact' => 'direction@ecole.test']);
+        $this->admin->update(['name' => 'Marie Dupont']);
+        Carbon::setTestNow(Carbon::parse('2026-10-05 12:30:00', 'UTC'));
+
+        $this->actingAs($this->admin)->postJson('/api/staff', ['name' => 'Nouveau', 'email' => 'nouveau@example.com', 'role' => 'directeur'])->assertCreated();
+
+        Mail::assertSent(InvitationCompteMail::class, function ($m) {
+            $this->assertSame('direction', $m->role);
+            $this->assertTrue($m->hasReplyTo('direction@ecole.test'));
+            $this->assertSame('Activez votre accès direction – École Test', $m->envelope()->subject);
+            $html = $m->render();
+            $texte = $this->texte($m);
+            foreach ([$html, $texte] as $contenu) {
+                $this->assertStringContainsString('Marie Dupont', $contenu);
+                $this->assertStringContainsString('nouveau@example.com', $contenu);
+                // 72 h après 12 h 30 UTC = jeudi 8 octobre 14 h 30, heure belge (CEST).
+                $this->assertStringContainsString('jeudi 8 octobre à 14 h 30', $contenu);
+                $this->assertStringContainsString('direction@ecole.test', $contenu);
+                $this->assertStringNotContainsString('Logiscool Pays Vert', $contenu);
+            }
+
+            return true;
+        });
+        Carbon::setTestNow();
+    }
+
+    public function test_confirmation_distingue_activation_et_modification()
+    {
+        [, $lien] = $this->creerDirecteur();
+        [$email, $token] = $this->extraire($lien);
+        $this->definir($email, $token)->assertOk();
+        Mail::assertSent(MotDePasseModifieMail::class, fn ($m) => $m->activation
+            && str_contains($m->envelope()->subject, 'est activé') && str_contains($m->render(), '/connexion'));
+
+        $this->postJson('/api/mot-de-passe/oublie', ['email' => $email])->assertStatus(202);
+        [, $token2] = $this->extraire($this->lienEnvoye(ReinitialisationMotDePasseMail::class));
+        $this->definir($email, $token2, 'EncoreUnMdp123')->assertOk();
+        Mail::assertSent(MotDePasseModifieMail::class, fn ($m) => ! $m->activation
+            && str_contains($m->envelope()->subject, 'a été modifié'));
+    }
+
+    public function test_reinitialisation_libre_service_indique_l_heure_limite_sans_auteur()
+    {
+        $dir = User::factory()->create(['role' => 'directeur', 'statut' => 'actif', 'email' => 'dir@example.com']);
+        Carbon::setTestNow(Carbon::parse('2026-10-05 12:12:00', 'UTC'));
+
+        $this->postJson('/api/mot-de-passe/oublie', ['email' => 'dir@example.com'])->assertStatus(202);
+
+        Mail::assertSent(ReinitialisationMotDePasseMail::class, function ($m) {
+            $this->assertNull($m->par);
+            $this->assertSame('Votre lien pour réinitialiser votre mot de passe (valable 1 heure)', $m->envelope()->subject);
+            $this->assertStringContainsString('jusqu\'à <strong>15 h 12</strong>', $m->render());
+            $this->assertStringContainsString('/mot-de-passe-oublie', $this->texte($m));
+
+            return true;
+        });
+        Carbon::setTestNow();
     }
 }

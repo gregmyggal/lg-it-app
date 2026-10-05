@@ -277,6 +277,17 @@ L'assistant s'ouvre alors en mode « reconfigure » et conserve l'APP_KEY.
   passent un jour par la file, passer à `QUEUE_CONNECTION=sync`.
 - **Tâches planifiées** : les tâches OVH tournent au mieux une fois par heure.
   Le `schedule:run` à la minute n'est pas disponible.
+- **Liens des emails** (invitation, réinitialisation, notifications) : ils
+  pointent vers le domaine d'où vient l'action (en-tête `Origin`), s'il fait
+  partie des origines connues : `APP_URL`, `FRONTEND_URL` et `FRONTEND_ORIGINS`
+  (liste séparée par des virgules, ex. `https://www.lgit.be`). Sinon, le lien
+  utilise `FRONTEND_URL`, puis `APP_URL`. L'assistant écrit
+  `FRONTEND_URL=APP_URL`. Sur un `.env` antérieur, vérifier que `FRONTEND_URL`
+  ne vaut pas `http://localhost:5173`.
+- **Emails d'accès** : `ECOLE_NOM` (défaut « Logiscool Pays Vert ») est affiché
+  dans les emails. `MAIL_CONTACT` est l'adresse citée en cas de doute ; elle sert
+  aussi de Reply-To. Sans `MAIL_CONTACT`, les emails renvoient vers « la
+  direction de votre école ». Après modification : `php artisan config:cache`.
 - **Staging** : même procédure avec `.env.deploy.staging`, un second clone (par
   ex. `~/lg-it-app-staging`), une base ou un préfixe distinct, et
   `./scripts/deploy.sh staging`.
