@@ -33,6 +33,7 @@ use App\Http\Controllers\TimesheetPdfController;
 use App\Http\Controllers\TimesheetSyntheseMoisController;
 use App\Http\Controllers\SessionProfesseurController;
 use App\Http\Controllers\ShareCodeController;
+use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
@@ -51,6 +52,9 @@ Route::middleware('validate.share.code')->group(function () {
 });
 
 Route::post('/login', [AuthController::class, 'login']);
+
+// SIG-01 : vérification publique d'une signature imprimée sur une fiche (identifiant aléatoire, données minimales).
+Route::get('/signatures/{publicId}/verification', [SignatureController::class, 'verifier'])->middleware('throttle:30,1');
 
 // ADMIN-02 : « Mot de passe oublié » et définition du mot de passe via un lien (publics, tous rôles).
 Route::post('/mot-de-passe/oublie', [AccesController::class, 'oubli'])->middleware('throttle:acces-oubli');
@@ -228,9 +232,12 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     // Phase 1B: Lissage, Signature, Aperçu PDF
     Route::get('/timesheets/{timesheet}/propose-lissage', [TimesheetController::class, 'proposeLissage']);
     Route::post('/timesheets/{timesheet}/apply-lissage', [TimesheetController::class, 'applyLissage']);
-    Route::post('/timesheets/{timesheet}/sign', [TimesheetController::class, 'sign']);
     Route::get('/timesheets/preview-pdf', [TimesheetController::class, 'previewPdf']);
     Route::post('/timesheets/sign-month', [TimesheetController::class, 'signMonth']);
+    Route::get('/ma-signature', [SignatureController::class, 'show']);
+    Route::put('/ma-signature', [SignatureController::class, 'update']);
+    Route::get('/signature-parametres', [SignatureController::class, 'parametres']);
+    Route::put('/signature-parametres', [SignatureController::class, 'enregistrerParametres']);
     Route::get('/timesheets/can-sign-month', [TimesheetController::class, 'canSignMonth']);
 
 

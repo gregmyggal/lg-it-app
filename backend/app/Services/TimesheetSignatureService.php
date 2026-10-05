@@ -2,35 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Timesheet;
-use App\Models\User;
+use App\Models\Professeur;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class TimesheetSignatureService
 {
-    /**
-     * Signe un timesheet (confirmé → signé)
-     * Enregistre le timestamp de signature
-     */
-    public function signTimesheet(Timesheet $timesheet, User $signee): bool
-    {
-        // Vérification: le signee doit être le propriétaire du timesheet
-        if ($timesheet->professeur_id !== $signee->professeur?->id) {
-            return false;
-        }
-
-        // Vérification: seuls les timesheets "confirme" peuvent être signés
-        if ($timesheet->statut_validation !== 'confirme') {
-            return false;
-        }
-
-        $timesheet->signature_professeur = now();
-        $timesheet->save();
-
-        return true;
-    }
-
     /**
      * Prépare les données pour l'aperçu PDF du mois
      * Retourne tout ce qu'il faut pour le PDF
@@ -108,8 +85,9 @@ class TimesheetSignatureService
 
     /**
      * Vérifie si un mois peut être signé par le professeur : toutes ses saisies sont confirmées (ou déjà générées), au
-     * moins une attend sa signature (une saisie ajustée après signature la perd ; les autres restent signées), aucune
-     * contestation en cours et aucun dépassement du plafond journalier.
+     * moins une attend sa signature (une saisie ajustée après signature la perd ; les autres restent signées) ou le
+     * contenu signé a changé (SIG-01), aucune contestation en cours et aucun dépassement du plafond journalier.
+     * La signature elle-même : SignatureNumeriqueService::signer().
      */
     public function canSignMonth(int $professeurId, int $year, int $month): array
     {
@@ -126,6 +104,13 @@ class TimesheetSignatureService
         $lissingService = new TimesheetLissingService;
         $monthData = $lissingService->calculateMonthlyMontants($professeurId, $year, $month);
 
+        // SIG-01 : tout est signé mais le contenu signé a changé depuis (ex. compte bancaire) → nouvelle signature.
+        $aResigner = $nonConfirmees->isEmpty() && $aSigner->isEmpty() && $timesheets->isNotEmpty()
+            && ($prof = Professeur::find($professeurId)) && app(SignatureNumeriqueService::class)->aResigner($prof, $year, $month);
+        if ($aResigner) {
+            $aSigner = collect([true]);
+        }
+
         return [
             'can_sign' => $nonConfirmees->isEmpty() && $aSigner->isNotEmpty() && empty($monthData['depassements']),
             'errors' => array_values(array_filter([
@@ -136,39 +121,5 @@ class TimesheetSignatureService
             ])),
             'warnings' => [],
         ];
-    }
-
-    /**
-     * Signe tous les timesheets confirmés d'un mois
-     */
-    public function signMonth(int $professeurId, int $year, int $month, User $signee): bool
-    {
-        if ($signee->isProfesseur() && $signee->professeur?->id !== $professeurId) {
-            return false;
-        }
-
-        $canSign = $this->canSignMonth($professeurId, $year, $month);
-        if (! $canSign['can_sign']) {
-            return false;
-        }
-
-        // Transaction: sign all or nothing
-        try {
-            DB::transaction(function () use ($professeurId, $year, $month) {
-                DB::table('timesheets')
-                    ->where('professeur_id', $professeurId)
-                    ->whereYear('date_prestation', $year)
-                    ->whereMonth('date_prestation', $month)
-                    ->where('statut_validation', 'confirme')
-                    ->whereNull('signature_professeur')
-                    ->update([
-                        'signature_professeur' => now(),
-                    ]);
-            });
-
-            return true;
-        } catch (\Throwable $e) {
-            return false;
-        }
     }
 }

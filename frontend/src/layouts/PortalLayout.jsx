@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import NotificationsBell from '../components/NotificationsBell';
 import ThemeToggle from '../components/ThemeToggle';
+import MaSignatureModal from '../components/signature/MaSignatureModal';
 
 const navClass = ({ isActive }) => (isActive ? 'active' : undefined);
 
@@ -10,6 +11,7 @@ export default function PortalLayout() {
   const { user, logout } = useAuth();
   const isStaff = user && (user.role === 'admin' || user.role === 'directeur');
   const [menuOuvert, setMenuOuvert] = useState(false);
+  const [maSignature, setMaSignature] = useState(false);
   const { pathname } = useLocation();
 
   // Sur mobile, le menu se referme après chaque navigation.
@@ -110,8 +112,10 @@ export default function PortalLayout() {
           </span>
           <ThemeToggle />
           <NotificationsBell />
+          {user?.role === 'professeur' && <button onClick={() => setMaSignature(true)}>Ma signature</button>}
           <button onClick={logout}>Déconnexion</button>
         </div>
+        {maSignature && <MaSignatureModal nom={user?.name} onClose={() => setMaSignature(false)} />}
       </aside>
 
       <main className="portal-main">

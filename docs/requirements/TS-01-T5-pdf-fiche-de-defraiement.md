@@ -3,7 +3,7 @@
 **Statut :** ☑ Livré · **Modèle :** fiche Logiscool « Fiche de défraiement – Volontariat » (juin 2026) · **Maquette :** écran D
 
 ## Format du PDF (conforme au modèle)
-Logo Logiscool · titre « FICHE DE DÉFRAIEMENT - VOLONTARIAT » · « MOIS DE : OCTOBRE 2026 » · « Nom et Prénom du volontaire : NOM Prénom » · « Compte bancaire n° : IBAN groupé par 4 » · tableau DATE / OBJET / DÉFRAIEMENT / NOMBRE / TOTAL sur **15 lignes par page** (lignes vides à 0,00 €, une page supplémentaire au-delà), ligne TOTAL · « Date et signature : date de signature électronique » · pied de page ASBL (`config/logiscool.php`).
+Logo Logiscool · titre « FICHE DE DÉFRAIEMENT - VOLONTARIAT » · « MOIS DE : OCTOBRE 2026 » · « Nom et Prénom du volontaire : NOM Prénom » · « Compte bancaire n° : IBAN groupé par 4 » · tableau DATE / OBJET / DÉFRAIEMENT / NOMBRE / TOTAL sur **15 lignes par page** (lignes vides à 0,00 €, une page supplémentaire au-delà), ligne TOTAL · bloc « Date et signature du volontaire » (SIG-01 : image de la signature, mention horodatée, identifiant, QR de vérification optionnel ; mois signés avant SIG-01 : « date — signé électroniquement par le volontaire ») · pied de page ASBL (`config/logiscool.php`).
 Le lissage et les plafonds **ne sont pas imprimés**. Les saisies identiques d'un même jour (date, objet, montant unitaire) sont regroupées sur une ligne. Nom de fichier : `AAAAMM Fiche de défraiement_Prénom Nom.pdf`.
 
 ## Types de lignes (alignés sur le modèle)

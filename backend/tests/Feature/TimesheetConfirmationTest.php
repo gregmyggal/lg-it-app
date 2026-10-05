@@ -8,8 +8,10 @@ use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\PrepareScolarite;
+use Tests\Concerns\SigneMois;
 use Tests\TestCase;
 
 /** TS-01 T4 : reconfirmation (signer / contester), traitement par la direction, notifications. */
@@ -17,13 +19,16 @@ class TimesheetConfirmationTest extends TestCase
 {
     use PrepareScolarite;
     use RefreshDatabase;
+    use SigneMois;
 
     private Professeur $prof;
 
     protected function setUp(): void
     {
         parent::setUp();
+        Storage::fake('local');
         $this->prof = Professeur::factory()->create();
+        $this->creerSignature($this->prof->user);
         ProfesseurTarif::create(['professeur_id' => $this->prof->id, 'tarif_horaire_eur' => 20, 'date_debut' => '2026-01-01']);
     }
 
@@ -75,8 +80,8 @@ class TimesheetConfirmationTest extends TestCase
         $this->ligne('conteste');
         $this->enProf();
 
-        $this->postJson('/api/timesheets/sign-month', ['professeur_id' => $this->prof->id, 'year' => 2026, 'month' => 10])
-            ->assertStatus(422)->assertJsonPath('error', 'Contestation en cours : en attente de la direction');
+        $this->signerMois($this->prof->id)
+            ->assertStatus(422)->assertJsonPath('message', 'Contestation en cours : en attente de la direction');
 
         $this->actingAsRole('directeur');
         $j = $this->getJson('/api/timesheets/mois-synthese?annee=2026&mois=10')->assertOk()->json();
@@ -118,7 +123,7 @@ class TimesheetConfirmationTest extends TestCase
         $this->assertSame('attente_prof', $etat['statut_mois']);
         $this->assertCount(1, $etat['ajustements']);
 
-        $this->postJson('/api/timesheets/sign-month', ['professeur_id' => $this->prof->id, 'year' => 2026, 'month' => 10])->assertOk();
+        $this->signerMois($this->prof->id)->assertOk();
         $this->assertSame(0, Timesheet::whereNull('signature_professeur')->count());
     }
 

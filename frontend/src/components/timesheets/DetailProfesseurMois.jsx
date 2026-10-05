@@ -8,6 +8,7 @@ import AdapterSaisieModal from './AdapterSaisieModal';
 import LisserMoisModal from './LisserMoisModal';
 import ValiderLotModal from './ValiderLotModal';
 import AdminModal from '../AdminModal';
+import SignaturePreuve from '../signature/SignaturePreuve';
 import { AdminFormField, AdminTextarea } from '../AdminFormField';
 import { apercuPdf, deverrouillerMois, genererPdf, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
@@ -161,6 +162,7 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                 {d.resume && <StatutBadge table={STATUTS_MOIS_PROF} valeur={d.resume.statut_mois} />}
                 <span>Total <strong>{formatEuros(totaux.e)}</strong> · {formatHeures(totaux.h)}</span>
               </div>
+              <SignaturePreuve signature={d.signature} />
             </div>
             <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap' }}>
               <AdminButton onClick={() => setValider(true)} disabled={soumises.length === 0}>Valider le mois ({soumises.length})</AdminButton>

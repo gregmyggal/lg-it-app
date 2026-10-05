@@ -104,8 +104,9 @@ export function useMaConfirmation(annee, mois) {
   );
 }
 
-export function signerMois(professeurId, annee, mois) {
-  return client.post('/timesheets/sign-month', { professeur_id: professeurId, year: annee, month: mois }).then((res) => res.data);
+/** SIG-01 : le professeur signe son mois (certification obligatoire, signature enregistrée requise). */
+export function signerMois(professeurId, annee, mois, certification) {
+  return client.post('/timesheets/sign-month', { professeur_id: professeurId, year: annee, month: mois, certification }).then((res) => res.data);
 }
 
 export function contesterMois(payload) {

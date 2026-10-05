@@ -288,6 +288,17 @@ L'assistant s'ouvre alors en mode « reconfigure » et conserve l'APP_KEY.
   dans les emails. `MAIL_CONTACT` est l'adresse citée en cas de doute ; elle sert
   aussi de Reply-To. Sans `MAIL_CONTACT`, les emails renvoient vers « la
   direction de votre école ». Après modification : `php artisan config:cache`.
+- **Signatures électroniques (SIG-01)** :
+  - **Clé de scellement** : générer une clé avec `php artisan signature:cle`, puis
+    copier `SIGNATURE_CLE_ID` et `SIGNATURE_CLE_PRIVEE` dans `backend/.env` et
+    lancer `php artisan config:cache`. Garder une copie de la clé hors du serveur.
+    Sans cette clé, une clé dérivée de l'APP_KEY est utilisée ; changer l'APP_KEY
+    rendrait alors les anciens sceaux invérifiables.
+  - **IP réelle** : si la preuve de signature affiche l'IP du proxy OVH au lieu de
+    celle du professeur, définir `TRUSTED_PROXIES=*`, à condition que le site ne
+    soit joignable qu'à travers ce proxy.
+  - **Anonymisation** : `signatures:anonymiser` est planifiée chaque jour à 03:00.
+    Elle efface l'IP et l'appareil des signatures de plus de 7 ans.
 - **Staging** : même procédure avec `.env.deploy.staging`, un second clone (par
   ex. `~/lg-it-app-staging`), une base ou un préfixe distinct, et
   `./scripts/deploy.sh staging`.

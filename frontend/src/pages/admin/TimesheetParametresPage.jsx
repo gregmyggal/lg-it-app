@@ -10,6 +10,7 @@ import { useToast } from '../../hooks/useToast';
 import { formatDateHeure } from '../../utils/dates';
 import { formatDuree } from '../../utils/format';
 import ImpactDefrayage from '../../components/ImpactDefrayage';
+import SignatureParametresCard from '../../components/signature/SignatureParametresCard';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 
 const ANNEE_COURANTE = new Date().getFullYear();
@@ -79,7 +80,7 @@ export default function TimesheetParametresPage() {
       <AdminPageHeader
         icon="⚙️"
         title="Paramètres des timesheets"
-        description="Heures défrayables et plafonds de défraiement, adaptés chaque année"
+        description="Heures défrayables, plafonds de défraiement et signature électronique des fiches"
       />
       <AdminPageContent>
         {erreurGlobale && <Banner tone="error" role="alert">{erreurGlobale}</Banner>}
@@ -150,6 +151,10 @@ export default function TimesheetParametresPage() {
             )}
           </AdminCardBody>
         </AdminCard>
+
+        <div style={{ marginTop: ADMIN_SPACING.xl }}>
+          <SignatureParametresCard />
+        </div>
 
         {historique.length > 0 && (
           <div style={{ marginTop: ADMIN_SPACING.xl }}>

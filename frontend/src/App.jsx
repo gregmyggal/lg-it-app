@@ -36,6 +36,7 @@ import AnneePeriodesPage from './pages/admin/AnneePeriodesPage';
 import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
 import SharePage from './pages/SharePage';
+import VerificationSignaturePage from './pages/VerificationSignaturePage';
 import StaffAdminPage from './pages/admin/StaffAdminPage';
 import TimesheetParametresPage from './pages/admin/TimesheetParametresPage';
 
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/mot-de-passe-oublie" element={<MotDePasseOubliePage />} />
           <Route path="/definir-mot-de-passe" element={<DefinirMotDePassePage />} />
           <Route path="/share/:code" element={<SharePage />} />
+          <Route path="/verif/:id" element={<VerificationSignaturePage />} />
           <Route
             path="/mot-de-passe"
             element={

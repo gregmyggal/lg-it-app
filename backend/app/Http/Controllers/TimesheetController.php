@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTimesheetRequest;
 use App\Http\Resources\TimesheetResource;
+use App\Models\Professeur;
 use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
+use App\Services\SignatureNumeriqueService;
 use App\Services\TimesheetAdaptationService;
 use App\Services\TimesheetLissingService;
 use App\Services\TimesheetNotifier;
@@ -243,28 +245,6 @@ class TimesheetController extends Controller
         return response()->json($pdfData);
     }
 
-    // Signature d'un timesheet par le professeur
-    public function sign(Request $request, Timesheet $timesheet)
-    {
-        Gate::authorize('view', $timesheet);
-
-        $user = $request->user();
-        if (! $user->isProfesseur()) {
-            abort(403, 'Seul un professeur peut signer');
-        }
-
-        $service = new TimesheetSignatureService;
-        if (! $service->signTimesheet($timesheet, $user)) {
-            return response()->json(['error' => 'Impossible de signer ce timesheet'], 422);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Timesheet signé',
-            'timesheet' => $timesheet->fresh(),
-        ]);
-    }
-
     // Vérifie si un mois entier peut être signé
     public function canSignMonth(Request $request)
     {
@@ -286,39 +266,24 @@ class TimesheetController extends Controller
         return response()->json($result);
     }
 
-    // Signe tous les timesheets d'un mois
-    public function signMonth(Request $request)
+    // SIG-01 : le professeur signe son mois (signature visible + preuve scellée). La direction ne signe jamais à sa place.
+    public function signMonth(Request $request, SignatureNumeriqueService $signatures)
     {
         Gate::authorize('viewAny', Timesheet::class);
 
-        $request->validate([
+        $v = $request->validate([
             'professeur_id' => ['required', 'integer', 'exists:professeurs,id'],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'month' => ['required', 'integer', 'min:1', 'max:12'],
-        ]);
+            'certification' => ['accepted'],
+        ], ['certification.accepted' => 'Cochez la certification pour signer.']);
 
-        $user = $request->user();
-
-        // Vérification: prof ne peut signer que ses propres heures
-        if ($user->isProfesseur() && $user->professeur?->id !== $request->input('professeur_id')) {
-            abort(403);
-        }
-
-        $service = new TimesheetSignatureService;
-        if (! $service->signMonth(
-            $request->input('professeur_id'),
-            $request->input('year'),
-            $request->input('month'),
-            $user
-        )) {
-            $erreurs = $service->canSignMonth($request->input('professeur_id'), $request->input('year'), $request->input('month'))['errors'];
-
-            return response()->json(['error' => $erreurs[0] ?? 'Impossible de signer ce mois'], 422);
-        }
+        $sig = $signatures->signer(Professeur::findOrFail($v['professeur_id']), (int) $v['year'], (int) $v['month'], $request->user(), $request->ip(), $request->userAgent());
 
         return response()->json([
             'success' => true,
             'message' => 'Mois signé avec succès',
+            'signature' => ['public_id' => $sig->public_id, 'signed_at' => $sig->signed_at],
         ]);
     }
 }

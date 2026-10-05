@@ -24,6 +24,11 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // SIG-01 : IP réelle du client derrière le proxy de l'hébergeur (preuve de signature). Vide = aucun proxy de
+        // confiance ; « * » seulement si le serveur n'est joignable qu'à travers ce proxy (sinon l'IP serait falsifiable).
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
         $middleware->alias([
             'validate.share.code' => ValidateShareCode::class,
         ]);

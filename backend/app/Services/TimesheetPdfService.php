@@ -9,6 +9,7 @@ use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
 use App\Models\TimesheetPdf;
 use App\Models\User;
+use App\Support\FrontendUrl;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -25,16 +26,11 @@ class TimesheetPdfService
 {
     public const LIGNES_PAR_PAGE = 15;
 
-    private const OBJETS = [
-        TimesheetService::TYPE_ANIMATION => 'Animation',
-        TimesheetService::TYPE_COURS => 'Cours',
-        TimesheetService::TYPE_PREPARATION => 'Préparation',
-        TimesheetService::TYPE_DEPLACEMENT => 'Frais de déplacement',
-    ];
-
     public function __construct(
         private readonly TimesheetConfirmationService $confirmation,
         private readonly TarifResolver $tarifs,
+        private readonly FicheDefraiementLignes $fiche,
+        private readonly SignatureNumeriqueService $signatures,
     ) {}
 
     /** Motifs qui empêchent la génération (liste vide = prêt). */
@@ -54,6 +50,9 @@ class TimesheetPdfService
         }
         if (blank($prof->compte_bancaire)) {
             $bloquants[] = 'Compte bancaire manquant';
+        }
+        if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF && $this->signatures->aResigner($prof, $annee, $mois)) {
+            $bloquants[] = 'Données modifiées depuis la signature : nouvelle signature du professeur requise';
         }
         if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF) {
             $tarifsProf = ProfesseurTarif::where('professeur_id', $prof->id)->get();
@@ -160,29 +159,14 @@ class TimesheetPdfService
     /** @return Collection<int, Timesheet> */
     private function saisies(Professeur $prof, int $annee, int $mois, bool $verrou = false): Collection
     {
-        $debut = Carbon::create($annee, $mois, 1);
-        $q = Timesheet::where('professeur_id', $prof->id)
-            ->whereBetween('date_prestation', [$debut->toDateString(), $debut->copy()->endOfMonth()->toDateString()])
-            ->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)
-            ->orderBy('date_prestation')->orderBy('id');
-
-        return ($verrou ? $q->lockForUpdate() : $q)->get();
+        return $this->fiche->saisies($prof, $annee, $mois, $verrou);
     }
 
     /** @return array{pdf: string, total: float} */
     private function contenu(Professeur $prof, int $annee, int $mois, Collection $saisies): array
     {
-        $tarifsProf = ProfesseurTarif::where('professeur_id', $prof->id)->get();
-
-        // Une ligne par (date, objet, montant unitaire) : les saisies identiques d'un même jour sont regroupées.
-        $lignes = $saisies
-            ->map(fn (Timesheet $t) => ['date' => $t->date_prestation->toDateString(), 'objet' => self::OBJETS[$t->type_activite] ?? ucfirst($t->type_activite), 'unite' => (float) $this->tarifs->unite($t, $tarifsProf), 'nombre' => (float) $t->nombre_heures])
-            ->groupBy(fn ($l) => $l['date'].'|'.$l['objet'].'|'.$l['unite'])
-            ->map(fn ($g) => ['date' => $g[0]['date'], 'objet' => $g[0]['objet'], 'unite' => $g[0]['unite'], 'nombre' => round($g->sum('nombre'), 2)])
-            ->map(fn ($l) => $l + ['total' => round($l['nombre'] * $l['unite'], 2)])
-            ->sortBy(['date', 'objet'])->values();
-
-        $signature = $saisies->whereNotNull('signature_professeur')->max('signature_professeur');
+        $lignes = $this->fiche->lignes($prof, $saisies);
+        $signature = $this->blocSignature($prof, $annee, $mois, $saisies);
         $pages = $lignes->chunk(self::LIGNES_PAR_PAGE);
         if ($pages->isEmpty()) {
             $pages = collect([collect()]);
@@ -202,7 +186,7 @@ class TimesheetPdfService
         return ['pdf' => $mpdf->Output('', 'S'), 'total' => round((float) $lignes->sum('total'), 2)];
     }
 
-    private function htmlPage(Professeur $prof, int $annee, int $mois, Collection $page, ?string $signature): string
+    private function htmlPage(Professeur $prof, int $annee, int $mois, Collection $page, string $signature): string
     {
         $mois = mb_strtoupper(Carbon::create($annee, $mois, 1)->locale('fr')->translatedFormat('F Y'));
         $nom = mb_strtoupper($prof->nom).' '.$prof->prenom;
@@ -217,7 +201,6 @@ class TimesheetPdfService
         }
         $totalNombre = $page->sum('nombre');
         $total = $page->sum('total');
-        $signe = $signature ? Carbon::parse($signature)->format('d/m/Y').' — signé électroniquement par le volontaire' : '';
         $logo = resource_path('pdf/logo-logiscool.jpg');
 
         return <<<HTML
@@ -230,8 +213,44 @@ class TimesheetPdfService
 <thead><tr><th style="width:17%">DATE</th><th style="width:33%">OBJET</th><th style="width:17%">DÉFRAIEMENT</th><th style="width:15%">NOMBRE</th><th style="width:18%">TOTAL</th></tr></thead>
 <tbody>{$corps}
 <tr><th style="text-align:left">TOTAL</th><td></td><td></td><th>{$this->nombre($totalNombre)}</th><th class="r" style="text-align:right">{$this->euro($total)}</th></tr></tbody></table>
-<p style="margin-top:9mm">Date et signature : {$signe}</p>
+{$signature}
 <style>td.r{text-align:right}td.c{text-align:center}</style>
+HTML;
+    }
+
+    /**
+     * SIG-01 : bloc « Date et signature » imprimé sur chaque page. Signature en vigueur et contenu inchangé : image
+     * figée, mention, identifiant et (si émise avec vérification publique) QR de vérification. Mois signé avant SIG-01 :
+     * mention textuelle d'origine. Contenu modifié depuis la signature : rien (la génération est d'ailleurs bloquée).
+     */
+    private function blocSignature(Professeur $prof, int $annee, int $mois, Collection $saisies): string
+    {
+        $sig = $this->signatures->derniere($prof, $annee, $mois);
+        if (! $sig) {
+            $date = $saisies->whereNotNull('signature_professeur')->max('signature_professeur');
+
+            return '<p style="margin-top:9mm">Date et signature : '.($date ? Carbon::parse($date)->format('d/m/Y').' — signé électroniquement par le volontaire' : '').'</p>';
+        }
+        if ($this->signatures->estPerimee($sig)) {
+            return '<p style="margin-top:9mm">Date et signature : </p>';
+        }
+
+        $image = Storage::disk('local')->path($sig->specimen_chemin);
+        $le = $sig->signed_at->copy()->timezone('Europe/Brussels');
+        $mention = 'Signé électroniquement par '.e($prof->prenom.' '.mb_strtoupper($prof->nom)).' le '.$le->format('d/m/Y').' à '.$le->format('H:i').' ('.$le->getTimezone()->getName().')'
+            .'<br>ID '.e($sig->public_id).' · empreinte '.substr($sig->content_hash, 0, 4).'…'.substr($sig->content_hash, -4);
+        $qr = '';
+        if ($sig->verification_publique) {
+            $url = FrontendUrl::lien('verif/'.$sig->public_id);
+            $qr = '<barcode code="'.e($url).'" type="QR" size="0.55" error="M" disableborder="1" /><br><span style="font-size:5.5pt;color:#555">Vérifier : '.e(preg_replace('#^https?://#', '', $url)).'</span>';
+        }
+
+        return <<<HTML
+<table style="width:100%;margin-top:6mm;border-collapse:collapse" cellpadding="0"><tr>
+<td style="width:72%;vertical-align:bottom">Date et signature du volontaire :<br>
+<div style="height:17mm;width:62mm;border-bottom:0.2mm solid #999"><img src="{$image}" style="max-height:16mm;max-width:60mm"></div>
+<div style="font-size:6.5pt;color:#555;margin-top:1mm">{$mention}</div></td>
+<td style="width:28%;text-align:right;vertical-align:bottom">{$qr}</td></tr></table>
 HTML;
     }
 

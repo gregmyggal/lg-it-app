@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
 use App\Models\Professeur;
+use App\Models\SignatureSpecimen;
 use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
 use App\Models\User;
@@ -17,7 +18,11 @@ use Illuminate\Support\Facades\DB;
  */
 class TimesheetConfirmationService
 {
-    public function __construct(private readonly TimesheetSyntheseMoisService $synthese) {}
+    public function __construct(
+        private readonly TimesheetSyntheseMoisService $synthese,
+        private readonly FicheDefraiementLignes $fiche,
+        private readonly SignatureNumeriqueService $signatures,
+    ) {}
 
     private function lignes(Professeur $prof, int $annee, int $mois)
     {
@@ -67,6 +72,30 @@ class TimesheetConfirmationService
             'pdf' => ($pdf = \App\Models\TimesheetPdf::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois])->orderByDesc('version')->first())
                 ? ['id' => $pdf->id, 'version' => $pdf->version, 'generated_at' => $pdf->generated_at] : null,
             'derniere_reponse' => $reponse ? ['motif' => $reponse->motif, 'created_at' => $reponse->created_at] : null,
+            'a_signature' => SignatureSpecimen::where('user_id', $prof->user_id)->exists(),
+            'recapitulatif' => $this->recapitulatif($prof, $annee, $mois, $ajustements->count()),
+            'signature' => ($sig = $this->signatures->derniere($prof, $annee, $mois)) ? [
+                'public_id' => $sig->public_id,
+                'signed_at' => $sig->signed_at,
+                'perimee' => $this->signatures->estPerimee($sig),
+                'image' => app(SignatureSpecimenService::class)->dataUrl($sig->specimen_chemin),
+            ] : null,
+        ];
+    }
+
+    /** SIG-01 : ce que le professeur s'apprête à signer (mêmes lignes que la fiche PDF). */
+    private function recapitulatif(Professeur $prof, int $annee, int $mois, int $ajustements): array
+    {
+        $saisies = $this->fiche->saisies($prof, $annee, $mois);
+        $lignes = $this->fiche->lignes($prof, $saisies);
+        $iban = preg_replace('/\s+/', '', (string) $prof->compte_bancaire);
+
+        return [
+            'lignes' => $lignes->count(),
+            'heures' => round((float) $saisies->where('type_activite', '!=', TimesheetService::TYPE_DEPLACEMENT)->sum('nombre_heures'), 2),
+            'total_eur' => round((float) $lignes->sum('total'), 2),
+            'ajustements' => $ajustements,
+            'compte_bancaire' => $iban === '' ? null : substr($iban, 0, 4).' •••• •••• '.substr($iban, -4),
         ];
     }
 

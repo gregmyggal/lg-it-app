@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // CLS-01 T4 : historique des liens conservé 6 mois.
 Schedule::command('liens:purge-historique')->dailyAt('03:30');
+
+// SIG-01 : preuves de signature (IP, appareil) conservées 7 ans.
+Schedule::command('signatures:anonymiser')->dailyAt('03:00'); // heure pile : cron OVH horaire

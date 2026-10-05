@@ -191,7 +191,6 @@ class TimesheetValidationTest extends TestCase
         $this->assertTrue($a->fresh()->isLocked());
 
         Sanctum::actingAs($this->alice->user);
-        $this->postJson("/api/timesheets/{$a->id}/sign")->assertOk();
         $this->getJson('/api/timesheets')->assertOk()->assertJsonPath('0.statut_validation', 'confirme');
     }
 }

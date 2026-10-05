@@ -8,6 +8,7 @@ use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
 use App\Models\TimesheetPdf;
+use App\Services\SignatureNumeriqueService;
 use App\Services\TarifResolver;
 use App\Services\TimesheetParametreService;
 use App\Services\TimesheetPdfService;
@@ -19,7 +20,7 @@ use Illuminate\Support\Carbon;
 /** TS-01 T3 : détail d'un professeur pour un mois (saisies, jauge par jour, historique). Staff uniquement. */
 class TimesheetDetailMoisController extends Controller
 {
-    public function show(Request $request, Professeur $professeur, TimesheetSyntheseMoisService $synthese, TimesheetParametreService $parametres, TarifResolver $tarifs, TimesheetPdfService $pdfs): JsonResponse
+    public function show(Request $request, Professeur $professeur, TimesheetSyntheseMoisService $synthese, TimesheetParametreService $parametres, TarifResolver $tarifs, TimesheetPdfService $pdfs, SignatureNumeriqueService $signatures): JsonResponse
     {
         abort_unless($request->user()->isStaff(), 403, 'Action non autorisée.');
 
@@ -67,6 +68,7 @@ class TimesheetDetailMoisController extends Controller
             'lignes' => TimesheetResource::collection($lignes)->resolve($request),
             'jours' => $jours,
             'historique' => $historique,
+            'signature' => ($sig = $signatures->derniere($professeur, (int) $v['annee'], (int) $v['mois'])) ? $signatures->preuve($sig, $request->user()) : null,
             'pdf' => [
                 'bloquants' => $pdfs->bloquants($professeur, (int) $v['annee'], (int) $v['mois']),
                 'versions' => TimesheetPdf::where(['professeur_id' => $professeur->id, 'annee' => (int) $v['annee'], 'mois' => (int) $v['mois']])

@@ -3,11 +3,13 @@ import AdminButton from '../AdminButton';
 import AdminModal from '../AdminModal';
 import { AdminFormField, AdminTextarea } from '../AdminFormField';
 import Banner from '../ui/Banner';
+import SignerMoisModal from '../signature/SignerMoisModal';
+import { useAuth } from '../../auth/AuthContext';
 import { Table, Th, Td, Tr } from '../ui/Table';
-import { contesterMois, signerMois, telechargerPdf, useMaConfirmation } from '../../hooks/useTimesheets';
+import { contesterMois, telechargerPdf, useMaConfirmation } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage } from '../../api/errors';
-import { formatDateCourte } from '../../utils/dates';
+import { formatDateCourte, formatDateHeure } from '../../utils/dates';
 import { enregistrerBlob } from '../../utils/telechargement';
 import { formatEuros, formatHeures } from '../../utils/format';
 
@@ -32,7 +34,9 @@ function descriptionAjustement(a) {
  */
 export default function ReconfirmationMois({ professeurId, annee, mois, onChange }) {
   const toast = useToast();
+  const { user } = useAuth();
   const conf = useMaConfirmation(annee, mois);
+  const [signature, setSignature] = useState(false);
   const [contestation, setContestation] = useState(false);
   const [motif, setMotif] = useState('');
   const [envoi, setEnvoi] = useState(false);
@@ -42,6 +46,9 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
 
   const attente = d.statut_mois === 'attente_prof';
   const termine = ['pret_pdf', 'genere'].includes(d.statut_mois);
+  // SIG-01 : tout est signé mais le contenu signé a changé depuis (ex. compte bancaire) → signer à nouveau.
+  const aResigner = termine && d.signature?.perimee && d.peut_signer;
+  const aSigner = attente || aResigner;
   if (!attente && !d.contestation && !termine && d.ajustements.length === 0) return null;
 
   async function agir(fn, succes) {
@@ -71,7 +78,12 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
       {d.derniere_reponse && !d.contestation && (
         <Banner tone="info">Réponse de la direction : « {d.derniere_reponse.motif} ».</Banner>
       )}
-      {termine && (
+      {aResigner && (
+        <Banner tone="warning">
+          <strong>Le contenu de votre fiche a changé depuis votre signature</strong> (montants ou compte bancaire). Signez à nouveau pour que la direction puisse générer votre fiche.
+        </Banner>
+      )}
+      {termine && !aResigner && (
         <Banner tone="success">
           <strong>Mois confirmé.</strong> {d.pdf ? 'Votre fiche de défraiement est disponible.' : 'Le PDF sera généré par la direction.'}
           {d.pdf && (
@@ -83,10 +95,16 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
               Télécharger ma fiche PDF
             </AdminButton>
           )}
+          {d.signature && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+              {d.signature.image && <img src={d.signature.image} alt="Votre signature" style={{ height: 36, background: '#fff', borderRadius: 4, padding: 2 }} />}
+              <span style={{ fontSize: 13 }}>Signé le {formatDateHeure(d.signature.signed_at)} · <code style={{ whiteSpace: 'nowrap' }}>{d.signature.public_id}</code></span>
+            </span>
+          )}
         </Banner>
       )}
 
-      {(attente || d.ajustements.length > 0) && !d.contestation && (
+      {(aSigner || d.ajustements.length > 0) && !d.contestation && (
         <div style={{ border: '1px solid var(--c-border)', borderRadius: 8, background: 'var(--c-card)', padding: 16 }}>
           {attente && (
             <>
@@ -109,22 +127,35 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
             </Table>
           )}
           {erreur && <Banner tone="error" role="alert">{erreur}</Banner>}
-          {attente && (
+          {aSigner && (
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
-              <AdminButton
-                loading={envoi}
-                disabled={!d.peut_signer}
-                onClick={() => agir(() => signerMois(professeurId, annee, mois), 'Mois confirmé et signé. Merci !')}
-              >
-                Accepter et signer
+              <AdminButton disabled={!d.peut_signer || envoi} onClick={() => setSignature(true)}>
+                Accepter et signer…
               </AdminButton>
               <AdminButton variant="secondary" disabled={!d.peut_contester || envoi} onClick={() => setContestation(true)}>Contester…</AdminButton>
             </div>
           )}
-          {attente && !d.peut_signer && d.erreurs_signature.length > 0 && (
+          {aSigner && !d.peut_signer && d.erreurs_signature.length > 0 && (
             <p style={{ fontSize: 13, color: 'var(--tone-warning-fg)' }}>{d.erreurs_signature.join(' · ')}</p>
           )}
         </div>
+      )}
+
+      {signature && (
+        <SignerMoisModal
+          professeurId={professeurId}
+          annee={annee}
+          mois={mois}
+          recapitulatif={d.recapitulatif}
+          nom={user?.name}
+          onClose={() => setSignature(false)}
+          onSigne={() => {
+            setSignature(false);
+            toast.success('Mois confirmé et signé. Merci !');
+            conf.reload();
+            onChange?.();
+          }}
+        />
       )}
 
       {contestation && (
