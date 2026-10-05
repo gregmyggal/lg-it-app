@@ -13,20 +13,23 @@ import PeriodeBadge from '../../components/classes/PeriodeBadge';
 import { anneeParDefaut, useAnneesScolaires } from '../../hooks/useAnneesScolaires';
 import { useCours } from '../../hooks/useCours';
 import { useCalendrierScolaire } from '../../hooks/useCalendrierScolaire';
-import { apercuClasse, creerClasse } from '../../hooks/useClasses';
+import { apercuClasse, creerClasse, propositionDuplication } from '../../hooks/useClasses';
 import { useHeuresDefrayables } from '../../hooks/useHeuresDefrayables';
 import { formatDuree } from '../../utils/format';
 import { useToast } from '../../hooks/useToast';
-import { getErrorData, getErrorMessage, getFieldErrors } from '../../api/errors';
+import { getErrorData, getErrorMessage, getFieldErrors, getStatus } from '../../api/errors';
 import { contexteHorsBornes, effacerBrouillon, lienNouvelleAnnee, lireBrouillon, sauverBrouillon } from '../../utils/annees';
 import { JOURS_SEMAINE, ajouterHeures, heuresEntre, formatDate, formatDateLongue, jourDeClasseApres, libelleClasse, nomJour, parseDate } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_TONES, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
 
 const DELAI_APERCU_MS = 400;
 const CLE_BROUILLON = 'classe-nouvelle';
-const CHEMIN_RETOUR = '/admin/classes/nouvelle?restaurer=1';
 
-/** Écran « Nouvelle classe » : créneau commun + une ou deux périodes (cours + date), aperçu en direct (mock-up CLS-02/01). */
+/**
+ * Écran « Nouvelle classe » : créneau commun + une ou deux périodes (cours + date), aperçu en direct (mock-up CLS-02/01).
+ * Avec `?source={id}`, c'est l'écran « Dupliquer une classe » (CLS-07) : pré-rempli depuis la classe source, dates de
+ * démarrage re-proposées par le serveur au changement de jour (sauf date saisie), aperçu comparé à la source.
+ */
 export default function ClasseCreatePage() {
   const toast = useToast();
   const [params] = useSearchParams();
@@ -36,6 +39,8 @@ export default function ClasseCreatePage() {
   // Saisie conservée pendant un détour par la gestion des années scolaires (restaurée une seule fois au retour).
   const [brouillon] = useState(() => (params.get('restaurer') ? lireBrouillon(CLE_BROUILLON) : null));
   const [datesMisesAJour] = useState(() => location.state?.datesMisesAJour || null);
+  const sourceId = params.get('source') || brouillon?.source || null;
+  const cheminRetour = `/admin/classes/nouvelle?restaurer=1${sourceId ? `&source=${sourceId}` : ''}`;
   useEffect(() => {
     effacerBrouillon(CLE_BROUILLON);
   }, []);
@@ -63,6 +68,8 @@ export default function ClasseCreatePage() {
   const [envoi, setEnvoi] = useState(false);
   const [echec, setEchec] = useState(null); // { message, champs }
   const [creee, setCreee] = useState(null); // { classe, resume }
+  const [duplication, setDuplication] = useState({ data: null, loading: Boolean(sourceId), statut: null, version: 0 });
+  const [datesSaisies, setDatesSaisies] = useState(brouillon?.datesSaisies || { 1: false, 2: false });
 
   const listeAnnees = useMemo(() => (annees.data || []).filter((a) => a.statut !== 'archivee'), [annees.data]);
   const anneeId = form.annee_scolaire_id || (anneeParDefaut(listeAnnees) ? String(anneeParDefaut(listeAnnees).id) : '');
@@ -98,7 +105,67 @@ export default function ClasseCreatePage() {
   function majPeriode(numero, champ, valeur) {
     setPer((prev) => ({ ...prev, [numero]: { ...prev[numero], [champ]: valeur } }));
     if (numero === 2 && champ === 'date') setDateP2Manuelle(true);
+    if (champ === 'date') setDatesSaisies((prev) => ({ ...prev, [numero]: true }));
     setEchec(null);
+  }
+
+  // CLS-07 : proposition de la classe source (pré-remplissage au premier chargement, sauf brouillon restauré).
+  const sourceData = duplication.data;
+  const anneeSource = sourceData ? String(sourceData.annee_scolaire_id ?? '') : '';
+  useEffect(() => {
+    if (!sourceId) return undefined;
+    let annule = false;
+    setDuplication((prev) => ({ ...prev, loading: true, statut: null }));
+    propositionDuplication(sourceId)
+      .then((d) => {
+        if (annule) return;
+        setDuplication((prev) => ({ ...prev, data: d, loading: false }));
+        if (brouillon) return;
+        setForm({ annee_scolaire_id: String(d.annee_scolaire_id ?? ''), jour_semaine: String(d.jour_semaine), lieu: d.lieu || '', heure_debut: d.heure_debut, heure_fin: d.heure_fin });
+        setFinManuelle(true);
+        setDateP2Manuelle(true);
+        const ouv = { 1: false, 2: false };
+        const p = { 1: { cours_id: '', date: '' }, 2: { cours_id: '', date: '' } };
+        d.periodes.forEach((x) => {
+          ouv[x.numero] = true;
+          p[x.numero] = { cours_id: String(x.cours_id), date: x.date_premiere_session || '' };
+        });
+        if (d.periodes.length) setOuvertes(ouv);
+        setPer(p);
+      })
+      .catch((err) => !annule && setDuplication((prev) => ({ ...prev, loading: false, statut: getStatus(err) || 'reseau' })));
+    return () => {
+      annule = true;
+    };
+  }, [sourceId, brouillon, duplication.version]);
+
+  // Re-proposition des dates au changement de jour, dans l'année de la source, pour les dates non saisies à la main.
+  const jourChoisiForm = form.jour_semaine;
+  useEffect(() => {
+    if (!sourceId || !anneeSource || anneeId !== anneeSource || !jourChoisiForm) return undefined;
+    let annule = false;
+    propositionDuplication(sourceId, { jour_semaine: jourChoisiForm }).then((d) => {
+      if (annule) return;
+      setDuplication((prev) => ({ ...prev, data: d }));
+      setPer((prev) => {
+        const suivant = { ...prev };
+        d.periodes.forEach((x) => {
+          if (!datesSaisies[x.numero] && x.date_premiere_session) suivant[x.numero] = { ...prev[x.numero], date: x.date_premiere_session };
+        });
+        return suivant;
+      });
+    }).catch(() => {});
+    return () => {
+      annule = true;
+    };
+  }, [sourceId, anneeSource, anneeId, jourChoisiForm, datesSaisies]);
+
+  function changerAnnee(valeur) {
+    maj('annee_scolaire_id', valeur);
+    if (sourceId && valeur !== anneeSource) {
+      setPer((prev) => ({ 1: { ...prev[1], date: '' }, 2: { ...prev[2], date: '' } }));
+      setDatesSaisies({ 1: false, 2: false });
+    }
   }
 
   function forcerDate(numero, date, forcer) {
@@ -132,8 +199,9 @@ export default function ClasseCreatePage() {
           date_premiere_session: per[n].date,
           dates_forcees: datesForcees[n],
         })),
+      source_classe_id: sourceId ? Number(sourceId) : undefined,
     }),
-    [form, anneeId, annee, ouvertes, per, datesForcees],
+    [form, anneeId, annee, ouvertes, per, datesForcees, sourceId],
   );
   const complet = Boolean(
     charge.annee_scolaire_id && charge.jour_semaine && charge.heure_debut && charge.heure_fin && charge.periodes.length > 0 &&
@@ -180,7 +248,10 @@ export default function ClasseCreatePage() {
   const avertissements = planApercu.flatMap((p) => p.avertissements || []);
   const erreurs = { ...apercu.erreurs, ...(echec?.champs || {}) };
   const contexteBornes = apercu.contexte || echec?.contexte || null;
-  const sauverSaisie = () => sauverBrouillon(CLE_BROUILLON, { form, ouvertes, per, datesForcees, dateP2Manuelle, finManuelle });
+  const sauverSaisie = () => sauverBrouillon(CLE_BROUILLON, { form, ouvertes, per, datesForcees, dateP2Manuelle, finManuelle, source: sourceId, datesSaisies });
+  const doublons = apercu.data?.doublons || [];
+  const avertissementsCopie = apercu.data?.avertissements || [];
+  const aujourdhui = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' });
   const erreurPeriode = (numero, champ) => {
     const idx = charge.periodes.findIndex((_, i) => numerosOuverts[i] === numero);
     return erreurs[`periodes.${idx}.${champ}`] || (blocage?.periode_numero === numero && champ === 'date_premiere_session' ? blocage.message : undefined);
@@ -199,14 +270,16 @@ export default function ClasseCreatePage() {
           const debut = p.seances[0]?.date;
           const fin = p.seances[p.seances.length - 1]?.date;
           const forcees = p.seances.filter((s) => s.forcee).length;
+          const passees = sourceId ? p.seances.filter((s) => s.date < aujourdhui).length : 0;
           return `P${p.numero} : ${p.seances.length} séances du ${formatDate(debut)} au ${formatDate(fin)}${
             sautees ? ` (${sautees} date${sautees > 1 ? 's' : ''} sautée${sautees > 1 ? 's' : ''})` : ''
           }${
             forcees ? `, dont ${forcees} forcée${forcees > 1 ? 's' : ''} sur un congé` : ''
-          }`;
+          }${passees ? `, dont ${passees} à des dates déjà passées` : ''}`;
         })
         .join(' · ') || `${classe.nb_sessions} séances générées`;
-      toast.success(`Classe « ${libelleClasse(classe)} » créée. ${resume}.`);
+      const origine = sourceData ? ` à partir de « ${sourceData.source.libelle} »` : '';
+      toast.success(`Classe « ${libelleClasse(classe)} » créée${origine}. ${resume}.`);
       setCreee({ classe, resume });
     } catch (err) {
       setEchec({ message: getErrorMessage(err, "La classe n'a pas pu être créée."), champs: getFieldErrors(err), contexte: contexteHorsBornes(getErrorData(err)) });
@@ -222,27 +295,39 @@ export default function ClasseCreatePage() {
     setPer((prev) => ({ 1: { ...prev[1], date: '' }, 2: { ...prev[2], date: '' } }));
     setForm((prev) => ({ ...prev, lieu: '' }));
     setDatesForcees({ 1: [], 2: [] });
+    setDatesSaisies({ 1: false, 2: false });
   }
 
   const entete = (
     <AdminPageHeader
       icon="🏫"
-      title="Nouvelle classe"
+      title={sourceId ? 'Dupliquer une classe' : 'Nouvelle classe'}
       breadcrumb={
-        <>
-          Scolarité › <Link to="/admin/classes">Classes</Link> › Nouvelle classe
-        </>
+        sourceId ? (
+          <>
+            Scolarité › <Link to="/admin/classes">Classes</Link> ›{' '}
+            <Link to={`/admin/classes/${sourceId}`}>{sourceData?.source.libelle || 'Classe source'}</Link> › Dupliquer
+          </>
+        ) : (
+          <>
+            Scolarité › <Link to="/admin/classes">Classes</Link> › Nouvelle classe
+          </>
+        )
       }
-      description="Un seul formulaire : le groupe et le créneau, puis une ou deux périodes (cours + date de démarrage). Les 14 séances de chaque période sont générées à la validation."
+      description={
+        sourceId
+          ? 'Choisissez le nouveau jour et/ou le nouvel horaire : les dates de démarrage suivent. Les 14 séances de chaque période sont régénérées.'
+          : 'Un seul formulaire : le groupe et le créneau, puis une ou deux périodes (cours + date de démarrage). Les 14 séances de chaque période sont générées à la validation.'
+      }
     />
   );
 
-  if (annees.loading || cours.loading) {
+  if (annees.loading || cours.loading || duplication.loading) {
     return (
       <>
         {entete}
         <AdminPageContent>
-          <LoadingBlock message="Chargement du formulaire…" />
+          <LoadingBlock message={sourceId ? 'Préparation de la copie de la classe…' : 'Chargement du formulaire…'} />
         </AdminPageContent>
       </>
     );
@@ -259,6 +344,86 @@ export default function ClasseCreatePage() {
               cours.reload();
             }}
           />
+        </AdminPageContent>
+      </>
+    );
+  }
+
+  if (duplication.statut) {
+    return (
+      <>
+        {entete}
+        <AdminPageContent>
+          {duplication.statut === 404 ? (
+            <EmptyBlock
+              icon="🏫"
+              title="Cette classe n'existe plus."
+              actions={
+                <LinkButton to="/admin/classes/nouvelle" variant="primary">
+                  Créer une classe vide
+                </LinkButton>
+              }
+            >
+              La classe à dupliquer a été supprimée.
+            </EmptyBlock>
+          ) : (
+            <ErrorBlock
+              message="Impossible de préparer la copie. Vérifiez votre connexion puis réessayez."
+              onRetry={() => setDuplication((prev) => ({ ...prev, version: prev.version + 1 }))}
+            />
+          )}
+        </AdminPageContent>
+      </>
+    );
+  }
+  if (sourceData && sourceData.periodes.length === 0 && !brouillon) {
+    return (
+      <>
+        {entete}
+        <AdminPageContent>
+          <EmptyBlock
+            icon="🏫"
+            title="Rien à dupliquer : toutes les périodes de cette classe sont annulées."
+            actions={
+              <>
+                <LinkButton to="/admin/classes/nouvelle" variant="primary">
+                  Créer une classe vide
+                </LinkButton>
+                <LinkButton to={`/admin/classes/${sourceId}`}>Revenir à la classe</LinkButton>
+              </>
+            }
+          />
+        </AdminPageContent>
+      </>
+    );
+  }
+
+  if (creee && sourceData) {
+    return (
+      <>
+        {entete}
+        <AdminPageContent>
+          <Banner
+            tone="success"
+            actions={
+              <>
+                <LinkButton to={`/admin/classes/${creee.classe.id}#professeurs`} variant="primary" size="sm">
+                  Assigner des professeurs
+                </LinkButton>
+                <LinkButton to={`/admin/classes/${creee.classe.id}`} size="sm">
+                  Ouvrir la nouvelle classe
+                </LinkButton>
+                <LinkButton to={`/admin/classes/${sourceId}`} size="sm">
+                  Revenir à la classe source
+                </LinkButton>
+              </>
+            }
+          >
+            <strong>
+              Classe « {libelleClasse(creee.classe)} » créée à partir de « {sourceData.source.libelle} ».
+            </strong>{' '}
+            {creee.resume}. Aucun professeur n'est encore assigné.
+          </Banner>
         </AdminPageContent>
       </>
     );
@@ -300,7 +465,7 @@ export default function ClasseCreatePage() {
             icon="🗓️"
             title="Aucune année scolaire disponible"
             actions={
-              <LinkButton to={lienNouvelleAnnee({ retour: CHEMIN_RETOUR })} variant="primary">
+              <LinkButton to={lienNouvelleAnnee({ retour: cheminRetour })} variant="primary">
                 Créer une année scolaire
               </LinkButton>
             }
@@ -312,21 +477,55 @@ export default function ClasseCreatePage() {
     );
   }
 
-  const libelleCreation = !complet
-    ? 'Créer la classe'
-    : nbHors > 0
-      ? `Créer quand même (${nbSeances} séances, ${nbHors} hors période)`
-      : `Créer la classe (${nbSeances || numerosOuverts.length * 14} séances)`;
+  const nbPrevu = nbSeances || numerosOuverts.length * 14;
+  const libelleCreation = (() => {
+    if (!complet) return sourceId ? 'Créer la copie' : 'Créer la classe';
+    if (doublons.length > 0) return `Créer quand même (${nbPrevu} séances)`;
+    if (nbHors > 0) return `Créer quand même (${nbPrevu} séances, ${nbHors} hors période)`;
+    return sourceId ? `Créer la copie (${nbPrevu} séances)` : `Créer la classe (${nbPrevu} séances)`;
+  })();
   const coursTitres = Object.fromEntries(
     numerosOuverts.map((n) => [n, (cours.data || []).find((c) => String(c.id) === String(per[n].cours_id))?.titre]),
   );
   const optionsCours = (cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }));
   const jourChoisi = Number(form.jour_semaine);
+  const aideDuplication = (numero) => {
+    const proposee = sourceData?.periodes.find((x) => x.numero === numero);
+    if (!proposee || datesSaisies[numero] || anneeId !== anneeSource || proposee.date_premiere_session !== per[numero].date) return '';
+    return proposee.raison === 'borne_periode'
+      ? ` La même semaine que la classe source sort des bornes de la période ${numero} : premier jour de classe possible proposé.`
+      : ' Même semaine que le démarrage de la classe source.';
+  };
 
   return (
     <>
       {entete}
       <AdminPageContent>
+        {sourceData && (
+          <Banner
+            tone="info"
+            actions={
+              <LinkButton to={`/admin/classes/${sourceId}`} size="sm">
+                Voir la classe source
+              </LinkButton>
+            }
+          >
+            <strong>Copie de « {sourceData.source.libelle} ».</strong> Les 14 séances de chaque période sont régénérées : les
+            déplacements, annulations et bis de la classe source ne sont pas copiés. Les professeurs ne sont pas repris : vous les
+            assignerez après la création.
+          </Banner>
+        )}
+        {sourceData?.periodes_non_reprises.map((p) => (
+          <Banner key={p.numero} tone="info">
+            {p.motif}
+          </Banner>
+        ))}
+        {sourceData && anneeSource !== anneeId && (
+          <Banner tone="warning" role="status">
+            Les dates de la classe source ne sont pas transposées sur une autre année : saisissez les dates de démarrage. La
+            comparaison avec la source est retirée.
+          </Banner>
+        )}
         {datesMisesAJour && (
           <Banner tone="success">
             <strong>{datesMisesAJour}</strong>
@@ -368,7 +567,7 @@ export default function ClasseCreatePage() {
                   id="classe-annee"
                   value={anneeId}
                   options={listeAnnees.map((a) => ({ value: String(a.id), label: a.libelle }))}
-                  onChange={(e) => maj('annee_scolaire_id', e.target.value)}
+                  onChange={(e) => changerAnnee(e.target.value)}
                 />
               </AdminFormField>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: ADMIN_SPACING.lg }}>
@@ -459,7 +658,7 @@ export default function ClasseCreatePage() {
                         {annee?.can?.update && (
                           <>
                             {' · '}
-                            <LienModifierDates annee={annee} numero={n} retour={CHEMIN_RETOUR} avantNavigation={sauverSaisie} />
+                            <LienModifierDates annee={annee} numero={n} retour={cheminRetour} avantNavigation={sauverSaisie} />
                           </>
                         )}
                       </p>
@@ -497,10 +696,11 @@ export default function ClasseCreatePage() {
                             ? `${formatDateLongue(per[n].date)} : correspond au jour choisi.`
                             : ''}
                         {n === 2 && ouvertes[1] && !dateP2Manuelle && per[2].date ? ' Proposée : 1er jour de classe après la dernière séance de la P1.' : ''}
+                        {aideDuplication(n)}
                       </div>
                       {contexteBornes && contexteBornes.numero === n && annee?.can?.update && (
                         <div style={{ fontSize: '13px', marginTop: ADMIN_SPACING.sm }}>
-                          <LienModifierDates annee={annee} numero={n} retour={CHEMIN_RETOUR} avantNavigation={sauverSaisie}>
+                          <LienModifierDates annee={annee} numero={n} retour={cheminRetour} avantNavigation={sauverSaisie}>
                             Modifier les dates de la période {n} ({contexteBornes.annee_libelle || annee.libelle})
                           </LienModifierDates>{' '}
                           · ou choisissez une date comprise entre {formatDate(contexteBornes.debut)} et {formatDate(contexteBornes.fin)}.
@@ -513,7 +713,7 @@ export default function ClasseCreatePage() {
             </Section>
 
             <div style={{ display: 'flex', gap: ADMIN_SPACING.md, justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
-              <LinkButton to="/admin/classes">Annuler</LinkButton>
+              <LinkButton to={sourceId ? `/admin/classes/${sourceId}` : '/admin/classes'}>Annuler</LinkButton>
               <AdminButton
                 type="submit"
                 variant={nbHors > 0 ? 'secondary' : 'primary'}
@@ -559,6 +759,17 @@ export default function ClasseCreatePage() {
                     </p>
                   </div>
                 )}
+                {avertissementsCopie.map((a) => (
+                  <Banner key={a.message} tone="warning" role="status">
+                    <strong>{a.code === 'doublon' ? 'Doublon probable (non bloquant) :' : 'Avertissement (non bloquant) :'}</strong> {a.message}
+                  </Banner>
+                ))}
+                {doublons.map((d) => (
+                  <p key={d.classe_id} style={{ fontSize: '13px', margin: `0 0 ${ADMIN_SPACING.md}` }}>
+                    <Link to={`/admin/classes/${d.classe_id}`}>Voir « {d.libelle} »</Link> · changez le jour ou l'horaire, ou créez quand même s'il
+                    s'agit d'un second groupe.
+                  </p>
+                ))}
                 {nbHors > 0 && !blocage && avertissements.length === 0 && (
                   <Banner tone="warning">
                     <strong>Avertissement (non bloquant) :</strong> {nbHors} séance{nbHors > 1 ? 's' : ''} tomberai{nbHors > 1 ? 'ent' : 't'} après la fin de sa période : elle{nbHors > 1 ? 's seront créées' : ' sera créée'} avec le badge « hors période ».

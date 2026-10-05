@@ -74,7 +74,7 @@ export default function AssignerProfesseurModal({ cote, fixeId, fixeNom, options
       const nom = options.find((o) => o.value === choix)?.label;
       const n = recapitulatif.sessions_assignees;
       onDone(
-        `${cote === 'classe' ? nom : fixeNom} assigné${n > 1 ? '' : ''} à ${n} session${n > 1 ? 's' : ''} à venir${
+        `${cote === 'classe' ? nom : fixeNom} assigné${n > 1 ? '' : ''} à ${n} session${n > 1 ? 's' : ''}${
           recapitulatif.sessions_passees_ignorees ? ` (${recapitulatif.sessions_passees_ignorees} passées non modifiées)` : ''
         }.`,
       );
@@ -101,7 +101,7 @@ export default function AssignerProfesseurModal({ cote, fixeId, fixeNom, options
           </AdminButton>
           <AdminButton type="submit" form="form-assignation" disabled={!peutConfirmer} loading={envoi}>
             {apercu.etat === 'ok' && apercu.data.sessions_assignees
-              ? `Assigner à ${apercu.data.sessions_assignees} session${apercu.data.sessions_assignees > 1 ? 's' : ''} à venir`
+              ? `Assigner à ${apercu.data.sessions_assignees} session${apercu.data.sessions_assignees > 1 ? 's' : ''}`
               : 'Assigner'}
           </AdminButton>
         </>

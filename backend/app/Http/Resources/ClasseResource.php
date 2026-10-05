@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Classe;
 use App\Models\ClassePeriode;
+use App\Services\ClasseDuplicationService;
 use App\Services\PeriodeRegles;
 use App\Services\TimesheetParametreService;
 use App\Services\TimesheetService;
@@ -37,6 +38,10 @@ class ClasseResource extends JsonResource
             'lieu' => $this->lieu,
             'duree_seance' => TimesheetService::dureeEntre($this->heure_debut, $this->heure_fin),
             'statut' => $this->statut,
+            'source' => $this->whenLoaded('source', fn () => $this->source ? [
+                'id' => $this->source->id,
+                'libelle' => ClasseDuplicationService::libelle($this->source),
+            ] : null),
             'periodes' => $this->when($periodes !== null, fn () => $periodes->map(fn (ClassePeriode $p) => self::periodeDeClasse($p))->values()),
             'nb_sessions' => $this->whenCounted('sessionsActives'),
             'alerte_periode_2' => $this->when($periodes !== null && $this->relationLoaded('anneeScolaire'), fn () => $this->alertePeriode2()),

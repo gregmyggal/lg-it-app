@@ -59,7 +59,7 @@ export default function ProfesseursClasseSection({ classe, titreClasse, onChange
   return (
     <Section
       title="Professeurs"
-      subtitle="Assignés à la classe : ils sont automatiquement assignés à ses sessions à venir"
+      subtitle="Assignés à la classe : ils sont automatiquement assignés à ses sessions à venir et à ses sessions passées sans professeur"
       bodyPadding={false}
       actions={
         peutGerer && (

@@ -60,7 +60,7 @@ class ClasseProfesseurAssignmentServiceTest extends TestCase
         $this->assertSame(ProfesseurClasse::ROLE_PRINCIPAL, $r['assignation']->role);
     }
 
-    public function test_classe_en_cours_ne_propage_qu_aux_sessions_a_venir(): void
+    public function test_classe_en_cours_propage_aussi_aux_seances_passees_orphelines(): void
     {
         $alice = Professeur::factory()->create();
         $cinquieme = $this->classe->sessions()->where('seance_numero', 5)->first();
@@ -68,9 +68,40 @@ class ClasseProfesseurAssignmentServiceTest extends TestCase
 
         $r = $this->service->assigner($this->classe, $alice);
 
+        $this->assertSame(14, $r['recapitulatif']['sessions_assignees']);
+        $this->assertSame(0, $r['recapitulatif']['sessions_passees_ignorees']);
+        $this->assertSame(14, $this->nbLignes($alice));
+        $this->assertSame($this->classe->sessions()->where('seance_numero', 1)->first()->date->toDateString(), $r['assignation']->date_debut->toDateString());
+    }
+
+    public function test_seances_passees_avec_professeur_ou_heures_ne_sont_pas_reprises(): void
+    {
+        $alice = Professeur::factory()->create();
+        $bob = Professeur::factory()->create();
+        $cinquieme = $this->classe->sessions()->where('seance_numero', 5)->first();
+        Carbon::setTestNow($cinquieme->date->copy()->addDay()->setTime(10, 0));
+        SessionProfesseur::factory()->create(['course_session_id' => $this->classe->sessions()->where('seance_numero', 1)->first()->id, 'professeur_id' => $bob->id]);
+        Timesheet::create([
+            'professeur_id' => $bob->id, 'date_prestation' => '2026-10-14', 'nombre_heures' => 2,
+            'course_session_id' => $this->classe->sessions()->where('seance_numero', 2)->first()->id,
+        ]);
+
+        $r = $this->service->assigner($this->classe, $alice);
+
+        $this->assertSame(12, $r['recapitulatif']['sessions_assignees']); // séances 3 à 14
+        $this->assertSame(2, $r['recapitulatif']['sessions_passees_ignorees']);
+    }
+
+    public function test_date_de_debut_explicite_exclut_les_seances_passees(): void
+    {
+        $alice = Professeur::factory()->create();
+        $cinquieme = $this->classe->sessions()->where('seance_numero', 5)->first();
+        Carbon::setTestNow($cinquieme->date->copy()->addDay()->setTime(10, 0));
+
+        $r = $this->service->assigner($this->classe, $alice, ['date_debut' => now()->toDateString()]);
+
         $this->assertSame(9, $r['recapitulatif']['sessions_assignees']);
         $this->assertSame(5, $r['recapitulatif']['sessions_passees_ignorees']);
-        $this->assertSame(9, $this->nbLignes($alice));
     }
 
     public function test_assignation_idempotente(): void

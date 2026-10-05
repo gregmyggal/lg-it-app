@@ -143,6 +143,7 @@ class ClasseSessionGenerator
                 'heure_fin' => $data['heure_fin'],
                 'lieu' => $data['lieu'] ?? null,
                 'statut' => Classe::STATUT_ACTIVE,
+                'source_classe_id' => $data['source_classe_id'] ?? null,
             ]);
 
             foreach ($data['periodes'] as $p) {

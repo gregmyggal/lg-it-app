@@ -25,6 +25,7 @@ class StoreClasseRequest extends FormRequest
             'periodes.*.periode_id' => ['required', 'integer', 'distinct', 'exists:periodes,id'],
             'periodes.*.cours_id' => ['required', 'integer', 'exists:cours,id'],
             'periodes.*.date_premiere_session' => ['required', 'date_format:Y-m-d'],
+            'source_classe_id' => ['sometimes', 'nullable', 'integer', 'exists:classes,id'],
             'periodes.*.dates_forcees' => ['sometimes', 'array'],
             'periodes.*.dates_forcees.*' => ['date_format:Y-m-d', 'distinct'],
         ];

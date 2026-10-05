@@ -45,6 +45,12 @@ export default function ClasseDetailPage() {
   const [params] = useSearchParams();
   const location = useLocation();
 
+  // Lien « Assigner des professeurs » après une duplication (CLS-07) : positionnement sur la section.
+  const classeChargee = Boolean(classe.data);
+  useEffect(() => {
+    if (classeChargee && location.hash === '#professeurs') document.getElementById('professeurs')?.scrollIntoView();
+  }, [classeChargee, location.hash]);
+
   // Retour de « Modifier les dates » : message de confirmation et réouverture de la modale « Ajouter la période » avec la saisie conservée.
   useEffect(() => {
     if (location.state?.datesMisesAJour) toast.success(location.state.datesMisesAJour);
@@ -178,6 +184,15 @@ export default function ClasseDetailPage() {
       <LinkButton to={`/admin/calendrier?classe_id=${c.id}&annee_scolaire_id=${c.annee_scolaire_id}`} size="sm">
         Voir dans le calendrier
       </LinkButton>
+      {c.can?.update && (
+        <LinkButton
+          to={`/admin/classes/nouvelle?source=${c.id}`}
+          size="sm"
+          title="Créer une nouvelle classe avec les mêmes cours et le même lieu, sur un autre jour ou un autre horaire."
+        >
+          ⧉ Dupliquer la classe
+        </LinkButton>
+      )}
       {c.can?.update && !estClasseArchivee(c.statut) && (
         <AdminButton variant="secondary" size="sm" onClick={archiver} loading={enCours}>
           Archiver la classe (P1 et P2)
@@ -201,7 +216,9 @@ export default function ClasseDetailPage() {
             Scolarité › <Link to="/admin/classes">Classes</Link> › {titre}
           </>
         }
-        description={[
+        description={
+          <>
+            {[
           c.lieu,
           c.annee_scolaire?.libelle,
           premiere ? `du ${formatDate(premiere)} au ${formatDate(derniere)}` : null,
@@ -210,6 +227,13 @@ export default function ClasseDetailPage() {
         ]
           .filter(Boolean)
           .join(' · ')}
+            {c.source && (
+              <>
+                {' · '}Dupliquée de <Link to={`/admin/classes/${c.source.id}`}>{c.source.libelle}</Link>
+              </>
+            )}
+          </>
+        }
         action={actionsEntete}
       />
 
@@ -259,7 +283,9 @@ export default function ClasseDetailPage() {
           </Banner>
         )}
 
-        <ProfesseursClasseSection classe={c} titreClasse={titre} onChange={sessions.reload} />
+        <div id="professeurs" style={{ scrollMarginTop: '16px' }}>
+          <ProfesseursClasseSection classe={c} titreClasse={titre} onChange={sessions.reload} />
+        </div>
 
         {[1, 2].map((n) => {
           const p = (c.periodes || []).find((x) => x.numero === n);

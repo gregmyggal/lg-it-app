@@ -30,6 +30,11 @@ export function creerClasse(payload) {
   return client.post('/classes', payload).then((res) => res.data.data);
 }
 
+/** CLS-07 : formulaire « Nouvelle classe » pré-rempli depuis une classe existante (dates transposées sur `jour_semaine`). */
+export function propositionDuplication(classeId, params = {}) {
+  return client.get(`/classes/${classeId}/duplication`, { params }).then((res) => res.data.data);
+}
+
 export function modifierClasse(id, payload) {
   return client.put(`/classes/${id}`, payload).then((res) => res.data.data);
 }

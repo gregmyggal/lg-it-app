@@ -28,7 +28,7 @@ class ClasseProfesseurAssignmentService
     public function apercu(Classe $classe, Professeur $professeur, array $data = []): array
     {
         $existante = $this->assignation($classe, $professeur);
-        [$debut, $fin] = $this->fenetre($data, $existante, true);
+        [$debut, $fin] = $this->fenetre($classe, $data, $existante, true);
 
         $plan = $this->plan($classe, $professeur, $debut, $fin);
 
@@ -51,7 +51,7 @@ class ClasseProfesseurAssignmentService
 
         return DB::transaction(function () use ($classe, $professeur, $data) {
             $existante = $this->assignation($classe, $professeur);
-            [$debut, $fin] = $this->fenetre($data, $existante, true);
+            [$debut, $fin] = $this->fenetre($classe, $data, $existante, true);
 
             $plan = $this->plan($classe, $professeur, $debut, $fin);
             $this->refuserSiConflits($plan['conflits']);
@@ -84,7 +84,7 @@ class ClasseProfesseurAssignmentService
         return DB::transaction(function () use ($assignation, $data) {
             $classe = $assignation->classe;
             $professeur = $assignation->professeur;
-            [$debut, $fin] = $this->fenetre($data, $assignation, false);
+            [$debut, $fin] = $this->fenetre($classe, $data, $assignation, false);
 
             $plan = $this->plan($classe, $professeur, $debut, $fin);
             $this->refuserSiConflits($plan['conflits']);
@@ -218,9 +218,12 @@ class ClasseProfesseurAssignmentService
     /**
      * @return array{0: string, 1: ?string} [date_debut, date_fin] retenues
      */
-    private function fenetre(array $data, ?ProfesseurClasse $existante, bool $reouverture): array
+    private function fenetre(Classe $classe, array $data, ?ProfesseurClasse $existante, bool $reouverture): array
     {
-        $debut = $data['date_debut'] ?? $existante?->date_debut?->toDateString() ?? $this->aujourdhui();
+        // Sans date explicite, une nouvelle assignation couvre aussi les séances passées orphelines (CLS-07).
+        $debut = $data['date_debut'] ?? $existante?->date_debut?->toDateString()
+            ?? $this->seancesPasseesOrphelines($classe)->min('date') ?? $this->aujourdhui();
+        $debut = substr((string) $debut, 0, 10);
         // POST : date_fin absente = assignation ouverte (réactivation) ; PUT : absente = inchangée.
         $fin = array_key_exists('date_fin', $data)
             ? $data['date_fin']
@@ -266,6 +269,12 @@ class ClasseProfesseurAssignmentService
             ->where('date', '>=', max($debut, $aujourdhui))
             ->when($fin !== null, fn ($q) => $q->where('date', '<=', $fin))
             ->get();
+        $orphelines = $this->seancesPasseesOrphelines($classe)
+            ->with('classePeriode.periode')
+            ->where('date', '>=', $debut)
+            ->when($fin !== null, fn ($q) => $q->where('date', '<=', $fin))
+            ->get();
+        $fenetre = $orphelines->concat($fenetre)->values();
 
         $deja = SessionProfesseur::where('professeur_id', $professeur->id)
             ->whereIn('course_session_id', $fenetre->pluck('id'))
@@ -276,7 +285,7 @@ class ClasseProfesseurAssignmentService
         $passees = CourseSession::where('classe_id', $classe->id)
             ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
             ->where(fn ($q) => $q->where('date', '<', $aujourdhui)->orWhere('statut', CourseSession::STATUT_TERMINEE))
-            ->count();
+            ->count() - $orphelines->count();
 
         return [
             'a_assigner' => $aAssigner,
@@ -284,6 +293,20 @@ class ClasseProfesseurAssignmentService
             'passees' => $passees,
             'conflits' => $this->conflits($aAssigner, $professeur->id),
         ];
+    }
+
+    /**
+     * Séances passées sans aucun professeur ni heure encodée (ex. classe dupliquée qui démarre dans le passé) :
+     * l'assignation de classe s'y propage aussi (CLS-07 N-1).
+     */
+    private function seancesPasseesOrphelines(Classe $classe)
+    {
+        return CourseSession::query()
+            ->where('classe_id', $classe->id)
+            ->where('date', '<', $this->aujourdhui())
+            ->where('statut', '!=', CourseSession::STATUT_ANNULEE)
+            ->whereDoesntHave('sessionProfesseurs')
+            ->whereDoesntHave('timesheets');
     }
 
     /** Sessions à venir d'une classe : date ≥ aujourd'hui, planifiee/en_cours (annulées et terminées exclues). */

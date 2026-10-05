@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PeriodeRegles;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,7 @@ class Classe extends Model
         'heure_fin',
         'lieu',
         'statut',
+        'source_classe_id',
     ];
 
     protected function casts(): array
@@ -45,6 +47,12 @@ class Classe extends Model
     }
 
     /** Périodes de la classe (1 ou 2), triées par numéro de période. */
+    /** Classe dont celle-ci est une copie (CLS-07) ; null si créée de zéro ou si la source a été supprimée. */
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'source_classe_id');
+    }
+
     public function periodes(): HasMany
     {
         return $this->hasMany(ClassePeriode::class)
@@ -93,6 +101,7 @@ class Classe extends Model
             'periodes' => self::chargerPeriodes(),
             'prochaineSession.classePeriode.periode',
             'assignationsActives.professeur',
+            'source.periodes.cours',
         ];
     }
 
@@ -102,7 +111,7 @@ class Classe extends Model
         return fn ($q) => $q->with(['periode', 'cours'])
             ->withCount(['sessionsActives', 'historiqueCours'])
             ->withMax('sessionsActives as derniere_session_date', 'date')
-            ->withCount(['sessionsActives as nb_hors_periode' => fn ($s) => $s->whereRaw(\App\Services\PeriodeRegles::sqlHorsPeriode())]);
+            ->withCount(['sessionsActives as nb_hors_periode' => fn ($s) => $s->whereRaw(PeriodeRegles::sqlHorsPeriode())]);
     }
 
     public function assignations(): HasMany

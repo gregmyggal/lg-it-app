@@ -7,9 +7,11 @@ use App\Http\Requests\StoreClasseRequest;
 use App\Http\Requests\UpdateClasseRequest;
 use App\Http\Resources\ClasseResource;
 use App\Models\Classe;
+use App\Services\ClasseDuplicationService;
 use App\Services\ClasseService;
 use App\Services\ClasseSessionGenerator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,6 +20,7 @@ class ClasseController extends Controller
     public function __construct(
         private readonly ClasseSessionGenerator $generator,
         private readonly ClasseService $service,
+        private readonly ClasseDuplicationService $duplication,
     ) {}
 
     public function index(ListClassesRequest $request): AnonymousResourceCollection
@@ -54,7 +57,29 @@ class ClasseController extends Controller
     /** Aperçu sans persistance : par période, 14 dates, dates sautées, avertissements, blocage éventuel. */
     public function apercu(StoreClasseRequest $request): JsonResponse
     {
-        return response()->json(['data' => $this->generator->preview($request->validated())]);
+        $data = $request->validated();
+        $apercu = $this->generator->preview($data);
+
+        return response()->json(['data' => empty($data['source_classe_id']) ? $apercu : $this->duplication->enrichirApercu($apercu, $data)]);
+    }
+
+    /** CLS-07 : formulaire « Nouvelle classe » pré-rempli depuis une classe existante (dates transposées, aucun professeur). */
+    public function duplication(Request $request, Classe $classe): JsonResponse
+    {
+        Gate::authorize('create', Classe::class);
+        Gate::authorize('view', $classe);
+        $data = $request->validate([
+            'jour_semaine' => ['sometimes', 'integer', 'between:1,7'],
+            'heure_debut' => ['sometimes', 'date_format:H:i'],
+            'heure_fin' => ['sometimes', 'date_format:H:i'],
+        ]);
+
+        return response()->json(['data' => $this->duplication->proposer(
+            $classe,
+            isset($data['jour_semaine']) ? (int) $data['jour_semaine'] : null,
+            $data['heure_debut'] ?? null,
+            $data['heure_fin'] ?? null,
+        )]);
     }
 
     public function show(Classe $classe): ClasseResource
