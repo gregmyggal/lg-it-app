@@ -19,6 +19,9 @@ class TimesheetAudit extends Model
 
     public const ACTION_DEVERROUILLAGE = 'deverrouillage';
 
+    /** CLS-08 : heure détachée de sa séance lors de la suppression forcée de la classe. */
+    public const ACTION_CLASSE_SUPPRIMEE = 'classe_supprimee';
+
     protected $fillable = ['timesheet_id', 'professeur_id', 'user_id', 'action', 'avant', 'apres', 'motif'];
 
     protected $casts = ['avant' => 'array', 'apres' => 'array'];

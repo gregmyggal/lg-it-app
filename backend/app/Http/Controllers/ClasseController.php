@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DestroyClasseRequest;
 use App\Http\Requests\ListClassesRequest;
 use App\Http\Requests\StoreClasseRequest;
 use App\Http\Requests\UpdateClasseRequest;
@@ -94,11 +95,10 @@ class ClasseController extends Controller
         return new ClasseResource(self::charger($this->service->modifier($classe, $request->validated())));
     }
 
-    public function destroy(Classe $classe): JsonResponse
+    /** CLS-08 : `force` + `motif` + `confirmation_nom` pour supprimer une classe ayant un historique. */
+    public function destroy(DestroyClasseRequest $request, Classe $classe): JsonResponse
     {
-        Gate::authorize('delete', $classe);
-
-        $this->service->supprimer($classe);
+        $this->service->supprimer($classe, $request->forcer() ? $request->validated('motif') : null, $request->user());
 
         return response()->json(null, 204);
     }

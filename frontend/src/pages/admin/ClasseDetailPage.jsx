@@ -19,10 +19,11 @@ import LienModifierDates from '../../components/annees/LienModifierDates';
 import { useAnneesScolaires } from '../../hooks/useAnneesScolaires';
 import { effacerBrouillon, lireBrouillon } from '../../utils/annees';
 import PeriodeBadge from '../../components/classes/PeriodeBadge';
+import { SuppressionClasseModal } from '../../components/classes/SuppressionClasseModals';
 import { AjouterPeriodeModal, ChangerCoursModal, SupprimerPeriodeModal, HistoriqueCoursModal } from '../../components/classes/PeriodeModals';
 import { useClasse, useClasseSessions, modifierClasse, supprimerClasse } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
-import { getErrorMessage, getStatus } from '../../api/errors';
+import { getErrorData, getErrorMessage, getStatus } from '../../api/errors';
 import { STATUTS_CLASSE, STATUT_CLASSE_ARCHIVEE, estClasseArchivee, estSessionBarree } from '../../utils/statuts';
 import { formatDate, formatDateCourte, jourDeClasseApres, libelleClasse } from '../../utils/dates';
 import { libelleSessionPhrase } from '../../utils/classes';
@@ -38,7 +39,7 @@ export default function ClasseDetailPage() {
   const professeursListe = useProfesseursListe();
   const [remplacement, setRemplacement] = useState(null); // session dont on gère les professeurs
   const [ajustement, setAjustement] = useState(null); // { session, mode }
-  const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message }
+  const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message, resume?, forcable? } (CLS-08)
   const [enCours, setEnCours] = useState(false);
   const [modalePeriode, setModalePeriode] = useState(null); // { type: 'ajout'|'cours'|'suppression', numero?, periode? }
   const annees = useAnneesScolaires();
@@ -160,15 +161,24 @@ export default function ClasseDetailPage() {
     }
   }
 
+  function apresSuppression(nbHeures) {
+    toast.success(
+      nbHeures > 0
+        ? `Classe « ${titre} » supprimée — ${nbHeures} heure${nbHeures > 1 ? 's' : ''} conservée${nbHeures > 1 ? 's' : ''} dans les feuilles des professeurs.`
+        : `Classe « ${titre} » supprimée.`,
+    );
+    navigate('/admin/classes');
+  }
+
   async function supprimer() {
     setEnCours(true);
     try {
       await supprimerClasse(c.id);
-      toast.success(`Classe « ${titre} » supprimée.`);
-      navigate('/admin/classes');
+      apresSuppression(0);
     } catch (err) {
       if (getStatus(err) === 409) {
-        setSuppression({ etape: 'refus', message: getErrorMessage(err) });
+        const { resume, forcable } = getErrorData(err);
+        setSuppression({ etape: 'refus', message: getErrorMessage(err), resume, forcable: Boolean(forcable) });
       } else {
         setSuppression(null);
         toast.error(getErrorMessage(err, "La classe n'a pas pu être supprimée."));
@@ -379,37 +389,16 @@ export default function ClasseDetailPage() {
       )}
 
       {suppression?.etape === 'refus' && (
-        <AdminModal
-          isOpen
-          title="Impossible de supprimer cette classe"
-          size="sm"
+        <SuppressionClasseModal
+          classe={c}
+          titre={titre}
+          refus={suppression}
+          peutArchiver={c.can?.update && !estClasseArchivee(c.statut)}
+          archivageEnCours={enCours}
+          onArchiver={archiver}
           onClose={() => setSuppression(null)}
-          footer={
-            <>
-              <AdminButton variant="secondary" onClick={() => setSuppression(null)}>
-                Fermer
-              </AdminButton>
-              {c.can?.update && !estClasseArchivee(c.statut) && (
-                <AdminButton onClick={archiver} loading={enCours}>
-                  Archiver la classe
-                </AdminButton>
-              )}
-            </>
-          }
-        >
-          <Banner tone="error">
-            <strong>Suppression refusée.</strong> {suppression.message}
-          </Banner>
-          <p>Vous pouvez à la place :</p>
-          <ul style={{ margin: `0 0 0 ${ADMIN_SPACING.lg}` }}>
-            <li>
-              <strong>Archiver la classe</strong> : elle disparaît des listes actives mais garde tout son historique.
-            </li>
-            <li>
-              <strong>Annuler des sessions</strong> à venir, une par une.
-            </li>
-          </ul>
-        </AdminModal>
+          onSupprimee={apresSuppression}
+        />
       )}
     </>
   );

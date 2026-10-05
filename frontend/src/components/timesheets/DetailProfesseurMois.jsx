@@ -25,6 +25,10 @@ const LIBELLE_CHAMP = { nombre_heures: 'Heures', date_prestation: 'Date', type_a
 function texteAudit(h) {
   if (h.action === 'contestation') return 'Contestation du professeur';
   if (h.action === 'reponse_contestation') return 'Réponse de la direction à la contestation';
+  if (h.action === 'classe_supprimee') {
+    const seance = h.avant.seance_numero ? ` : séance n° ${h.avant.seance_numero}${h.avant.date_seance ? ` du ${formatDateCourte(h.avant.date_seance)}` : ''} détachée` : '';
+    return `Classe « ${h.avant.classe} » supprimée${seance}`;
+  }
   if (h.action === 'lissage') {
     return `Lissage : ${formatHeures(h.apres.heures_deplacees)} (${formatEuros(h.apres.montant_deplace)}) déplacées vers le ${formatDateCourte(h.apres.date_cible)}`;
   }

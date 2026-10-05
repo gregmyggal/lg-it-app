@@ -8,6 +8,7 @@ use App\Models\Cours;
 use App\Models\CourseSession;
 use App\Models\Professeur;
 use App\Models\Timesheet;
+use App\Models\TimesheetAudit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -224,6 +225,95 @@ class ClasseApiTest extends TestCase
         ]);
         $this->deleteJson("/api/classes/{$classe3->id}")->assertStatus(409);
         $this->assertSame(14, $classe3->sessions()->count());
+    }
+
+    /** CLS-08 : 409 avec résumé de l'historique, puis forçage (motif + nom) ; les heures sont conservées et tracées. */
+    public function test_cls08_forcer_la_suppression_conserve_les_heures_et_les_trace(): void
+    {
+        $classe = $this->classeAvecSessions($this->annee());
+        $nom = $classe->load('periodes.cours')->periodes->first()->cours->titre;
+        $professeur = $this->professeur();
+        $seance2 = $classe->sessions()->where('seance_numero', 2)->first();
+        $heure = Timesheet::create([
+            'professeur_id' => $professeur->id, 'date_prestation' => '2026-10-14', 'nombre_heures' => 3,
+            'cours_id' => $seance2->classePeriode->cours_id, 'course_session_id' => $seance2->id, 'statut_validation' => 'confirme',
+        ]);
+        $classe->sessions()->where('seance_numero', 4)->update(['statut' => 'annulee']);
+        Carbon::setTestNow('2026-10-20 10:00:00'); // séances 1 et 2 passées
+        $this->actingAsRole('directeur');
+
+        $this->deleteJson("/api/classes/{$classe->id}")
+            ->assertStatus(409)
+            ->assertJsonPath('forcable', true)
+            ->assertJsonPath('resume.seances.passees', 2)
+            ->assertJsonPath('resume.seances.annulees', 1)
+            ->assertJsonPath('resume.seances.a_venir', 11)
+            ->assertJsonPath('resume.heures.nb', 1)
+            ->assertJsonPath('resume.heures.par_statut.0.statut', 'confirme')
+            ->assertJsonPath('resume.professeurs.0.nom', 'Alice Martin');
+
+        // Motif trop court, nom erroné : 422, rien n'est supprimé.
+        $this->deleteJson("/api/classes/{$classe->id}", ['force' => true, 'motif' => 'erreur', 'confirmation_nom' => 'Autre'])
+            ->assertStatus(422)->assertJsonValidationErrors(['motif', 'confirmation_nom']);
+        $this->deleteJson("/api/classes/{$classe->id}", ['force' => true])
+            ->assertStatus(422)->assertJsonValidationErrors(['motif', 'confirmation_nom']);
+        $this->assertDatabaseHas('classes', ['id' => $classe->id]);
+
+        $this->deleteJson("/api/classes/{$classe->id}", [
+            'force' => true, 'motif' => 'Classe créée en double par erreur', 'confirmation_nom' => '  '.mb_strtoupper($nom).' ',
+        ])->assertNoContent();
+
+        $this->assertDatabaseMissing('classes', ['id' => $classe->id]);
+        $this->assertSame(0, CourseSession::where('classe_id', $classe->id)->count());
+        $this->assertDatabaseHas('timesheets', ['id' => $heure->id, 'course_session_id' => null, 'statut_validation' => 'confirme', 'nombre_heures' => 3]);
+        $audit = TimesheetAudit::where('timesheet_id', $heure->id)->sole();
+        $this->assertSame('classe_supprimee', $audit->action);
+        $this->assertSame('Classe créée en double par erreur', $audit->motif);
+        $this->assertSame(2, $audit->avant['seance_numero']);
+        $this->assertSame('2026-10-14', $audit->avant['date_seance']);
+        $this->assertSame($nom, $audit->avant['classe']);
+    }
+
+    public function test_cls08_forcage_sans_heure_et_forcage_refuse_si_heure_sur_fiche_generee(): void
+    {
+        $this->actingAsRole('admin');
+
+        // Séances passées sans heure : forçage possible, aucun audit.
+        $classe = $this->classeAvecSessions($this->annee());
+        $nom = $classe->load('periodes.cours')->periodes->first()->cours->titre;
+        Carbon::setTestNow('2026-10-20 10:00:00');
+        $this->deleteJson("/api/classes/{$classe->id}", ['force' => true, 'motif' => 'Classe jamais ouverte', 'confirmation_nom' => $nom])
+            ->assertNoContent();
+        $this->assertSame(0, TimesheetAudit::count());
+
+        // Heure « générée » : 409 non forçable, même avec motif et nom corrects.
+        Carbon::setTestNow('2026-09-30 10:00:00');
+        $classe2 = $this->classeAvecSessions($this->annee2());
+        $nom2 = $classe2->load('periodes.cours')->periodes->first()->cours->titre;
+        Timesheet::create([
+            'professeur_id' => $this->professeur()->id, 'date_prestation' => '2026-10-07', 'nombre_heures' => 3,
+            'course_session_id' => $classe2->sessions()->first()->id, 'statut_validation' => 'genere',
+        ]);
+        $this->deleteJson("/api/classes/{$classe2->id}")->assertStatus(409)->assertJsonPath('forcable', false);
+        $this->deleteJson("/api/classes/{$classe2->id}", ['force' => true, 'motif' => 'Classe créée en double', 'confirmation_nom' => $nom2])
+            ->assertStatus(409)->assertJsonPath('resume.heures_generees', 1);
+        $this->assertSame(14, $classe2->sessions()->count());
+    }
+
+    public function test_cls08_forcage_interdit_au_professeur_et_sans_jeton(): void
+    {
+        $classe = $this->classeAvecSessions($this->annee());
+        $payload = ['force' => true, 'motif' => 'Classe créée en double', 'confirmation_nom' => 'x'];
+
+        $this->deleteJson("/api/classes/{$classe->id}", $payload)->assertStatus(401);
+        $this->actingAsRole('professeur');
+        $this->deleteJson("/api/classes/{$classe->id}", $payload)->assertStatus(403);
+        $this->assertDatabaseHas('classes', ['id' => $classe->id]);
+    }
+
+    private function professeur(): Professeur
+    {
+        return Professeur::create(['user_id' => User::factory()->professeur()->create()->id, 'prenom' => 'Alice', 'nom' => 'Martin', 'email' => 'alice'.uniqid().'@test.com', 'statut' => 'actif', 'date_entree' => '2025-09-01']);
     }
 
     private function annee2()

@@ -39,8 +39,9 @@ export function modifierClasse(id, payload) {
   return client.put(`/classes/${id}`, payload).then((res) => res.data.data);
 }
 
-export function supprimerClasse(id) {
-  return client.delete(`/classes/${id}`);
+/** Sans payload : refus 409 si la classe a un historique. CLS-08 : `{ force: true, motif, confirmation_nom }` pour forcer. */
+export function supprimerClasse(id, payload) {
+  return client.delete(`/classes/${id}`, payload ? { data: payload } : undefined);
 }
 
 /** Session renvoyée + `avertissements` (non bloquants, ex. « Cette date est après la fin de la période 1 »). */
