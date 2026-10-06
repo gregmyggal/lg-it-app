@@ -15,7 +15,8 @@ import { ADMIN_COLORS, ADMIN_SPACING } from '../styles/AdminDesignSystem';
 import ClassesProfesseurSection from './professeurs/ClassesProfesseurSection';
 import CompteProfesseurSection from './professeurs/CompteProfesseurSection';
 import CompteBancaireSection from './professeurs/CompteBancaireSection';
-import { getErrorMessage } from '../api/errors';
+import { ArchiverProfesseurModal, SupprimerProfesseurModal } from './professeurs/CycleVieProfesseurModals';
+import { useToast } from '../hooks/useToast';
 
 export default function AdminProfesseurDetail() {
   const { id } = useParams();
@@ -26,6 +27,8 @@ export default function AdminProfesseurDetail() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [modal, setModal] = useState(null); // 'archiver' | 'supprimer'
+  const toast = useToast();
 
   useEffect(() => {
     loadProfesseur();
@@ -41,19 +44,6 @@ export default function AdminProfesseurDetail() {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDeleteProfesseur() {
-    if (!window.confirm('Supprimer définitivement ce professeur ? Possible uniquement s\'il n\'a aucune donnée liée (sinon, désactivez-le).')) {
-      return;
-    }
-
-    try {
-      await client.delete(`/professeurs/${id}`);
-      navigate('/admin/professeurs');
-    } catch (err) {
-      setError(getErrorMessage(err, 'Erreur lors de la suppression'));
     }
   }
 
@@ -73,7 +63,14 @@ export default function AdminProfesseurDetail() {
     );
   }
 
-  const statusColor = professeur.statut === 'actif' ? 'green' : 'red';
+  const actif = professeur.statut === 'actif';
+  const statusColor = actif ? 'green' : 'purple';
+
+  function apresChangement(message) {
+    setSuccess(message);
+    loadProfesseur();
+    setTimeout(() => setSuccess(null), 4000);
+  }
 
   return (
     <>
@@ -81,7 +78,7 @@ export default function AdminProfesseurDetail() {
         icon="👨‍🏫"
         title={`${professeur.prenom} ${professeur.nom}`}
         description={professeur.email}
-        badge={professeur.statut === 'actif' ? '✅ Actif' : '⏸️ Inactif'}
+        badge={actif ? '✅ Actif' : '🗄️ Archivé'}
       />
 
       <AdminPageContent>
@@ -167,7 +164,7 @@ export default function AdminProfesseurDetail() {
                     STATUT
                   </div>
                   <AdminBadge
-                    label={professeur.statut === 'actif' ? 'Actif' : 'Inactif'}
+                    label={actif ? 'Actif' : 'Archivé'}
                     color={statusColor}
                   />
                 </div>
@@ -189,14 +186,7 @@ export default function AdminProfesseurDetail() {
         </div>
 
         <div style={{ marginBottom: ADMIN_SPACING.xl }}>
-          <CompteProfesseurSection
-            professeur={professeur}
-            onChange={(message) => {
-              setSuccess(message);
-              loadProfesseur();
-              setTimeout(() => setSuccess(null), 4000);
-            }}
-          />
+          <CompteProfesseurSection professeur={professeur} onChange={apresChangement} />
         </div>
 
         <div style={{ marginBottom: ADMIN_SPACING.xl }}>
@@ -317,16 +307,41 @@ export default function AdminProfesseurDetail() {
             Éditer
           </AdminButton>
 
-          <AdminButton
-            variant="danger"
-            icon="🗑️"
-            onClick={handleDeleteProfesseur}
-          >
-            Supprimer
-          </AdminButton>
         </div>
+
+        {/* PROF-02 : suppression définitive, à l'écart des actions courantes (l'archivage est recommandé). */}
+        <section
+          aria-labelledby="zone-sensible-titre"
+          style={{ marginTop: ADMIN_SPACING.xl, border: '1px solid var(--tone-error-bd)', borderRadius: '12px', padding: '20px', background: 'var(--c-card)' }}
+        >
+          <h2 id="zone-sensible-titre" style={{ margin: '0 0 8px', fontSize: '16px', color: 'var(--tone-error-fg)' }}>Zone sensible</h2>
+          <p style={{ marginTop: 0 }}>
+            Supprimer définitivement ce professeur et toutes ses données.{actif && ' Pour un départ, préférez l\u2019archivage.'}
+          </p>
+          <AdminButton variant="secondary" size="sm" onClick={() => setModal('supprimer')} style={{ color: 'var(--tone-error-fg)' }}>
+            Supprimer le professeur…
+          </AdminButton>
+        </section>
       </AdminPageContent>
 
+      {modal === 'supprimer' && (
+        <SupprimerProfesseurModal
+          professeur={professeur}
+          onArchiver={actif ? () => setModal('archiver') : null}
+          onClose={() => setModal(null)}
+          onSupprime={(message) => {
+            toast.success(message);
+            navigate('/admin/professeurs');
+          }}
+        />
+      )}
+      {modal === 'archiver' && (
+        <ArchiverProfesseurModal
+          professeur={professeur}
+          onClose={() => setModal(null)}
+          onDone={(message) => { setModal(null); apresChangement(message); }}
+        />
+      )}
     </>
   );
 }

@@ -37,7 +37,8 @@ class SessionReplacementService
             }
 
             $ligneA = SessionProfesseur::where('course_session_id', $session->id)->where('professeur_id', $professeurRemplaceId)->lockForUpdate()->first();
-            if (! $ligneA || $ligneA->remplace) {
+            // PROF-02 : un remplacé sans remplaçant (remplaçant archivé ou supprimé) peut recevoir un nouveau remplaçant.
+            if (! $ligneA || ($ligneA->remplace && $ligneA->remplace_par_professeur_id !== null)) {
                 $this->invalide('professeur_remplace_id', 'Le professeur remplacé n\'est pas assigné à cette session (ou est déjà remplacé).');
             }
 

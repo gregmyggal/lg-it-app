@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DestroyProfesseurRequest;
 use App\Models\Professeur;
 use App\Services\AccesCompteService;
 use App\Services\ProfesseurCompteService;
@@ -89,13 +90,12 @@ class ProfesseurController extends Controller
         return $professeur;
     }
 
-    // Suppression réservée à un professeur sans donnée liée (sinon 409 : désactiver).
-    public function destroy(Professeur $professeur)
+    // PROF-02 : sans heure encodée, suppression directe ; sinon 409 avec résumé, puis forçage (motif + nom).
+    public function destroy(DestroyProfesseurRequest $request, Professeur $professeur)
     {
-        Gate::authorize('delete', $professeur);
         $this->refuserSoi($professeur);
 
-        $this->comptes->supprimer($professeur);
+        $this->comptes->supprimer($professeur, $request->user(), $request->forcer() ? $request->validated('motif') : null);
 
         return response()->noContent();
     }
@@ -107,19 +107,27 @@ class ProfesseurController extends Controller
         return response()->json(['data' => $this->comptes->impact($professeur)]);
     }
 
+    public function impactSuppression(Request $request, Professeur $professeur)
+    {
+        Gate::authorize('delete', $professeur);
+
+        return response()->json(['data' => $this->comptes->resumeSuppression($professeur, $request->user())]);
+    }
+
     public function desactiver(Request $request, Professeur $professeur)
     {
         Gate::authorize('update', $professeur);
         $this->refuserSoi($professeur);
 
-        $data = $request->validate([
-            'terminer_assignations' => ['sometimes', 'boolean'],
-            'date_sortie' => ['nullable', 'date'],
+        $data = $request->validate(['date_sortie' => ['nullable', 'date']]);
+
+        $r = $this->comptes->desactiver($professeur, $data['date_sortie'] ?? null);
+
+        return response()->json([
+            'data' => $r['professeur'],
+            'assignations_terminees' => $r['assignations_terminees'],
+            'seances_liberees' => $r['seances_liberees'],
         ]);
-
-        $r = $this->comptes->desactiver($professeur, $data['terminer_assignations'] ?? true, $data['date_sortie'] ?? null);
-
-        return response()->json(['data' => $r['professeur'], 'assignations_terminees' => $r['assignations_terminees']]);
     }
 
     public function reactiver(Request $request, Professeur $professeur)

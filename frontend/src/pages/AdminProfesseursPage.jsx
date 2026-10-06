@@ -20,13 +20,13 @@ import { FilterToolbar, ResultCount } from '../components/ui/Filters';
 import { EmptyBlock } from '../components/ui/DataStates';
 import { useFiltresListe } from '../hooks/useFiltresListe';
 import {
-  OPTIONS_ACCES, OPTIONS_CONTRAT, OPTIONS_STATUT, STATUT_PAR_DEFAUT, correspondAcces, correspondContrat,
+  OPTIONS_ACCES, OPTIONS_CONTRAT, OPTIONS_STATUT_PROFESSEUR, STATUT_PAR_DEFAUT, correspondAcces, correspondContrat,
   correspondRecherche, libelleResultats, statutPourApi,
 } from '../utils/filtres';
 
 const DEFAUTS = { q: '', statut: STATUT_PAR_DEFAUT, contrat: '', acces: '' };
 const AUTORISEES = {
-  statut: OPTIONS_STATUT.map((o) => o.value),
+  statut: OPTIONS_STATUT_PROFESSEUR.map((o) => o.value),
   contrat: OPTIONS_CONTRAT.map((o) => o.value),
   acces: OPTIONS_ACCES.map((o) => o.value),
 };
@@ -209,7 +209,7 @@ export default function AdminProfesseursPage() {
               label="Filtres des professeurs"
               recherche={{ id: ID_RECHERCHE, value: valeurs.q, onChange: (v) => majFiltre('q', v), placeholder: 'Nom ou email' }}
               filtres={[
-                { id: 'professeurs-statut', label: 'Statut', value: valeurs.statut, onChange: (v) => majFiltre('statut', v), options: OPTIONS_STATUT },
+                { id: 'professeurs-statut', label: 'Statut', value: valeurs.statut, onChange: (v) => majFiltre('statut', v), options: OPTIONS_STATUT_PROFESSEUR },
                 { id: 'professeurs-contrat', label: 'Contrat', value: valeurs.contrat, onChange: (v) => majFiltre('contrat', v), options: OPTIONS_CONTRAT, placeholder: 'Tous' },
                 { id: 'professeurs-acces', label: 'Accès', value: valeurs.acces, onChange: (v) => majFiltre('acces', v), options: OPTIONS_ACCES, placeholder: 'Tous' },
               ]}
@@ -273,7 +273,7 @@ export default function AdminProfesseursPage() {
                   <>
                     <AdminButton variant="primary" onClick={reinitialiserEtFocaliser}>Réinitialiser les filtres</AdminButton>
                     {valeurs.statut === STATUT_PAR_DEFAUT && (
-                      <AdminButton variant="secondary" onClick={() => majFiltre('statut', 'tous')}>Inclure les désactivés</AdminButton>
+                      <AdminButton variant="secondary" onClick={() => majFiltre('statut', 'tous')}>Inclure les archivés</AdminButton>
                     )}
                   </>
                 )}
@@ -314,7 +314,7 @@ export default function AdminProfesseursPage() {
                     <h3 style={{ margin: '0 0 8px 0' }}>
                       {prof.prenom} {prof.nom}{' '}
                       <span style={{ fontSize: '12px', fontWeight: 600, color: prof.statut === 'actif' ? 'var(--tone-success-fg)' : 'var(--c-text-2)' }}>
-                        {prof.statut === 'actif' ? 'Actif' : 'Désactivé'}
+                        {prof.statut === 'actif' ? 'Actif' : 'Archivé'}
                       </span>
                     </h3>
                     <p style={{ margin: 0, color: 'var(--c-text-2)', fontSize: '0.9em' }}>

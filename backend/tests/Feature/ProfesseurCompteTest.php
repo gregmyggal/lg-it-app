@@ -81,17 +81,6 @@ class ProfesseurCompteTest extends TestCase
         $this->assertSame(1, $prof->assignations()->count());
     }
 
-    public function test_option_conserver_les_assignations(): void
-    {
-        $prof = Professeur::factory()->create();
-        $classe = $this->classeAvecSessions($this->annee());
-        app(ClasseProfesseurAssignmentService::class)->assigner($classe, $prof);
-        $this->actingAsRole('admin');
-
-        $this->postJson("/api/professeurs/{$prof->id}/desactiver", ['terminer_assignations' => false])
-            ->assertOk()->assertJsonPath('assignations_terminees', 0);
-    }
-
     public function test_connexion_refusee_si_desactive_uniquement_avec_bon_mot_de_passe(): void
     {
         $prof = Professeur::factory()->create(['statut' => 'inactif']);
@@ -158,7 +147,7 @@ class ProfesseurCompteTest extends TestCase
         $vide = Professeur::factory()->create();
         $this->actingAsRole('admin');
 
-        $this->deleteJson("/api/professeurs/{$avecHeures->id}")->assertStatus(409);
+        $this->deleteJson("/api/professeurs/{$avecHeures->id}")->assertStatus(409)->assertJsonPath('forcable', true);
         $this->deleteJson("/api/professeurs/{$vide->id}")->assertNoContent();
         $this->assertDatabaseMissing('professeurs', ['id' => $vide->id]);
     }

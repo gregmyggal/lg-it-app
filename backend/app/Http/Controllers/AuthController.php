@@ -30,7 +30,9 @@ class AuthController extends Controller
             : $user->statut === 'inactif';
 
         if ($inactif) {
-            return response()->json(['message' => 'Ce compte est désactivé. Contactez la direction.', 'code' => 'compte_desactive'], 403);
+            $message = $user->isProfesseur() ? 'Ce compte a été archivé. Contactez la direction de votre école.' : 'Ce compte est désactivé. Contactez la direction.';
+
+            return response()->json(['message' => $message, 'code' => 'compte_desactive'], 403);
         }
 
         return response()->json([

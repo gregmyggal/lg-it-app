@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Archiver / supprimer un professeur — Maquettes PROF-02</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok-d:#047857;--ok-l:#d1fae5;--warn-d:#92400e;--warn-l:#fef3c7;--warn-b:#fcd34d;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info-d:#075985;--info-l:#e0f2fe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--deep:#0b3550;--cta:#d9531e}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.6;color:var(--t1);background:var(--bg)}
+h1,h2,h3,p{margin:0}
+button,input,textarea{font:inherit}
+.mockbar{position:sticky;top:0;z-index:500;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24;margin-right:6px}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.note{max-width:1100px;margin:16px auto 0;padding:10px 14px;background:#fffbeb;border:1px dashed #f59e0b;border-radius:8px;font-size:13px;color:#78350f}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 44px)}
+.side{background:var(--deep);color:#fff;padding:24px 18px}
+.brand{font-weight:700;font-size:17px;margin-bottom:24px}.brand i{width:9px;height:9px;border-radius:50%;background:var(--cta);display:inline-block;margin-right:6px}
+.side a{display:block;color:rgba(255,255,255,.8);text-decoration:none;padding:7px 10px;border-radius:5px}
+.side a.active{background:rgba(255,255,255,.14);color:#fff;font-weight:700}
+.main{min-width:0;position:relative}
+.phead{background:#fff;border-bottom:1px solid var(--bd);padding:24px}
+.phead h1{font-size:28px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.phead p{color:var(--t3);margin-top:4px}
+.content{max-width:1100px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px}
+.card h2{font-size:16px;padding:14px 18px;border-bottom:1px solid var(--bd)}
+.card .b{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.danger-zone{border-color:#fecaca}
+.danger-zone h2{color:var(--err-d);border-color:#fecaca}
+.badge{display:inline-flex;align-items:center;font-size:12px;font-weight:700;border-radius:9999px;padding:2px 10px}
+.g{background:var(--ok-l);color:var(--ok-d)}.gr{background:#e5e7eb;color:#374151}.o{background:var(--warn-l);color:var(--warn-d)}.r{background:var(--err-l);color:var(--err-d)}
+.btn{border-radius:6px;padding:8px 14px;border:1px solid transparent;cursor:pointer;font-weight:600;font-size:14px}
+.btn.sm{padding:5px 10px;font-size:13px}
+.p{background:var(--primary);color:#fff}.s{background:#fff;color:var(--t1);border-color:#d1d5db}.d{background:var(--err);color:#fff}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.link{background:none;border:none;padding:0;color:var(--primary);text-decoration:underline;cursor:pointer}
+.link.red{color:var(--err-d)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--t3);font-size:13px}
+.ban{border-radius:6px;padding:10px 12px;font-size:13px;border:1px solid}
+.ban.w{background:var(--warn-l);color:var(--warn-d);border-color:var(--warn-b)}
+.ban.e{background:var(--err-l);color:var(--err-d);border-color:#fca5a5}
+.ban.i{background:var(--info-l);color:var(--info-d);border-color:#7dd3fc}
+.ban ul{margin:4px 0 0;padding-left:18px}
+.changed{outline:2px dashed #10b981;outline-offset:3px;border-radius:6px}
+.overlay{position:absolute;inset:0;background:rgba(17,24,39,.45);display:flex;align-items:flex-start;justify-content:center;padding:60px 16px;z-index:50}
+.modal{background:#fff;border-radius:10px;width:560px;max-width:100%;box-shadow:0 20px 40px rgba(0,0,0,.25)}
+.modal header{padding:16px 20px;border-bottom:1px solid var(--bd);font-weight:700;font-size:17px;display:flex;justify-content:space-between}
+.modal .mb{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.modal footer{padding:12px 20px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;align-items:center}
+.modal footer .left{margin-right:auto}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--t3)}
+ul.k{margin:0;padding-left:18px}
+details summary{cursor:pointer;color:var(--t2);font-size:13px}
+.counts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.counts div{background:var(--hover);border-radius:6px;padding:8px;text-align:center;font-size:12px;color:var(--t2)}
+.counts b{display:block;font-size:20px;color:var(--t1)}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13px}
+input[type=text],textarea{border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;font-weight:400}
+.err{color:var(--err-d);font-size:12px;font-weight:500}
+.skel{height:14px;background:linear-gradient(90deg,#eee,#f6f6f6,#eee);border-radius:4px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--bd);font-size:13px}
+th{color:var(--t3);font-weight:600;font-size:12px;text-transform:uppercase}
+tr.arch td{color:var(--t3)}
+.seg{display:inline-flex;border:1px solid #d1d5db;border-radius:6px;overflow:hidden}
+.seg span{padding:5px 12px;font-size:13px;border-right:1px solid #d1d5db}.seg span:last-child{border:none}
+.seg span.on{background:var(--primary-l);color:#1e40af;font-weight:700}
+.toast{position:absolute;right:24px;top:16px;background:#111827;color:#fff;border-radius:8px;padding:10px 14px;font-size:13px;display:flex;gap:12px;align-items:center;z-index:60}
+.toast button{background:none;border:none;color:#93c5fd;text-decoration:underline;cursor:pointer}
+.prof{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--bd);border-radius:6px}
+.screen{display:none}.screen.on{display:block}
+@media (max-width:760px){.shell{grid-template-columns:1fr}.side{display:none}.counts{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="mockbar" id="bar"><strong>PROF-02 · maquettes</strong></div>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><i></i>Logiscool</div>
+    <a href="#">Tableau de bord</a><a href="#">Classes</a><a href="#" class="active">Professeurs</a><a href="#">Heures</a><a href="#">Calendrier</a>
+  </aside>
+  <div class="main" id="main"></div>
+</div>
+
+<!-- ========== Fragments ========== -->
+<template id="fiche">
+  <div class="phead"><h1>Julie Martin <span class="badge {{badgeCls}}">{{badge}}</span></h1><p>Professeure · freelance · entrée le 01/09/2025{{sortie}}</p></div>
+  <div class="content">
+    <div class="card"><h2>👤 Profil</h2><div class="b muted">Email : julie.martin@example.com · Téléphone : 0470 12 34 56 · IBAN : BE68 •••• 0123</div></div>
+    <div class="card"><h2>🏫 Classes</h2><div class="b">{{classes}}</div></div>
+    <div class="card"><h2>🔐 Compte de connexion</h2><div class="b">
+      <p>Identifiant : <strong>julie.martin@example.com</strong> <span class="badge {{badgeCls}}">{{badge}}</span></p>
+      {{compte}}
+    </div></div>
+    <div class="card danger-zone changed"><h2>Zone sensible</h2><div class="b">
+      <p>Supprimer définitivement ce professeur et toutes ses données. Pour un départ, préférez l'archivage.</p>
+      <div><button class="link red" data-go="{{suppr}}">Supprimer le professeur…</button></div>
+    </div></div>
+    <div class="row"><button class="btn s">← Retour</button><button class="btn s">Éditer</button></div>
+  </div>
+</template>
+
+<script>
+const T = (id, vars={}) => document.getElementById(id).innerHTML.replace(/{{(\w+)}}/g, (_, k) => vars[k] ?? '');
+const ficheActive = (suppr='suppr-b') => T('fiche', {
+  badge:'Actif', badgeCls:'g', sortie:'', suppr,
+  classes:'<div class="prof"><span>Scratch · lundi 17:00–18:30 <span class="badge g">Principale</span></span></div><div class="prof"><span>Python · mercredi 14:00–15:30 <span class="badge gr">Co-enseignante</span></span></div>',
+  compte:'<p class="muted">Accès : mot de passe défini le 12/09/2025</p><div class="row"><button class="btn s sm">Modifier l\'email de connexion</button><button class="btn s sm">Envoyer un lien de réinitialisation</button><button class="btn s sm changed" data-go="archiver">Archiver…</button></div><p class="muted">Avant : bouton rouge « Désactiver » + gros bouton « 🗑️ Supprimer » en pied de fiche (window.confirm).</p>'
+});
+const ficheArchivee = () => T('fiche', {
+  badge:'Archivé', badgeCls:'gr', sortie:' · archivée le 06/10/2026', suppr:'suppr-b',
+  classes:'<p class="muted">Aucune classe active. 2 assignations terminées le 06/10/2026 (historique).</p>',
+  compte:'<p style="color:var(--t2)">Ce professeur est archivé : il ne peut plus se connecter et n\'est plus assigné à aucune séance à venir. Son historique (heures, fiches de défraiement, tarifs, séances passées) est conservé.</p><div class="row"><button class="btn p sm">Réactiver</button></div>'
+});
+const modal = (title, body, footer) => `<div class="overlay"><div class="modal" role="alertdialog"><header>${title}<span class="muted">✕</span></header><div class="mb">${body}</div><footer>${footer}</footer></div></div>`;
+
+const impactArchiver = `
+  <p>Elle ne pourra plus se connecter et sera déconnectée immédiatement. Son historique (heures, fiches de défraiement, tarifs) est conservé.</p>
+  <h3>Ce qui sera nettoyé</h3>
+  <ul class="k">
+    <li><b>2 classes</b> : son assignation se termine aujourd'hui (Scratch lun. 17:00, Python mer. 14:00)</li>
+    <li><b>23 séances à venir</b> ne lui seront plus assignées
+      <details><summary>Détail par type</summary><ul class="k"><li>20 de ses classes</li><li>1 ajout ponctuel (Robotique, sam. 18/10)</li><li>1 remplacement qu'elle assurait (Scratch Junior, mar. 14/10, pour Tom Leroy)</li><li>1 séance où elle était déjà remplacée (par Léa Dubois, qui reste assignée)</li></ul></details>
+    </li>
+  </ul>
+  <div class="ban w"><b>11 séances n'auront plus aucun professeur</b> (Scratch, lundis du 13/10 au 22/12). <button class="link">Voir dans le calendrier</button></div>
+  <div class="ban w">Dernière professeure de : <b>Scratch (lun. 17:00)</b> — pensez à en assigner un autre.</div>
+  <div class="ban w">Elle remplaçait un collègue sur <b>1 séance</b> : Tom Leroy y reste absent, la séance passe en « remplaçant à trouver ».</div>
+  <div class="ban i">3 encodages d'heures non finalisés : vous pourrez toujours les valider.</div>`;
+
+const screens = {
+  'fiche': {label:'1 · Fiche active', render:()=>ficheActive()},
+  'archiver': {label:'2 · Archiver (impact)', render:()=>ficheActive()+modal('Archiver Julie Martin ?', impactArchiver,
+      '<button class="btn s">Annuler</button><button class="btn p">Archiver le professeur</button>')},
+  'archiver-load': {label:'2b · Archiver (chargement)', render:()=>ficheActive()+modal('Archiver Julie Martin ?',
+      '<p>Calcul de l\'impact…</p><div class="skel" style="width:70%"></div><div class="skel" style="width:55%"></div><div class="skel" style="width:62%"></div>',
+      '<button class="btn s">Annuler</button><button class="btn p" disabled>Archiver le professeur</button>')},
+  'archiver-vide': {label:'3 · Archiver (rien à nettoyer)', render:()=>ficheActive('suppr-a')+modal('Archiver Julie Martin ?',
+      '<p>Elle ne pourra plus se connecter et sera déconnectée immédiatement. Son historique est conservé.</p><p class="muted">Aucune classe ni séance à venir à son nom.</p>',
+      '<button class="btn s">Annuler</button><button class="btn p">Archiver le professeur</button>')},
+  'archivee': {label:'4 · Fiche archivée + toast', render:()=>ficheArchivee()+'<div class="toast">Julie Martin archivée — 23 séances à venir libérées. <button>Voir les séances</button></div>'},
+  'suppr-a': {label:'5 · Supprimer (sans heure)', render:()=>ficheActive('suppr-a')+modal('Supprimer Julie Martin ?',
+      '<p>Son compte de connexion et sa fiche seront supprimés.</p><p>Elle sera retirée de <b>1 classe</b> et de <b>12 séances à venir</b> (les séances restent planifiées).</p><div class="ban w"><b>12 séances n\'auront plus aucun professeur</b> (Scratch, lundis). Dernière professeure de : Scratch (lun. 17:00).</div>',
+      '<button class="btn s">Annuler</button><button class="btn d">Supprimer</button>')},
+  'suppr-b': {label:'6 · A un historique', render:()=>ficheActive()+modal('Ce professeur a un historique',
+      '<p>Julie Martin a déjà des heures encodées. Pour un départ, <b>archivez-la</b> : tout est conservé et elle ne peut plus se connecter.</p><h3>Heures encodées (56 · 84 h)</h3><div class="counts"><div><b>12</b>brouillon</div><div><b>3</b>soumises</div><div><b>40</b>confirmées</div><div><b>1</b>contestée</div></div><ul class="k"><li>2 tarifs horaires</li><li>38 séances passées où elle apparaît</li><li>2 classes · 23 séances à venir</li></ul>',
+      '<button class="link red left" data-go="suppr-b2">Supprimer quand même…</button><button class="btn s">Annuler</button><button class="btn p" data-go="archiver">Archiver le professeur</button>')},
+  'suppr-b2': {label:'7 · Supprimer définitivement', render:()=>ficheActive()+modal('Supprimer définitivement ?',
+      '<div class="ban e"><b>Action irréversible.</b> Ses 56 heures encodées, ses 2 tarifs, son compte et sa présence sur 38 séances passées seront effacés. Les 23 séances à venir restent planifiées, sans elle (11 n\'auront plus aucun professeur).</div>'+
+      '<label class="f">Motif <textarea rows="2">Doublon</textarea><span class="err">Le motif doit contenir au moins 10 caractères.</span></label>'+
+      '<label class="f">Recopiez « Julie Martin » pour confirmer <input type="text" value="julie martin"></label>'+
+      '<label class="row" style="font-size:13px"><input type="checkbox"> Je comprends que cette action est irréversible</label>'+
+      '<p class="muted">Le bouton s\'active quand les trois champs sont valides (revalidé côté serveur).</p>',
+      '<button class="btn s">Annuler</button><button class="btn d" disabled>Supprimer définitivement</button>')},
+  'suppr-c': {label:'8 · Suppression impossible', render:()=>ficheActive()+modal('Suppression impossible',
+      '<div class="ban e">Impossible de supprimer : <b>2 fiches de défraiement</b> ont déjà été générées (septembre 2026, août 2026). Ces documents de paie doivent être conservés.</div><p>Archivez Julie Martin : elle ne pourra plus se connecter, ses séances à venir seront libérées et son historique restera disponible.</p>',
+      '<button class="btn s">Annuler</button><button class="btn p" data-go="archiver">Archiver le professeur</button>')},
+  'liste': {label:'9 · Liste (filtre Archivés)', render:()=>`<div class="phead"><h1>Professeurs</h1><p>Gérez les professeurs, leurs classes et leurs accès.</p></div><div class="content"><div class="row">Statut : <div class="seg changed"><span>Actifs</span><span>Archivés</span><span class="on">Tous</span></div></div><div class="card"><table><thead><tr><th>Nom</th><th>Classes</th><th>Statut</th><th>Accès</th></tr></thead><tbody>
+      <tr><td>Léa Dubois</td><td>3</td><td><span class="badge g">Actif</span></td><td>Mot de passe défini</td></tr>
+      <tr class="arch"><td>Julie Martin</td><td>0</td><td><span class="badge gr changed">Archivé</span></td><td>—</td></tr>
+      <tr><td>Tom Leroy</td><td>2</td><td><span class="badge g">Actif</span></td><td>Invitation envoyée</td></tr></tbody></table></div><p class="muted">Avant : « Désactivés » / badge rouge « Désactivé ». Aucune action destructrice dans la liste.</p></div>`},
+  'seance': {label:'10 · Séance après nettoyage', render:()=>`<div class="phead"><h1>Scratch Junior · mar. 14/10/2026</h1><p>14:00–15:30 · séance n° 6 · Planifiée</p></div><div class="content">
+      <div class="card"><h2>Professeurs de la séance</h2><div class="b"><div class="prof"><span>Tom Leroy <span class="badge o changed">Absent — remplaçant à trouver</span></span><button class="btn s sm">Choisir un remplaçant</button></div><p class="muted">Avant : « Tom Leroy remplacé par Julie Martin ». Julie Martin a été archivée.</p></div></div>
+      <div class="card"><h2>Scratch · lun. 13/10/2026</h2><div class="b"><div class="ban w changed">Aucun professeur assigné à cette séance.</div><div class="row"><button class="btn s sm">Ajouter un professeur</button></div></div></div></div>`},
+};
+
+const bar = document.getElementById('bar'), main = document.getElementById('main');
+function go(k){ main.innerHTML = screens[k].render(); bar.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.k===k)); if (location.protocol !== 'data:') history.replaceState(null, '', '#'+k); window.scrollTo(0,0); }
+Object.entries(screens).forEach(([k,s])=>{ const b=document.createElement('button'); b.textContent=s.label; b.dataset.k=k; b.onclick=()=>go(k); bar.appendChild(b); });
+main.addEventListener('click', e=>{ const t=e.target.closest('[data-go]'); if(t) go(t.dataset.go); });
+go(screens[location.hash.slice(1)] ? location.hash.slice(1) : 'fiche');
+</script>
+</body>
+</html>

@@ -47,7 +47,8 @@ class ProfesseurClasseResource extends JsonResource
             'role' => $this->role,
             'date_debut' => $this->date_debut->toDateString(),
             'date_fin' => $this->date_fin?->toDateString(),
-            'actif' => $this->isActif(),
+            // PROF-02 : l'assignation d'un professeur archivé se termine le jour même ; elle n'est plus présentée active.
+            'actif' => $this->isActif() && $this->professeur?->statut !== 'inactif',
             'nb_sessions_assignees' => $this->when(
                 array_key_exists('nb_sessions_assignees', $this->resource->getAttributes()),
                 fn () => (int) $this->resource->getAttributes()['nb_sessions_assignees']

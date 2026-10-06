@@ -101,7 +101,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
                         {p.nom}
                         {p.origine === 'ajout' && !p.remplace && ' (ajouté)'}
                         {p.role === 'remplacant' && !p.remplace && ' (remplaçant)'}
-                        {p.remplace && ' (remplacé)'}
+                        {p.remplace && (p.remplacant_a_trouver ? ' (absent — remplaçant à trouver)' : ' (remplacé)')}
                       </li>
                     ))}
                   </ul>

@@ -56,6 +56,7 @@ class CourseSessionResource extends JsonResource
                     'role' => $l->role,
                     'origine' => $l->origine,
                     'remplace' => $l->remplace,
+                    'remplacant_a_trouver' => $l->remplace && $l->remplace_par_professeur_id === null,
                 ])->values()),
             'can' => [
                 'update' => $staff && $this->isMovable(),

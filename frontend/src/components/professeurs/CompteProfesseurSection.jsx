@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import client from '../../api/client';
 import AdminModal from '../AdminModal';
 import AdminButton from '../AdminButton';
 import { AdminCard, AdminCardHeader, AdminCardBody, AdminBadge } from '../AdminPageLayout';
 import { AdminFormField, AdminInput, AdminCheckbox } from '../AdminFormField';
+import { ArchiverProfesseurModal } from './CycleVieProfesseurModals';
 import Banner from '../ui/Banner';
 import StatutBadge from '../ui/StatutBadge';
 import LienCopiable from '../ui/LienCopiable';
@@ -14,14 +15,14 @@ import { getErrorMessage, getFieldErrors } from '../../api/errors';
 
 /**
  * Compte de connexion du professeur : état d'accès, envoi d'invitation / lien de réinitialisation (ADMIN-03),
- * activer / désactiver, changer l'email de connexion. Le serveur reste la source de vérité.
+ * archiver / réactiver (PROF-02), changer l'email de connexion. Le serveur reste la source de vérité.
  *
  * @param {object} props
  * @param {object} props.professeur  professeur chargé avec `user` et `acces`
  * @param {(message: string|null) => void} props.onChange  rechargement + message de succès éventuel
  */
 export default function CompteProfesseurSection({ professeur, onChange }) {
-  const [modal, setModal] = useState(null); // 'desactiver' | 'email'
+  const [modal, setModal] = useState(null); // 'archiver' | 'email'
   const [confirmation, setConfirmation] = useState(null); // 'envoi' | 'reactivation'
   const [erreur, setErreur] = useState(null);
   const [lien, setLien] = useState(null);
@@ -114,7 +115,7 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         )}
         <p>
           Identifiant : <strong>{loginEmail}</strong>{' '}
-          <AdminBadge label={actif ? 'Actif' : 'Désactivé'} color={actif ? 'green' : 'red'} />
+          <AdminBadge label={actif ? 'Actif' : 'Archivé'} color={actif ? 'green' : 'purple'} />
         </p>
         {actif && acces?.statut && (
           <p>
@@ -132,8 +133,8 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         )}
         {!actif && (
           <p style={{ color: 'var(--c-text-2)' }}>
-            Ce professeur ne peut plus se connecter. Son historique (heures, tarifs, séances passées) est conservé.
-            Réactivez le compte pour envoyer une invitation.
+            Ce professeur est archivé : il ne peut plus se connecter et n&apos;est plus assigné à aucune séance à venir.
+            Son historique (heures, fiches de défraiement, tarifs, séances passées) est conservé. Réactivez le compte pour envoyer une invitation.
           </p>
         )}
         {lien && <LienCopiable lien={lien} />}
@@ -174,7 +175,7 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
               >
                 {libelleEnvoiLien(acces)}
               </AdminButton>
-              <AdminButton variant="danger" size="sm" onClick={() => setModal('desactiver')}>Désactiver</AdminButton>
+              <AdminButton variant="secondary" size="sm" onClick={() => setModal('archiver')}>Archiver…</AdminButton>
             </>
           ) : (
             <AdminButton
@@ -197,8 +198,8 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         )}
       </AdminCardBody>
 
-      {modal === 'desactiver' && (
-        <DesactiverModal
+      {modal === 'archiver' && (
+        <ArchiverProfesseurModal
           professeur={professeur}
           onClose={() => setModal(null)}
           onDone={(message) => { setModal(null); reinitialiserRetour(); onChange(message); }}
@@ -212,71 +213,6 @@ export default function CompteProfesseurSection({ professeur, onChange }) {
         />
       )}
     </AdminCard>
-  );
-}
-
-function DesactiverModal({ professeur, onClose, onDone }) {
-  const [impact, setImpact] = useState(null);
-  const [terminer, setTerminer] = useState(true);
-  const [erreur, setErreur] = useState(null);
-  const [envoi, setEnvoi] = useState(false);
-
-  useEffect(() => {
-    client.get(`/professeurs/${professeur.id}/impact-desactivation`)
-      .then((res) => setImpact(res.data.data))
-      .catch((err) => setErreur(getErrorMessage(err)));
-  }, [professeur.id]);
-
-  async function confirmer() {
-    setEnvoi(true);
-    setErreur(null);
-    try {
-      await client.post(`/professeurs/${professeur.id}/desactiver`, { terminer_assignations: terminer });
-      onDone(`${professeur.prenom} ${professeur.nom} est désactivé.`);
-    } catch (err) {
-      setErreur(getErrorMessage(err));
-    } finally {
-      setEnvoi(false);
-    }
-  }
-
-  return (
-    <AdminModal
-      isOpen
-      title={`Désactiver ${professeur.prenom} ${professeur.nom} ?`}
-      size="sm"
-      onClose={onClose}
-      closeOnBackdrop={false}
-      footer={
-        <>
-          <AdminButton variant="secondary" onClick={onClose}>Annuler</AdminButton>
-          <AdminButton variant="danger" onClick={confirmer} loading={envoi} disabled={!impact}>Désactiver</AdminButton>
-        </>
-      }
-    >
-      {erreur && <Banner tone="error">{erreur}</Banner>}
-      {!impact && !erreur && <p>Calcul de l'impact…</p>}
-      {impact && (
-        <>
-          <p>Il ne pourra plus se connecter et sera déconnecté immédiatement. Son historique est conservé.</p>
-          <ul>
-            <li>{impact.classes_actives} classe(s) active(s)</li>
-            <li>{impact.seances_a_venir} séance(s) à venir</li>
-            <li>{impact.heures_en_attente} encodage(s) d'heures non finalisé(s)</li>
-          </ul>
-          {impact.classes_sans_autre_professeur.length > 0 && (
-            <Banner tone="warning">
-              Dernier professeur de : {impact.classes_sans_autre_professeur.join(', ')}. Pensez à en assigner un autre.
-            </Banner>
-          )}
-          <AdminCheckbox
-            label="Terminer ses assignations de classes et le retirer des séances à venir"
-            checked={terminer}
-            onChange={(e) => setTerminer(e.target.checked)}
-          />
-        </>
-      )}
-    </AdminModal>
   );
 }
 

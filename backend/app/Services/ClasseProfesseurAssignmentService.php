@@ -46,7 +46,7 @@ class ClasseProfesseurAssignmentService
     public function assigner(Classe $classe, Professeur $professeur, array $data = []): array
     {
         if ($professeur->statut === 'inactif') {
-            throw RegleMetierException::conflit('Ce professeur est désactivé : il ne peut plus être assigné à une classe.');
+            throw RegleMetierException::conflit('Ce professeur est archivé : il ne peut plus être assigné à une classe.');
         }
 
         return DB::transaction(function () use ($classe, $professeur, $data) {

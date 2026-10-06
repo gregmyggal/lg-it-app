@@ -44,7 +44,8 @@ export default function ProfesseursSessionModal({ session, professeurs, onClose,
   }, [session.id]);
 
   const presents = new Set((lignes || []).map((l) => l.professeur_id));
-  const remplacables = (lignes || []).filter((l) => !l.remplace);
+  // PROF-02 : un remplacé sans remplaçant (remplaçant archivé ou supprimé) peut recevoir un nouveau remplaçant.
+  const remplacables = (lignes || []).filter((l) => !l.remplace || !l.remplace_par_professeur_id);
   const candidats = professeurs.filter((p) => !presents.has(Number(p.value)));
   const titreSession = `${libelleSessionPhrase(session)} du ${formatDate(session.date)}`;
   const passee = new Date(`${session.date}T23:59:59`) < new Date();
@@ -140,7 +141,9 @@ export default function ProfesseursSessionModal({ session, professeurs, onClose,
                 <span style={{ textDecoration: l.remplace ? 'line-through' : undefined }}>{l.professeur.nom}</span>
                 <StatutBadge table={ROLES_PROFESSEUR} valeur={l.role} />
                 {l.origine !== 'classe' && <StatutBadge table={ORIGINES_SESSION} valeur={l.origine} />}
-                {l.remplace && <span style={{ fontSize: '13px' }}>remplacé par {l.remplace_par?.nom}</span>}
+                {l.remplace && (l.remplace_par_professeur_id
+                  ? <span style={{ fontSize: '13px' }}>remplacé par {l.remplace_par?.nom}</span>
+                  : <StatutBadge label="Absent — remplaçant à trouver" tone="warning" />)}
                 {l.remplace && (
                   <AdminButton size="sm" variant="secondary" disabled={envoi} onClick={() => annuler(l)}>
                     Annuler ce remplacement

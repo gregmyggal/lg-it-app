@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::apiResource('professeurs', ProfesseurController::class);
     // PROF-01 : cycle de vie du professeur et de son compte.
     Route::get('/professeurs/{professeur}/impact-desactivation', [ProfesseurController::class, 'impact']);
+    Route::get('/professeurs/{professeur}/impact-suppression', [ProfesseurController::class, 'impactSuppression']);
     Route::post('/professeurs/{professeur}/desactiver', [ProfesseurController::class, 'desactiver']);
     Route::post('/professeurs/{professeur}/reactiver', [ProfesseurController::class, 'reactiver']);
     // ADMIN-03 : invitation / lien de réinitialisation envoyés par email (même contrat que le staff).

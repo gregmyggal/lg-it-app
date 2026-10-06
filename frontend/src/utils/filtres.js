@@ -21,6 +21,13 @@ export const OPTIONS_STATUT = [
   { value: 'tous', label: 'Tous' },
 ];
 
+/** PROF-02 : un professeur inactif est « archivé » (les comptes staff restent « désactivés »). */
+export const OPTIONS_STATUT_PROFESSEUR = [
+  { value: 'actif', label: 'Actifs' },
+  { value: 'inactif', label: 'Archivés' },
+  { value: 'tous', label: 'Tous' },
+];
+
 /** Valeur d'API du filtre Statut (« tous » = pas de filtre serveur). */
 export const statutPourApi = (statut) => (statut === 'tous' ? '' : statut);
 
