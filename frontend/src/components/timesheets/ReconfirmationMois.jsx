@@ -70,6 +70,7 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
 
   return (
     <section aria-label="Confirmation du mois" style={{ marginBottom: 16 }}>
+      {d.employeur && aSigner && <p style={{ margin: '0 0 8px', fontSize: 14 }}>Employeur ce mois : <strong>{d.employeur.nom}</strong></p>}
       {d.remise_brouillon && (
         <Banner tone="warning">
           <strong>La direction a rouvert vos heures{d.remise_brouillon.auteur ? ` (${d.remise_brouillon.auteur}, ${formatDateHeure(d.remise_brouillon.created_at)})` : ''}.</strong> Motif : « {d.remise_brouillon.motif} ». Corrigez vos saisies puis soumettez-les à nouveau.
@@ -85,7 +86,7 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
       )}
       {aResigner && (
         <Banner tone="warning">
-          <strong>Le contenu de votre fiche a changé depuis votre signature</strong> (montants ou compte bancaire). Signez à nouveau pour que la direction puisse générer votre fiche.
+          <strong>Le contenu de votre fiche a changé depuis votre signature</strong> (montants, compte bancaire ou employeur). Signez à nouveau pour que la direction puisse générer votre fiche.
         </Banner>
       )}
       {termine && !aResigner && (

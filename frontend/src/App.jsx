@@ -39,6 +39,7 @@ import SharePage from './pages/SharePage';
 import VerificationSignaturePage from './pages/VerificationSignaturePage';
 import StaffAdminPage from './pages/admin/StaffAdminPage';
 import TimesheetParametresPage from './pages/admin/TimesheetParametresPage';
+import EmployeursAdminPage from './pages/admin/EmployeursAdminPage';
 
 const STAFF = ['admin', 'directeur'];
 const PORTAL = ['professeur', 'directeur', 'admin'];
@@ -280,6 +281,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <TimesheetParametresPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/employeurs"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <EmployeursAdminPage />
                 </ProtectedRoute>
               }
             />

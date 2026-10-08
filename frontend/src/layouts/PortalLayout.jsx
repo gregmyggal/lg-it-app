@@ -63,6 +63,9 @@ export default function PortalLayout() {
               <NavLink to="/admin/timesheets/parametres" className={navClass}>
                 ⚙️ Paramètres timesheets
               </NavLink>
+              <NavLink to="/admin/employeurs" className={navClass}>
+                🏢 Entités employeurs
+              </NavLink>
               <NavLink to="/admin/professeurs" className={navClass}>
                 👨‍🏫 Professeurs & Tarifs
               </NavLink>

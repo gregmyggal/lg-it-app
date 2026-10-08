@@ -129,6 +129,12 @@ function MonMois({ user }) {
             <strong>{erreur}</strong>
           </Banner>
         )}
+        {data?.employeur && (
+          <p style={{ margin: '0 0 16px', fontSize: 14 }} data-testid="employeur-du-mois">
+            Employeur ce mois : <strong>{data.employeur.nom}</strong>
+            <span style={{ display: 'block', fontSize: 12, color: 'var(--c-text-2)' }}>Pour toute question sur votre contrat ou vos données, contactez la direction.</span>
+          </p>
+        )}
         <ReconfirmationMois key={`${periode.annee}-${periode.mois}`} professeurId={user.professeur?.id} annee={periode.annee} mois={periode.mois} onChange={mon.reload} />
         {mon.loading && <LoadingBlock message="Chargement de votre mois…" lignes={4} />}
         {mon.error && <ErrorBlock message="Impossible de charger votre mois. Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez." onRetry={mon.reload} />}
