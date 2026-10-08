@@ -25,8 +25,10 @@ export default function LoginPage() {
       }
       navigate(connecte?.role === 'professeur' ? '/mes-classes' : '/admin/classes');
     } catch (err) {
-      // 403 : compte désactivé (message du serveur, révélé seulement avec un mot de passe correct).
-      setError(getStatus(err) === 403 && err.response.data?.message ? err.response.data.message : 'Identifiants invalides.');
+      // 403 : compte désactivé (message du serveur, révélé seulement avec un mot de passe correct) ;
+      // 429 : trop de tentatives (RGPD-01).
+      const status = getStatus(err);
+      setError((status === 403 || status === 429) && err.response.data?.message ? err.response.data.message : 'Identifiants invalides.');
     } finally {
       setSubmitting(false);
     }

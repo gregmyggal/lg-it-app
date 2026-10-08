@@ -51,6 +51,11 @@ class AppServiceProvider extends ServiceProvider
 
         // ADMIN-02 : routes publiques de mot de passe.
         RateLimiter::for('acces-oubli', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        // RGPD-01 : force brute sur la connexion — 5/min par email+IP et 20/min par IP (l'email est haché dans la clé).
+        RateLimiter::for('login', fn (Request $request) => [
+            Limit::perMinute(5)->by('login:'.sha1(mb_strtolower(trim((string) $request->input('email'))).'|'.$request->ip())),
+            Limit::perMinute(20)->by('login-ip:'.$request->ip()),
+        ]);
         RateLimiter::for('acces-lien', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
     }
 }

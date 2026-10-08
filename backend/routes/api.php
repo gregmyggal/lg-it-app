@@ -53,7 +53,7 @@ Route::middleware('validate.share.code')->group(function () {
     Route::get('/share/{code}', [ShareCodeController::class, 'show']);
 });
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 // SIG-01 : vérification publique d'une signature imprimée sur une fiche (identifiant aléatoire, données minimales).
 Route::get('/signatures/{publicId}/verification', [SignatureController::class, 'verifier'])->middleware('throttle:30,1');
