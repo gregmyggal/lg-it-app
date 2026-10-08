@@ -60,6 +60,11 @@ class TimesheetConfirmationService
         $reponse = $audits->where('action', TimesheetAudit::ACTION_REPONSE)->last();
         $contestationOuverte = $lignes->contains('statut_validation', Timesheet::STATUT_CONTESTE);
 
+        // TS-02 : lignes encore en brouillon dont la dernière trace est une remise en brouillon par la direction.
+        $remise = $audits->filter(fn (TimesheetAudit $a) => $a->action === TimesheetAudit::ACTION_REMISE_BROUILLON
+            && $lignes->firstWhere('id', $a->timesheet_id)?->statut_validation === Timesheet::STATUT_BROUILLON
+            && $audits->where('timesheet_id', $a->timesheet_id)->last()?->id === $a->id)->last();
+
         $sign = (new TimesheetSignatureService)->canSignMonth($prof->id, $annee, $mois);
 
         return [
@@ -71,6 +76,7 @@ class TimesheetConfirmationService
             'contestation' => $contestationOuverte && $derniere ? ['motif' => $derniere->motif, 'created_at' => $derniere->created_at] : null,
             'pdf' => ($pdf = \App\Models\TimesheetPdf::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois])->orderByDesc('version')->first())
                 ? ['id' => $pdf->id, 'version' => $pdf->version, 'generated_at' => $pdf->generated_at] : null,
+            'remise_brouillon' => $remise ? ['motif' => $remise->motif, 'auteur' => $remise->auteur?->name, 'created_at' => $remise->created_at] : null,
             'derniere_reponse' => $reponse ? ['motif' => $reponse->motif, 'created_at' => $reponse->created_at] : null,
             'a_signature' => SignatureSpecimen::where('user_id', $prof->user_id)->exists(),
             'recapitulatif' => $this->recapitulatif($prof, $annee, $mois, $ajustements->count()),
@@ -134,6 +140,52 @@ class TimesheetConfirmationService
             return $cibles->count();
         });
     }
+
+    /**
+     * TS-02 : la direction renvoie le mois entier en brouillon (soumis/confirmé/contesté → brouillon, signatures retirées).
+     * Impossible dès qu'un PDF a été généré : les corrections se font alors sur la timesheet du mois suivant.
+     */
+    public function remettreEnBrouillon(Professeur $prof, int $annee, int $mois, string $motif, User $auteur): int
+    {
+        return DB::transaction(function () use ($prof, $annee, $mois, $motif, $auteur) {
+            $lignes = $this->lignes($prof, $annee, $mois)->lockForUpdate()->get();
+            if ($lignes->contains('statut_validation', Timesheet::STATUT_GENERE)) {
+                throw RegleMetierException::invalide(self::MSG_PDF_GENERE);
+            }
+            $cibles = $lignes->filter(fn (Timesheet $t) => $t->statut_validation !== Timesheet::STATUT_BROUILLON);
+            if ($cibles->isEmpty()) {
+                throw RegleMetierException::invalide('Aucune saisie à remettre en brouillon : ce mois ne contient que des brouillons.');
+            }
+            foreach ($cibles as $t) {
+                $avant = ['statut' => $t->statut_validation, 'signee' => $t->signature_professeur !== null];
+                $t->update(['statut_validation' => Timesheet::STATUT_BROUILLON, 'signature_professeur' => null, 'validated_at' => null, 'validated_by' => null]);
+                TimesheetAudit::create([
+                    'timesheet_id' => $t->id, 'professeur_id' => $t->professeur_id, 'user_id' => $auteur->id,
+                    'action' => TimesheetAudit::ACTION_REMISE_BROUILLON,
+                    'avant' => $avant, 'apres' => ['statut' => Timesheet::STATUT_BROUILLON, 'signee' => false], 'motif' => $motif,
+                ]);
+            }
+
+            return $cibles->count();
+        });
+    }
+
+    /** État pour l'écran directeur : l'action est-elle possible, sinon pourquoi. */
+    public function etatRemiseBrouillon(Professeur $prof, int $annee, int $mois): array
+    {
+        $lignes = $this->lignes($prof, $annee, $mois)->get();
+        $genere = $lignes->contains('statut_validation', Timesheet::STATUT_GENERE);
+        $rouvrables = $lignes->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->count();
+
+        return [
+            'possible' => ! $genere && $rouvrables > 0,
+            'lignes' => $genere ? 0 : $rouvrables,
+            'signatures' => $genere ? 0 : $lignes->whereNotNull('signature_professeur')->count(),
+            'raison' => $genere ? self::MSG_PDF_GENERE : null,
+        ];
+    }
+
+    private const MSG_PDF_GENERE = 'Remise en brouillon impossible : un PDF a été généré pour ce mois. Les corrections doivent être apportées dans la timesheet du mois suivant.';
 
     private function audit(Timesheet $t, User $auteur, string $action, string $de, string $vers, string $motif): void
     {

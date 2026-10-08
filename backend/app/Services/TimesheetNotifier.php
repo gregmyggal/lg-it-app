@@ -59,9 +59,24 @@ class TimesheetNotifier
         ));
     }
 
-    private function envoyer(User $destinataire, NotificationTimesheet $notification): void
+    /** TS-02 : la direction a renvoyé le mois en brouillon (pas de dédoublonnage : chaque motif est distinct). */
+    public function remiseBrouillon(Professeur $prof, int $annee, int $mois, string $motif): void
     {
-        $doublon = $destinataire->unreadNotifications()
+        if (! $prof->user) {
+            return;
+        }
+        $this->envoyer($prof->user, new NotificationTimesheet(
+            NotificationTimesheet::REMISE_BROUILLON,
+            'Vos heures ont été rouvertes',
+            'La direction a remis vos heures de '.$this->libelle($annee, $mois).' en brouillon : « '.$motif.' ». Merci de les corriger puis de les soumettre à nouveau.',
+            '/timesheets',
+            $prof->id, $annee, $mois,
+        ), dedoublonner: false);
+    }
+
+    private function envoyer(User $destinataire, NotificationTimesheet $notification, bool $dedoublonner = true): void
+    {
+        $doublon = $dedoublonner && $destinataire->unreadNotifications()
             ->where('type', NotificationTimesheet::class)
             ->get()
             ->contains(fn ($n) => ($n->data['code'] ?? null) === $notification->code

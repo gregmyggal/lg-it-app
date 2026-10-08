@@ -49,7 +49,7 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
   // SIG-01 : tout est signé mais le contenu signé a changé depuis (ex. compte bancaire) → signer à nouveau.
   const aResigner = termine && d.signature?.perimee && d.peut_signer;
   const aSigner = attente || aResigner;
-  if (!attente && !d.contestation && !termine && d.ajustements.length === 0) return null;
+  if (!attente && !d.remise_brouillon && !d.contestation && !termine && d.ajustements.length === 0) return null;
 
   async function agir(fn, succes) {
     setEnvoi(true);
@@ -70,6 +70,11 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
 
   return (
     <section aria-label="Confirmation du mois" style={{ marginBottom: 16 }}>
+      {d.remise_brouillon && (
+        <Banner tone="warning">
+          <strong>La direction a rouvert vos heures{d.remise_brouillon.auteur ? ` (${d.remise_brouillon.auteur}, ${formatDateHeure(d.remise_brouillon.created_at)})` : ''}.</strong> Motif : « {d.remise_brouillon.motif} ». Corrigez vos saisies puis soumettez à nouveau le mois.
+        </Banner>
+      )}
       {d.contestation && (
         <Banner tone="warning">
           <strong>Contestation envoyée à la direction.</strong> Votre motif : « {d.contestation.motif} ». Vos heures sont en cours de révision ; vous serez prévenu(e) pour les confirmer.

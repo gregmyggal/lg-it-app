@@ -213,6 +213,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/timesheet-pdfs/{pdf}/telecharger', [TimesheetPdfController::class, 'telecharger']);
     Route::get('/timesheets/ma-confirmation', [TimesheetConfirmationController::class, 'etat']);
     Route::post('/timesheets/contester-mois', [TimesheetConfirmationController::class, 'contester']);
+    Route::post('/professeurs/{professeur}/timesheets-mois/remettre-en-brouillon', [TimesheetConfirmationController::class, 'remettreEnBrouillon']);
     Route::post('/professeurs/{professeur}/timesheets-mois/traiter-contestation', [TimesheetConfirmationController::class, 'traiter']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/lues', [NotificationController::class, 'toutesLues']);

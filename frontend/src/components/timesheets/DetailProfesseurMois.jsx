@@ -10,7 +10,7 @@ import ValiderLotModal from './ValiderLotModal';
 import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
 import { AdminFormField, AdminTextarea } from '../AdminFormField';
-import { apercuPdf, deverrouillerMois, genererPdf, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
+import { apercuPdf, deverrouillerMois, genererPdf, remettreMoisEnBrouillon, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage } from '../../api/errors';
 import { useAuth } from '../../auth/AuthContext';
@@ -24,6 +24,7 @@ import { libelleSession } from '../../utils/classes';
 const LIBELLE_CHAMP = { nombre_heures: 'Heures', date_prestation: 'Date', type_activite: 'Type' };
 
 function texteAudit(h) {
+  if (h.action === 'remise_brouillon') return 'Remise en brouillon par la direction (signature retirée)';
   if (h.action === 'contestation') return 'Contestation du professeur';
   if (h.action === 'reponse_contestation') return 'Réponse de la direction à la contestation';
   if (h.action === 'classe_supprimee') {
@@ -86,6 +87,9 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
   const [deverrouillage, setDeverrouillage] = useState(null); // null = fermé, sinon motif
   const [pdfEnCours, setPdfEnCours] = useState(false);
   const [reponse, setReponse] = useState(null); // null = fermé, sinon texte de la réponse
+  const [brouillon, setBrouillon] = useState(null); // null = fermé, sinon motif
+  const [envoiBrouillon, setEnvoiBrouillon] = useState(false);
+  const [erreurBrouillon, setErreurBrouillon] = useState(null);
   const [envoiReponse, setEnvoiReponse] = useState(false);
   const [erreurReponse, setErreurReponse] = useState(null);
 
@@ -108,6 +112,20 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
       setErreurReponse(getErrorMessage(err));
     } finally {
       setEnvoiReponse(false);
+    }
+  }
+
+  async function envoyerBrouillon() {
+    setEnvoiBrouillon(true);
+    setErreurBrouillon(null);
+    try {
+      const res = await remettreMoisEnBrouillon(professeurId, { annee, mois: moisNum, motif: brouillon.trim() });
+      setBrouillon(null);
+      recharger(`${res.remises_en_brouillon} ligne(s) remise(s) en brouillon. ${d.professeur.nom} a été prévenu(e).`);
+    } catch (err) {
+      setErreurBrouillon(getErrorMessage(err));
+    } finally {
+      setEnvoiBrouillon(false);
     }
   }
 
@@ -177,6 +195,9 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               {dernierPdf && (
                 <AdminButton variant="secondary" disabled={pdfEnCours} onClick={() => actionPdf(() => telecharger(dernierPdf))}>Télécharger (v{dernierPdf.version})</AdminButton>
               )}
+              {d.remise_brouillon?.possible && (
+                <AdminButton variant="secondary" disabled={pdfEnCours} onClick={() => setBrouillon('')}>Remettre en brouillon…</AdminButton>
+              )}
               {user?.role === 'admin' && d.resume?.statut_mois === 'genere' && (
                 <AdminButton variant="secondary" disabled={pdfEnCours} onClick={() => setDeverrouillage('')}>Déverrouiller…</AdminButton>
               )}
@@ -186,6 +207,9 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             <p style={{ fontSize: 13, color: 'var(--tone-warning-fg)', margin: '0 0 12px' }}>PDF : {d.pdf.bloquants.join(' · ')}.</p>
           )}
 
+          {d.remise_brouillon?.raison && (
+            <Banner tone="info">{d.remise_brouillon.raison}</Banner>
+          )}
           {contestation && (
             <Banner
               tone="error"
@@ -279,6 +303,32 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               <p style={{ marginTop: 0 }}>Les saisies repassent en « confirmé » pour pouvoir être corrigées ; le PDF actuel est conservé et la prochaine génération crée une nouvelle version.</p>
               <AdminFormField label="Motif (obligatoire)" htmlFor="deverrouillage-motif">
                 <AdminTextarea id="deverrouillage-motif" rows={2} value={deverrouillage} onChange={(e) => setDeverrouillage(e.target.value)} />
+              </AdminFormField>
+            </AdminModal>
+          )}
+          {brouillon !== null && (
+            <AdminModal
+              isOpen
+              title="Remettre le mois en brouillon"
+              size="sm"
+              onClose={() => setBrouillon(null)}
+              footer={
+                <>
+                  <AdminButton variant="secondary" onClick={() => setBrouillon(null)}>Annuler</AdminButton>
+                  <AdminButton loading={envoiBrouillon} disabled={brouillon.trim().length < 3} onClick={envoyerBrouillon}>
+                    Remettre {d.remise_brouillon.lignes} ligne(s) en brouillon
+                  </AdminButton>
+                </>
+              }
+            >
+              {erreurBrouillon && <Banner tone="error" role="alert">{erreurBrouillon}</Banner>}
+              <ul style={{ marginTop: 0, paddingLeft: 18 }}>
+                <li>Les {d.remise_brouillon.lignes} lignes du mois redeviennent modifiables par le professeur.</li>
+                <li>{d.remise_brouillon.signatures} signature(s) seront retirées : le professeur devra soumettre puis signer à nouveau.</li>
+                <li>{d.professeur.nom} est prévenu(e) par notification et par email, avec votre motif.</li>
+              </ul>
+              <AdminFormField label="Motif (obligatoire)" htmlFor="brouillon-motif">
+                <AdminTextarea id="brouillon-motif" rows={3} value={brouillon} onChange={(e) => setBrouillon(e.target.value)} />
               </AdminFormField>
             </AdminModal>
           )}

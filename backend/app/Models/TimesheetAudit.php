@@ -17,6 +17,9 @@ class TimesheetAudit extends Model
 
     public const ACTION_REPONSE = 'reponse_contestation';
 
+    /** TS-02 : mois renvoyé en brouillon au professeur par la direction. */
+    public const ACTION_REMISE_BROUILLON = 'remise_brouillon';
+
     public const ACTION_DEVERROUILLAGE = 'deverrouillage';
 
     /** CLS-08 : heure détachée de sa séance lors de la suppression forcée de la classe. */

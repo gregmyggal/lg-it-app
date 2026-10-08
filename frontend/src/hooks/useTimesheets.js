@@ -113,6 +113,11 @@ export function contesterMois(payload) {
   return client.post('/timesheets/contester-mois', payload).then((res) => res.data);
 }
 
+/** Staff : renvoie le mois entier en brouillon au professeur (TS-02, impossible une fois le PDF généré). */
+export function remettreMoisEnBrouillon(professeurId, payload) {
+  return client.post(`/professeurs/${professeurId}/timesheets-mois/remettre-en-brouillon`, payload).then((res) => res.data);
+}
+
 /** Staff : répond à la contestation (les saisies contestées repassent en revue). */
 export function traiterContestation(professeurId, payload) {
   return client.post(`/professeurs/${professeurId}/timesheets-mois/traiter-contestation`, payload).then((res) => res.data);

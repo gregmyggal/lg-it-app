@@ -15,6 +15,8 @@ class NotificationTimesheet extends Notification
 
     public const CONTESTATION_TRAITEE = 'contestation_traitee';
 
+    public const REMISE_BROUILLON = 'remise_brouillon';
+
     public function __construct(
         public readonly string $code,
         public readonly string $titre,

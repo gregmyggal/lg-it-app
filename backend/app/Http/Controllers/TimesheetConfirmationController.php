@@ -52,6 +52,18 @@ class TimesheetConfirmationController extends Controller
         return response()->json(['traitees' => $n]);
     }
 
+    // Staff (directeur ou admin) : renvoie le mois entier en brouillon au professeur (TS-02), motif obligatoire.
+    public function remettreEnBrouillon(Request $request, Professeur $professeur): JsonResponse
+    {
+        abort_unless($request->user()->isStaff(), 403, 'Action non autorisée.');
+        $v = $this->periode($request) + $request->validate(['motif' => ['required', 'string', 'min:3', 'max:1000']]);
+
+        $n = $this->service->remettreEnBrouillon($professeur, $v['annee'], $v['mois'], $v['motif'], $request->user());
+        $this->notifier->remiseBrouillon($professeur, $v['annee'], $v['mois'], $v['motif']);
+
+        return response()->json(['remises_en_brouillon' => $n]);
+    }
+
     private function periode(Request $request): array
     {
         $v = $request->validate([
