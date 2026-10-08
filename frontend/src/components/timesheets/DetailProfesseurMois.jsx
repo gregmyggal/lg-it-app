@@ -24,7 +24,7 @@ import { libelleSession } from '../../utils/classes';
 const LIBELLE_CHAMP = { nombre_heures: 'Heures', date_prestation: 'Date', type_activite: 'Type' };
 
 function texteAudit(h) {
-  if (h.action === 'remise_brouillon') return 'Remise en brouillon par la direction (signature retirée)';
+  if (h.action === 'remise_brouillon') return 'Remise en brouillon par la direction';
   if (h.action === 'contestation') return 'Contestation du professeur';
   if (h.action === 'reponse_contestation') return 'Réponse de la direction à la contestation';
   if (h.action === 'classe_supprimee') {
@@ -207,9 +207,6 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             <p style={{ fontSize: 13, color: 'var(--tone-warning-fg)', margin: '0 0 12px' }}>PDF : {d.pdf.bloquants.join(' · ')}.</p>
           )}
 
-          {d.remise_brouillon?.raison && (
-            <Banner tone="info">{d.remise_brouillon.raison}</Banner>
-          )}
           {contestation && (
             <Banner
               tone="error"
@@ -323,8 +320,8 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             >
               {erreurBrouillon && <Banner tone="error" role="alert">{erreurBrouillon}</Banner>}
               <ul style={{ marginTop: 0, paddingLeft: 18 }}>
-                <li>Les {d.remise_brouillon.lignes} lignes du mois redeviennent modifiables par le professeur.</li>
-                <li>{d.remise_brouillon.signatures} signature(s) seront retirées : le professeur devra soumettre puis signer à nouveau.</li>
+                <li>Les {d.remise_brouillon.lignes} ligne(s) soumises (non validées) redeviennent modifiables par le professeur, qui devra les soumettre à nouveau.</li>
+                <li>Les lignes déjà validées, signées ou incluses dans un PDF ne sont pas touchées.</li>
                 <li>{d.professeur.nom} est prévenu(e) par notification et par email, avec votre motif.</li>
               </ul>
               <AdminFormField label="Motif (obligatoire)" htmlFor="brouillon-motif">

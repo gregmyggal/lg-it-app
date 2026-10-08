@@ -6,20 +6,18 @@
 Une fois le mois soumis/validé, le professeur ne peut plus corriger. La direction doit pouvoir lui rendre la main sur son mois.
 
 ## Décisions (directeur, 2026-10-08)
-1. **Mois entier uniquement** (pas de remise ligne par ligne).
-2. **Impossible dès qu'un PDF est généré** (aucune ligne `genere`) : les corrections se font dans la timesheet du mois suivant. Pas de renvoi vers le déverrouillage admin.
-3. **Directeur ou admin** peuvent le faire (staff), motif obligatoire.
-4. Signatures retirées sur toutes les lignes rouvertes (hypothèse par défaut : une ligne corrigée ne reste pas signée).
+1. **Mois entier** : une seule action pour toutes les lignes éligibles du mois (pas de ligne par ligne).
+2. **Seules les lignes simplement soumises** (`soumis`, sans signature) sont rouvrables. Une ligne validée, signée, contestée ou incluse dans un PDF (`genere`) ne l'est jamais : les corrections se font dans la timesheet du mois suivant. Pas de renvoi vers le déverrouillage admin.
+3. **Directeur ou admin**, motif obligatoire.
 
 ## Règles
-- `soumis`, `confirme`, `conteste` → `brouillon` ; `signature_professeur`, `validated_at`, `validated_by` remis à null. Les lignes déjà `brouillon` ne sont pas touchées.
-- 422 si une ligne du mois est `genere` ou si le mois n'a aucune ligne rouvrable. Rien n'est modifié en cas d'erreur (transaction).
-- Trace `remise_brouillon` par ligne (avant : statut + signée, après, motif, auteur). Notification cloche + email au professeur (non dédoublonnée).
-- Le professeur corrige, puis utilise le flux existant : soumettre → validation → reconfirmation/signature.
+- `soumis` sans signature → `brouillon`. Les autres lignes du mois ne sont pas touchées ; 422 s'il n'y a aucune ligne éligible (rien n'est modifié).
+- Trace `remise_brouillon` par ligne (statut avant/après, motif, auteur). Notification cloche + email au professeur (non dédoublonnée).
+- Le professeur corrige puis utilise le flux existant : soumettre → validation → reconfirmation/signature.
 
 ## API
 - Staff : `POST /api/professeurs/{id}/timesheets-mois/remettre-en-brouillon` `{annee, mois, motif}` → `{remises_en_brouillon}`.
-- `GET /api/professeurs/{id}/timesheets-mois` expose `remise_brouillon: {possible, lignes, signatures, raison}`.
+- `GET /api/professeurs/{id}/timesheets-mois` expose `remise_brouillon: {possible, lignes, raison}`.
 - `GET /api/timesheets/ma-confirmation` expose `remise_brouillon: {motif, auteur, created_at} | null`.
 
 ## UI

@@ -43,26 +43,26 @@ class TimesheetRemiseBrouillonTest extends TestCase
     }
 
     /** @dataProvider rolesStaff */
-    public function test_le_staff_remet_le_mois_entier_en_brouillon_signatures_retirees(string $role): void
+    public function test_le_staff_remet_en_brouillon_uniquement_les_lignes_soumises(string $role): void
     {
-        $a = $this->ligne('confirme', '2026-10-10', true);
-        $b = $this->ligne('soumis', '2026-10-11');
-        $autreMois = $this->ligne('confirme', '2026-11-02', true);
+        $a = $this->ligne('soumis', '2026-10-10');
+        $validee = $this->ligne('confirme', '2026-10-11');
+        $signee = $this->ligne('confirme', '2026-10-12', true);
+        $generee = $this->ligne('genere', '2026-10-13');
+        $autreMois = $this->ligne('soumis', '2026-11-02');
         $this->actingAsRole($role);
 
         $this->postJson($this->url(), $this->payload(['motif' => 'Heures du 12 oubliées']))
-            ->assertOk()->assertJsonPath('remises_en_brouillon', 2);
+            ->assertOk()->assertJsonPath('remises_en_brouillon', 1);
 
-        foreach ([$a, $b] as $t) {
-            $this->assertSame('brouillon', $t->fresh()->statut_validation);
-            $this->assertNull($t->fresh()->signature_professeur);
-        }
-        $this->assertSame('confirme', $autreMois->fresh()->statut_validation);
-        $audit = TimesheetAudit::where(['timesheet_id' => $a->id, 'action' => 'remise_brouillon'])->firstOrFail();
-        $this->assertSame('Heures du 12 oubliées', $audit->motif);
-        $this->assertTrue($audit->avant['signee']);
-        $notif = $this->prof->user->notifications()->firstOrFail();
-        $this->assertSame('remise_brouillon', $notif->data['code']);
+        $this->assertSame('brouillon', $a->fresh()->statut_validation);
+        $this->assertSame('confirme', $validee->fresh()->statut_validation);
+        $this->assertSame('confirme', $signee->fresh()->statut_validation);
+        $this->assertNotNull($signee->fresh()->signature_professeur);
+        $this->assertSame('genere', $generee->fresh()->statut_validation);
+        $this->assertSame('soumis', $autreMois->fresh()->statut_validation);
+        $this->assertSame('Heures du 12 oubliées', TimesheetAudit::where(['timesheet_id' => $a->id, 'action' => 'remise_brouillon'])->firstOrFail()->motif);
+        $this->assertSame('remise_brouillon', $this->prof->user->notifications()->firstOrFail()->data['code']);
     }
 
     public static function rolesStaff(): array
@@ -70,10 +70,11 @@ class TimesheetRemiseBrouillonTest extends TestCase
         return [['directeur'], ['admin']];
     }
 
-    public function test_impossible_des_qu_un_pdf_est_genere_et_rien_n_est_modifie(): void
+    public function test_impossible_sans_ligne_soumise_ligne_signee_validee_ou_generee(): void
     {
-        $a = $this->ligne('confirme');
+        $a = $this->ligne('confirme', '2026-10-10', true);
         $this->ligne('genere', '2026-10-12');
+        $this->ligne('conteste', '2026-10-13');
         $this->actingAsRole('directeur');
 
         $this->postJson($this->url(), $this->payload(['motif' => 'Correction']))
@@ -83,18 +84,17 @@ class TimesheetRemiseBrouillonTest extends TestCase
         $this->assertSame(0, TimesheetAudit::count());
     }
 
-    public function test_motif_obligatoire_et_mois_sans_saisie_rouvrable(): void
+    public function test_motif_obligatoire(): void
     {
-        $this->ligne('brouillon');
+        $this->ligne('soumis');
         $this->actingAsRole('directeur');
 
         $this->postJson($this->url(), $this->payload())->assertStatus(422)->assertJsonValidationErrors('motif');
-        $this->postJson($this->url(), $this->payload(['motif' => 'Correction']))->assertStatus(422);
     }
 
     public function test_le_professeur_ne_peut_pas_remettre_en_brouillon(): void
     {
-        $this->ligne('confirme');
+        $this->ligne('soumis');
         Sanctum::actingAs($this->prof->user);
 
         $this->postJson($this->url(), $this->payload(['motif' => 'Correction']))->assertForbidden();
@@ -102,20 +102,20 @@ class TimesheetRemiseBrouillonTest extends TestCase
 
     public function test_le_detail_expose_la_possibilite_de_remise_en_brouillon(): void
     {
-        $this->ligne('confirme', '2026-10-10', true);
+        $this->ligne('soumis');
         $this->actingAsRole('directeur');
         $q = "/api/professeurs/{$this->prof->id}/timesheets-mois?annee=2026&mois=10";
 
         $this->getJson($q)->assertOk()->assertJsonPath('remise_brouillon.possible', true)
-            ->assertJsonPath('remise_brouillon.lignes', 1)->assertJsonPath('remise_brouillon.signatures', 1);
+            ->assertJsonPath('remise_brouillon.lignes', 1);
 
-        $this->ligne('genere', '2026-10-12');
+        Timesheet::query()->update(['statut_validation' => 'confirme']);
         $this->getJson($q)->assertOk()->assertJsonPath('remise_brouillon.possible', false);
     }
 
     public function test_le_professeur_peut_corriger_puis_resoumettre(): void
     {
-        $t = $this->ligne('confirme', '2026-10-10', true);
+        $t = $this->ligne('soumis', '2026-10-10');
         $this->actingAsRole('directeur');
         $this->postJson($this->url(), $this->payload(['motif' => 'Correction']))->assertOk();
 
@@ -127,7 +127,7 @@ class TimesheetRemiseBrouillonTest extends TestCase
 
     public function test_le_professeur_voit_le_motif_de_la_remise_en_brouillon_jusqu_a_la_resoumission(): void
     {
-        $t = $this->ligne('confirme', '2026-10-10', true);
+        $t = $this->ligne('soumis', '2026-10-10');
         $this->actingAsRole('directeur');
         $this->postJson($this->url(), $this->payload(['motif' => 'Heure oubliée']))->assertOk();
 

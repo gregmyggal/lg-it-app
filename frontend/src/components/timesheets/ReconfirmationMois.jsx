@@ -72,7 +72,7 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
     <section aria-label="Confirmation du mois" style={{ marginBottom: 16 }}>
       {d.remise_brouillon && (
         <Banner tone="warning">
-          <strong>La direction a rouvert vos heures{d.remise_brouillon.auteur ? ` (${d.remise_brouillon.auteur}, ${formatDateHeure(d.remise_brouillon.created_at)})` : ''}.</strong> Motif : « {d.remise_brouillon.motif} ». Corrigez vos saisies puis soumettez à nouveau le mois.
+          <strong>La direction a rouvert vos heures{d.remise_brouillon.auteur ? ` (${d.remise_brouillon.auteur}, ${formatDateHeure(d.remise_brouillon.created_at)})` : ''}.</strong> Motif : « {d.remise_brouillon.motif} ». Corrigez vos saisies puis soumettez-les à nouveau.
         </Banner>
       )}
       {d.contestation && (

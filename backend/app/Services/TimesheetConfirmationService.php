@@ -142,27 +142,23 @@ class TimesheetConfirmationService
     }
 
     /**
-     * TS-02 : la direction renvoie le mois entier en brouillon (soumis/confirmé/contesté → brouillon, signatures retirées).
-     * Impossible dès qu'un PDF a été généré : les corrections se font alors sur la timesheet du mois suivant.
+     * TS-02 : la direction renvoie en brouillon les lignes simplement soumises (pas encore validées ni signées).
+     * Une ligne validée, signée, contestée ou incluse dans un PDF ne peut plus être rouverte : correction sur le mois suivant.
      */
     public function remettreEnBrouillon(Professeur $prof, int $annee, int $mois, string $motif, User $auteur): int
     {
         return DB::transaction(function () use ($prof, $annee, $mois, $motif, $auteur) {
-            $lignes = $this->lignes($prof, $annee, $mois)->lockForUpdate()->get();
-            if ($lignes->contains('statut_validation', Timesheet::STATUT_GENERE)) {
-                throw RegleMetierException::invalide(self::MSG_PDF_GENERE);
-            }
-            $cibles = $lignes->filter(fn (Timesheet $t) => $t->statut_validation !== Timesheet::STATUT_BROUILLON);
+            $cibles = $this->lignes($prof, $annee, $mois)->lockForUpdate()->get()
+                ->filter(fn (Timesheet $t) => $this->rouvrable($t));
             if ($cibles->isEmpty()) {
-                throw RegleMetierException::invalide('Aucune saisie à remettre en brouillon : ce mois ne contient que des brouillons.');
+                throw RegleMetierException::invalide(self::MSG_AUCUNE);
             }
             foreach ($cibles as $t) {
-                $avant = ['statut' => $t->statut_validation, 'signee' => $t->signature_professeur !== null];
-                $t->update(['statut_validation' => Timesheet::STATUT_BROUILLON, 'signature_professeur' => null, 'validated_at' => null, 'validated_by' => null]);
+                $t->update(['statut_validation' => Timesheet::STATUT_BROUILLON]);
                 TimesheetAudit::create([
                     'timesheet_id' => $t->id, 'professeur_id' => $t->professeur_id, 'user_id' => $auteur->id,
                     'action' => TimesheetAudit::ACTION_REMISE_BROUILLON,
-                    'avant' => $avant, 'apres' => ['statut' => Timesheet::STATUT_BROUILLON, 'signee' => false], 'motif' => $motif,
+                    'avant' => ['statut' => Timesheet::STATUT_SOUMIS], 'apres' => ['statut' => Timesheet::STATUT_BROUILLON], 'motif' => $motif,
                 ]);
             }
 
@@ -170,22 +166,20 @@ class TimesheetConfirmationService
         });
     }
 
+    private function rouvrable(Timesheet $t): bool
+    {
+        return $t->statut_validation === Timesheet::STATUT_SOUMIS && $t->signature_professeur === null;
+    }
+
     /** État pour l'écran directeur : l'action est-elle possible, sinon pourquoi. */
     public function etatRemiseBrouillon(Professeur $prof, int $annee, int $mois): array
     {
-        $lignes = $this->lignes($prof, $annee, $mois)->get();
-        $genere = $lignes->contains('statut_validation', Timesheet::STATUT_GENERE);
-        $rouvrables = $lignes->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->count();
+        $n = $this->lignes($prof, $annee, $mois)->get()->filter(fn (Timesheet $t) => $this->rouvrable($t))->count();
 
-        return [
-            'possible' => ! $genere && $rouvrables > 0,
-            'lignes' => $genere ? 0 : $rouvrables,
-            'signatures' => $genere ? 0 : $lignes->whereNotNull('signature_professeur')->count(),
-            'raison' => $genere ? self::MSG_PDF_GENERE : null,
-        ];
+        return ['possible' => $n > 0, 'lignes' => $n, 'raison' => null];
     }
 
-    private const MSG_PDF_GENERE = 'Remise en brouillon impossible : un PDF a été généré pour ce mois. Les corrections doivent être apportées dans la timesheet du mois suivant.';
+    private const MSG_AUCUNE = 'Remise en brouillon impossible : seules les lignes soumises, ni validées ni signées, peuvent être rouvertes. Les corrections se font dans la timesheet du mois suivant.';
 
     private function audit(Timesheet $t, User $auteur, string $action, string $de, string $vers, string $motif): void
     {
