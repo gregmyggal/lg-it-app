@@ -94,14 +94,13 @@ class TimesheetConfirmationService
     {
         $saisies = $this->fiche->saisies($prof, $annee, $mois);
         $lignes = $this->fiche->lignes($prof, $saisies);
-        $iban = preg_replace('/\s+/', '', (string) $prof->compte_bancaire);
 
         return [
             'lignes' => $lignes->count(),
             'heures' => round((float) $saisies->where('type_activite', '!=', TimesheetService::TYPE_DEPLACEMENT)->sum('nombre_heures'), 2),
             'total_eur' => round((float) $lignes->sum('total'), 2),
             'ajustements' => $ajustements,
-            'compte_bancaire' => $iban === '' ? null : substr($iban, 0, 4).' •••• •••• '.substr($iban, -4),
+            'compte_bancaire' => \App\Rules\Iban::masquer($prof->compte_bancaire),
         ];
     }
 

@@ -50,7 +50,11 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return $request->user()->load('professeur');
+        // RGPD-01 : le professeur lit son propre IBAN (masqué partout ailleurs, y compris login).
+        $user = $request->user()->load('professeur');
+        $user->professeur?->makeVisible('compte_bancaire');
+
+        return $user;
     }
 
     public function changerMotDePasse(Request $request)

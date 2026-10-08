@@ -51,7 +51,11 @@ export default function CompteBancaireSection({ professeur, onSaved }) {
             label="Numéro de compte (IBAN)"
             htmlFor="compte-bancaire"
             error={erreur}
-            description={professeur.compte_bancaire ? null : 'Obligatoire pour générer la fiche de défraiement PDF.'}
+            description={
+              professeur.compte_bancaire_renseigne ?? Boolean(professeur.compte_bancaire)
+                ? `Compte enregistré (chiffré en base) : ${professeur.compte_bancaire_masque}.`
+                : 'Obligatoire pour générer la fiche de défraiement PDF.'
+            }
           >
             <AdminInput
               id="compte-bancaire"

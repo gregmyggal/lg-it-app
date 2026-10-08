@@ -15,6 +15,14 @@ class Iban implements ValidationRule
         return $v === '' ? null : $v;
     }
 
+    /** « BE12 •••• •••• 1234 » : 4 premiers et 4 derniers caractères ; null si vide. */
+    public static function masquer(?string $iban): ?string
+    {
+        $v = self::normaliser($iban);
+
+        return $v === null ? null : substr($v, 0, 4).' •••• •••• '.substr($v, -4);
+    }
+
     public static function estValide(string $iban): bool
     {
         if (! preg_match('/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/', $iban)) {

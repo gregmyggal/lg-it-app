@@ -27,7 +27,11 @@ class Professeur extends Model
         'photo_path',
     ];
 
+    // RGPD-01 : l'IBAN n'est jamais sérialisé implicitement ; ProfesseurResource l'expose explicitement.
+    protected $hidden = ['compte_bancaire'];
+
     protected $casts = [
+        'compte_bancaire' => 'encrypted',
         'date_entree' => 'date',
         'date_sortie' => 'date',
     ];

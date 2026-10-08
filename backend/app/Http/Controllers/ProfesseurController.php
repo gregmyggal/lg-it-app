@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DestroyProfesseurRequest;
+use App\Http\Resources\ProfesseurResource;
 use App\Models\Professeur;
 use App\Services\AccesCompteService;
 use App\Services\ProfesseurCompteService;
@@ -29,15 +30,18 @@ class ProfesseurController extends Controller
             ->withCount(['assignations as classes_count' => fn ($q) => $q->actif()])
             ->orderBy('nom')
             ->get()
-            ->map(fn (Professeur $p) => $this->avecAcces($p));
+            ->map(fn (Professeur $p) => (new ProfesseurResource($this->avecAcces($p)))->resolve());
     }
 
     public function show(Professeur $professeur)
     {
         Gate::authorize('view', $professeur);
 
-        return $this->avecAcces($professeur->load(['tarifs', 'user:id,name,email,role,statut,must_change_password,invitation_envoyee_le,mot_de_passe_defini_le'])
-            ->loadCount(['assignations as classes_count' => fn ($q) => $q->actif()]));
+        $professeur->load(['tarifs', 'user:id,name,email,role,statut,must_change_password,invitation_envoyee_le,mot_de_passe_defini_le'])
+            ->loadCount(['assignations as classes_count' => fn ($q) => $q->actif()]);
+
+        // IBAN complet : gestionnaires de paie (staff) et titulaire (RGPD-01).
+        return new ProfesseurResource($this->avecAcces($professeur), avecIban: true);
     }
 
     // Crée le compte de connexion (User, role=professeur) et le profil ensemble, puis envoie l'invitation
@@ -87,7 +91,7 @@ class ProfesseurController extends Controller
 
         $professeur->update($data);
 
-        return $professeur;
+        return new ProfesseurResource($professeur, avecIban: true);
     }
 
     // PROF-02 : sans heure encodée, suppression directe ; sinon 409 avec résumé, puis forçage (motif + nom).
