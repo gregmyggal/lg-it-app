@@ -11,6 +11,7 @@ import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
 import DefinirEmployeurModal from '../employeurs/DefinirEmployeurModal';
+import EmployeurMoisSection from '../employeurs/EmployeurMoisSection';
 import { AdminFormField, AdminTextarea } from '../AdminFormField';
 import { apercuPdf, deverrouillerMois, genererPdf, remettreMoisEnBrouillon, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
@@ -300,6 +301,10 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               )}
               </section>
             </aside>
+          </div>
+
+          <div style={{ marginTop: ADMIN_SPACING.lg }}>
+            <EmployeurMoisSection professeurId={professeurId} professeurNom={d.professeur.nom} anneeInitiale={annee} onChange={() => { detail.reload(); onChange?.(); }} />
           </div>
 
           {employeurModal && (

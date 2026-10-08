@@ -7,6 +7,7 @@ import { FilterField, FilterSearch } from '../ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../ui/DataStates';
 import ValiderLotModal from './ValiderLotModal';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
+import DefinirEmployeurModal from '../employeurs/DefinirEmployeurModal';
 import { useEmployeurs } from '../../hooks/useEmployeurs';
 import { genererPdfLot, useListeSaisies, useSyntheseMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
@@ -52,6 +53,8 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
   const [statut, setStatut] = useState('');
   const [employeurFiltre, setEmployeurFiltre] = useState('');
   const employeurs = useEmployeurs();
+  const [definition, setDefinition] = useState(null); // null = fermé, sinon 'choisir' | 'reprendre'
+  const [recap, setRecap] = useState(null);
   const [selection, setSelection] = useState(new Set());
   const [lot, setLot] = useState(false);
   const [pdfEnCours, setPdfEnCours] = useState(false);
@@ -61,6 +64,18 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
     (!statut || l.statut_mois === statut)
     && (!recherche || l.professeur.toLowerCase().includes(recherche.toLowerCase()))
   )), [synthese.data, statut, recherche]);
+
+  const ciblesEmployeur = lignes.filter((l) => selection.has(l.professeur_id) && l.employeur)
+    .map((l) => ({ professeur_id: l.professeur_id, professeur: l.professeur, vue: l.employeur }));
+
+  function apresEmployeur({ message, ignores }) {
+    setDefinition(null);
+    setSelection(new Set());
+    setRecap(ignores.length ? ignores : null);
+    toast.success(message);
+    synthese.reload();
+    onChange?.();
+  }
 
   const saisiesChoisies = (saisies.data || []).filter((t) => selection.has(t.professeur_id) && t.statut_validation === 'soumis' && t.can?.validate);
 
@@ -146,6 +161,8 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               placeholder="Tous les employeurs"
             />
             <div style={{ marginLeft: 'auto', display: 'flex', gap: ADMIN_SPACING.sm }}>
+              <AdminButton variant="secondary" onClick={() => setDefinition('reprendre')} disabled={ciblesEmployeur.length === 0}>Reprendre le mois précédent</AdminButton>
+              <AdminButton variant="secondary" onClick={() => setDefinition('choisir')} disabled={ciblesEmployeur.length === 0}>Définir l’employeur…</AdminButton>
               <AdminButton variant="secondary" onClick={() => exporterCsv(lignes, annee, moisNum)} disabled={lignes.length === 0}>Exporter CSV</AdminButton>
               <AdminButton
                 variant="secondary"
@@ -169,6 +186,11 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               </ul>
             </Banner>
           )}
+          {recap && (
+            <Banner tone="warning">
+              <strong>Ignoré(s) :</strong> {recap.map((r) => `${r.professeur} (${r.raison})`).join(' · ')}
+            </Banner>
+          )}
           {synthese.data.professeurs.length === 0 ? (
             <EmptyBlock icon="📭" title="Aucune timesheet pour ce mois">Aucun professeur n’a encodé ni soumis d’heures sur cette période.</EmptyBlock>
           ) : (
@@ -187,7 +209,6 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                         type="checkbox"
                         aria-label={`Sélectionner ${l.professeur}`}
                         checked={selection.has(l.professeur_id)}
-                        disabled={l.lignes_soumises === 0 && l.statut_mois !== 'pret_pdf'}
                         onChange={() => basculer(l.professeur_id)}
                       />
                     </Td>
@@ -216,6 +237,9 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
         </>
       )}
 
+      {definition && synthese.data && (
+        <DefinirEmployeurModal annee={annee} mois={moisNum} cibles={ciblesEmployeur} modeInitial={definition} onClose={() => setDefinition(null)} onDone={apresEmployeur} />
+      )}
       {lot && synthese.data && (
         <ValiderLotModal
           plafond={synthese.data.periode.plafond_journalier_eur}

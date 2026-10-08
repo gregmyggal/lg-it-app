@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import EmployeurMoisSection from './employeurs/EmployeurMoisSection';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import AdminButton, { AdminIconButton } from './AdminButton';
@@ -282,6 +283,11 @@ export default function AdminProfesseurDetail() {
             </AdminButton>
           </AdminCardFooter>
         </AdminCard>
+
+        {/* EMP-01 : employeur par mois */}
+        <div style={{ marginTop: ADMIN_SPACING.lg }}>
+          <EmployeurMoisSection professeurId={professeur.id} professeurNom={`${professeur.prenom} ${professeur.nom}`} />
+        </div>
 
         {/* Actions */}
         <div
