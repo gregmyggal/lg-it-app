@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccesDonneeSensible;
 use App\Models\Professeur;
 use App\Models\TimesheetPdf;
+use App\Services\JournalAccesService;
 use App\Services\TimesheetPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 /** TS-01 T5 : fiche de défraiement PDF — génération (staff), lot en zip, déverrouillage (admin), téléchargement. */
 class TimesheetPdfController extends Controller
 {
-    public function __construct(private readonly TimesheetPdfService $service) {}
+    public function __construct(private readonly TimesheetPdfService $service, private readonly JournalAccesService $journal) {}
 
     public function generer(Request $request, Professeur $professeur): JsonResponse
     {
@@ -30,6 +32,7 @@ class TimesheetPdfController extends Controller
     {
         $this->exigerStaff($request);
         $p = $this->periode($request);
+        $this->journal->enregistrer($request->user(), $professeur, AccesDonneeSensible::TELECHARGEMENT_PDF);
 
         return response($this->service->apercu($professeur, $p['annee'], $p['mois']), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="apercu.pdf"']);
     }
@@ -76,6 +79,7 @@ class TimesheetPdfController extends Controller
     {
         $this->exigerAcces($request, $pdf->professeur);
         abort_unless(Storage::disk('local')->exists($pdf->chemin), 404, 'Fichier introuvable.');
+        $this->journal->enregistrer($request->user(), $pdf->professeur, AccesDonneeSensible::TELECHARGEMENT_PDF);
 
         return Storage::disk('local')->download($pdf->chemin, $pdf->nomFichier(), ['Content-Type' => 'application/pdf']);
     }

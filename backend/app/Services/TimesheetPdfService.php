@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
 use App\Models\Employeur;
+use App\Models\AccesDonneeSensible;
 use App\Models\Professeur;
 use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
@@ -140,6 +141,10 @@ class TimesheetPdfService
             }
         });
         $zip->close();
+
+        foreach ($profs as $p) {
+            app(JournalAccesService::class)->enregistrer($auteur, $p, AccesDonneeSensible::EXPORT_ZIP);
+        }
 
         return ['zip' => $zipChemin, 'nombre' => $profs->count()];
     }

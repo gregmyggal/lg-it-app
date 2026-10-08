@@ -53,7 +53,7 @@ export default function CompteBancaireSection({ professeur, onSaved }) {
             error={erreur}
             description={
               professeur.compte_bancaire_renseigne ?? Boolean(professeur.compte_bancaire)
-                ? `Compte enregistré (chiffré en base) : ${professeur.compte_bancaire_masque}.`
+                ? `Compte enregistré (chiffré en base) : ${professeur.compte_bancaire_masque}. Chaque consultation est journalisée.`
                 : 'Obligatoire pour générer la fiche de défraiement PDF.'
             }
           >

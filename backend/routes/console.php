@@ -13,3 +13,6 @@ Schedule::command('liens:purge-historique')->dailyAt('03:30');
 
 // SIG-01 : preuves de signature (IP, appareil) conservées 7 ans.
 Schedule::command('signatures:anonymiser')->dailyAt('03:00'); // heure pile : cron OVH horaire
+
+// RGPD-01 : journal des accès à l'IBAN et aux fiches conservé 12 mois.
+Schedule::command('acces:purger-journal')->dailyAt('03:15');

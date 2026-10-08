@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DestroyProfesseurRequest;
 use App\Http\Resources\ProfesseurResource;
 use App\Models\Professeur;
+use App\Models\AccesDonneeSensible;
 use App\Services\AccesCompteService;
+use App\Services\JournalAccesService;
 use App\Services\ProfesseurCompteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +19,7 @@ class ProfesseurController extends Controller
     public function __construct(
         private readonly ProfesseurCompteService $comptes,
         private readonly AccesCompteService $acces,
+        private readonly JournalAccesService $journal,
     ) {}
 
     public function index(Request $request)
@@ -40,7 +43,8 @@ class ProfesseurController extends Controller
         $professeur->load(['tarifs', 'user:id,name,email,role,statut,must_change_password,invitation_envoyee_le,mot_de_passe_defini_le'])
             ->loadCount(['assignations as classes_count' => fn ($q) => $q->actif()]);
 
-        // IBAN complet : gestionnaires de paie (staff) et titulaire (RGPD-01).
+        // IBAN complet : gestionnaires de paie (staff) et titulaire (RGPD-01) ; la lecture est journalisée.
+        $this->journal->enregistrer(request()->user(), $professeur, AccesDonneeSensible::LECTURE_IBAN);
         return new ProfesseurResource($this->avecAcces($professeur), avecIban: true);
     }
 
@@ -90,6 +94,7 @@ class ProfesseurController extends Controller
         }
 
         $professeur->update($data);
+        $this->journal->enregistrer($request->user(), $professeur, AccesDonneeSensible::LECTURE_IBAN);
 
         return new ProfesseurResource($professeur, avecIban: true);
     }
