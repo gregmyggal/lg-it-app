@@ -6,6 +6,8 @@ import { Table, Th, Td, Tr } from '../ui/Table';
 import { FilterField, FilterSearch } from '../ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../ui/DataStates';
 import ValiderLotModal from './ValiderLotModal';
+import EmployeurBadge from '../employeurs/EmployeurBadge';
+import { useEmployeurs } from '../../hooks/useEmployeurs';
 import { genererPdfLot, useListeSaisies, useSyntheseMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
 import { STATUTS_MOIS_PROF } from '../../utils/statuts';
@@ -19,8 +21,8 @@ const dernierJour = (annee, mois) => new Date(annee, mois, 0).getDate();
 const OPTIONS_STATUT = Object.entries(STATUTS_MOIS_PROF).map(([value, s]) => ({ value, label: s.label }));
 
 function exporterCsv(lignes, annee, mois) {
-  const entete = ['Professeur', 'Statut', 'Heures animation', 'Heures préparation', 'Total EUR', 'Lignes ajustées'];
-  const corps = lignes.map((l) => [l.professeur, STATUTS_MOIS_PROF[l.statut_mois]?.label, l.heures_animation, l.heures_preparation, l.total_eur, l.lignes_ajustees]);
+  const entete = ['Professeur', 'Employeur', 'Statut', 'Heures animation', 'Heures préparation', 'Total EUR', 'Lignes ajustées'];
+  const corps = lignes.map((l) => [l.professeur, l.employeur?.employeur.nom, STATUTS_MOIS_PROF[l.statut_mois]?.label, l.heures_animation, l.heures_preparation, l.total_eur, l.lignes_ajustees]);
   const csv = [entete, ...corps].map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
   const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
   const a = document.createElement('a');
@@ -48,6 +50,8 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
   const saisies = useListeSaisies({ date_from: `${mois}-01`, date_to: `${mois}-${String(dernierJour(annee, moisNum)).padStart(2, '0')}` });
   const [recherche, setRecherche] = useState('');
   const [statut, setStatut] = useState('');
+  const [employeurFiltre, setEmployeurFiltre] = useState('');
+  const employeurs = useEmployeurs();
   const [selection, setSelection] = useState(new Set());
   const [lot, setLot] = useState(false);
   const [pdfEnCours, setPdfEnCours] = useState(false);
@@ -134,6 +138,13 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: ADMIN_SPACING.md, alignItems: 'flex-end', marginBottom: ADMIN_SPACING.md }}>
             <FilterSearch id="synthese-recherche" value={recherche} onChange={setRecherche} placeholder="Nom du professeur" />
             <FilterField label="Statut" value={statut} onChange={setStatut} options={OPTIONS_STATUT} placeholder="Tous les statuts" />
+            <FilterField
+              label="Employeur"
+              value={employeurFiltre}
+              onChange={setEmployeurFiltre}
+              options={(employeurs.data || []).map((e) => ({ value: String(e.id), label: e.nom }))}
+              placeholder="Tous les employeurs"
+            />
             <div style={{ marginLeft: 'auto', display: 'flex', gap: ADMIN_SPACING.sm }}>
               <AdminButton variant="secondary" onClick={() => exporterCsv(lignes, annee, moisNum)} disabled={lignes.length === 0}>Exporter CSV</AdminButton>
               <AdminButton
@@ -161,10 +172,10 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
           {synthese.data.professeurs.length === 0 ? (
             <EmptyBlock icon="📭" title="Aucune timesheet pour ce mois">Aucun professeur n’a encodé ni soumis d’heures sur cette période.</EmptyBlock>
           ) : (
-            <Table caption="Validation du mois par professeur" minWidth="860px">
+            <Table caption="Validation du mois par professeur" minWidth="980px">
               <thead>
                 <tr>
-                  <Th srOnly>Sélection</Th><Th>Professeur</Th><Th>Statut du mois</Th><Th>H. animation</Th><Th xl>H. préparation</Th>
+                  <Th srOnly>Sélection</Th><Th>Professeur</Th><Th>Employeur</Th><Th>Statut du mois</Th><Th>H. animation</Th><Th xl>H. préparation</Th>
                   <Th>Total</Th><Th>Lignes ajustées</Th><Th>Alertes</Th><Th xl>Dernière action</Th><Th srOnly>Ouvrir</Th>
                 </tr>
               </thead>
@@ -181,6 +192,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                       />
                     </Td>
                     <Td>{l.professeur}</Td>
+                    <Td>{l.employeur && <EmployeurBadge employeur={l.employeur.employeur} source={l.employeur.source} verrouille={l.employeur.verrouille} raisonVerrou={l.employeur.raison_verrou} />}</Td>
                     <Td><StatutBadge table={STATUTS_MOIS_PROF} valeur={l.statut_mois} /></Td>
                     <Td>{l.heures_animation ? formatHeures(l.heures_animation) : '—'}</Td>
                     <Td xl>{l.heures_preparation ? formatHeures(l.heures_preparation) : '—'}</Td>

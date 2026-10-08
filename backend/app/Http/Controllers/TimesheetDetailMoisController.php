@@ -8,6 +8,7 @@ use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
 use App\Models\TimesheetPdf;
+use App\Services\EmployeurMoisService;
 use App\Services\SignatureNumeriqueService;
 use App\Services\TarifResolver;
 use App\Services\TimesheetParametreService;
@@ -20,7 +21,7 @@ use Illuminate\Support\Carbon;
 /** TS-01 T3 : détail d'un professeur pour un mois (saisies, jauge par jour, historique). Staff uniquement. */
 class TimesheetDetailMoisController extends Controller
 {
-    public function show(Request $request, Professeur $professeur, TimesheetSyntheseMoisService $synthese, TimesheetParametreService $parametres, TarifResolver $tarifs, TimesheetPdfService $pdfs, SignatureNumeriqueService $signatures): JsonResponse
+    public function show(Request $request, Professeur $professeur, TimesheetSyntheseMoisService $synthese, TimesheetParametreService $parametres, TarifResolver $tarifs, TimesheetPdfService $pdfs, SignatureNumeriqueService $signatures, EmployeurMoisService $employeurs): JsonResponse
     {
         abort_unless($request->user()->isStaff(), 403, 'Action non autorisée.');
 
@@ -59,12 +60,13 @@ class TimesheetDetailMoisController extends Controller
                 'created_at' => $a->created_at,
             ]);
 
-        $resume = collect($synthese->synthese((int) $v['annee'], (int) $v['mois'])['professeurs'])->firstWhere('professeur_id', $professeur->id);
+        $resume = collect($synthese->synthese((int) $v['annee'], (int) $v['mois'], $request->user())['professeurs'])->firstWhere('professeur_id', $professeur->id);
 
         return response()->json([
             'professeur' => ['id' => $professeur->id, 'nom' => trim($professeur->prenom.' '.$professeur->nom)],
             'periode' => ['annee' => (int) $v['annee'], 'mois' => (int) $v['mois'], 'plafond_journalier_eur' => $plafond],
             'resume' => $resume,
+            'employeur' => $employeurs->pourProfesseur($professeur, (int) $v['annee'], (int) $v['mois'], $request->user()),
             'lignes' => TimesheetResource::collection($lignes)->resolve($request),
             'jours' => $jours,
             'historique' => $historique,

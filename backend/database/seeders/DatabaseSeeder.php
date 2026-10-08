@@ -75,6 +75,7 @@ class DatabaseSeeder extends Seeder
 
         // CLS-01 T1 : année scolaire 2026-2027 (+ calendrier FWB) puis classes React (14 sessions chacune)
         $this->call([
+            EmployeurSeeder::class,
             AnneeScolaireSeeder::class,
             ClasseSeeder::class,
             ProfesseurClasseSeeder::class,

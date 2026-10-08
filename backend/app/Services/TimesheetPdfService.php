@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\RegleMetierException;
+use App\Models\Employeur;
 use App\Models\Professeur;
 use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
@@ -20,7 +21,7 @@ use ZipArchive;
 /**
  * TS-01 T5 : fiche de défraiement « Fiche de défraiement – Volontariat » (modèle Logiscool) : logo, titre, mois, nom
  * et compte du volontaire, tableau DATE / OBJET / DÉFRAIEMENT / NOMBRE / TOTAL sur 15 lignes par page (page suivante
- * au-delà), total, date et signature, pied de page de l'ASBL. Le lissage n'apparaît pas : seules les saisies finales comptent.
+ * au-delà), total, date et signature, pied de page de l'employeur du mois (EMP-01 : ASBL ou L-IT Solutions). Le lissage n'apparaît pas : seules les saisies finales comptent.
  */
 class TimesheetPdfService
 {
@@ -31,6 +32,7 @@ class TimesheetPdfService
         private readonly TarifResolver $tarifs,
         private readonly FicheDefraiementLignes $fiche,
         private readonly SignatureNumeriqueService $signatures,
+        private readonly EmployeurMoisService $employeurs,
     ) {}
 
     /** Motifs qui empêchent la génération (liste vide = prêt). */
@@ -50,6 +52,10 @@ class TimesheetPdfService
         }
         if (blank($prof->compte_bancaire)) {
             $bloquants[] = 'Compte bancaire manquant';
+        }
+        $employeur = $this->employeurs->effectif($prof, $annee, $mois);
+        if (! $employeur->coordonneesCompletes()) {
+            $bloquants[] = 'Coordonnées de l\'employeur « '.$employeur->nom.' » à compléter (Admin > Entités employeurs)';
         }
         if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF && $this->signatures->aResigner($prof, $annee, $mois)) {
             $bloquants[] = 'Données modifiées depuis la signature : nouvelle signature du professeur requise';
@@ -74,7 +80,9 @@ class TimesheetPdfService
                 throw RegleMetierException::invalide('Génération impossible : '.implode(' ; ', $bloquants).'.', ['pdf' => $bloquants]);
             }
 
-            $contenu = $this->contenu($prof, $annee, $mois, $saisies);
+            // RG-3/RG-8 : l'employeur du mois est figé sur la fiche (ligne « fige » + snapshot des coordonnées).
+            $employeur = $this->employeurs->materialiser($prof, $annee, $mois, $auteur, 'Fixé automatiquement à la génération du PDF');
+            $contenu = $this->contenu($prof, $annee, $mois, $saisies, $employeur);
             $version = (int) TimesheetPdf::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois])->max('version') + 1;
             $chemin = sprintf('pdfs/%d/%04d-%02d-v%d.pdf', $prof->id, $annee, $mois, $version);
             Storage::disk('local')->put($chemin, $contenu['pdf']);
@@ -82,6 +90,7 @@ class TimesheetPdfService
             $pdf = TimesheetPdf::create([
                 'professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'version' => $version,
                 'chemin' => $chemin, 'total_eur' => $contenu['total'], 'generated_by' => $auteur->id, 'generated_at' => now(),
+                'employeur_id' => $employeur->id, 'employeur_snapshot' => $employeur->snapshot(),
             ]);
 
             Timesheet::whereIn('id', $saisies->pluck('id'))->update([
@@ -97,7 +106,7 @@ class TimesheetPdfService
     /** Aperçu : mêmes données que la génération, sans rien enregistrer ni changer de statut (accepte un mois non prêt). */
     public function apercu(Professeur $prof, int $annee, int $mois): string
     {
-        return $this->contenu($prof, $annee, $mois, $this->saisies($prof, $annee, $mois))['pdf'];
+        return $this->contenu($prof, $annee, $mois, $this->saisies($prof, $annee, $mois), $this->employeurs->effectif($prof, $annee, $mois))['pdf'];
     }
 
     /**
@@ -163,7 +172,7 @@ class TimesheetPdfService
     }
 
     /** @return array{pdf: string, total: float} */
-    private function contenu(Professeur $prof, int $annee, int $mois, Collection $saisies): array
+    private function contenu(Professeur $prof, int $annee, int $mois, Collection $saisies, Employeur $employeur): array
     {
         $lignes = $this->fiche->lignes($prof, $saisies);
         $signature = $this->blocSignature($prof, $annee, $mois, $saisies);
@@ -180,7 +189,7 @@ class TimesheetPdfService
         }
         $mpdf = new Mpdf(['tempDir' => $dir, 'format' => 'A4', 'margin_top' => 12, 'margin_bottom' => 38, 'margin_left' => 20, 'margin_right' => 20, 'default_font' => 'dejavusans', 'default_font_size' => 9]);
         $mpdf->SetTitle('Fiche de défraiement – '.trim($prof->prenom.' '.$prof->nom));
-        $mpdf->SetHTMLFooter($this->htmlPied());
+        $mpdf->SetHTMLFooter($this->htmlPied($employeur));
         $mpdf->WriteHTML($html);
 
         return ['pdf' => $mpdf->Output('', 'S'), 'total' => round((float) $lignes->sum('total'), 2)];
@@ -254,11 +263,12 @@ HTML;
 HTML;
     }
 
-    private function htmlPied(): string
+    private function htmlPied(Employeur $employeur): string
     {
-        $a = config('logiscool.association');
+        $compte = $employeur->compteFormate();
 
-        return '<div style="text-align:center"><b style="font-family:serif;font-size:12pt">'.e($a['nom']).'</b><br><span style="font-family:serif;font-size:8pt">RPM : '.e($a['rpm']).'<br>Banque : '.e($a['banque']).'<br>'.e($a['adresse']).'</span></div>';
+        return '<div style="text-align:center"><b style="font-family:serif;font-size:12pt">'.e($employeur->nom).'</b><br><span style="font-family:serif;font-size:8pt">RPM : '.e($employeur->rpm)
+            .($compte ? '<br>Banque : '.e($compte) : '').'<br>'.e($employeur->adresse).'</span></div>';
     }
 
     private function euro(float $v): string

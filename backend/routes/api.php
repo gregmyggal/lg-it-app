@@ -17,6 +17,8 @@ use App\Http\Controllers\CoursController;
 use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\CoursLienController;
 use App\Http\Controllers\CoursRessourceController;
+use App\Http\Controllers\EmployeurController;
+use App\Http\Controllers\EmployeurMoisController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\HeuresDefrayablesController;
 use App\Http\Controllers\LienVersionController;
@@ -218,6 +220,14 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/lues', [NotificationController::class, 'toutesLues']);
     Route::post('/notifications/{id}/lue', [NotificationController::class, 'lue']);
+    // EMP-01 : employeur d'un animateur, mois par mois (entités, frise, édition, lot, historique).
+    Route::get('/employeurs', [EmployeurController::class, 'index']);
+    Route::post('/employeurs', [EmployeurController::class, 'store']);
+    Route::put('/employeurs/{employeur}', [EmployeurController::class, 'update']);
+    Route::get('/professeurs/{professeur}/employeurs-mois', [EmployeurMoisController::class, 'index']);
+    Route::get('/professeurs/{professeur}/employeurs-mois/historique', [EmployeurMoisController::class, 'historique']);
+    Route::put('/professeurs/{professeur}/employeurs-mois/{annee}/{mois}', [EmployeurMoisController::class, 'update'])->whereNumber(['annee', 'mois']);
+    Route::post('/employeurs-mois/lot', [EmployeurMoisController::class, 'lot']);
     Route::get('/timesheets/mois-synthese', [TimesheetSyntheseMoisController::class, 'show']);
     Route::post('/timesheets/valider-lot', [TimesheetValidationController::class, 'validerLot']);
 

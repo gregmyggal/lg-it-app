@@ -179,4 +179,37 @@ class MigrationsRollbackTest extends TestCase
         $this->assertSame((int) $cp[0]->id, (int) DB::table('course_sessions')->value('classe_periode_id'));
         $this->assertFalse(Schema::hasColumn('classes', 'periode_id'));
     }
+
+    public function test_emp01_migration_reprend_l_historique_en_asbl_et_son_rollback_est_propre(): void
+    {
+        Artisan::call('migrate:fresh');
+        $this->rollbackJusqua('2026_10_11_100000_create_employeurs_tables');
+        foreach (['employeurs', 'professeur_employeurs_mois', 'employeur_mois_audits'] as $table) {
+            $this->assertFalse(Schema::hasTable($table), "Table non supprimée : {$table}");
+        }
+        $this->assertFalse(Schema::hasColumn('timesheet_pdfs', 'employeur_id'));
+        $this->assertFalse(Schema::hasColumn('timesheet_pdfs', 'employeur_snapshot'));
+
+        // Historique existant avant EMP-01 : une saisie (oct.), un PDF (sept.).
+        DB::table('users')->insert(['id' => 1, 'name' => 'P', 'email' => 'p@t.test', 'password' => 'x', 'role' => 'professeur', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('professeurs')->insert(['id' => 1, 'user_id' => 1, 'prenom' => 'A', 'nom' => 'B', 'email' => 'p@t.test', 'statut' => 'actif', 'date_entree' => '2026-01-01', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('timesheets')->insert(['professeur_id' => 1, 'date_prestation' => '2026-10-01', 'nombre_heures' => 2, 'statut_validation' => 'confirme', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('timesheet_pdfs')->insert(['professeur_id' => 1, 'annee' => 2026, 'mois' => 9, 'version' => 1, 'chemin' => 'pdfs/1/x.pdf', 'total_eur' => 10]);
+
+        $this->assertSame(0, Artisan::call('migrate'), Artisan::output());
+
+        $this->assertSame(2, DB::table('professeur_employeurs_mois')->count());
+        $asbl = DB::table('employeurs')->where('code', 'asbl')->first();
+        $this->assertSame(1, (int) $asbl->par_defaut);
+        $this->assertSame(2, DB::table('professeur_employeurs_mois')->where(['employeur_id' => $asbl->id, 'source' => 'migration'])->count());
+        $this->assertSame(2, DB::table('employeur_mois_audits')->count());
+        $this->assertSame($asbl->id, (int) DB::table('timesheet_pdfs')->value('employeur_id'));
+        $this->assertNotNull(DB::table('timesheet_pdfs')->value('employeur_snapshot'));
+        // IBAN chiffré au repos, jamais en clair.
+        $this->assertStringNotContainsString('1431', (string) $asbl->compte_bancaire);
+        // L-IT : valeurs de remplacement, aucune coordonnée inventée.
+        $lit = DB::table('employeurs')->where('code', 'lit_solutions')->first();
+        $this->assertSame('À COMPLÉTER', $lit->rpm);
+        $this->assertNull($lit->compte_bancaire);
+    }
 }

@@ -9,6 +9,8 @@ import LisserMoisModal from './LisserMoisModal';
 import ValiderLotModal from './ValiderLotModal';
 import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
+import EmployeurBadge from '../employeurs/EmployeurBadge';
+import DefinirEmployeurModal from '../employeurs/DefinirEmployeurModal';
 import { AdminFormField, AdminTextarea } from '../AdminFormField';
 import { apercuPdf, deverrouillerMois, genererPdf, remettreMoisEnBrouillon, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
@@ -90,6 +92,8 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
   const [brouillon, setBrouillon] = useState(null); // null = fermé, sinon motif
   const [envoiBrouillon, setEnvoiBrouillon] = useState(false);
   const [erreurBrouillon, setErreurBrouillon] = useState(null);
+  const [employeurModal, setEmployeurModal] = useState(false);
+  const [confirmationPdf, setConfirmationPdf] = useState(false);
   const [envoiReponse, setEnvoiReponse] = useState(false);
   const [erreurReponse, setErreurReponse] = useState(null);
 
@@ -180,6 +184,15 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                 {d.resume && <StatutBadge table={STATUTS_MOIS_PROF} valeur={d.resume.statut_mois} />}
                 <span>Total <strong>{formatEuros(totaux.e)}</strong> · {formatHeures(totaux.h)}</span>
               </div>
+              {d.employeur && (
+                <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span>Employeur :</span>
+                  <EmployeurBadge employeur={d.employeur.employeur} source={d.employeur.source} verrouille={d.employeur.verrouille} raisonVerrou={d.employeur.raison_verrou} />
+                  <AdminButton variant="secondary" size="sm" onClick={() => setEmployeurModal(true)}>
+                    {d.employeur.modifiable ? 'Modifier' : 'Détails'}
+                  </AdminButton>
+                </div>
+              )}
               <SignaturePreuve signature={d.signature} />
             </div>
             <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap' }}>
@@ -188,7 +201,7 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               <AdminButton
                 disabled={pdfEnCours || d.pdf.bloquants.length > 0}
                 title={d.pdf.bloquants.join(' · ') || undefined}
-                onClick={() => actionPdf(() => genererPdf(professeurId, annee, moisNum), 'PDF généré.')}
+                onClick={() => setConfirmationPdf(true)}
               >
                 Générer le PDF
               </AdminButton>
@@ -207,6 +220,11 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             <p style={{ fontSize: 13, color: 'var(--tone-warning-fg)', margin: '0 0 12px' }}>PDF : {d.pdf.bloquants.join(' · ')}.</p>
           )}
 
+          {d.employeur?.verrouille && (
+            <Banner tone="info">
+              <span role="img" aria-label="Mois verrouillé">🔒</span> {d.employeur.raison_verrou}
+            </Banner>
+          )}
           {contestation && (
             <Banner
               tone="error"
@@ -284,6 +302,39 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             </aside>
           </div>
 
+          {employeurModal && (
+            <DefinirEmployeurModal
+              annee={annee}
+              mois={moisNum}
+              cibles={[{ professeur_id: professeurId, professeur: d.professeur.nom, vue: d.employeur }]}
+              onClose={() => setEmployeurModal(false)}
+              onDone={({ message }) => { setEmployeurModal(false); recharger(message); }}
+            />
+          )}
+          {confirmationPdf && (
+            <AdminModal
+              isOpen
+              title="Générer la fiche PDF"
+              size="sm"
+              onClose={() => setConfirmationPdf(false)}
+              footer={
+                <>
+                  <AdminButton variant="secondary" onClick={() => setConfirmationPdf(false)}>Annuler</AdminButton>
+                  <AdminButton
+                    loading={pdfEnCours}
+                    onClick={async () => { await actionPdf(() => genererPdf(professeurId, annee, moisNum), 'PDF généré.'); setConfirmationPdf(false); }}
+                  >
+                    Générer
+                  </AdminButton>
+                </>
+              }
+            >
+              <p style={{ marginTop: 0 }}>
+                Fiche émise au nom de : <strong>{d.employeur?.employeur.nom}</strong> — l’entité est figée sur cette version et responsable de traitement des heures du mois.
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--c-text-2)', marginBottom: 0 }}>Les saisies du mois passeront à « généré » et ne seront plus modifiables sans déverrouillage par un administrateur.</p>
+            </AdminModal>
+          )}
           {deverrouillage !== null && (
             <AdminModal
               isOpen

@@ -26,6 +26,7 @@ class SignatureNumeriqueService
     public function __construct(
         private readonly FicheDefraiementLignes $fiche,
         private readonly SignatureCle $cle,
+        private readonly EmployeurMoisService $employeurs,
     ) {}
 
     /** Signe le mois : seul le professeur concerné, avec sa signature enregistrée et la certification cochée. */
@@ -45,6 +46,9 @@ class SignatureNumeriqueService
             if (! $etat['can_sign']) {
                 throw RegleMetierException::invalide($etat['errors'][0] ?? 'Impossible de signer ce mois.');
             }
+
+            // RG-3 : l'employeur du mois est figé avant l'acte (il entre dans l'empreinte et dans le sceau).
+            $employeur = $this->employeurs->materialiser($prof, $annee, $mois, $signataire, 'Fixé automatiquement à la signature du mois');
 
             $debut = Carbon::create($annee, $mois, 1);
             Timesheet::where('professeur_id', $prof->id)
@@ -68,6 +72,8 @@ class SignatureNumeriqueService
                 'annee' => $annee,
                 'mois' => $mois,
                 'signataire' => ['user_id' => $signataire->id, 'nom' => trim($prof->prenom.' '.$prof->nom)],
+                'emetteur' => $employeur->nom,
+                'employeur_id' => $employeur->id,
                 'signe_a' => $signeA->toIso8601ZuluString(),
                 'ip' => $ip,
                 'user_agent' => $userAgent ? mb_substr($userAgent, 0, 255) : null,
@@ -167,7 +173,8 @@ class SignatureNumeriqueService
             'document' => 'Fiche de défraiement – '.Carbon::create($sig->annee, $sig->mois, 1)->locale('fr')->translatedFormat('F Y'),
             'signataire' => $initiales,
             'signed_at' => $sig->signed_at,
-            'emetteur' => config('logiscool.association.nom'),
+            'emetteur' => (json_decode((string) $sig->payload, true)['emetteur'] ?? null)
+                ?? $this->employeurs->effectif($p, $sig->annee, $sig->mois)->nom,
         ];
     }
 

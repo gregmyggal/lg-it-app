@@ -18,6 +18,6 @@ class TimesheetSyntheseMoisController extends Controller
             'mois' => ['required', 'integer', 'between:1,12'],
         ]);
 
-        return response()->json($service->synthese((int) $v['annee'], (int) $v['mois']));
+        return response()->json($service->synthese((int) $v['annee'], (int) $v['mois'], $request->user()));
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Professeur;
 use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -28,10 +29,14 @@ class TimesheetSyntheseMoisService
 
     public const STATUT_GENERE = 'genere';
 
-    public function __construct(private readonly TimesheetParametreService $parametres, private readonly TarifResolver $tarifs) {}
+    public function __construct(
+        private readonly TimesheetParametreService $parametres,
+        private readonly TarifResolver $tarifs,
+        private readonly EmployeurMoisService $employeurs,
+    ) {}
 
     /** @return array{periode: array, kpis: array, professeurs: array} */
-    public function synthese(int $annee, int $mois): array
+    public function synthese(int $annee, int $mois, ?User $lecteur = null): array
     {
         $debut = Carbon::create($annee, $mois, 1)->startOfMonth();
         $fin = $debut->copy()->endOfMonth();
@@ -52,7 +57,11 @@ class TimesheetSyntheseMoisService
             ->whereIn('timesheet_id', $saisies->flatten()->pluck('id'))
             ->get()->groupBy('professeur_id');
 
-        $lignes = $ids->map(function (int $id) use ($saisies, $sansHeures, $professeurs, $tarifs, $audits, $plafondJour, $plafondAn, $totauxAnnuels) {
+        // EMP-01 : employeur et verrou du mois de tous les animateurs en 4 requêtes (pas de N+1).
+        $employeurs = $lecteur ? $this->employeurs->resoudre($ids, $annee, $mois) : [];
+        $verrous = $lecteur ? $this->employeurs->verrous($ids, $annee, $mois) : [];
+
+        $lignes = $ids->map(function (int $id) use ($lecteur, $employeurs, $verrous, $saisies, $sansHeures, $professeurs, $tarifs, $audits, $plafondJour, $plafondAn, $totauxAnnuels) {
             $prof = $professeurs[$id];
             $lignes = $saisies->get($id, collect());
             $tarifsProf = $tarifs->get($id, collect());
@@ -99,7 +108,7 @@ class TimesheetSyntheseMoisService
                 'lignes_ajustees' => $auditsProf->pluck('timesheet_id')->unique()->count(),
                 'alertes' => $alertes,
                 'derniere_action_at' => $dernier ? Carbon::parse($dernier)->toIso8601String() : null,
-            ];
+            ] + ($lecteur ? ['employeur' => $this->employeurs->vue($employeurs[$id], $verrous[$id] ?? null, $lecteur)] : []);
         })->sortBy('professeur', SORT_NATURAL | SORT_FLAG_CASE)->values();
 
         return [

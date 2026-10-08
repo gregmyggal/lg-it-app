@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Employeur;
 use App\Models\Professeur;
 use App\Models\ProfesseurTarif;
 use App\Models\Timesheet;
@@ -21,7 +22,7 @@ class FicheDefraiementLignes
         TimesheetService::TYPE_DEPLACEMENT => 'Frais de déplacement',
     ];
 
-    public function __construct(private readonly TarifResolver $tarifs) {}
+    public function __construct(private readonly TarifResolver $tarifs, private readonly EmployeurMoisService $employeurs) {}
 
     /** Saisies du mois hors brouillons. @return Collection<int, Timesheet> */
     public function saisies(Professeur $prof, int $annee, int $mois, bool $verrou = false): Collection
@@ -58,6 +59,8 @@ class FicheDefraiementLignes
     {
         $lignes = $this->lignes($prof, $this->saisies($prof, $annee, $mois));
 
+        $employeur = $this->employeurs->effectif($prof, $annee, $mois);
+
         return [
             'professeur_id' => $prof->id,
             'nom' => trim($prof->prenom.' '.$prof->nom),
@@ -69,6 +72,18 @@ class FicheDefraiementLignes
                 'unite' => number_format($l['unite'], 2, '.', ''), 'nombre' => number_format($l['nombre'], 2, '.', ''), 'total' => number_format($l['total'], 2, '.', ''),
             ])->all(),
             'total' => number_format((float) $lignes->sum('total'), 2, '.', ''),
-        ];
+        ] + $this->cleEmployeur($employeur);
+    }
+
+    /**
+     * EMP-01 : l'employeur du mois fait partie du contenu signé (changer d'employeur rend la signature « à re-signer »).
+     * Rétrocompatibilité : les signatures antérieures à EMP-01 ne le contenaient pas et supposent l'ASBL ; pour elles
+     * l'empreinte reste identique, la clé n'est donc ajoutée que pour une autre entité.
+     *
+     * @return array{employeur?: array{id: int, nom: string}}
+     */
+    private function cleEmployeur(Employeur $employeur): array
+    {
+        return $employeur->code === Employeur::CODE_ASBL ? [] : ['employeur' => ['id' => $employeur->id, 'nom' => $employeur->nom]];
     }
 }

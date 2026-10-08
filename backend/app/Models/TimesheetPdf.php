@@ -9,9 +9,9 @@ class TimesheetPdf extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['professeur_id', 'annee', 'mois', 'version', 'chemin', 'total_eur', 'generated_by', 'generated_at'];
+    protected $fillable = ['professeur_id', 'annee', 'mois', 'version', 'chemin', 'total_eur', 'generated_by', 'generated_at', 'employeur_id', 'employeur_snapshot'];
 
-    protected $casts = ['generated_at' => 'datetime', 'total_eur' => 'float'];
+    protected $casts = ['generated_at' => 'datetime', 'total_eur' => 'float', 'employeur_snapshot' => 'encrypted:array'];
 
     public function professeur(): BelongsTo
     {

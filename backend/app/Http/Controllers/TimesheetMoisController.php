@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\TimesheetResource;
 use App\Models\CourseSession;
 use App\Models\Timesheet;
+use App\Services\EmployeurMoisService;
 use App\Services\TimesheetLissingService;
 use App\Services\TimesheetService;
 use App\Services\TimesheetSignatureService;
@@ -16,7 +17,7 @@ use Illuminate\Validation\Rule;
 /** « Encoder mon mois » (CLS-01 T3, mock-up 02) : sessions du mois, heures libres, synthèse, soumission du mois. */
 class TimesheetMoisController extends Controller
 {
-    public function __construct(private readonly TimesheetService $service) {}
+    public function __construct(private readonly TimesheetService $service, private readonly EmployeurMoisService $employeurs) {}
 
     public function monMois(Request $request): JsonResponse
     {
@@ -81,6 +82,8 @@ class TimesheetMoisController extends Controller
         return response()->json([
             'annee' => (int) $v['annee'],
             'mois' => (int) $v['mois'],
+            // EMP-01 (RG-10) : le professeur voit le nom de l'entité de son mois, en lecture seule.
+            'employeur' => ['nom' => $this->employeurs->effectif($professeur, (int) $v['annee'], (int) $v['mois'])->nom],
             'sessions' => $donnees,
             'libres' => TimesheetResource::collection($saisies->whereNull('course_session_id')->values())->resolve($request),
             'synthese' => [

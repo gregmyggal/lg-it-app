@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Professeur;
 use App\Models\Timesheet;
+use App\Services\EmployeurMoisService;
 use App\Services\TimesheetConfirmationService;
 use App\Services\TimesheetNotifier;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,7 @@ class TimesheetConfirmationController extends Controller
     public function __construct(
         private readonly TimesheetConfirmationService $service,
         private readonly TimesheetNotifier $notifier,
+        private readonly EmployeurMoisService $employeurs,
     ) {}
 
     // Professeur : ce qui a été ajusté, contestation en cours, signature possible.
@@ -24,7 +26,10 @@ class TimesheetConfirmationController extends Controller
         Gate::authorize('create', Timesheet::class);
         $v = $this->periode($request);
 
-        return response()->json($this->service->etat($request->user()->professeur, $v['annee'], $v['mois']));
+        $prof = $request->user()->professeur;
+
+        // EMP-01 (RG-10) : le professeur voit le nom de l'entité de son mois, rien d'autre.
+        return response()->json($this->service->etat($prof, $v['annee'], $v['mois']) + ['employeur' => ['nom' => $this->employeurs->effectif($prof, $v['annee'], $v['mois'])->nom]]);
     }
 
     // Professeur : conteste les saisies confirmées non signées de son mois (motif obligatoire).
