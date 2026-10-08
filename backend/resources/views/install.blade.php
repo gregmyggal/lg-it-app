@@ -194,7 +194,7 @@
             <p class="lead">Utilisé pour les notifications et la réinitialisation des mots de passe.</p>
             <div class="radio-row">
                 <label><input type="radio" name="mail_mailer" value="smtp" checked> <span><strong>SMTP</strong><br><span class="muted">Adresse e-mail OVH (ssl0.ovh.net) ou autre fournisseur</span></span></label>
-                <label><input type="radio" name="mail_mailer" value="log"> <span><strong>Désactivé</strong><br><span class="muted">Les e-mails sont écrits dans les logs, pas envoyés</span></span></label>
+                <label><input type="radio" name="mail_mailer" value="log"> <span><strong>Désactivé</strong><br><span class="muted">Les e-mails sont écrits dans les logs, pas envoyés. Refusé en production (liens d'accès exposés dans les logs).</span></span></label>
             </div>
             <div class="grid" id="smtp-fields" style="margin-top:16px">
                 <div class="full"><label for="mail_host">Serveur SMTP</label><input id="mail_host" name="mail_host" placeholder="ssl0.ovh.net"></div>

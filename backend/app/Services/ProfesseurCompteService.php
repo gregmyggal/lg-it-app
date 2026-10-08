@@ -293,10 +293,8 @@ class ProfesseurCompteService
 
         Log::info('Professeur supprimé (PROF-02)', [
             'professeur_id' => $professeur->id,
-            'nom' => trim("{$professeur->prenom} {$professeur->nom}"),
             'user_id' => $auteur->id,
             'force' => $motifForcage !== null,
-            'motif' => $motifForcage,
             'heures' => $resume['heures'],
             'heures_generees' => $resume['heures_generees'],
             'seances_liberees' => $resume['impact']['seances_a_venir'],

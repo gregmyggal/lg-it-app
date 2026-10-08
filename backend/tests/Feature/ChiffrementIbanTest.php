@@ -60,6 +60,29 @@ class ChiffrementIbanTest extends TestCase
         $this->assertSame($apres, $this->brut($clair->id));
     }
 
+    public function test_rechiffrer_apres_rotation_de_cle_garde_la_valeur(): void
+    {
+        $prof = Professeur::factory()->create(['compte_bancaire' => self::IBAN]);
+        $avant = $this->brut($prof->id);
+
+        // Rotation : l'ancienne clé passe en APP_PREVIOUS_KEYS, la nouvelle devient APP_KEY.
+        $ancienne = config('app.key');
+        $nouvelle = 'base64:'.base64_encode(random_bytes(32));
+        config(['app.key' => $nouvelle, 'app.previous_keys' => [$ancienne]]);
+        app()->forgetInstance('encrypter');
+        app()->forgetInstance(\Illuminate\Contracts\Encryption\Encrypter::class);
+        \Illuminate\Support\Facades\Facade::clearResolvedInstance('encrypter');
+        app()->singleton('encrypter', fn () => new \Illuminate\Encryption\Encrypter(base64_decode(substr($nouvelle, 7)), config('app.cipher')));
+        app('encrypter')->previousKeys([base64_decode(substr($ancienne, 7))]);
+
+        $this->assertSame(self::IBAN, $prof->fresh()->compte_bancaire, 'Lisible grâce à APP_PREVIOUS_KEYS.');
+        $this->artisan('professeurs:chiffrer-iban', ['--rechiffrer' => true])->assertSuccessful();
+
+        $apres = $this->brut($prof->id);
+        $this->assertNotSame($avant, $apres);
+        $this->assertSame(self::IBAN, (new \Illuminate\Encryption\Encrypter(base64_decode(substr($nouvelle, 7)), config('app.cipher')))->decryptString($apres), 'Rechiffré avec la seule clé courante.');
+    }
+
     public function test_la_liste_n_expose_jamais_l_iban_mais_son_masque(): void
     {
         $avec = Professeur::factory()->create(['compte_bancaire' => self::IBAN]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\Installer\ConfigurationProduction;
 use App\Support\Installer\EnvFile;
 use App\Support\Installer\InstallToken;
 use Illuminate\Http\JsonResponse;
@@ -75,6 +76,7 @@ class InstallController extends Controller
         return response()->json([
             'mode' => is_file($this->installedMarker()) ? 'reconfigure' : 'install',
             'requirements' => $this->requirements($request),
+            'avertissements' => $hasEnv ? ConfigurationProduction::violationsDe($env) : [],
             'admin_exists' => $hasEnv && $this->adminExists(),
             'values' => [
                 'app_name' => $value('APP_NAME', 'Logiscool Pays Vert'),
@@ -209,6 +211,17 @@ class InstallController extends Controller
             'mail_from_name' => ['nullable', 'string', 'max:100'],
         ]);
 
+        // RGPD-01 : on refuse d'écrire une configuration dangereuse en production (mailer « log », debug).
+        $problemes = ConfigurationProduction::violations([
+            'APP_ENV' => $data['app_env'],
+            'APP_DEBUG' => 'false',
+            'MAIL_MAILER' => $data['mail_mailer'],
+            'SESSION_ENCRYPT' => 'true',
+        ]);
+        if ($problemes !== []) {
+            return $this->fail(implode(' ', $problemes), 422);
+        }
+
         // On refuse d'écrire un .env qui casserait le site : la base doit répondre.
         try {
             $this->connect($db);
@@ -235,6 +248,7 @@ class InstallController extends Controller
             'APP_FALLBACK_LOCALE' => 'fr',
             'APP_FAKER_LOCALE' => 'fr_BE',
             'LOG_STACK' => 'daily',
+            'LOG_DAILY_DAYS' => '14',
             'LOG_LEVEL' => $data['app_env'] === 'production' ? 'warning' : 'debug',
             'DB_CONNECTION' => 'mysql',
             'DB_HOST' => $db['db_host'],
@@ -244,6 +258,7 @@ class InstallController extends Controller
             'DB_PASSWORD' => $db['db_password'],
             'DB_PREFIX' => $db['db_prefix'],
             'SESSION_DRIVER' => 'database',
+            'SESSION_ENCRYPT' => 'true',
             'SESSION_SECURE_COOKIE' => str_starts_with($data['app_url'], 'https://') ? 'true' : 'false',
             'CACHE_STORE' => 'database',
             'QUEUE_CONNECTION' => 'database',

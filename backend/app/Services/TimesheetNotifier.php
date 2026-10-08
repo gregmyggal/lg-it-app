@@ -89,7 +89,7 @@ class TimesheetNotifier
         try {
             $destinataire->notify($notification);
         } catch (\Throwable $e) {
-            Log::warning('Notification timesheet non envoyée : '.$e->getMessage());
+            Log::warning('Notification timesheet non envoyée', ['exception' => get_class($e)]);
         }
     }
 

@@ -83,7 +83,6 @@ class ClasseService
             Log::info('Classe supprimée par forçage (CLS-08)', [
                 'classe_id' => $classe->id,
                 'user_id' => $auteur?->id,
-                'motif' => $motifForcage,
                 'seances' => $resume['seances'],
                 'heures' => $resume['heures'],
             ]);

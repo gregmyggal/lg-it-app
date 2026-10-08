@@ -24,20 +24,25 @@ class ChiffrementIban
     }
 
     /**
-     * Chiffre les valeurs encore en clair. Idempotent : une valeur déjà chiffrée n'est pas retouchée.
+     * Chiffre les valeurs encore en clair. Idempotent : une valeur déjà chiffrée n'est pas retouchée, sauf avec
+     * $rechiffrer (rotation d'APP_KEY) : elle est déchiffrée (clé courante ou APP_PREVIOUS_KEYS) puis rechiffrée
+     * avec la clé courante.
      *
      * @return array{chiffres: int, deja_chiffres: int, vides: int}
      */
-    public static function chiffrerTout(bool $simulation = false): array
+    public static function chiffrerTout(bool $simulation = false, bool $rechiffrer = false): array
     {
         $r = ['chiffres' => 0, 'deja_chiffres' => 0, 'vides' => 0];
 
-        DB::table('professeurs')->select('id', 'compte_bancaire')->orderBy('id')->chunkById(200, function ($lignes) use (&$r, $simulation) {
+        DB::table('professeurs')->select('id', 'compte_bancaire')->orderBy('id')->chunkById(200, function ($lignes) use (&$r, $simulation, $rechiffrer) {
             foreach ($lignes as $l) {
                 if ($l->compte_bancaire === null || trim($l->compte_bancaire) === '') {
                     $r['vides']++;
                 } elseif (self::estChiffre($l->compte_bancaire)) {
                     $r['deja_chiffres']++;
+                    if ($rechiffrer && ! $simulation) {
+                        DB::table('professeurs')->where('id', $l->id)->update(['compte_bancaire' => Crypt::encryptString(Crypt::decryptString($l->compte_bancaire))]);
+                    }
                 } else {
                     $r['chiffres']++;
                     if (! $simulation) {

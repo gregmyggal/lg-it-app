@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureInstallerToken;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\ValidateShareCode;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -29,6 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
         if ($proxies = env('TRUSTED_PROXIES')) {
             $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
         }
+        // RGPD-01 : en-têtes de sécurité sur toutes les réponses (API, SPA servie par Laravel, assistant).
+        $middleware->append(SecurityHeaders::class);
         $middleware->alias([
             'validate.share.code' => ValidateShareCode::class,
         ]);
