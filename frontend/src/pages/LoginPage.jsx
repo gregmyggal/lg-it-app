@@ -45,6 +45,9 @@ export default function LoginPage() {
           Email
           <input
             type="email"
+            autoComplete="username"
+            inputMode="email"
+            enterKeyHint="next"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -54,6 +57,8 @@ export default function LoginPage() {
           Mot de passe
           <input
             type="password"
+            autoComplete="current-password"
+            enterKeyHint="go"
             autoFocus={Boolean(location.state?.email)}
             value={password}
             onChange={(e) => setPassword(e.target.value)}

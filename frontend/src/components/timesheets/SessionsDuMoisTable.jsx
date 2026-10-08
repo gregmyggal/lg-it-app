@@ -1,7 +1,8 @@
 import { Table, Th, Td, Tr } from '../ui/Table';
 import StatutBadge from '../ui/StatutBadge';
 import AdminButton from '../AdminButton';
-import { AdminCheckbox, AdminInput } from '../AdminFormField';
+import { AdminCheckbox } from '../AdminFormField';
+import HeuresStepper from './HeuresStepper';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 import { ETATS_ENCODAGE, TYPES_ACTIVITE, getStatut } from '../../utils/statuts';
 import { formatDateCourte, formatHoraire } from '../../utils/dates';
@@ -22,7 +23,7 @@ import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
  */
 export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange, onModifier, onSupprimer }) {
   return (
-    <Table caption="Mes sessions du mois" minWidth="760px">
+    <Table caption="Mes sessions du mois" minWidth="760px" cards>
       <thead>
         <tr>
           <Th>Inclure</Th>
@@ -43,7 +44,7 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
 
           return (
             <Tr key={s.id} fond={s.annulee ? ADMIN_COLORS.background : undefined}>
-              <Td>
+              <Td label="Inclure">
                 {aEncoder && local && (
                   <AdminCheckbox
                     id={`inclure-${s.id}`}
@@ -54,25 +55,25 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                   />
                 )}
               </Td>
-              <Td>
+              <Td label="Date">
                 <span style={{ textDecoration: s.annulee ? 'line-through' : undefined }}>{formatDateCourte(s.date)}</span>
                 <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>{formatHoraire(s.heure_debut, s.heure_fin)}</div>
               </Td>
-              <Td>
+              <Td label="Classe · Séance">
                 <strong>{s.classe_libelle}</strong> · {libelleSession(s)}
                 {s.remplace_par && (
                   <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>Remplacée par {s.remplace_par.nom}</div>
                 )}
                 {s.annulee && <div style={{ fontSize: '12px' }}>Annulée : aucune heure à encoder</div>}
               </Td>
-              <Td>
+              <Td label="Activité">
                 {saisies.length > 0
                   ? saisies.map((x) => <div key={x.id}>{getStatut(TYPES_ACTIVITE, x.type_activite).label}</div>)
                   : aEncoder
                     ? getStatut(TYPES_ACTIVITE, 'animation').label
                     : '—'}
               </Td>
-              <Td>
+              <Td label="Heures défrayées">
                 {saisies.length > 0 ? (
                   saisies.map((x) => (
                     <div key={x.id} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -92,15 +93,11 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                 ) : aEncoder && local ? (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <AdminInput
-                        type="number"
-                        step="0.5"
-                        min="0.5"
-                        max="24"
+                      <HeuresStepper
                         aria-label={`Heures défrayées pour la ${libelleSessionPhrase(s)}`}
                         value={local.heures}
                         disabled={!local.inclure}
-                        onChange={(e) => onChange(s.id, { heures: e.target.value })}
+                        onChange={(heures) => onChange(s.id, { heures })}
                       />
                       {s.duree_seance != null && (
                         <span
@@ -122,8 +119,8 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                   '—'
                 )}
               </Td>
-              <Td>{saisies.length > 0 && montant > 0 ? formatEuros(montant) : '—'}</Td>
-              <Td>
+              <Td label="Montant">{saisies.length > 0 && montant > 0 ? formatEuros(montant) : '—'}</Td>
+              <Td label="État">
                 <StatutBadge table={ETATS_ENCODAGE} valeur={s.encodage} />
               </Td>
             </Tr>

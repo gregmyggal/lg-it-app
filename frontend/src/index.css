@@ -1271,3 +1271,314 @@ form input[type='checkbox'] {
   color: var(--brand-deep);
   font-weight: 700;
 }
+
+/* ---------- mobile (MOB-01) ---------- */
+.only-mobile {
+  display: none;
+}
+
+.heures-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.heures-stepper__btn {
+  display: none;
+}
+
+.sticky-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.sticky-actions__boutons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .portal-shell {
+    min-height: 100dvh;
+  }
+
+  /* Barre du haut collante ; le menu ouvert défile dans l'écran au lieu de dépasser. */
+  .portal-side {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    max-height: 100dvh;
+    overflow-y: auto;
+    padding: calc(8px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));
+  }
+
+  .portal-side__head {
+    gap: 8px;
+  }
+
+  .portal-side__head > div {
+    margin-left: auto;
+  }
+
+  .portal-side__head .notif-btn {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+    min-width: 44px;
+  }
+
+  .portal-side nav a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .portal-main {
+    padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  }
+
+  /* Cloche : volet ancré sous la barre du haut, jamais plus large que l'écran. */
+  .notif-pop {
+    position: fixed !important;
+    top: 60px;
+    bottom: auto !important;
+    left: 12px !important;
+    right: 12px;
+    width: auto !important;
+    max-height: calc(100dvh - 76px) !important;
+    color: var(--c-text);
+  }
+}
+
+@media (max-width: 640px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .only-mobile {
+    display: flex;
+  }
+
+  /* Champs : 16 px (évite le zoom automatique d'iOS) et cibles tactiles de 44 px. */
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  button,
+  .btn,
+  .adm-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .checkbox-group__item,
+  .table td label {
+    min-height: 44px;
+  }
+
+  .card--narrow {
+    margin: 16px auto;
+  }
+
+  .adm-page-head {
+    padding: 16px !important;
+  }
+
+  .adm-page-content {
+    padding: 16px !important;
+    min-height: 0 !important;
+  }
+
+  .adm-page-head p {
+    margin-left: 0 !important;
+  }
+
+  .adm-btn--block {
+    justify-content: center !important;
+  }
+
+  /* Modales plein écran : en-tête fixe, corps défilant, pied collant au-dessus du clavier et de la barre d'accueil. */
+  .adm-modal-overlay {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  .adm-modal {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100dvh;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+  }
+
+  .adm-modal__head {
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px !important;
+  }
+
+  .adm-modal__body {
+    padding: 16px !important;
+  }
+
+  .adm-modal__foot {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adm-modal__foot > * {
+    width: 100%;
+    justify-content: center !important;
+  }
+
+  .modal-container .modal {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: 56px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .modal__close {
+    width: 44px;
+    height: 44px;
+    top: 6px;
+    right: 6px;
+  }
+
+  /* Sélecteur de mois : flèches de 44 px autour du titre. */
+  .month-nav {
+    flex-wrap: nowrap !important;
+    justify-content: space-between;
+  }
+
+  .month-nav__titre {
+    min-width: 0 !important;
+    flex: 1;
+  }
+
+  /* Barre d'actions collante en bas d'écran, avec le total du mois. */
+  .sticky-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    margin: 16px -16px calc(-16px - env(safe-area-inset-bottom));
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--c-card);
+    border-top: 1px solid var(--c-border);
+  }
+
+  .sticky-actions__total {
+    justify-content: space-between;
+    font-size: 14px;
+  }
+
+  .sticky-actions__boutons {
+    flex-wrap: nowrap;
+  }
+
+  .sticky-actions__boutons > * {
+    flex: 1;
+    justify-content: center !important;
+  }
+
+  .heures-stepper__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    padding: 0;
+    font-size: 22px;
+  }
+
+  .heures-stepper input {
+    text-align: center;
+    min-width: 0;
+    width: 72px !important;
+  }
+
+  /* Tableaux « cartes » : chaque ligne devient une carte empilée, libellés repris de l'en-tête. */
+  .ui-table-wrap--cards {
+    border: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  .ui-table-wrap--cards .ui-table {
+    min-width: 0;
+  }
+
+  .ui-table-wrap--cards .ui-table,
+  .ui-table-wrap--cards tbody,
+  .ui-table-wrap--cards tr,
+  .ui-table-wrap--cards td {
+    display: block;
+  }
+
+  .ui-table-wrap--cards thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .ui-table-wrap--cards tr {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    margin: 0 0 10px;
+    padding: 4px 0;
+  }
+
+  .ui-table-wrap--cards td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    border: 0 !important;
+    text-align: right;
+  }
+
+  .ui-table-wrap--cards td::before {
+    content: attr(data-label);
+    flex: none;
+    max-width: 45%;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-text-2);
+    text-align: left;
+  }
+
+  .ui-table-wrap--cards td:not([data-label])::before,
+  .ui-table-wrap--cards td[data-label='Sélection']::before {
+    display: none;
+  }
+
+  .ui-table-wrap--cards td:empty {
+    display: none;
+  }
+
+  .ui-table-wrap--cards .col-xl {
+    display: none;
+  }
+
+  /* Tableaux à défilement horizontal conservés : indice visuel du bord. */
+  .ui-table-wrap:not(.ui-table-wrap--cards) {
+    -webkit-overflow-scrolling: touch;
+  }
+}

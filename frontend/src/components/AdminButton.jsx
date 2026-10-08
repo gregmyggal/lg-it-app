@@ -114,7 +114,7 @@ export default function AdminButton({
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
       }}
-      className={className}
+      className={['adm-btn', fullWidth && 'adm-btn--block', className].filter(Boolean).join(' ')}
       {...props}
     >
       {loading && <span>⏳</span>}

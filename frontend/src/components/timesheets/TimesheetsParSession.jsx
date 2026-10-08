@@ -81,7 +81,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
           </EmptyBlock>
         )}
         {sansHeures.data?.length > 0 && (
-          <Table caption="Sessions passées sans heures" minWidth="640px">
+          <Table caption="Sessions passées sans heures" minWidth="640px" cards>
             <thead>
               <tr>
                 <Th>Session</Th>
@@ -96,18 +96,18 @@ export default function TimesheetsParSession({ mois, onChange }) {
                 .filter((s) => !classeId || String(s.classe_id) === classeId)
                 .map((s) => (
                   <Tr key={s.session_id}>
-                    <Td>
+                    <Td label="Session">
                       <strong>{s.classe_libelle}</strong> · {libelleSession(s)}
                     </Td>
-                    <Td>{formatDateCourte(s.date)}</Td>
-                    <Td>{s.professeurs_sans_heures.map((p) => p.nom).join(', ')}</Td>
-                    <Td>
+                    <Td label="Date">{formatDateCourte(s.date)}</Td>
+                    <Td label="Professeurs sans heures">{s.professeurs_sans_heures.map((p) => p.nom).join(', ')}</Td>
+                    <Td label="Retard">
                       <StatutBadge
                         label={s.jours_de_retard === 0 ? "Aujourd'hui" : `${s.jours_de_retard} j`}
                         tone={s.jours_de_retard > SEUIL_RETARD_JOURS ? 'warning' : 'neutral'}
                       />
                     </Td>
-                    <Td>
+                    <Td label="Actions">
                       <LinkButton to={`/admin/classes/${s.classe_id}`} size="sm">
                         Voir la classe
                       </LinkButton>
@@ -143,7 +143,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
           </EmptyBlock>
         )}
         {visibles.length > 0 && (
-          <Table caption="Heures du mois par session" minWidth="860px">
+          <Table caption="Heures du mois par session" minWidth="860px" cards>
             <thead>
               <tr>
                 <Th srOnly>Sélection</Th>
@@ -161,7 +161,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
                 const valid = t.can?.validate && t.statut_validation === 'soumis';
                 return (
                   <Tr key={t.id}>
-                    <Td>
+                    <Td label="Sélection">
                       {valid && (
                         <AdminCheckbox
                           id={`sel-${t.id}`}
@@ -172,7 +172,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
                         />
                       )}
                     </Td>
-                    <Td>
+                    <Td label="Session">
                       {t.session ? (
                         <>
                           <strong>{t.session.classe_libelle?.split(' — ')[0]}</strong> · {libelleSession(t.session)}
@@ -181,14 +181,14 @@ export default function TimesheetsParSession({ mois, onChange }) {
                         <span style={{ color: ADMIN_COLORS.textSecondary }}>Heures hors séance</span>
                       )}
                     </Td>
-                    <Td>{formatDateCourte(t.date_prestation.slice(0, 10))}</Td>
-                    <Td>
+                    <Td label="Date">{formatDateCourte(t.date_prestation.slice(0, 10))}</Td>
+                    <Td label="Professeur">
                       {t.professeur?.prenom} {t.professeur?.nom}
                     </Td>
-                    <Td>{getStatut(TYPES_ACTIVITE, t.type_activite).label}</Td>
-                    <Td>{formatHeures(t.nombre_heures)}</Td>
-                    <Td>{formatEuros(t.montant_brut)}</Td>
-                    <Td>
+                    <Td label="Activité">{getStatut(TYPES_ACTIVITE, t.type_activite).label}</Td>
+                    <Td label="Durée">{formatHeures(t.nombre_heures)}</Td>
+                    <Td label="Montant">{formatEuros(t.montant_brut)}</Td>
+                    <Td label="Statut">
                       <StatutBadge table={STATUTS_TIMESHEET} valeur={t.statut_validation} />
                     </Td>
                   </Tr>

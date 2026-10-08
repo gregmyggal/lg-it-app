@@ -114,13 +114,13 @@ function MonMois({ user }) {
         description="Vos sessions sont préremplies ; ajoutez vos autres heures (préparation, etc.), vérifiez le total, puis soumettez le mois."
       />
       <AdminPageContent>
-        <nav aria-label="Choix du mois" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-          <AdminButton size="sm" variant="secondary" onClick={() => aller(-1)}>
-            ‹ Mois précédent
+        <nav aria-label="Choix du mois" className="month-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <AdminButton size="sm" variant="secondary" onClick={() => aller(-1)} aria-label="Mois précédent">
+            ‹<span className="hide-mobile"> Mois précédent</span>
           </AdminButton>
-          <strong style={{ minWidth: '140px', textAlign: 'center' }}>{titreMois}</strong>
-          <AdminButton size="sm" variant="secondary" onClick={() => aller(1)}>
-            Mois suivant ›
+          <strong className="month-nav__titre" style={{ minWidth: '140px', textAlign: 'center' }}>{titreMois}</strong>
+          <AdminButton size="sm" variant="secondary" onClick={() => aller(1)} aria-label="Mois suivant">
+            <span className="hide-mobile">Mois suivant </span>›
           </AdminButton>
         </nav>
 
@@ -187,7 +187,7 @@ function MonMois({ user }) {
               {data.libres.length === 0 ? (
                 <p style={{ padding: '16px', margin: 0 }}>Aucune autre heure encodée ce mois-ci.</p>
               ) : (
-                <Table caption="Mes autres heures du mois" minWidth="640px">
+                <Table caption="Mes autres heures du mois" minWidth="640px" cards>
                   <thead>
                     <tr>
                       <Th>Date</Th>
@@ -202,15 +202,15 @@ function MonMois({ user }) {
                   <tbody>
                     {data.libres.map((x) => (
                       <Tr key={x.id}>
-                        <Td>{formatDateCourte(x.date_prestation.slice(0, 10))}</Td>
-                        <Td>{getStatut(TYPES_ACTIVITE, x.type_activite).label}</Td>
-                        <Td>{x.cours?.titre || '—'}</Td>
-                        <Td>{formatHeures(x.nombre_heures)}</Td>
-                        <Td>{formatEuros(x.montant_brut)}</Td>
-                        <Td>
+                        <Td label="Date">{formatDateCourte(x.date_prestation.slice(0, 10))}</Td>
+                        <Td label="Activité">{getStatut(TYPES_ACTIVITE, x.type_activite).label}</Td>
+                        <Td label="Cours">{x.cours?.titre || '—'}</Td>
+                        <Td label="Durée">{formatHeures(x.nombre_heures)}</Td>
+                        <Td label="Montant">{formatEuros(x.montant_brut)}</Td>
+                        <Td label="État">
                           <StatutBadge table={STATUTS_TIMESHEET} valeur={x.statut_validation} />
                         </Td>
-                        <Td>
+                        <Td label="Actions">
                           <div style={{ display: 'flex', gap: '6px' }}>
                             {x.can?.update && (
                               <AdminButton size="sm" variant="secondary" onClick={() => setEdition(x)}>
@@ -233,16 +233,24 @@ function MonMois({ user }) {
 
             <Section title="3. Total du mois" subtitle="Brouillons et saisies à enregistrer comprises.">
               <SyntheseMois synthese={data.synthese} heuresEnAttente={heuresEnAttente} />
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
-                <AdminButton variant="secondary" onClick={enregistrer} disabled={incluses.length === 0 || envoi}>
-                  Enregistrer en brouillon
-                </AdminButton>
-                <AdminButton onClick={() => setSoumission(true)} disabled={(incluses.length === 0 && data.synthese.nb_brouillons === 0) || envoi}>
-                  Soumettre le mois
-                </AdminButton>
-              </div>
             </Section>
 
+            <div className="sticky-actions">
+              <div className="sticky-actions__total only-mobile" aria-live="polite">
+                <span>Total du mois</span>
+                <strong>
+                  {formatHeures(data.synthese.heures + heuresEnAttente)} · {formatEuros(data.synthese.montant)}
+                </strong>
+              </div>
+              <div className="sticky-actions__boutons">
+                <AdminButton variant="secondary" onClick={enregistrer} disabled={incluses.length === 0 || envoi}>
+                  Enregistrer<span className="hide-mobile"> en brouillon</span>
+                </AdminButton>
+                <AdminButton onClick={() => setSoumission(true)} disabled={(incluses.length === 0 && data.synthese.nb_brouillons === 0) || envoi}>
+                  Soumettre<span className="hide-mobile"> le mois</span>
+                </AdminButton>
+              </div>
+            </div>
           </>
         )}
       </AdminPageContent>

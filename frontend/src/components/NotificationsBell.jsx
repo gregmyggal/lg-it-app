@@ -30,10 +30,10 @@ export default function NotificationsBell() {
     const fermer = (e) => {
       if (e.type === 'keydown' ? e.key === 'Escape' : !conteneur.current?.contains(e.target)) setOuvert(false);
     };
-    document.addEventListener('mousedown', fermer);
+    document.addEventListener('pointerdown', fermer);
     document.addEventListener('keydown', fermer);
     return () => {
-      document.removeEventListener('mousedown', fermer);
+      document.removeEventListener('pointerdown', fermer);
       document.removeEventListener('keydown', fermer);
     };
   }, [ouvert]);
@@ -54,6 +54,7 @@ export default function NotificationsBell() {
     <div ref={conteneur} style={{ position: 'relative' }}>
       <button
         type="button"
+        className="notif-btn"
         onClick={() => setOuvert((o) => !o)}
         aria-expanded={ouvert}
         aria-label={`Notifications${etat.non_lues ? ` (${etat.non_lues} non lues)` : ''}`}
@@ -64,6 +65,7 @@ export default function NotificationsBell() {
       {ouvert && (
         <div
           role="region"
+          className="notif-pop"
           aria-label="Notifications"
           style={{ position: 'absolute', bottom: '110%', left: 0, width: 300, maxHeight: 360, overflow: 'auto', background: 'var(--c-card)', color: 'var(--c-text)', border: '1px solid var(--c-border)', borderRadius: 8, boxShadow: '0 8px 24px var(--c-shadow)', zIndex: 50 }}
         >

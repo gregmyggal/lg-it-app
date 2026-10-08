@@ -246,22 +246,22 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
 
           <div className="detail-grid">
             <div>
-              <Table caption="Saisies du mois" minWidth="640px">
+              <Table caption="Saisies du mois" minWidth="640px" cards>
                 <thead><tr><Th>Date</Th><Th>Session / cours</Th><Th>Type</Th><Th>Heures</Th><Th>Montant</Th><Th>Statut</Th><Th srOnly>Actions</Th></tr></thead>
                 <tbody>
                   {d.lignes.length === 0 && <Tr><Td colSpan={7}>Aucune saisie ce mois-ci.</Td></Tr>}
                   {d.lignes.map((t) => (
                     <Tr key={t.id} fond={modifiees.has(t.id) ? 'var(--tone-warning-bg)' : undefined}>
-                      <Td>{formatDateCourte(t.date_prestation)}</Td>
-                      <Td>{(t.session ? libelleSession(t.session) : 'Heures libres')}</Td>
-                      <Td>{TYPES_ACTIVITE[t.type_activite]?.label || t.type_activite}</Td>
-                      <Td>{formatHeures(t.nombre_heures)}</Td>
-                      <Td>{formatEuros(t.montant_brut)}</Td>
-                      <Td>
+                      <Td label="Date">{formatDateCourte(t.date_prestation)}</Td>
+                      <Td label="Session / cours">{(t.session ? libelleSession(t.session) : 'Heures libres')}</Td>
+                      <Td label="Type">{TYPES_ACTIVITE[t.type_activite]?.label || t.type_activite}</Td>
+                      <Td label="Heures">{formatHeures(t.nombre_heures)}</Td>
+                      <Td label="Montant">{formatEuros(t.montant_brut)}</Td>
+                      <Td label="Statut">
                         <StatutBadge table={STATUTS_TIMESHEET} valeur={t.statut_validation} />
                         {modifiees.has(t.id) && <span title="Adaptée ou lissée" style={{ display: 'block', marginTop: 2, fontSize: 12 }}>✎ modifiée</span>}
                       </Td>
-                      <Td>
+                      <Td label="Actions">
                         {t.can?.adapt && (
                           <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
                             <AdminButton variant="secondary" size="sm" onClick={() => setAdapter(t)}>Adapter</AdminButton>

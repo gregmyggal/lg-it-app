@@ -194,7 +194,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
           {synthese.data.professeurs.length === 0 ? (
             <EmptyBlock icon="📭" title="Aucune timesheet pour ce mois">Aucun professeur n’a encodé ni soumis d’heures sur cette période.</EmptyBlock>
           ) : (
-            <Table caption="Validation du mois par professeur" minWidth="980px">
+            <Table caption="Validation du mois par professeur" minWidth="980px" cards>
               <thead>
                 <tr>
                   <Th srOnly>Sélection</Th><Th>Professeur</Th><Th>Employeur</Th><Th>Statut du mois</Th><Th>H. animation</Th><Th xl>H. préparation</Th>
@@ -204,7 +204,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               <tbody>
                 {lignes.map((l) => (
                   <Tr key={l.professeur_id}>
-                    <Td>
+                    <Td label="Sélection">
                       <input
                         type="checkbox"
                         aria-label={`Sélectionner ${l.professeur}`}
@@ -212,20 +212,20 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                         onChange={() => basculer(l.professeur_id)}
                       />
                     </Td>
-                    <Td>{l.professeur}</Td>
-                    <Td>{l.employeur && <EmployeurBadge employeur={l.employeur.employeur} source={l.employeur.source} verrouille={l.employeur.verrouille} raisonVerrou={l.employeur.raison_verrou} />}</Td>
-                    <Td><StatutBadge table={STATUTS_MOIS_PROF} valeur={l.statut_mois} /></Td>
-                    <Td>{l.heures_animation ? formatHeures(l.heures_animation) : '—'}</Td>
-                    <Td xl>{l.heures_preparation ? formatHeures(l.heures_preparation) : '—'}</Td>
-                    <Td>{l.lignes ? formatEuros(l.total_eur) : '—'}</Td>
-                    <Td>{l.lignes_ajustees || '—'}</Td>
-                    <Td>
+                    <Td label="Professeur">{l.professeur}</Td>
+                    <Td label="Employeur">{l.employeur && <EmployeurBadge employeur={l.employeur.employeur} source={l.employeur.source} verrouille={l.employeur.verrouille} raisonVerrou={l.employeur.raison_verrou} />}</Td>
+                    <Td label="Statut du mois"><StatutBadge table={STATUTS_MOIS_PROF} valeur={l.statut_mois} /></Td>
+                    <Td label="Heures animation">{l.heures_animation ? formatHeures(l.heures_animation) : '—'}</Td>
+                    <Td xl label="Heures préparation">{l.heures_preparation ? formatHeures(l.heures_preparation) : '—'}</Td>
+                    <Td label="Total">{l.lignes ? formatEuros(l.total_eur) : '—'}</Td>
+                    <Td label="Lignes ajustées">{l.lignes_ajustees || '—'}</Td>
+                    <Td label="Alertes">
                       {l.alertes.length === 0 ? '—' : l.alertes.map((a) => (
                         <div key={a.code} style={{ color: 'var(--tone-warning-fg)', fontSize: 12 }}>⚠ {a.libelle}</div>
                       ))}
                     </Td>
-                    <Td xl>{l.derniere_action_at ? formatDateHeure(l.derniere_action_at) : '—'}</Td>
-                    <Td><AdminButton variant="secondary" size="sm" onClick={() => onOuvrir(l.professeur_id)}>Ouvrir</AdminButton></Td>
+                    <Td xl label="Dernière action">{l.derniere_action_at ? formatDateHeure(l.derniere_action_at) : '—'}</Td>
+                    <Td label="Ouvrir"><AdminButton variant="secondary" size="sm" onClick={() => onOuvrir(l.professeur_id)}>Ouvrir</AdminButton></Td>
                   </Tr>
                 ))}
               </tbody>

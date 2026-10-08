@@ -6,6 +6,7 @@
 export function AdminPageHeader({ icon, title, description, badge, action, breadcrumb }) {
   return (
     <div
+      className="adm-page-head"
       style={{
         background: 'var(--c-card)',
         borderBottom: '1px solid var(--c-border)',
@@ -67,6 +68,7 @@ export function AdminPageHeader({ icon, title, description, badge, action, bread
 export function AdminPageContent({ children }) {
   return (
     <div
+      className="adm-page-content"
       style={{
         maxWidth: 'var(--page-max, 1760px)',
         margin: '0 auto',

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import NotificationsBell from '../components/NotificationsBell';
@@ -13,6 +14,8 @@ export default function PortalLayout() {
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [maSignature, setMaSignature] = useState(false);
   const { pathname } = useLocation();
+  // Sous 860 px la cloche vit dans la barre du haut (toujours visible) ; au-delà, dans le bloc compte de la barre latérale.
+  const mobile = useMediaQuery('(max-width: 860px)');
 
   // Sur mobile, le menu se referme après chaque navigation.
   useEffect(() => {
@@ -26,6 +29,7 @@ export default function PortalLayout() {
           <NavLink to="/" className="brand-mark">
             <span className="dot"></span>Logiscool Pays Vert
           </NavLink>
+          {mobile && <NotificationsBell />}
           <button
             type="button"
             className="portal-side__toggle"
@@ -114,7 +118,7 @@ export default function PortalLayout() {
             {user?.name} ({user?.role})
           </span>
           <ThemeToggle />
-          <NotificationsBell />
+          {!mobile && <NotificationsBell />}
           {user?.role === 'professeur' && <button onClick={() => setMaSignature(true)}>Ma signature</button>}
           <button onClick={logout}>Déconnexion</button>
         </div>

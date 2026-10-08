@@ -77,6 +77,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
 
   return (
     <div
+      className="adm-modal-overlay"
       style={{
         position: 'fixed',
         top: 0,
@@ -94,6 +95,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
     >
       <div
         ref={dialogRef}
+        className="adm-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -114,6 +116,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
       >
         {/* Header */}
         <div
+          className="adm-modal__head"
           style={{
             padding: '24px',
             borderBottom: '1px solid var(--c-border)',
@@ -128,6 +131,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
           </h2>
           <button
             type="button"
+            className="adm-modal__close"
             onClick={onClose}
             aria-label="Fermer la fenêtre"
             style={{
@@ -152,6 +156,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
 
         {/* Body */}
         <div
+          className="adm-modal__body"
           style={{
             padding: '24px',
             overflowY: 'auto',
@@ -164,6 +169,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
         {/* Footer */}
         {footer && (
           <div
+            className="adm-modal__foot"
             style={{
               padding: '24px',
               borderTop: '1px solid var(--c-border)',
