@@ -1,6 +1,6 @@
 # TS-02 — Remise en brouillon d'un mois par la direction
 
-**Statut :** ☑ Livré · **Maquette :** `docs/mockups/TS-02/01-remise-en-brouillon.html` (la maquette montre aussi un « ligne par ligne » et un déverrouillage PDF écartés, voir décisions)
+**Statut :** ☑ Livré · **Maquette :** `docs/mockups/TS-02/01-remise-en-brouillon.html`
 
 ## Contexte
 Une fois le mois soumis/validé, le professeur ne peut plus corriger. La direction doit pouvoir lui rendre la main sur son mois.
