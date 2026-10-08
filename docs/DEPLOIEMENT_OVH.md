@@ -289,16 +289,52 @@ L'assistant s'ouvre alors en mode « reconfigure » et conserve l'APP_KEY.
   aussi de Reply-To. Sans `MAIL_CONTACT`, les emails renvoient vers « la
   direction de votre école ». Après modification : `php artisan config:cache`.
 - **Signatures électroniques (SIG-01)** :
-  - **Clé de scellement** : générer une clé avec `php artisan signature:cle`, puis
-    copier `SIGNATURE_CLE_ID` et `SIGNATURE_CLE_PRIVEE` dans `backend/.env` et
-    lancer `php artisan config:cache`. Garder une copie de la clé hors du serveur.
-    Sans cette clé, une clé dérivée de l'APP_KEY est utilisée ; changer l'APP_KEY
-    rendrait alors les anciens sceaux invérifiables.
+  - **Clé de scellement** : générer une clé **dédiée** avec `php artisan signature:cle`
+    (option `--id=cle-2026`), puis copier `SIGNATURE_CLE_ID` et `SIGNATURE_CLE_PRIVEE`
+    dans `backend/.env` et lancer `php artisan config:cache`. Sans cette clé, le code
+    se replie sur une clé dérivée d'`APP_KEY` : un seul secret protégerait alors le
+    chiffrement **et** l'intégrité des preuves, et changer `APP_KEY` rendrait les anciens
+    sceaux invérifiables. **Toujours définir `SIGNATURE_CLE_PRIVEE` avant la première
+    signature en production.** Garder une copie de la clé hors du serveur. Rotation :
+    nouvelle clé (`SIGNATURE_CLE_ID` change), l'ancienne clé **publique** est ajoutée à
+    `SIGNATURE_CLES_PUBLIQUES` (JSON) pour vérifier les anciennes signatures.
   - **IP réelle** : si la preuve de signature affiche l'IP du proxy OVH au lieu de
     celle du professeur, définir `TRUSTED_PROXIES=*`, à condition que le site ne
     soit joignable qu'à travers ce proxy.
   - **Anonymisation** : `signatures:anonymiser` est planifiée chaque jour à 03:00.
     Elle efface l'IP et l'appareil des signatures de plus de 7 ans.
+- **Secrets, chiffrement et RGPD (RGPD-01)** :
+  - **`APP_KEY` chiffre les IBAN** des professeurs (colonne `professeurs.compte_bancaire`),
+    les IBAN des entités employeurs (EMP-01) et les snapshots chiffrés. **Perdre `APP_KEY`
+    = perdre ces données, de façon irrécupérable.** La sauvegarder **hors du serveur**
+    (coffre de mots de passe), séparément des dumps de base : un dump seul ne doit pas
+    suffire à lire les IBAN. L'assistant `/install` conserve une `APP_KEY` existante.
+  - **Première mise en production après RGPD-01** : sauvegarder la base **et** `APP_KEY`,
+    déployer (la migration `encrypt_professeurs_compte_bancaire` chiffre les IBAN
+    existants), puis vérifier : `php artisan professeurs:chiffrer-iban --dry-run` doit
+    annoncer `0 IBAN à chiffrer`. La commande est idempotente et peut être relancée.
+    Purger ensuite les anciens dumps qui contiennent des IBAN en clair.
+  - **Rotation d'`APP_KEY`** (Laravel 11) : 1) conserver l'ancienne clé dans
+    `APP_PREVIOUS_KEYS` (liste séparée par des virgules) et mettre la nouvelle dans
+    `APP_KEY` ; les données se lisent toujours (essai avec les anciennes clés) ;
+    2) lancer `php artisan professeurs:chiffrer-iban --rechiffrer` (après sauvegarde,
+    idéalement en maintenance) : chaque IBAN est déchiffré puis rechiffré avec la nouvelle
+    clé ; sans `--rechiffrer`, les valeurs déjà chiffrées ne sont pas retouchées ;
+    3) retirer l'ancienne clé de
+    `APP_PREVIOUS_KEYS` une fois toutes les données ré-encryptées. Les sceaux de
+    signature ne dépendent pas d'`APP_KEY` si `SIGNATURE_CLE_PRIVEE` est définie.
+  - **Valeurs de production attendues dans `backend/.env`** (écrites par l'assistant, qui
+    refuse `MAIL_MAILER=log` en production) : `APP_DEBUG=false`, `LOG_LEVEL=warning`,
+    `LOG_STACK=daily`, `LOG_DAILY_DAYS=14`, `SESSION_ENCRYPT=true`,
+    `SESSION_SECURE_COOKIE=true` (HTTPS), `MAIL_MAILER=smtp`. Ne jamais copier le
+    bloc « DÉVELOPPEMENT LOCAL » d'`.env.example`.
+  - **Journal des accès sensibles** : chaque lecture d'IBAN complet ou téléchargement de
+    fiche par un autre utilisateur que le titulaire est tracé (table
+    `acces_donnees_sensibles`, ids seulement). Purge automatique à 12 mois
+    (`acces:purger-journal`, planifiée chaque jour à 03:15).
+  - **Connexion** : `POST /login` est limité (5 tentatives/min par email+IP, 20/min par IP).
+    Derrière le proxy OVH, définir `TRUSTED_PROXIES` pour que la limite porte sur l'IP
+    réelle et non sur celle du proxy.
 - **Staging** : même procédure avec `.env.deploy.staging`, un second clone (par
   ex. `~/lg-it-app-staging`), une base ou un préfixe distinct, et
   `./scripts/deploy.sh staging`.
