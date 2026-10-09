@@ -105,7 +105,7 @@ export default function StagesEditContentPage() {
       {error && <ErrorMessage message={error} />}
 
       {/* Content */}
-      <div style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
+      <div className="edit-layout" style={{ maxWidth: 'var(--page-max, 1760px)', margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px' }}>
         {/* Sidebar Navigation */}
         <aside style={{ height: 'fit-content', position: 'sticky', top: '120px' }}>
           <div style={{ background: 'var(--c-card)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>

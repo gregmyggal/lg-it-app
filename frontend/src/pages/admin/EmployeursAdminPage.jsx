@@ -120,23 +120,23 @@ export default function EmployeursAdminPage() {
         {entites.loading && !entites.data && <LoadingBlock message="Chargement des entités…" />}
         {entites.error && <ErrorBlock message="Impossible de charger les employeurs." onRetry={entites.reload} />}
         {entites.data && (
-          <Table caption="Entités employeurs" minWidth="860px">
+          <Table caption="Entités employeurs" minWidth="860px" cards>
             <thead>
               <tr><Th>Nom</Th><Th>RPM</Th><Th>Compte</Th><Th>Adresse</Th><Th>Mois liés</Th><Th>Statut</Th><Th srOnly>Actions</Th></tr>
             </thead>
             <tbody>
               {entites.data.map((e) => (
                 <Tr key={e.id}>
-                  <Td><EmployeurBadge employeur={e} source="explicite" />{e.par_defaut && <span style={{ marginLeft: 6, fontSize: 12 }}>défaut</span>}</Td>
-                  <Td>{e.rpm}</Td>
-                  <Td>{e.compte_bancaire || 'À COMPLÉTER'}</Td>
-                  <Td>{e.adresse}</Td>
-                  <Td>{e.mois_lies ?? 0}</Td>
-                  <Td>
+                  <Td label="Nom"><EmployeurBadge employeur={e} source="explicite" />{e.par_defaut && <span style={{ marginLeft: 6, fontSize: 12 }}>défaut</span>}</Td>
+                  <Td label="RPM">{e.rpm}</Td>
+                  <Td label="Compte">{e.compte_bancaire || 'À COMPLÉTER'}</Td>
+                  <Td label="Adresse">{e.adresse}</Td>
+                  <Td label="Mois liés">{e.mois_lies ?? 0}</Td>
+                  <Td label="Statut">
                     {!e.actif ? 'Désactivée' : 'Active'}
                     {!e.coordonnees_completes && <div style={{ fontSize: 12, color: 'var(--tone-warning-fg)' }}>⚠ Coordonnées à compléter : fiches PDF bloquées</div>}
                   </Td>
-                  <Td>{e.can?.update && <AdminButton variant="secondary" size="sm" onClick={() => setEdition(e)}>Modifier</AdminButton>}</Td>
+                  <Td label="Actions">{e.can?.update && <AdminButton variant="secondary" size="sm" onClick={() => setEdition(e)}>Modifier</AdminButton>}</Td>
                 </Tr>
               ))}
             </tbody>

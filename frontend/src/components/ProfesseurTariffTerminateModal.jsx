@@ -56,7 +56,7 @@ export default function ProfesseurTariffTerminateModal({
   };
 
   return (
-    <div style={{
+    <div className="adm-modal-overlay" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -68,7 +68,7 @@ export default function ProfesseurTariffTerminateModal({
       justifyContent: 'center',
       zIndex: 1000,
     }}>
-      <div style={{
+      <div className="adm-modal adm-modal--plain" style={{
         background: 'var(--c-card)',
         borderRadius: '8px',
         padding: '24px',

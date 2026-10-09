@@ -160,7 +160,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               options={(employeurs.data || []).map((e) => ({ value: String(e.id), label: e.nom }))}
               placeholder="Tous les employeurs"
             />
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: ADMIN_SPACING.sm }}>
+            <div className="actions-bar" style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', gap: ADMIN_SPACING.sm }}>
               <AdminButton variant="secondary" onClick={() => setDefinition('reprendre')} disabled={ciblesEmployeur.length === 0}>Reprendre le mois précédent</AdminButton>
               <AdminButton variant="secondary" onClick={() => setDefinition('choisir')} disabled={ciblesEmployeur.length === 0}>Définir l’employeur…</AdminButton>
               <AdminButton variant="secondary" onClick={() => exporterCsv(lignes, annee, moisNum)} disabled={lignes.length === 0}>Exporter CSV</AdminButton>
@@ -172,7 +172,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               >
                 {pdfEnCours ? 'Génération…' : `Générer les PDF (zip)${pdfPossible ? ` (${choisis.length})` : ''}`}
               </AdminButton>
-              <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
+              <AdminButton className="hide-mobile" onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
                 Valider la sélection ({saisiesChoisies.length > 0 ? selection.size : 0})
               </AdminButton>
             </div>
@@ -234,6 +234,13 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
           {synthese.data.professeurs.length > 0 && lignes.length === 0 && (
             <Banner tone="info">Aucun professeur ne correspond aux filtres.</Banner>
           )}
+          <div className="sticky-actions only-mobile">
+            <div className="sticky-actions__boutons">
+              <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
+                Valider la sélection ({saisiesChoisies.length > 0 ? selection.size : 0})
+              </AdminButton>
+            </div>
+          </div>
         </>
       )}
 

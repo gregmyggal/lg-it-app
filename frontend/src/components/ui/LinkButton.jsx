@@ -10,6 +10,7 @@ export default function LinkButton({ to, children, variant = 'secondary', size =
   return (
     <Link
       to={to}
+      className="adm-btn"
       style={{
         display: 'inline-flex',
         alignItems: 'center',

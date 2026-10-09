@@ -177,7 +177,7 @@ export default function StaffAdminPage() {
     );
   } else {
     liste = (
-      <Table>
+      <Table cards>
         <thead>
           <Tr>
             <Th>Nom</Th>
@@ -191,13 +191,13 @@ export default function StaffAdminPage() {
         <tbody>
           {lignes.map((s) => (
             <Tr key={s.id}>
-              <Td>{s.name}</Td>
-              <Td>{s.email}</Td>
-              <Td>{libelleRole(s.role)}</Td>
-              <Td>
+              <Td label="Nom">{s.name}</Td>
+              <Td label="Email">{s.email}</Td>
+              <Td label="Rôle">{libelleRole(s.role)}</Td>
+              <Td label="Statut">
                 <StatutBadge table={STATUTS_STAFF} valeur={s.statut} />
               </Td>
-              <Td>
+              <Td label="Accès">
                 {s.statut === 'actif' && s.acces?.statut ? (
                   <>
                     {eligibleLot(s.acces) && (
@@ -215,7 +215,7 @@ export default function StaffAdminPage() {
                   <span aria-label="Non applicable">—</span>
                 )}
               </Td>
-              <Td>
+              <Td label="Actions">
                 <AdminButton onClick={() => ouvrirDetail(s)} small>
                   Modifier
                 </AdminButton>

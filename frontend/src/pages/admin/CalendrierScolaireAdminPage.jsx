@@ -191,7 +191,7 @@ export default function CalendrierScolaireAdminPage() {
         <p style={{ margin: `0 0 ${ADMIN_SPACING.md}`, fontSize: '13px', color: ADMIN_COLORS.textSecondary }} aria-live="polite">
           {entrees.length} entrée{entrees.length > 1 ? 's' : ''} · {nbParSource('fwb')} FWB · {nbParSource('ecole')} École
         </p>
-        <Table caption={`Dates du calendrier scolaire ${libelleAnnee}`} minWidth="720px">
+        <Table caption={`Dates du calendrier scolaire ${libelleAnnee}`} minWidth="720px" cards>
           <thead>
             <tr>
               <Th>Période</Th>
@@ -204,12 +204,12 @@ export default function CalendrierScolaireAdminPage() {
           <tbody>
             {entrees.map((e) => (
               <Tr key={e.id}>
-                <Td style={{ whiteSpace: 'nowrap' }}>{formatPlage(e.date_debut, e.date_fin)}</Td>
-                <Td>
+                <Td label="Période" style={{ whiteSpace: 'nowrap' }}>{formatPlage(e.date_debut, e.date_fin)}</Td>
+                <Td label="Type">
                   <StatutBadge table={TYPES_CALENDRIER} valeur={e.type} />
                 </Td>
-                <Td>{e.libelle}</Td>
-                <Td>
+                <Td label="Libellé">{e.libelle}</Td>
+                <Td label="Source">
                   {e.modifie_manuellement ? (
                     <StatutBadge
                       label={`${getStatut(SOURCES_CALENDRIER, e.source).label} · modifiée`}
@@ -219,7 +219,7 @@ export default function CalendrierScolaireAdminPage() {
                     <StatutBadge table={SOURCES_CALENDRIER} valeur={e.source} />
                   )}
                 </Td>
-                <Td>
+                <Td label="Actions">
                   <div style={{ display: 'flex', gap: ADMIN_SPACING.sm }}>
                     {e.can?.update && (
                       <AdminButton size="sm" variant="secondary" onClick={() => setEntreeModale({ entree: e })} aria-label={`Modifier « ${e.libelle} »`}>

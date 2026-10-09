@@ -272,8 +272,9 @@ export default function SignatureCreator({ nom, initial, onChange }) {
             aria-checked={couleur === e.valeur}
             aria-label={e.libelle}
             title={e.libelle}
+            className="swatch-couleur"
             onClick={() => setCouleur(e.valeur)}
-            style={{ width: 24, height: 24, minWidth: 24, padding: 0, flex: '0 0 auto', borderRadius: '50%', background: e.valeur, border: '2px solid #fff', cursor: 'pointer', boxShadow: couleur === e.valeur ? '0 0 0 2px var(--c-primary)' : '0 0 0 1px var(--c-border)' }}
+            style={{ width: 36, height: 36, minWidth: 36, padding: 0, flex: '0 0 auto', borderRadius: '50%', background: e.valeur, border: '2px solid #fff', cursor: 'pointer', boxShadow: couleur === e.valeur ? '0 0 0 2px var(--c-primary)' : '0 0 0 1px var(--c-border)' }}
           />
         ))}
       </div>

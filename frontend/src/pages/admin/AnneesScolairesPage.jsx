@@ -182,7 +182,7 @@ export default function AnneesScolairesPage() {
         <p style={{ margin: `0 0 ${ADMIN_SPACING.md}`, fontSize: '13px', color: ADMIN_COLORS.textSecondary }} aria-live="polite">
           {pluriel(visibles.length, 'année')} · la plus récente en premier
         </p>
-        <Table caption="Années scolaires, leurs périodes et leur statut" minWidth="1080px">
+        <Table caption="Années scolaires, leurs périodes et leur statut" minWidth="1080px" cards>
           <thead>
             <tr>
               <Th>Année</Th>
@@ -202,23 +202,23 @@ export default function AnneesScolairesPage() {
               const enCours = (n) => p(n) && p(n).date_debut <= aujourdhui && aujourdhui <= p(n).date_fin;
               return (
                 <Tr key={a.id}>
-                  <Td>
+                  <Td label="Année">
                     <strong>{a.libelle}</strong>{' '}
                     {a.en_cours && <StatutBadge label="en cours" tone="primary" />}
                   </Td>
-                  <Td>
+                  <Td label="Statut">
                     <StatutBadge table={STATUTS_ANNEE} valeur={a.statut} />
                   </Td>
                   {[1, 2].map((n) => (
-                    <Td key={n} style={{ whiteSpace: 'nowrap' }}>
+                    <Td label={`P${n}`} key={n} style={{ whiteSpace: 'nowrap' }}>
                       <PeriodeBadge numero={n} /> {p(n) ? `${formatDate(p(n).date_debut)} → ${formatDate(p(n).date_fin)}` : '—'}
                       {enCours(n) && (
                         <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>P{n} en cours</div>
                       )}
                     </Td>
                   ))}
-                  <Td>{a.classes_count ?? 0}</Td>
-                  <Td>
+                  <Td label="Classes">{a.classes_count ?? 0}</Td>
+                  <Td label="Calendrier">
                     {a.calendrier_count === 0 ? (
                       <>
                         <StatutBadge label="⚠ Vide" tone="warning" />
@@ -240,7 +240,7 @@ export default function AnneesScolairesPage() {
                       `${a.calendrier_count} date${a.calendrier_count > 1 ? 's' : ''}`
                     )}
                   </Td>
-                  <Td style={{ fontSize: '13px' }}>
+                  <Td label="Dernière modif." style={{ fontSize: '13px' }}>
                     {a.updated_at ? (
                       <>
                         {a.updated_by?.name ? `${a.updated_by.name} · ` : ''}
@@ -250,7 +250,7 @@ export default function AnneesScolairesPage() {
                       '—'
                     )}
                   </Td>
-                  <Td>
+                  <Td label="Actions">
                     <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap', alignItems: 'center' }}>
                       {archivee ? (
                         <span style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>Dates verrouillées</span>

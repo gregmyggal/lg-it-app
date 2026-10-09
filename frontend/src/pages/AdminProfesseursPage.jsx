@@ -511,7 +511,7 @@ export default function AdminProfesseursPage() {
 
         {/* Modal Tarif */}
         {showTarifForm && selectedProf && (
-          <div style={{
+          <div className="adm-modal-overlay" style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -524,7 +524,7 @@ export default function AdminProfesseursPage() {
             zIndex: 1000,
           }} onClick={() => setShowTarifForm(false)}>
             <div
-              style={{
+              className="adm-modal adm-modal--plain" style={{
                 background: 'var(--c-card)',
                 borderRadius: '8px',
                 padding: '24px',

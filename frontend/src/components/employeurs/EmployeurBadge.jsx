@@ -16,6 +16,7 @@ export default function EmployeurBadge({ employeur, source, verrouille = false, 
   const estHerite = source === 'herite' || source === 'defaut';
   return (
     <span
+      className="employeur-badge"
       title={raisonVerrou || undefined}
       style={{
         display: 'inline-flex',

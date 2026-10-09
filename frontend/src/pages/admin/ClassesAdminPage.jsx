@@ -169,7 +169,7 @@ export default function ClassesAdminPage() {
             </ul>
           </Banner>
         )}
-        <Table caption={`Classes de ${libelleAnnee}`} minWidth="920px">
+        <Table caption={`Classes de ${libelleAnnee}`} minWidth="920px" cards>
           <thead>
             <tr>
               <Th>Classe / créneau</Th>
@@ -185,25 +185,25 @@ export default function ClassesAdminPage() {
           <tbody>
             {classes.data.map((c) => (
               <Tr key={c.id}>
-                <Td>
+                <Td label="Classe / créneau">
                   <strong>{titreClasse(c)}</strong>
                   <div style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>{libelleCreneau(c)}</div>
                 </Td>
                 {periodesAffichees.map((n) => (
-                  <Td key={n}>
+                  <Td label={`Période ${n}`} key={n}>
                     <CellulePeriode classe={c} numero={n} />
                   </Td>
                 ))}
-                <Td>{c.lieu || '—'}</Td>
-                <Td>
+                <Td label="Lieu">{c.lieu || '—'}</Td>
+                <Td label="Prochaine session">
                   {c.prochaine_session
                     ? `${c.prochaine_session.libelle} · ${formatDateCourte(c.prochaine_session.date)} · ${formatHeure(c.heure_debut)}`
                     : '—'}
                 </Td>
-                <Td>
+                <Td label="Statut">
                   <StatutBadge table={STATUTS_CLASSE} valeur={c.statut} />
                 </Td>
-                <Td>
+                <Td label="Actions">
                   <LinkButton to={`/admin/classes/${c.id}`} size="sm">
                     Ouvrir la classe
                   </LinkButton>

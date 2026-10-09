@@ -30,3 +30,10 @@ Professeur (prioritaire), directeur/staff (valider un mois), admin (consultation
 - [x] `AdminModal` et `ui/Modal` plein écran sous 640 px.
 - [x] 5 tableaux en cartes (sessions du mois, autres heures, sessions sans heures, heures par session, synthèse de validation, détail professeur).
 - [ ] Recette manuelle sur iPhone Safari et Android Chrome.
+
+## 6. Tour complet des pages (375 px, base de démo `lgit_demo`)
+Contrôle automatisé (débordement horizontal, cibles < 40 px, champs < 16 px) sur ~45 routes professeur, staff et publiques, puis captures des écrans clés.
+- Corrigé : page élargie par les `.sr-only` des cellules de tableau (`.ui-table-wrap` positionné), grille 280 px + 1fr des 4 pages d'édition de contenu, badge employeur insécable, boutons de la synthèse de validation, barre de modes de la page Timesheets admin, modale « Ma signature » (texte blanc hérité de l'aside), pastilles d'encre ovales, liens de fil d'Ariane trop petits, 3 modales maison sans défilement, notifications masquées par la barre collante.
+- Cartes ajoutées : sessions d'une classe, professeurs d'une classe, classes d'un professeur, classes, années scolaires, calendrier scolaire, employeurs, staff, historique employeur.
+- Reste en défilement horizontal (volontaire) : modification des périodes d'une année.
+- Reste à faire : recette sur appareils réels.

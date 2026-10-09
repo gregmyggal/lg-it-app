@@ -124,16 +124,16 @@ export default function EmployeurMoisSection({ professeurId, professeurNom, anne
       {historique.data && (historique.data.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--c-text-2)', margin: 0 }}>Aucun changement enregistré en {annee}.</p>
       ) : (
-        <Table caption={`Historique des changements d’employeur en ${annee}`} minWidth="560px">
+        <Table caption={`Historique des changements d’employeur en ${annee}`} minWidth="560px" cards>
           <thead><tr><Th>Date</Th><Th>Mois</Th><Th>Changement</Th><Th>Par</Th><Th>Motif</Th></tr></thead>
           <tbody>
             {historique.data.map((h) => (
               <Tr key={h.id}>
-                <Td>{formatDateHeure(h.created_at)}</Td>
-                <Td>{NOMS_MOIS_COURTS[h.mois - 1]} {h.annee}</Td>
-                <Td>{h.employeur_avant ? `${h.employeur_avant.nom} → ` : '→ '}{h.employeur_apres.nom}</Td>
-                <Td>{h.auteur}</Td>
-                <Td>{h.motif || '—'}</Td>
+                <Td label="Date">{formatDateHeure(h.created_at)}</Td>
+                <Td label="Mois">{NOMS_MOIS_COURTS[h.mois - 1]} {h.annee}</Td>
+                <Td label="Changement">{h.employeur_avant ? `${h.employeur_avant.nom} → ` : '→ '}{h.employeur_apres.nom}</Td>
+                <Td label="Par">{h.auteur}</Td>
+                <Td label="Motif">{h.motif || '—'}</Td>
               </Tr>
             ))}
           </tbody>

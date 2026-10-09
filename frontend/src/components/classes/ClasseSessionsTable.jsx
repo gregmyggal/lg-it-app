@@ -25,7 +25,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
   const remplacantDe = new Map(sessions.filter((s) => s.remplace_session_id).map((s) => [s.remplace_session_id, s]));
 
   return (
-    <Table caption={caption} minWidth="760px">
+    <Table caption={caption} minWidth="760px" cards>
       <thead>
         <tr>
           <Th>Séance</Th>
@@ -50,10 +50,10 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
               key={s.id}
               fond={alerte ? ADMIN_TONES.warning.bg : barree ? ADMIN_COLORS.background : undefined}
             >
-              <Td>
+              <Td label="Séance">
                 <strong>{libelleSession(s)}</strong>
               </Td>
-              <Td>
+              <Td label="Date">
                 <span
                   style={{
                     textDecoration: barree ? 'line-through' : undefined,
@@ -81,8 +81,8 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
                   </div>
                 )}
               </Td>
-              <Td>{formatHoraire(s.heure_debut, s.heure_fin)}</Td>
-              <Td>
+              <Td label="Horaire">{formatHoraire(s.heure_debut, s.heure_fin)}</Td>
+              <Td label="Défrayé">
                 {barree || !s.heures_defrayables ? (
                   <span style={{ color: ADMIN_COLORS.textSecondary }}>—</span>
                 ) : (
@@ -91,7 +91,7 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
                   </span>
                 )}
               </Td>
-              <Td>
+              <Td label="Professeurs">
                 {(s.professeurs || []).length === 0 ? (
                   <span style={{ color: ADMIN_COLORS.textSecondary }}>—</span>
                 ) : (
@@ -108,18 +108,18 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
                 )}
               </Td>
               {liens && (
-                <Td>
+                <Td label="Liens">
                   <span style={{ fontSize: '13px' }}>{resumeLiens(liensDeSession(liens, s.seance_numero), s.seance_numero)}</span>
                 </Td>
               )}
-              <Td>
+              <Td label="Statut">
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <StatutBadge table={STATUTS_SESSION} valeur={s.statut} />
                   {alerte && <StatutBadge label="⚠ Date en conflit" tone="warning" />}
                   {barree && (remplacee ? <StatutBadge label="Remplacée par un bis" tone="success" /> : <StatutBadge label="À remplacer" tone="warning" />)}
                 </div>
               </Td>
-              <Td>
+              <Td label="Actions">
                 {onProfesseurs && !barree && (
                   <AdminButton size="sm" variant="secondary" onClick={() => onProfesseurs(s)} style={{ marginBottom: '6px' }}>
                     Professeurs

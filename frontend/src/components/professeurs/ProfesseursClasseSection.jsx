@@ -77,7 +77,7 @@ export default function ProfesseursClasseSection({ classe, titreClasse, onChange
         </EmptyBlock>
       )}
       {assignations.data?.length > 0 && (
-        <Table caption="Professeurs de la classe" minWidth="680px">
+        <Table caption="Professeurs de la classe" minWidth="680px" cards>
           <thead>
             <tr>
               <Th>Professeur</Th>
@@ -91,10 +91,10 @@ export default function ProfesseursClasseSection({ classe, titreClasse, onChange
           <tbody>
             {assignations.data.map((a) => (
               <Tr key={a.id}>
-                <Td>
+                <Td label="Professeur">
                   <strong>{a.professeur.nom}</strong>
                 </Td>
-                <Td>
+                <Td label="Rôle">
                   {a.can?.update && a.actif ? (
                     <AdminSelect
                       aria-label={`Rôle de ${a.professeur.nom}`}
@@ -106,15 +106,15 @@ export default function ProfesseursClasseSection({ classe, titreClasse, onChange
                     <StatutBadge table={ROLES_PROFESSEUR} valeur={a.role} />
                   )}
                 </Td>
-                <Td>
+                <Td label="Depuis">
                   {formatDate(a.date_debut)}
                   {a.date_fin ? ` → ${formatDate(a.date_fin)}` : ''}
                 </Td>
-                <Td>{a.nb_sessions_assignees}</Td>
-                <Td>
+                <Td label="Sessions">{a.nb_sessions_assignees}</Td>
+                <Td label="Statut">
                   <StatutBadge table={STATUTS_ASSIGNATION} valeur={statutAssignation(a.actif)} />
                 </Td>
-                <Td>
+                <Td label="Actions">
                   {a.can?.delete && (
                     <AdminButton size="sm" variant="secondary" onClick={() => setFin(a)}>
                       Terminer

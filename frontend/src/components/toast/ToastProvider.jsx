@@ -35,6 +35,7 @@ export default function ToastProvider({ children }) {
     <ToastContext.Provider value={api}>
       {children}
       <div
+        className="toast-zone"
         aria-live="polite"
         style={{
           position: 'fixed',

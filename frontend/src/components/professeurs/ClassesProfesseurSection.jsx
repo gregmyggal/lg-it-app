@@ -59,7 +59,7 @@ export default function ClassesProfesseurSection({ professeur }) {
         </EmptyBlock>
       )}
       {assignations.data?.length > 0 && (
-        <Table caption={`Classes de ${nom}`} minWidth="760px">
+        <Table caption={`Classes de ${nom}`} minWidth="760px" cards>
           <thead>
             <tr>
               <Th>Classe</Th>
@@ -74,11 +74,11 @@ export default function ClassesProfesseurSection({ professeur }) {
           <tbody>
             {assignations.data.map((a) => (
               <Tr key={a.id}>
-                <Td>
+                <Td label="Classe">
                   <strong>{libelleClasse(a.classe)}</strong>
                   <div style={{ fontSize: '13px' }}>{a.nb_sessions_assignees} session{a.nb_sessions_assignees > 1 ? 's' : ''}</div>
                 </Td>
-                <Td>
+                <Td label="Périodes">
                   {(a.classe?.periodes || []).length === 0 ? (
                     '—'
                   ) : (
@@ -91,18 +91,18 @@ export default function ClassesProfesseurSection({ professeur }) {
                     </div>
                   )}
                 </Td>
-                <Td>
+                <Td label="Rôle">
                   <StatutBadge table={ROLES_PROFESSEUR} valeur={a.role} />
                 </Td>
-                <Td>{a.co_professeurs?.length ? a.co_professeurs.map((p) => p.nom).join(', ') : '—'}</Td>
-                <Td>
+                <Td label="Co-professeurs">{a.co_professeurs?.length ? a.co_professeurs.map((p) => p.nom).join(', ') : '—'}</Td>
+                <Td label="Depuis">
                   {formatDate(a.date_debut)}
                   {a.date_fin ? ` → ${formatDate(a.date_fin)}` : ''}
                 </Td>
-                <Td>
+                <Td label="Statut">
                   <StatutBadge table={STATUTS_ASSIGNATION} valeur={statutAssignation(a.actif)} />
                 </Td>
-                <Td>
+                <Td label="Actions">
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     <LinkButton to={`/admin/classes/${a.classe_id}`} size="sm">
                       Voir la classe

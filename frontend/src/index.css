@@ -1294,6 +1294,10 @@ form input[type='checkbox'] {
   margin-top: 16px;
 }
 
+.sticky-actions.only-mobile {
+  display: none;
+}
+
 .sticky-actions__boutons {
   display: flex;
   gap: 12px;
@@ -1301,6 +1305,16 @@ form input[type='checkbox'] {
 }
 
 @media (max-width: 860px) {
+  .edit-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+
+  .edit-layout > aside {
+    position: static !important;
+  }
+
   .portal-shell {
     min-height: 100dvh;
   }
@@ -1370,17 +1384,22 @@ form input[type='checkbox'] {
     min-height: 44px;
   }
 
-  button,
+  button:not(.swatch-couleur),
   .btn,
   .adm-btn {
     min-height: 44px;
     min-width: 44px;
   }
 
+  .swatch-couleur {
+    min-height: 36px;
+  }
+
   input[type='checkbox'],
   input[type='radio'] {
     width: 22px !important;
     height: 22px !important;
+    flex: none;
   }
 
   .checkbox-group__item,
@@ -1481,6 +1500,25 @@ form input[type='checkbox'] {
     border-top: 1px solid var(--c-border);
   }
 
+  .employeur-badge {
+    white-space: normal !important;
+    max-width: 100%;
+  }
+
+  .actions-bar {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .actions-bar > * {
+    flex: 1 1 calc(50% - 8px);
+    justify-content: center !important;
+  }
+
+  .sticky-actions.only-mobile {
+    display: flex;
+  }
+
   .sticky-actions__total {
     justify-content: space-between;
     font-size: 14px;
@@ -1512,6 +1550,7 @@ form input[type='checkbox'] {
 
   /* Tableaux « cartes » : chaque ligne devient une carte empilée, libellés repris de l'en-tête. */
   .ui-table-wrap--cards {
+    padding: 8px;
     border: 0 !important;
     background: transparent !important;
     overflow: visible !important;
@@ -1544,7 +1583,12 @@ form input[type='checkbox'] {
     padding: 4px 0;
   }
 
+  .ui-table-wrap--cards td > * {
+    min-width: 0;
+  }
+
   .ui-table-wrap--cards td {
+    flex-wrap: wrap;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1565,12 +1609,23 @@ form input[type='checkbox'] {
   }
 
   .ui-table-wrap--cards td:not([data-label])::before,
+  .ui-table-wrap--cards td[data-label='Ouvrir']::before,
   .ui-table-wrap--cards td[data-label='Sélection']::before {
     display: none;
   }
 
   .ui-table-wrap--cards td:empty {
     display: none;
+  }
+
+  .heures-stepper {
+    margin-left: auto;
+  }
+
+  nav[aria-label="Fil d'Ariane"] a,
+  .portal-main p a:not(.btn):not(.adm-btn) {
+    display: inline-block;
+    padding: 12px 0;
   }
 
   .ui-table-wrap--cards .col-xl {
@@ -1580,5 +1635,32 @@ form input[type='checkbox'] {
   /* Tableaux à défilement horizontal conservés : indice visuel du bord. */
   .ui-table-wrap:not(.ui-table-wrap--cards) {
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Les modales de la barre latérale (ex. « Ma signature ») héritaient du texte blanc de l'aside. */
+.adm-modal {
+  color: var(--c-text);
+}
+
+/* Les textes .sr-only des cellules (position absolue) échappaient au défilement du tableau et élargissaient la page. */
+.ui-table-wrap {
+  position: relative;
+}
+
+.adm-modal--plain {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .adm-modal--plain {
+    overflow-y: auto;
+    padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Les notifications passent au-dessus de la barre d'actions collante. */
+  .toast-zone {
+    bottom: calc(96px + env(safe-area-inset-bottom)) !important;
   }
 }

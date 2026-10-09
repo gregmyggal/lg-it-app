@@ -218,7 +218,7 @@ export default function AdminTimesheetsPage() {
             </div>
 
             {/* Mode de vue */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               <AdminButton
                 variant={viewMode === 'validation' ? 'primary' : 'secondary'}
                 size="sm"
