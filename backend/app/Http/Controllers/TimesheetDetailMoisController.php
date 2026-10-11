@@ -39,10 +39,21 @@ class TimesheetDetailMoisController extends Controller
 
         $plafond = $parametres->plafondJournalier((int) $v['annee']);
         $tarifsProf = ProfesseurTarif::where('professeur_id', $professeur->id)->get();
-        $jours = $lignes->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)
-            ->groupBy(fn (Timesheet $t) => $t->date_prestation->toDateString())
-            ->map(fn ($l, $date) => ['date' => $date, 'montant' => round((float) $l->sum(fn (Timesheet $t) => (float) $tarifs->montant($t, $tarifsProf)), 2)])
-            ->map(fn ($j) => $j + ['depasse' => $j['montant'] > $plafond])
+        // Jour par jour : heures de toutes les saisies (brouillons inclus, affichées en jaune) ; montant et
+        // plafond ne portent que sur les saisies soumises ou validées.
+        $jours = $lignes->groupBy(fn (Timesheet $t) => $t->date_prestation->toDateString())
+            ->map(function ($l, $date) use ($tarifs, $tarifsProf, $plafond) {
+                $soumises = $l->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON);
+                $montant = round((float) $soumises->sum(fn (Timesheet $t) => (float) $tarifs->montant($t, $tarifsProf)), 2);
+
+                return [
+                    'date' => $date,
+                    'heures' => round((float) $l->sum(fn (Timesheet $t) => (float) $t->nombre_heures), 2),
+                    'montant' => $montant,
+                    'brouillon' => $l->contains(fn (Timesheet $t) => $t->statut_validation === Timesheet::STATUT_BROUILLON),
+                    'depasse' => $montant > $plafond,
+                ];
+            })
             ->values();
 
         $historique = TimesheetAudit::with('auteur:id,name', 'timesheet:id,date_prestation,type_activite')

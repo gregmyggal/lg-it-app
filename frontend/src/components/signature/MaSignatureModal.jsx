@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import AdminModal from '../AdminModal';
 import AdminButton from '../AdminButton';
 import Banner from '../ui/Banner';
@@ -8,7 +9,11 @@ import { enregistrerMaSignature, useMaSignature } from '../../hooks/useSignature
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage } from '../../api/errors';
 
-/** SIG-01 : « Ma signature » (bloc compte du portail) — créer, modifier, télécharger. Pas de nouvelle page. */
+/**
+ * SIG-01 : « Ma signature » (bloc compte du portail) — créer, modifier, télécharger. Pas de nouvelle page.
+ * Rendue dans <body> : la barre latérale est `position: sticky` (contexte d'empilement propre),
+ * ce qui ferait passer la modale sous le contenu de la page.
+ */
 export default function MaSignatureModal({ nom, onClose }) {
   const toast = useToast();
   const actuelle = useMaSignature();
@@ -30,7 +35,7 @@ export default function MaSignatureModal({ nom, onClose }) {
     }
   }
 
-  return (
+  return createPortal(
     <AdminModal
       isOpen
       title="Ma signature"
@@ -47,6 +52,7 @@ export default function MaSignatureModal({ nom, onClose }) {
       {actuelle.loading && <LoadingBlock lignes={3} />}
       {actuelle.error && <ErrorBlock message={actuelle.error} onRetry={actuelle.reload} />}
       {!actuelle.loading && !actuelle.error && <EtapeCreationSignature nom={nom} initial={actuelle.specimen} onChange={setBrouillon} />}
-    </AdminModal>
+    </AdminModal>,
+    document.body,
   );
 }

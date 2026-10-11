@@ -53,6 +53,19 @@ class TimesheetLissageMoisTest extends TestCase
         $this->assertSame('a_valider', $j['resume']['statut_mois']);
     }
 
+    public function test_detail_du_mois_affiche_les_heures_des_brouillons_sans_les_compter_dans_le_montant(): void
+    {
+        $this->ligne('2026-10-08', 2, 'brouillon');
+        $this->ligne('2026-10-08', 1, 'soumis');
+        $this->actingAsRole('directeur');
+
+        $jour8 = collect($this->getJson($this->url('?annee=2026&mois=10'))->assertOk()->json('jours'))->firstWhere('date', '2026-10-08');
+        $this->assertEquals(3.0, $jour8['heures']);
+        $this->assertTrue($jour8['brouillon']);
+        $this->assertEquals(20.0, $jour8['montant']); // seule la ligne soumise (1 h × 20 €, tarif des tests)
+        $this->assertFalse($jour8['depasse']);
+    }
+
     public function test_apercu_auto_propose_de_ramener_les_jours_sous_le_plafond_sans_changer_le_total(): void
     {
         $this->ligne('2026-10-08', 3); // 60 €

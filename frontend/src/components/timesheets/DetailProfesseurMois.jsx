@@ -54,23 +54,26 @@ function CalendrierMois({ annee, mois, jours, plafond }) {
           if (n === null) return <div key={`v${i}`} />;
           const date = `${annee}-${String(mois).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
           const j = parDate.get(date);
+          const fond = j?.depasse ? 'var(--tone-error-bg)' : j?.brouillon ? 'var(--tone-warning-bg)' : j?.montant > 0 ? 'var(--tone-success-bg)' : 'var(--c-card)';
           return (
             <div
               key={date}
-              title={j ? `${formatEuros(j.montant)}${j.depasse ? ` — au-delà de ${formatEuros(plafond)}` : ''}` : undefined}
+              title={j ? `${formatHeures(j.heures)}${j.brouillon ? ' (brouillon)' : ''} — ${formatEuros(j.montant)}${j.depasse ? ` — au-delà de ${formatEuros(plafond)}` : ''}` : undefined}
               style={{
                 border: `1px solid ${j?.depasse ? ADMIN_COLORS.error : ADMIN_COLORS.border}`,
-                background: j?.depasse ? 'var(--tone-error-bg)' : j ? 'var(--tone-success-bg)' : 'var(--c-card)',
+                background: fond,
                 borderRadius: 5, padding: 3, minHeight: 44,
               }}
             >
               {n}
-              {j && <div style={{ fontWeight: 600 }}>{formatEuros(j.montant)}{j.depasse ? ' ⚠' : ''}</div>}
+              {j && <div style={{ fontWeight: 600 }}>{formatHeures(j.heures)}{j.montant > 0 ? ` · ${formatEuros(j.montant)}` : ''}{j.depasse ? ' ⚠' : ''}</div>}
             </div>
           );
         })}
       </div>
-      <p style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Rouge : au-delà de {formatEuros(plafond)} par jour.</p>
+      <p style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
+        Jaune : saisies en brouillon. Vert : saisies soumises. Rouge : au-delà de {formatEuros(plafond)} par jour.
+      </p>
     </div>
   );
 }
