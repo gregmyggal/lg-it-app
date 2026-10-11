@@ -8,12 +8,11 @@ import { formatEuros, formatHeures } from '../../utils/format';
  *
  * @param {object} props
  * @param {{heures: number, montant: number, jours: number, depassements: object[]}} props.synthese
- * @param {number} props.heuresEnAttente heures des sessions cochées pas encore enregistrées
  */
-export default function SyntheseMois({ synthese, heuresEnAttente }) {
+export default function SyntheseMois({ synthese }) {
   const cases = [
-    { label: 'Total heures', valeur: formatHeures(synthese.heures + heuresEnAttente) },
-    { label: 'Total montant', valeur: formatEuros(synthese.montant), note: heuresEnAttente > 0 ? 'hors sessions à enregistrer' : null },
+    { label: 'Total heures', valeur: formatHeures(synthese.heures) },
+    { label: 'Total montant', valeur: formatEuros(synthese.montant), },
     { label: 'Jours encodés', valeur: String(synthese.jours) },
   ];
 

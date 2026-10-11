@@ -58,18 +58,19 @@ class TimesheetMoisTest extends TestCase
         Carbon::setTestNow($this->seance($n)->date->copy()->setTime(20, 0));
     }
 
-    public function test_mon_mois_ne_liste_que_les_sessions_commencees_avec_leur_etat(): void
+    public function test_mon_mois_liste_toutes_les_seances_passees_et_a_venir_ts03(): void
     {
         // Mercredis du calendrier de tests : 07/10, 14/10, 04/11, 18/11, 25/11… (vacances d'automne sautées)
-        $this->soirDe(2); // 14/10 : séances 1 et 2 commencées
+        $this->soirDe(1); // 07/10 au soir : séance 1 commencée, séance 2 (14/10) à venir
         Sanctum::actingAs($this->alice->user);
 
         $r = $this->getJson('/api/timesheets/mon-mois?annee=2026&mois=10')->assertOk();
 
         $sessions = collect($r->json('sessions'));
-        $this->assertSame([1, 2], $sessions->pluck('seance_numero')->all());
-        $this->assertSame(['a_encoder', 'a_encoder'], $sessions->pluck('encodage')->all());
-        $this->assertTrue($sessions[0]['peut_encoder']);
+        $this->assertSame([1, 2, 3, 4], $sessions->pluck('seance_numero')->all());
+        $this->assertSame(['a_encoder', 'a_encoder', 'a_encoder', 'a_encoder'], $sessions->pluck('encodage')->all());
+        $this->assertSame([false, true, true, true], $sessions->pluck('est_a_venir')->all());
+        $this->assertTrue($sessions[1]['peut_encoder']); // à venir : encodable à l'avance
         $this->assertEquals(2, $sessions[0]['duree_par_defaut']); // heures défrayables (séance de 3 h au calendrier)
         $this->assertSame(0, $r->json('synthese.nb_brouillons'));
     }
@@ -135,43 +136,51 @@ class TimesheetMoisTest extends TestCase
         $this->assertFalse($s['peut_encoder']);
     }
 
-    public function test_soumettre_le_mois_cree_les_sessions_incluses_et_soumet_tous_les_brouillons_ac31(): void
+    public function test_soumettre_le_mois_soumet_toutes_les_heures_encodees_sans_cocher_ac31(): void
     {
         $this->soirDe(2);
         Sanctum::actingAs($this->alice->user);
         $this->postJson('/api/timesheets', ['date_prestation' => '2026-10-05', 'type_activite' => 'preparation', 'nombre_heures' => 2])->assertCreated();
         $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(1)->id])->assertCreated();
 
-        $r = $this->postJson('/api/timesheets/soumettre-mois', [
-            'annee' => 2026, 'mois' => 10,
-            'sessions' => [
-                ['course_session_id' => $this->seance(1)->id], // déjà saisie : ignorée (idempotent)
-                ['course_session_id' => $this->seance(2)->id, 'nombre_heures' => 2.5],
-            ],
-        ])->assertOk();
+        $r = $this->postJson('/api/timesheets/soumettre-mois', ['annee' => 2026, 'mois' => 10])->assertOk();
 
-        $this->assertSame(1, $r->json('creees'));
-        $this->assertSame(3, $r->json('soumises'));
-        $this->assertSame(3, Timesheet::where('professeur_id', $this->alice->id)->where('statut_validation', 'soumis')->count());
-        $this->assertEquals(2.5, Timesheet::where('course_session_id', $this->seance(2)->id)->value('nombre_heures'));
+        $this->assertSame(2, $r->json('soumises'));
+        $this->assertSame(2, Timesheet::where('professeur_id', $this->alice->id)->where('statut_validation', 'soumis')->count());
     }
 
-    public function test_soumettre_le_mois_est_atomique(): void
+    public function test_soumettre_un_mois_sans_heure_encodee_est_refuse(): void
+    {
+        $this->soirDe(2);
+        Sanctum::actingAs($this->alice->user);
+
+        $this->postJson('/api/timesheets/soumettre-mois', ['annee' => 2026, 'mois' => 10])->assertStatus(422);
+        $this->assertSame(0, Timesheet::count());
+    }
+
+    public function test_un_mois_ne_se_soumet_qu_une_fois_et_plus_aucune_saisie_n_y_est_ajoutee(): void
     {
         $this->soirDe(2);
         Sanctum::actingAs($this->alice->user);
         $this->postJson('/api/timesheets', ['date_prestation' => '2026-10-05', 'type_activite' => 'preparation', 'nombre_heures' => 2])->assertCreated();
+        $this->postJson('/api/timesheets/soumettre-mois', ['annee' => 2026, 'mois' => 10])->assertOk();
 
-        // La séance 5 n'a pas commencé : tout le lot est refusé et le brouillon reste brouillon.
-        $this->postJson('/api/timesheets/soumettre-mois', [
-            'annee' => 2026, 'mois' => 11, 'sessions' => [['course_session_id' => $this->seance(5)->id]],
-        ])->assertStatus(422);
-        $this->postJson('/api/timesheets/soumettre-mois', [
-            'annee' => 2026, 'mois' => 10, 'sessions' => [['course_session_id' => $this->seance(5)->id]],
-        ])->assertStatus(422);
+        $this->getJson('/api/timesheets/mon-mois?annee=2026&mois=10')->assertOk()->assertJsonPath('mois_soumis', true);
+        $this->postJson('/api/timesheets/soumettre-mois', ['annee' => 2026, 'mois' => 10])->assertStatus(422);
+        $this->postJson('/api/timesheets', ['date_prestation' => '2026-10-20', 'type_activite' => 'preparation', 'nombre_heures' => 1])->assertStatus(422);
+        $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(1)->id])->assertStatus(422);
 
-        $this->assertSame(0, Timesheet::where('statut_validation', 'soumis')->count());
         $this->assertSame(1, Timesheet::count());
+    }
+
+    public function test_il_n_existe_pas_de_soumission_ligne_par_ligne(): void
+    {
+        $this->soirDe(2);
+        Sanctum::actingAs($this->alice->user);
+        $id = $this->postJson('/api/timesheets', ['date_prestation' => '2026-10-05', 'type_activite' => 'preparation', 'nombre_heures' => 2])->assertCreated()->json('id');
+
+        $this->postJson("/api/timesheets/{$id}/submit")->assertNotFound();
+        $this->assertSame('brouillon', Timesheet::find($id)->statut_validation);
     }
 
     public function test_staff_ne_peut_pas_utiliser_l_ecran_mensuel(): void
@@ -194,7 +203,8 @@ class TimesheetMoisTest extends TestCase
         $this->assertCount(1, $sessions[1]['mes_timesheets']);
         $this->assertSame('a_encoder', $sessions[2]['encodage']);
         $this->assertTrue($sessions[2]['peut_encoder']);
-        $this->assertFalse($sessions[5]['peut_encoder']); // pas encore commencée
+        $this->assertTrue($sessions[5]['peut_encoder']); // TS-03 : une séance à venir est encodable
+        $this->assertTrue($sessions[5]['est_a_venir']);
         $this->assertEquals(2, $sessions[2]['duree_par_defaut']);
     }
 }

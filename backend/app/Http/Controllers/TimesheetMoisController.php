@@ -12,7 +12,6 @@ use App\Services\TimesheetSignatureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 
 /** « Encoder mon mois » (CLS-01 T3, mock-up 02) : sessions du mois, heures libres, synthèse, soumission du mois. */
 class TimesheetMoisController extends Controller
@@ -44,7 +43,6 @@ class TimesheetMoisController extends Controller
                 ->orWhereIn('id', $parSession->keys()))
             ->with(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])
             ->orderBy('date')->orderBy('heure_debut')->get()
-            ->filter(fn (CourseSession $s) => $this->service->aCommence($s) || $parSession->has($s->id))
             ->values();
 
         $donnees = $sessions->map(function (CourseSession $s) use ($professeur, $parSession, $request) {
@@ -71,6 +69,7 @@ class TimesheetMoisController extends Controller
                 'duree_par_defaut' => $this->service->dureeParDefaut($s),
                 'duree_seance' => $this->service->dureeSeance($s),
                 'encodage' => $this->service->etatEncodage($miennes),
+                'est_a_venir' => $this->service->estAVenir($s),
                 'peut_encoder' => $this->service->peutEncoder($professeur, $s),
                 'remplace_par' => $remplaceur ? ['id' => $remplaceur->id, 'nom' => trim($remplaceur->prenom.' '.$remplaceur->nom)] : null,
                 'mes_timesheets' => TimesheetResource::collection($miennes->values())->resolve($request),
@@ -93,6 +92,8 @@ class TimesheetMoisController extends Controller
                 'depassements' => $lissage['depassements'],
                 'nb_brouillons' => $saisies->where('statut_validation', Timesheet::STATUT_BROUILLON)->count(),
             ],
+            // Un mois ne se soumet qu'une fois : au-delà, le front n'offre plus de saisie ni de soumission.
+            'mois_soumis' => $saisies->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->isNotEmpty(),
             'peut_signer' => (new TimesheetSignatureService)->canSignMonth($professeur->id, $v['annee'], $v['mois'])['can_sign'],
         ]);
     }
@@ -104,14 +105,8 @@ class TimesheetMoisController extends Controller
         $v = $request->validate([
             'annee' => ['required', 'integer', 'min:2000', 'max:2100'],
             'mois' => ['required', 'integer', 'min:1', 'max:12'],
-            'sessions' => ['sometimes', 'array', 'max:100'],
-            'sessions.*.course_session_id' => ['required', 'integer', 'exists:course_sessions,id'],
-            'sessions.*.nombre_heures' => ['sometimes', 'nullable', 'numeric', 'min:0.5', 'max:24'],
-            'sessions.*.type_activite' => ['sometimes', Rule::in(TimesheetService::TYPES)],
         ]);
 
-        return response()->json(
-            $this->service->soumettreMois($request->user(), (int) $v['annee'], (int) $v['mois'], $v['sessions'] ?? [])
-        );
+        return response()->json($this->service->soumettreMois($request->user(), (int) $v['annee'], (int) $v['mois']));
     }
 }

@@ -170,15 +170,28 @@ class TimesheetValidationTest extends TestCase
         $this->assertSame('soumis', $a->fresh()->statut_validation);
     }
 
-    public function test_session_avec_heures_ne_peut_etre_ni_annulee_ni_deplacee_ac33(): void
+    public function test_session_avec_heures_validees_ne_peut_etre_ni_annulee_ni_deplacee_ac33(): void
     {
-        $this->soumise($this->alice, 5);
+        $t = $this->soumise($this->alice, 5);
+        $t->update(['statut_validation' => 'confirme']);
         $s = $this->seance(5);
         $this->actingAsRole('directeur');
 
         $this->postJson("/api/sessions/{$s->id}/cancel", ['motif_annulation' => 'Test'])->assertStatus(409);
         $this->putJson("/api/sessions/{$s->id}", ['date' => $s->date->copy()->addDay()->toDateString()])->assertStatus(409);
         $this->assertSame('planifiee', $s->fresh()->statut);
+        $this->assertTrue($t->fresh()->exists);
+    }
+
+    public function test_annuler_supprime_les_heures_encodees_non_validees(): void
+    {
+        $t = $this->soumise($this->alice, 5);
+        $s = $this->seance(5);
+        $this->actingAsRole('directeur');
+
+        $this->postJson("/api/sessions/{$s->id}/cancel", ['motif_annulation' => 'Séance annulée'])->assertOk();
+        $this->assertSame('annulee', $s->fresh()->statut);
+        $this->assertNull(Timesheet::find($t->id));
     }
 
     public function test_le_workflow_existant_fonctionne_avec_les_statuts_normalises(): void

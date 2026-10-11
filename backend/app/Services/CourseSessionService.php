@@ -25,64 +25,70 @@ class CourseSessionService
 
         return DB::transaction(function () use ($session, $data) {
             $session->update($data);
-            $this->reporterHeuresBrouillon($session->id, $session->date->toDateString());
+            $this->reporterHeures($session->id, $session->date->toDateString());
 
             return $session->refresh();
         });
     }
 
     /**
-     * Une séance, même passée, se déplace tant qu'aucune heure n'y est soumise ou validée (CLS-06).
+     * Une séance, même passée, se déplace tant qu'aucune heure n'y est validée (CLS-06) ; les heures non validées la suivent.
      *
-     * @throws RegleMetierException 409 si la session est annulée ou a des heures soumises ou validées
+     * @throws RegleMetierException 409 si la session est annulée ou a des heures validées
      */
     public function verifierDeplacable(CourseSession $session): void
     {
         if ($session->isAnnulee()) {
             throw RegleMetierException::conflit('Une session annulée ne peut pas être déplacée.');
         }
-        $nb = $session->timesheets()->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->count();
-        if ($nb > 0) {
-            throw RegleMetierException::conflit(
-                "Cette session ne peut pas être déplacée : {$nb} saisie".($nb > 1 ? 's' : '')." d'heures ".($nb > 1 ? 'soumises ou validées y sont rattachées' : 'soumise ou validée y est rattachée').'. Le remplacement d\'un professeur reste possible.'
-            );
-        }
+        $this->refuserSiHeuresValidees($session, 'déplacée');
     }
 
-    /** Les heures encore en brouillon suivent la nouvelle date de leur séance. */
-    public function reporterHeuresBrouillon(int $sessionId, string $date): void
+    /**
+     * Les heures non validées (brouillon, soumises) suivent la date de leur séance. Les heures validées ne se déplacent pas
+     * (elles bloquent le déplacement, voir `refuserSiHeuresValidees()`).
+     */
+    public function reporterHeures(int $sessionId, string $date): void
     {
         Timesheet::where('course_session_id', $sessionId)
-            ->where('statut_validation', Timesheet::STATUT_BROUILLON)
+            ->whereNotIn('statut_validation', Timesheet::STATUTS_VALIDEES)
             ->update(['date_prestation' => $date]);
     }
 
+    /**
+     * Annule la séance. Elle est refusée si des heures sont validées ; sinon les heures encodées (brouillon et soumises)
+     * de cette séance sont supprimées avec elle, en une transaction.
+     */
     public function annuler(CourseSession $session, string $motif): CourseSession
     {
         if (! $session->isCancellable()) {
             throw RegleMetierException::conflit('Seule une session planifiée ou en cours peut être annulée.');
         }
-        $this->refuserSiHeuresEncodees($session, 'annulée');
 
-        $session->update([
-            'statut' => CourseSession::STATUT_ANNULEE,
-            'motif_annulation' => $motif,
-            'cancelled_at' => now(),
-        ]);
+        return DB::transaction(function () use ($session, $motif) {
+            $this->refuserSiHeuresValidees($session, 'annulée');
+            Timesheet::where('course_session_id', $session->id)->delete();
 
-        return $session->refresh();
+            $session->update([
+                'statut' => CourseSession::STATUT_ANNULEE,
+                'motif_annulation' => $motif,
+                'cancelled_at' => now(),
+            ]);
+
+            return $session->refresh();
+        });
     }
 
     /**
-     * R-T3-8 / AC-33 : une session qui a des heures encodées ne peut être ni annulée ni déplacée (le remplacement
-     * d'un professeur, lui, reste possible).
+     * Une session dont des heures sont validées ne peut être ni annulée ni déplacée (le remplacement d'un professeur,
+     * lui, reste possible).
      */
-    private function refuserSiHeuresEncodees(CourseSession $session, string $action): void
+    private function refuserSiHeuresValidees(CourseSession $session, string $action): void
     {
-        $nb = $session->timesheets()->count();
+        $nb = $session->timesheets()->whereIn('statut_validation', Timesheet::STATUTS_VALIDEES)->count();
         if ($nb > 0) {
             throw RegleMetierException::conflit(
-                "Cette session ne peut pas être {$action} : {$nb} saisie".($nb > 1 ? 's' : '')." d'heures y ".($nb > 1 ? 'sont rattachées' : 'est rattachée').'. Le remplacement d\'un professeur reste possible.'
+                "Cette session ne peut pas être {$action} : {$nb} saisie".($nb > 1 ? 's' : '')." d'heures validée".($nb > 1 ? 's' : '').' y '.($nb > 1 ? 'sont rattachées' : 'est rattachée').'. Le remplacement d\'un professeur reste possible.'
             );
         }
     }

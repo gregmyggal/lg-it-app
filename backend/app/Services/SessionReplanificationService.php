@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * CLS-06 : déplacer une séance, même passée, et replanifier les séances suivantes (une par semaine, au jour de
  * la classe, congés sautés sauf dates forcées), sans jamais renuméroter. Arrêt sur la première séance verrouillée
- * (heures soumises ou validées) ; cascade vers la P2 si la P1 déborde sur sa 1re séance. Les heures en brouillon
+ * (heures validées) ; cascade vers la P2 si la P1 déborde sur sa 1re séance. Les heures en brouillon
  * suivent la nouvelle date de leur séance.
  */
 class SessionReplanificationService
@@ -62,7 +62,7 @@ class SessionReplanificationService
                 foreach ($bloc['lignes'] as $ligne) {
                     if ($ligne['etat'] === 'decalee') {
                         CourseSession::whereKey($ligne['id'])->update(['date' => $ligne['date_apres']]);
-                        $this->sessions->reporterHeuresBrouillon($ligne['id'], $ligne['date_apres']);
+                        $this->sessions->reporterHeures($ligne['id'], $ligne['date_apres']);
                     }
                 }
                 if ($bloc['cascade']) {
@@ -74,7 +74,7 @@ class SessionReplanificationService
             }
 
             $session->update(array_intersect_key($data, array_flip(['date', 'heure_debut', 'heure_fin', 'lieu'])));
-            $this->sessions->reporterHeuresBrouillon($session->id, $data['date']);
+            $this->sessions->reporterHeures($session->id, $data['date']);
 
             return $plan;
         });
@@ -263,7 +263,7 @@ class SessionReplanificationService
                 $position = $l['date_apres'] === $verrou->date->toDateString() ? 'le même jour que' : 'après';
                 $avertissements[] = [
                     'code' => 'ordre_inverse',
-                    'message' => "La {$l['libelle']} tombera le {$this->court($l['date_apres'])}, {$position} la ".$this->libelle($verrou, $cp)." ({$this->court($verrou->date->toDateString())}, heures soumises ou validées) : l'ordre des séances ne suivra plus leur numéro.",
+                    'message' => "La {$l['libelle']} tombera le {$this->court($l['date_apres'])}, {$position} la ".$this->libelle($verrou, $cp)." ({$this->court($verrou->date->toDateString())}, heures validées) : l'ordre des séances ne suivra plus leur numéro.",
                 ];
             }
             if ($l['date_apres'] > $finAnnee) {

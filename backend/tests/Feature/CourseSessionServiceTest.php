@@ -91,19 +91,24 @@ class CourseSessionServiceTest extends TestCase
         $this->assertSame('2026-10-15', $brouillon->fresh()->date_prestation->toDateString());
     }
 
-    public function test_deplacer_refuse_409_si_des_heures_sont_soumises_ou_validees(): void
+    public function test_deplacer_suit_les_heures_non_validees_et_refuse_409_si_une_heure_est_validee(): void
     {
         $classe = $this->classeAvecSessions($this->annee());
         Carbon::setTestNow('2026-10-20 10:00:00');
-        foreach ([Timesheet::STATUT_SOUMIS, Timesheet::STATUT_CONFIRME] as $i => $statut) {
-            Timesheet::create([
-                'professeur_id' => Professeur::factory()->create()->id, 'date_prestation' => '2026-10-07', 'nombre_heures' => 2,
-                'course_session_id' => $this->seance($classe, 1)->id, 'statut_validation' => $statut,
-            ]);
-        }
+        $soumise = Timesheet::create([
+            'professeur_id' => Professeur::factory()->create()->id, 'date_prestation' => '2026-10-07', 'nombre_heures' => 2,
+            'course_session_id' => $this->seance($classe, 1)->id, 'statut_validation' => Timesheet::STATUT_SOUMIS,
+        ]);
 
-        $this->assertRegle(409, "Cette session ne peut pas être déplacée : 2 saisies d'heures soumises ou validées y sont rattachées. Le remplacement d'un professeur reste possible.", fn () => $this->service->deplacer(
-            $this->seance($classe, 1), ['date' => '2026-10-08']
+        $this->service->deplacer($this->seance($classe, 1), ['date' => '2026-10-08']);
+        $this->assertSame('2026-10-08', $soumise->fresh()->date_prestation->toDateString());
+
+        Timesheet::create([
+            'professeur_id' => Professeur::factory()->create()->id, 'date_prestation' => '2026-10-08', 'nombre_heures' => 2,
+            'course_session_id' => $this->seance($classe, 1)->id, 'statut_validation' => Timesheet::STATUT_CONFIRME,
+        ]);
+        $this->assertRegle(409, "Cette session ne peut pas être déplacée : 1 saisie d'heures validée y est rattachée. Le remplacement d'un professeur reste possible.", fn () => $this->service->deplacer(
+            $this->seance($classe, 1), ['date' => '2026-10-09']
         ));
     }
 

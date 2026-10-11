@@ -3,7 +3,7 @@ import AdminModal from '../AdminModal';
 import AdminButton from '../AdminButton';
 import { AdminFormField, AdminInput, AdminSelect, AdminTextarea } from '../AdminFormField';
 import Banner from '../ui/Banner';
-import { creerSaisie, soumettreSaisie } from '../../hooks/useTimesheets';
+import { creerSaisie } from '../../hooks/useTimesheets';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 import { optionsStatut, TYPES_ACTIVITE } from '../../utils/statuts';
 import { formatDateLongue, formatHoraire } from '../../utils/dates';
@@ -11,9 +11,10 @@ import { formatDuree } from '../../utils/format';
 import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
 /**
- * Raccourci d'encodage d'une session depuis « Mes classes » (mock-up 01) : 2 clics (ouvrir, soumettre).
- * La date, le cours et la durée viennent de la session ; la durée reste modifiable. Chaque professeur encode les
- * siennes, de façon indépendante (co-enseignement, remplacement).
+ * Raccourci d'encodage d'une session depuis « Mes classes » (mock-up 01) : enregistre un brouillon de la session.
+ * La date, le cours et la durée viennent de la session ; la durée reste modifiable. Une ligne ne se soumet jamais
+ * seule : seul le mois entier se soumet, depuis « Encoder mon mois ». Chaque professeur encode les siennes, de façon
+ * indépendante (co-enseignement, remplacement).
  *
  * @param {object} props
  * @param {object} props.session session de `GET /mes-classes/{id}/sessions` (`duree_par_defaut`, `libelle`, `date`…)
@@ -30,19 +31,18 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
   const [envoi, setEnvoi] = useState(false);
   const valide = Number(heures) >= 0.5 && Number(heures) <= 24;
 
-  async function envoyer(soumettre) {
+  async function enregistrer() {
     setEnvoi(true);
     setMessage(null);
     setErreurs({});
     try {
-      const saisie = await creerSaisie({
+      await creerSaisie({
         course_session_id: session.id,
         type_activite: type,
         nombre_heures: Number(heures),
         commentaire: commentaire || null,
       });
-      if (soumettre) await soumettreSaisie(saisie.id);
-      onDone(soumettre ? `Heures soumises pour la ${libelleSessionPhrase(session)}.` : `Brouillon enregistré pour la ${libelleSessionPhrase(session)}.`);
+      onDone(`Brouillon enregistré pour la ${libelleSessionPhrase(session)}. Vous soumettrez le mois entier depuis « Encoder mon mois ».`);
     } catch (err) {
       setErreurs(getFieldErrors(err));
       setMessage(getErrorMessage(err));
@@ -59,11 +59,8 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
       closeOnBackdrop={false}
       footer={
         <>
-          <AdminButton variant="secondary" onClick={() => envoyer(false)} disabled={!valide || envoi}>
+          <AdminButton onClick={enregistrer} disabled={!valide || envoi} loading={envoi}>
             Enregistrer en brouillon
-          </AdminButton>
-          <AdminButton onClick={() => envoyer(true)} disabled={!valide || envoi} loading={envoi}>
-            Soumettre les heures
           </AdminButton>
         </>
       }
@@ -94,7 +91,7 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
         <AdminTextarea id="enc-comm" rows={2} value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
       </AdminFormField>
       <p style={{ fontSize: '13px', marginBottom: 0 }}>
-        Vos heures sont les vôtres : vos co-enseignants encodent les leurs de leur côté. Une fois soumises, elles ne sont plus modifiables par vous.
+        Vos heures sont les vôtres : vos co-enseignants encodent les leurs de leur côté. Elles seront soumises avec le mois entier.
       </p>
     </AdminModal>
   );

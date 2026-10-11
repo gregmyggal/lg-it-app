@@ -55,12 +55,6 @@ class TimesheetPolicy
         return $this->update($user, $timesheet);
     }
 
-    // Transition brouillon → soumis, réservée au professeur propriétaire.
-    public function submit(User $user, Timesheet $timesheet): bool
-    {
-        return $this->isOwner($user, $timesheet) && $timesheet->statut_validation === Timesheet::STATUT_BROUILLON;
-    }
-
     // Transition soumis → validé, réservée au directeur/admin.
     public function validateEntry(User $user, Timesheet $timesheet): bool
     {

@@ -69,7 +69,7 @@ class SessionReplanificationApiTest extends TestCase
             'date_prestation' => $session->date->toDateString(),
             'nombre_heures' => 2,
             'course_session_id' => $session->id,
-            'statut_validation' => Timesheet::STATUT_SOUMIS,
+            'statut_validation' => Timesheet::STATUT_CONFIRME,
         ]);
     }
 
@@ -256,7 +256,7 @@ class SessionReplanificationApiTest extends TestCase
 
         $avertissements = $this->postJson("/api/sessions/{$id}/deplacement/apercu", ['date' => '2026-10-14'])->assertOk()->json('data.avertissements');
         $this->assertContains(
-            "La P1 · Séance 3 tombera le 18/11, le même jour que la P1 · Séance 4 (18/11, heures soumises ou validées) : l'ordre des séances ne suivra plus leur numéro.",
+            "La P1 · Séance 3 tombera le 18/11, le même jour que la P1 · Séance 4 (18/11, heures validées) : l'ordre des séances ne suivra plus leur numéro.",
             array_column($avertissements, 'message')
         );
 

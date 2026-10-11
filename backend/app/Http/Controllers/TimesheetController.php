@@ -104,16 +104,6 @@ class TimesheetController extends Controller
         return response()->noContent();
     }
 
-    // Transition brouillon → soumis (US-302), réservée au professeur propriétaire.
-    public function submit(Request $request, Timesheet $timesheet)
-    {
-        Gate::authorize('submit', $timesheet);
-
-        $timesheet->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
-
-        return new TimesheetResource($timesheet->load('professeur', 'cours', 'session.classe', 'session.classePeriode.cours', 'session.classePeriode.periode'));
-    }
-
     // TS-01 T1 : adaptation par le directeur/admin (heures, date d'une saisie libre, type), motif obligatoire.
     public function adapter(Request $request, Timesheet $timesheet, TimesheetAdaptationService $service, TimesheetNotifier $notifier)
     {

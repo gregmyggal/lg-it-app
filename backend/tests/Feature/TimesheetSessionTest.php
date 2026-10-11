@@ -112,16 +112,17 @@ class TimesheetSessionTest extends TestCase
             ->assertCreated();
     }
 
-    public function test_session_non_commencee_ou_annulee_refusee_ac29(): void
+    public function test_seance_a_venir_encodable_et_annulee_refusee_ts03(): void
     {
         Sanctum::actingAs($this->alice->user);
 
-        $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(8)->id])->assertStatus(422);
+        // TS-03 : une séance à venir s'encode à l'avance (brouillon).
+        $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(8)->id])->assertCreated();
 
         $annulee = $this->seance(2);
         $annulee->update(['statut' => CourseSession::STATUT_ANNULEE]);
         $this->postJson('/api/timesheets', ['course_session_id' => $annulee->id])->assertStatus(422);
-        $this->assertSame(0, Timesheet::count());
+        $this->assertSame(1, Timesheet::count());
     }
 
     public function test_le_remplace_ne_peut_plus_creer_mais_garde_ses_saisies_et_le_remplacant_encode_ac25_ac27(): void

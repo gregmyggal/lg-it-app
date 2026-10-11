@@ -3,7 +3,7 @@ import { useApiQuery } from './useApiQuery';
 
 /** Accès API de la tranche T3 : heures liées aux sessions, écran mensuel, vue directeur, validation en lot. */
 
-/** Écran « Encoder mon mois » : sessions commencées du mois, heures libres, synthèse. */
+/** Écran « Encoder mon mois » : séances du mois (passées et à venir), heures libres, synthèse. */
 export function useMonMois(annee, mois) {
   return useApiQuery(
     () => client.get('/timesheets/mon-mois', { params: { annee, mois } }).then((res) => res.data),
@@ -49,11 +49,6 @@ export function proposerLissage(id, annee, mois) {
 /** Validation en lot : applique les lissages demandés puis confirme, en une transaction. */
 export function validerLot(payload) {
   return client.post('/timesheets/valider-lot', payload).then((res) => res.data);
-}
-
-/** Soumet une saisie en brouillon (brouillon → soumis). */
-export function soumettreSaisie(id) {
-  return client.post(`/timesheets/${id}/submit`).then((res) => res.data);
 }
 
 /** TS-01 T1 : adaptation d'une saisie par le staff (motif obligatoire) et historique. */

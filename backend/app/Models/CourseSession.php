@@ -124,14 +124,14 @@ class CourseSession extends Model
         return ! $this->isAnnulee();
     }
 
-    /** Déplaçable, même passée (CLS-06) : ni annulée, ni avec des heures soumises ou validées. */
+    /** Déplaçable, même passée (CLS-06) : ni annulée, ni avec des heures validées. */
     public function isMovable(): bool
     {
         return ! $this->isAnnulee() && ! $this->aHeuresVerrouillees();
     }
 
     /**
-     * Heures soumises, contestées, confirmées ou générées sur la séance. Utilise l'attribut `heures_verrouillees`
+     * Heures validées (confirmées, contestées ou générées) sur la séance. Utilise l'attribut `heures_verrouillees`
      * s'il a été chargé (`avecHeuresVerrouillees()`), sinon une requête.
      */
     public function aHeuresVerrouillees(): bool
@@ -140,12 +140,12 @@ class CourseSession extends Model
             return (bool) $this->attributes['heures_verrouillees'];
         }
 
-        return $this->timesheets()->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->exists();
+        return $this->timesheets()->whereIn('statut_validation', Timesheet::STATUTS_VALIDEES)->exists();
     }
 
     public function scopeAvecHeuresVerrouillees(Builder $query): Builder
     {
-        return $query->withExists(['timesheets as heures_verrouillees' => fn ($q) => $q->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)]);
+        return $query->withExists(['timesheets as heures_verrouillees' => fn ($q) => $q->whereIn('statut_validation', Timesheet::STATUTS_VALIDEES)]);
     }
 
     public function isCancellable(): bool

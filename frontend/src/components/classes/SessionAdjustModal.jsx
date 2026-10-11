@@ -366,7 +366,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
   );
 }
 
-const MOTIFS = { heures_validees: 'heures soumises ou validées' };
+const MOTIFS = { heures_validees: 'heures validées' };
 
 function messageDecalage(session, rep, numero) {
   const propres = rep.decalees[`p${numero}`] || 0;

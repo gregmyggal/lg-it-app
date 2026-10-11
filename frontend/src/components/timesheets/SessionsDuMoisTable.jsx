@@ -1,7 +1,6 @@
 import { Table, Th, Td, Tr } from '../ui/Table';
 import StatutBadge from '../ui/StatutBadge';
 import AdminButton from '../AdminButton';
-import { AdminCheckbox } from '../AdminFormField';
 import HeuresStepper from './HeuresStepper';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 import { ETATS_ENCODAGE, TYPES_ACTIVITE, getStatut } from '../../utils/statuts';
@@ -9,24 +8,28 @@ import { formatDateCourte, formatHoraire } from '../../utils/dates';
 import { formatDuree, formatEuros, formatHeures } from '../../utils/format';
 import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
+/** Une heure saisissable pour une séance : entre 0,5 et 24 h. */
+export const heuresValides = (valeur) => Number(valeur) >= 0.5 && Number(valeur) <= 24;
+
 /**
- * Sessions commencées du mois (mock-up 02, section 1). Une session « à encoder » est préremplie (durée de la
- * session, modifiable) et peut être incluse ou non ; une session déjà saisie affiche ses heures et ses actions ;
- * une session remplacée ou annulée l'indique, sans aucune alerte.
+ * Séances du mois, passées et à venir (mock-up 02 et TS-03, section 1). Chaque séance s'encode par son propre bouton « Encoder » : elle
+ * devient un brouillon. Une fois encodée, elle affiche ses heures et ses actions. Il n'y a pas de case à cocher : la
+ * soumission du mois prend automatiquement toutes les heures encodées.
  *
  * @param {object} props
  * @param {object[]} props.sessions sessions de `GET /timesheets/mon-mois`
- * @param {Record<number, {inclure: boolean, heures: string}>} props.saisiesLocales état local des sessions à encoder
- * @param {(id: number, patch: object) => void} props.onChange
+ * @param {Record<number, string>} props.heuresParSession heures proposées pour chaque séance à encoder
+ * @param {(id: number, heures: string) => void} props.onHeures
+ * @param {(session: object) => void} props.onEncoder
  * @param {(saisie: object) => void} props.onModifier
  * @param {(saisie: object) => void} props.onSupprimer
+ * @param {boolean} [props.verrouille] mois soumis : plus aucune action d'encodage
  */
-export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange, onModifier, onSupprimer }) {
+export default function SessionsDuMoisTable({ sessions, heuresParSession, onHeures, onEncoder, onModifier, onSupprimer, verrouille = false }) {
   return (
     <Table caption="Mes sessions du mois" minWidth="760px" cards>
       <thead>
         <tr>
-          <Th>Inclure</Th>
           <Th>Date</Th>
           <Th>Classe · Séance</Th>
           <Th>Activité</Th>
@@ -37,26 +40,20 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
       </thead>
       <tbody>
         {sessions.map((s) => {
-          const local = saisiesLocales[s.id];
           const saisies = s.mes_timesheets;
-          const aEncoder = s.encodage === 'a_encoder' && s.peut_encoder;
+          const aEncoder = s.encodage === 'a_encoder' && s.peut_encoder && !verrouille;
+          const heures = heuresParSession[s.id] ?? String(s.duree_par_defaut);
           const montant = saisies.reduce((t, x) => t + (Number(x.montant_brut) || 0), 0);
 
           return (
             <Tr key={s.id} fond={s.annulee ? ADMIN_COLORS.background : undefined}>
-              <Td label="Inclure">
-                {aEncoder && local && (
-                  <AdminCheckbox
-                    id={`inclure-${s.id}`}
-                    label=""
-                    aria-label={`Inclure la ${libelleSessionPhrase(s)} du ${formatDateCourte(s.date)}`}
-                    checked={local.inclure}
-                    onChange={(e) => onChange(s.id, { inclure: e.target.checked })}
-                  />
-                )}
-              </Td>
               <Td label="Date">
                 <span style={{ textDecoration: s.annulee ? 'line-through' : undefined }}>{formatDateCourte(s.date)}</span>
+                {s.est_a_venir && !s.annulee && (
+                  <span className="badge" style={{ marginLeft: '6px', fontSize: '11px', background: '#dbeafe', color: '#1e40af', borderRadius: '9999px', padding: '1px 8px' }}>
+                    À venir
+                  </span>
+                )}
                 <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>{formatHoraire(s.heure_debut, s.heure_fin)}</div>
               </Td>
               <Td label="Classe · Séance">
@@ -78,26 +75,25 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                   saisies.map((x) => (
                     <div key={x.id} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                       {formatHeures(x.nombre_heures)}
-                      {x.can?.update && (
+                      {x.can?.update && !verrouille && (
                         <AdminButton size="sm" variant="secondary" onClick={() => onModifier(x)}>
                           Modifier
                         </AdminButton>
                       )}
-                      {x.can?.delete && (
+                      {x.can?.delete && !verrouille && (
                         <AdminButton size="sm" variant="secondary" onClick={() => onSupprimer(x)}>
                           Supprimer
                         </AdminButton>
                       )}
                     </div>
                   ))
-                ) : aEncoder && local ? (
+                ) : aEncoder ? (
                   <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                       <HeuresStepper
                         aria-label={`Heures défrayées pour la ${libelleSessionPhrase(s)}`}
-                        value={local.heures}
-                        disabled={!local.inclure}
-                        onChange={(heures) => onChange(s.id, { heures })}
+                        value={heures}
+                        onChange={(valeur) => onHeures(s.id, valeur)}
                       />
                       {s.duree_seance != null && (
                         <span
@@ -110,8 +106,11 @@ export default function SessionsDuMoisTable({ sessions, saisiesLocales, onChange
                           ⓘ
                         </span>
                       )}
+                      <AdminButton size="sm" onClick={() => onEncoder(s, heures)} disabled={!heuresValides(heures)}>
+                        Encoder
+                      </AdminButton>
                     </div>
-                    {Number(local.heures) !== Number(s.duree_par_defaut) && (
+                    {Number(heures) !== Number(s.duree_par_defaut) && (
                       <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>Valeur standard : {formatDuree(s.duree_par_defaut)}</div>
                     )}
                   </>

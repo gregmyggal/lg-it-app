@@ -141,23 +141,28 @@ class TimesheetConfirmationService
     }
 
     /**
-     * TS-02 : la direction renvoie en brouillon les lignes simplement soumises (pas encore validées ni signées).
-     * Une ligne validée, signée, contestée ou incluse dans un PDF ne peut plus être rouverte : correction sur le mois suivant.
+     * TS-02 (révisé) : la direction remet TOUT le mois en brouillon. Chaque ligne non brouillon (soumise, confirmée,
+     * contestée) repasse en brouillon et perd sa signature : le professeur resoumet son mois complet.
+     * Un mois dont un PDF a été généré ne se rouvre pas (document déjà émis).
      */
     public function remettreEnBrouillon(Professeur $prof, int $annee, int $mois, string $motif, User $auteur): int
     {
         return DB::transaction(function () use ($prof, $annee, $mois, $motif, $auteur) {
-            $cibles = $this->lignes($prof, $annee, $mois)->lockForUpdate()->get()
-                ->filter(fn (Timesheet $t) => $this->rouvrable($t));
+            $lignes = $this->lignes($prof, $annee, $mois)->lockForUpdate()->get();
+            $cibles = $lignes->filter(fn (Timesheet $t) => $t->statut_validation !== Timesheet::STATUT_BROUILLON);
             if ($cibles->isEmpty()) {
                 throw RegleMetierException::invalide(self::MSG_AUCUNE);
             }
+            if ($cibles->contains(fn (Timesheet $t) => $t->statut_validation === Timesheet::STATUT_GENERE)) {
+                throw RegleMetierException::invalide(self::MSG_GENERE);
+            }
             foreach ($cibles as $t) {
-                $t->update(['statut_validation' => Timesheet::STATUT_BROUILLON]);
+                $avant = $t->statut_validation;
+                $t->update(['statut_validation' => Timesheet::STATUT_BROUILLON, 'signature_professeur' => null]);
                 TimesheetAudit::create([
                     'timesheet_id' => $t->id, 'professeur_id' => $t->professeur_id, 'user_id' => $auteur->id,
                     'action' => TimesheetAudit::ACTION_REMISE_BROUILLON,
-                    'avant' => ['statut' => Timesheet::STATUT_SOUMIS], 'apres' => ['statut' => Timesheet::STATUT_BROUILLON], 'motif' => $motif,
+                    'avant' => ['statut' => $avant], 'apres' => ['statut' => Timesheet::STATUT_BROUILLON], 'motif' => $motif,
                 ]);
             }
 
@@ -165,20 +170,20 @@ class TimesheetConfirmationService
         });
     }
 
-    private function rouvrable(Timesheet $t): bool
-    {
-        return $t->statut_validation === Timesheet::STATUT_SOUMIS && $t->signature_professeur === null;
-    }
-
     /** État pour l'écran directeur : l'action est-elle possible, sinon pourquoi. */
     public function etatRemiseBrouillon(Professeur $prof, int $annee, int $mois): array
     {
-        $n = $this->lignes($prof, $annee, $mois)->get()->filter(fn (Timesheet $t) => $this->rouvrable($t))->count();
+        $lignes = $this->lignes($prof, $annee, $mois)->get()->filter(fn (Timesheet $t) => $t->statut_validation !== Timesheet::STATUT_BROUILLON);
+        if ($lignes->contains(fn (Timesheet $t) => $t->statut_validation === Timesheet::STATUT_GENERE)) {
+            return ['possible' => false, 'lignes' => 0, 'raison' => self::MSG_GENERE];
+        }
 
-        return ['possible' => $n > 0, 'lignes' => $n, 'raison' => null];
+        return ['possible' => $lignes->isNotEmpty(), 'lignes' => $lignes->count(), 'raison' => null];
     }
 
-    private const MSG_AUCUNE = 'Remise en brouillon impossible : seules les lignes soumises, ni validées ni signées, peuvent être rouvertes. Les corrections se font dans la timesheet du mois suivant.';
+    private const MSG_AUCUNE = 'Remise en brouillon impossible : aucune heure soumise, confirmée ou contestée ce mois-ci.';
+
+    private const MSG_GENERE = 'Remise en brouillon impossible : un PDF de fiche de défraiement a été généré pour ce mois.';
 
     private function audit(Timesheet $t, User $auteur, string $action, string $de, string $vers, string $motif): void
     {

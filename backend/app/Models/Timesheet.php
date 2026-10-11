@@ -62,6 +62,9 @@ class Timesheet extends Model
 
     public const STATUTS = [self::STATUT_BROUILLON, self::STATUT_SOUMIS, self::STATUT_CONFIRME, self::STATUT_CONTESTE, self::STATUT_GENERE];
 
+    /** Validées par la direction : elles bloquent l'annulation et le déplacement d'une séance. Une simple soumission ne bloque pas. */
+    public const STATUTS_VALIDEES = [self::STATUT_CONFIRME, self::STATUT_CONTESTE, self::STATUT_GENERE];
+
     // Verrouillées : toute saisie qui n'est plus un brouillon (soumise, confirmée, générée).
     public function isLocked(): bool
     {

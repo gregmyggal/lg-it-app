@@ -372,14 +372,14 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                 <>
                   <AdminButton variant="secondary" onClick={() => setBrouillon(null)}>Annuler</AdminButton>
                   <AdminButton loading={envoiBrouillon} disabled={brouillon.trim().length < 3} onClick={envoyerBrouillon}>
-                    Remettre {d.remise_brouillon.lignes} ligne(s) en brouillon
+                    Remettre le mois en brouillon
                   </AdminButton>
                 </>
               }
             >
               {erreurBrouillon && <Banner tone="error" role="alert">{erreurBrouillon}</Banner>}
               <ul style={{ marginTop: 0, paddingLeft: 18 }}>
-                <li>Les {d.remise_brouillon.lignes} ligne(s) soumises (non validées) redeviennent modifiables par le professeur, qui devra les soumettre à nouveau.</li>
+                <li>Tout le mois ({d.remise_brouillon.lignes} ligne(s)) repasse en brouillon, signatures comprises : le professeur pourra corriger puis soumettre son mois complet à nouveau.</li>
                 <li>Les lignes déjà validées, signées ou incluses dans un PDF ne sont pas touchées.</li>
                 <li>{d.professeur.nom} est prévenu(e) par notification et par email, avec votre motif.</li>
               </ul>

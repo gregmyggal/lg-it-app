@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { AdminPageHeader, AdminPageContent } from '../components/AdminPageLayout';
@@ -38,7 +38,7 @@ function MonMois({ user }) {
   const [periode, setPeriode] = useState({ annee: aujourdhui.getFullYear(), mois: aujourdhui.getMonth() + 1 });
   const mon = useMonMois(periode.annee, periode.mois);
   const cours = useCours();
-  const [locales, setLocales] = useState({});
+  const [heuresParSession, setHeuresParSession] = useState({});
   const [ajout, setAjout] = useState(false);
   const [edition, setEdition] = useState(null);
   const [suppression, setSuppression] = useState(null);
@@ -46,23 +46,17 @@ function MonMois({ user }) {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
-  // Sessions à encoder : préremplies (durée de la session), incluses par défaut.
+  // Heures proposées pour chaque séance à encoder : la durée défrayable, modifiable avant d'encoder la séance.
   useEffect(() => {
     if (!mon.data) return;
-    setLocales(
+    setHeuresParSession(
       Object.fromEntries(
         mon.data.sessions
           .filter((s) => s.encodage === 'a_encoder' && s.peut_encoder)
-          .map((s) => [s.id, { inclure: true, heures: String(s.duree_par_defaut) }]),
+          .map((s) => [s.id, String(s.duree_par_defaut)]),
       ),
     );
   }, [mon.data]);
-
-  const incluses = useMemo(
-    () => Object.entries(locales).filter(([, l]) => l.inclure && Number(l.heures) >= 0.5).map(([id, l]) => ({ course_session_id: Number(id), nombre_heures: Number(l.heures) })),
-    [locales],
-  );
-  const heuresEnAttente = incluses.reduce((t, s) => t + s.nombre_heures, 0);
 
   function aller(delta) {
     const d = new Date(periode.annee, periode.mois - 1 + delta, 1);
@@ -70,8 +64,8 @@ function MonMois({ user }) {
     setErreur(null);
   }
 
-  function modifierLocale(id, patch) {
-    setLocales((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  function modifierHeures(id, heures) {
+    setHeuresParSession((prev) => ({ ...prev, [id]: heures }));
   }
 
   async function agir(fn, succes) {
@@ -88,13 +82,13 @@ function MonMois({ user }) {
     }
   }
 
-  const enregistrer = () =>
-    agir(async () => {
-      for (const s of incluses) await creerSaisie(s);
-    }, 'Brouillon enregistré. Vous pourrez encore modifier ces heures avant de soumettre le mois.');
+  // Encoder une séance = enregistrer ses heures en brouillon. Rien n'est soumis ici.
+  const encoder = (session, heures) =>
+    agir(() => creerSaisie({ course_session_id: session.id, nombre_heures: Number(heures) }), 'Heures encodées en brouillon. Elles partiront avec le mois entier.');
 
+  // Soumission du mois entier : toutes les heures encodées du mois, sans sélection.
   async function soumettre() {
-    await agir(() => soumettreMois({ annee: periode.annee, mois: periode.mois, sessions: incluses }), 'Mois soumis. La direction peut maintenant valider vos heures.');
+    await agir(() => soumettreMois({ annee: periode.annee, mois: periode.mois }), 'Mois soumis. La direction peut maintenant valider vos heures.');
     setSoumission(false);
   }
 
@@ -111,7 +105,7 @@ function MonMois({ user }) {
       <AdminPageHeader
         icon="📋"
         title="Encoder mon mois"
-        description="Vos sessions sont préremplies ; ajoutez vos autres heures (préparation, etc.), vérifiez le total, puis soumettez le mois."
+        description="Encodez vos heures au fil du mois. Vous soumettez le mois entier une seule fois, quand il est complet."
       />
       <AdminPageContent>
         <nav aria-label="Choix du mois" className="month-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -127,6 +121,11 @@ function MonMois({ user }) {
         {erreur && (
           <Banner tone="error" role="alert">
             <strong>{erreur}</strong>
+          </Banner>
+        )}
+        {data?.mois_soumis && (
+          <Banner tone="info" role="status">
+            <strong>Ce mois est soumis à la direction.</strong> Il ne peut être soumis qu'une fois : vos heures ne sont plus modifiables. Une correction passe par la direction (remise en brouillon du mois).
           </Banner>
         )}
         {data?.employeur && (
@@ -150,7 +149,7 @@ function MonMois({ user }) {
               </>
             }
           >
-            Aucune de vos sessions n'a encore commencé ce mois-ci et vous n'avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.
+            Aucune séance n'est prévue ce mois-ci et vous n'avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.
           </EmptyBlock>
         )}
 
@@ -158,18 +157,20 @@ function MonMois({ user }) {
           <>
             <Section
               title="1. Mes sessions du mois"
-              subtitle="Heures défrayées préremplies (séance + préparation), modifiables. Seules les sessions commencées sont proposées. Décochez une session pour la laisser « À encoder » plus tard."
+              subtitle="Encodez chaque séance avec « Encoder » : la durée défrayable est préremplie, modifiable. Toutes les heures encodées partent avec le mois entier."
               bodyPadding={false}
             >
               {data.sessions.length === 0 ? (
-                <p style={{ padding: '16px', margin: 0 }}>Aucune session commencée ce mois-ci.</p>
+                <p style={{ padding: '16px', margin: 0 }}>Aucune séance ce mois-ci.</p>
               ) : (
                 <SessionsDuMoisTable
                   sessions={data.sessions}
-                  saisiesLocales={locales}
-                  onChange={modifierLocale}
+                  heuresParSession={heuresParSession}
+                  onHeures={modifierHeures}
+                  onEncoder={encoder}
                   onModifier={setEdition}
                   onSupprimer={setSuppression}
+                  verrouille={data.mois_soumis}
                 />
               )}
             </Section>
@@ -179,7 +180,7 @@ function MonMois({ user }) {
               subtitle="Préparation, animation ou autre travail, avec ou sans cours : à la date où vous l'avez réalisé."
               bodyPadding={false}
               actions={
-                <AdminButton size="sm" onClick={() => setAjout(true)}>
+                <AdminButton size="sm" onClick={() => setAjout(true)} disabled={data.mois_soumis}>
                   Ajouter des heures
                 </AdminButton>
               }
@@ -231,22 +232,19 @@ function MonMois({ user }) {
               )}
             </Section>
 
-            <Section title="3. Total du mois" subtitle="Brouillons et saisies à enregistrer comprises.">
-              <SyntheseMois synthese={data.synthese} heuresEnAttente={heuresEnAttente} />
+            <Section title="3. Total du mois" subtitle="Toutes les heures encodées ce mois, soumises ou non.">
+              <SyntheseMois synthese={data.synthese} />
             </Section>
 
             <div className="sticky-actions">
               <div className="sticky-actions__total only-mobile" aria-live="polite">
                 <span>Total du mois</span>
                 <strong>
-                  {formatHeures(data.synthese.heures + heuresEnAttente)} · {formatEuros(data.synthese.montant)}
+                  {formatHeures(data.synthese.heures)} · {formatEuros(data.synthese.montant)}
                 </strong>
               </div>
               <div className="sticky-actions__boutons">
-                <AdminButton variant="secondary" onClick={enregistrer} disabled={incluses.length === 0 || envoi}>
-                  Enregistrer<span className="hide-mobile"> en brouillon</span>
-                </AdminButton>
-                <AdminButton onClick={() => setSoumission(true)} disabled={(incluses.length === 0 && data.synthese.nb_brouillons === 0) || envoi}>
+                <AdminButton onClick={() => setSoumission(true)} disabled={data.mois_soumis || data.synthese.nb_brouillons === 0 || envoi}>
                   Soumettre<span className="hide-mobile"> le mois</span>
                 </AdminButton>
               </div>
@@ -327,7 +325,7 @@ function MonMois({ user }) {
           }
         >
           <p style={{ margin: 0 }}>
-            Une fois soumises, ces heures sont visibles par la direction et ne sont plus modifiables par vous. Elles seront ensuite validées par la direction.
+            Vous ne pouvez soumettre ce mois qu'une seule fois, entièrement : toutes vos heures du mois partent ensemble. Ensuite vous ne pourrez plus ajouter ni modifier d'heures pour ce mois. La direction les valide ensuite.
           </p>
         </AdminModal>
       )}

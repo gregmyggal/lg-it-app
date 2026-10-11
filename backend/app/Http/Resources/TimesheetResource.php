@@ -39,7 +39,6 @@ class TimesheetResource extends JsonResource
             'can' => [
                 'update' => (bool) $user?->can('update', $this->resource),
                 'delete' => (bool) $user?->can('delete', $this->resource),
-                'submit' => (bool) $user?->can('submit', $this->resource),
                 'validate' => (bool) $user?->can('validateEntry', $this->resource),
                 'adapt' => (bool) $user?->can('adapt', $this->resource),
             ],

@@ -1,5 +1,7 @@
 # TS-02 — Remise en brouillon d'un mois par la direction
 
+> **Révisé (2026-10-11, voir TS-03 RG-TS3-13) :** la remise concerne désormais **tout le mois** : toutes les lignes non brouillon (soumises, confirmées, contestées) repassent en brouillon, signatures retirées, pour que le professeur resoumette son mois complet. Une remise est refusée (422) si un PDF a été généré pour ce mois. Les points 2 ci-dessous sont remplacés.
+
 **Statut :** ☑ Livré · **Maquette :** `docs/mockups/TS-02/01-remise-en-brouillon.html`
 
 ## Contexte

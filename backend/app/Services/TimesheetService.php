@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Saisie des heures (CLS-01 T3) : création liée à une session ou libre, écran mensuel, soumission du mois.
+ * Saisie des heures (CLS-01 T3) : création liée à une session ou libre, écran mensuel, soumission du mois entier.
  * Une timesheet est toujours celle d'UN professeur (RG-5) ; remplacer un professeur ne la touche jamais (RG-9).
  */
 class TimesheetService
@@ -35,7 +35,7 @@ class TimesheetService
      * @param  array<string, mixed>  $data  session : course_session_id (+ type_activite, nombre_heures, commentaire) ;
      *                                      libre : date_prestation, type_activite, nombre_heures (+ cours_id, commentaire)
      *
-     * @throws RegleMetierException 422 session non commencée/annulée ou doublon
+     * @throws RegleMetierException 422 session annulée, mois soumis ou doublon
      */
     public function creer(User $user, array $data): Timesheet
     {
@@ -43,6 +43,8 @@ class TimesheetService
         $type = $data['type_activite'] ?? self::TYPE_ANIMATION;
 
         if (empty($data['course_session_id'])) {
+            $this->verifierMoisNonSoumis($professeur->id, Carbon::parse($data['date_prestation']));
+
             return Timesheet::create([
                 'professeur_id' => $professeur->id,
                 'date_prestation' => $data['date_prestation'],
@@ -61,9 +63,7 @@ class TimesheetService
             if ($session->isAnnulee()) {
                 throw RegleMetierException::invalide('Cette session est annulée : aucune heure ne peut y être encodée.', ['course_session_id' => ['Session annulée.']]);
             }
-            if (! $this->aCommence($session)) {
-                throw RegleMetierException::invalide('Cette session n\'a pas encore commencé : vous pourrez encoder vos heures dès son début.', ['course_session_id' => ['Session non commencée.']]);
-            }
+            $this->verifierMoisNonSoumis($professeur->id, $session->date);
             if (Timesheet::where('professeur_id', $professeur->id)->where('course_session_id', $session->id)->where('type_activite', $type)->lockForUpdate()->exists()) {
                 throw RegleMetierException::invalide('Ces heures sont déjà encodées pour cette session.', ['course_session_id' => ['Doublon (professeur, session, type d\'activité).']]);
             }
@@ -79,6 +79,32 @@ class TimesheetService
                 'statut_validation' => Timesheet::STATUT_BROUILLON,
             ]);
         });
+    }
+
+    /** Un mois se soumet une seule fois : après soumission, plus aucune saisie dans ce mois (sauf remise en brouillon par la direction). */
+    public function moisSoumis(int $professeurId, int $annee, int $mois): bool
+    {
+        return Timesheet::where('professeur_id', $professeurId)
+            ->whereYear('date_prestation', $annee)->whereMonth('date_prestation', $mois)
+            ->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)
+            ->exists();
+    }
+
+    /** @throws RegleMetierException 422 si le mois de la date est déjà soumis */
+    private function verifierMoisNonSoumis(int $professeurId, Carbon $date): void
+    {
+        if ($this->moisSoumis($professeurId, $date->year, $date->month)) {
+            throw RegleMetierException::invalide(
+                'Ce mois est déjà soumis : il ne peut être soumis qu\'une fois. Toute correction passe par la direction.',
+                ['date_prestation' => ['Mois déjà soumis.']]
+            );
+        }
+    }
+
+    /** Une séance à venir (pas encore commencée) peut être encodée à l'avance (TS-03). */
+    public function estAVenir(CourseSession $session): bool
+    {
+        return ! $this->aCommence($session);
     }
 
     /** Une session a commencé : date passée, ou aujourd'hui à partir de son heure de début (Europe/Brussels). */
@@ -124,11 +150,10 @@ class TimesheetService
         return max(0.5, min(24.0, $heures));
     }
 
-    /** Le professeur peut-il encoder cette session maintenant ? (assigné non remplacé ou remplaçant, commencée, non annulée) */
+    /** Le professeur peut-il encoder cette session ? (assigné non remplacé ou remplaçant, non annulée ; passée ou à venir, TS-03) */
     public function peutEncoder(Professeur $professeur, CourseSession $session): bool
     {
         return ! $session->isAnnulee()
-            && $this->aCommence($session)
             && SessionProfesseur::where('course_session_id', $session->id)
                 ->where('professeur_id', $professeur->id)->where('remplace', false)->exists();
     }
@@ -153,38 +178,32 @@ class TimesheetService
     }
 
     /**
-     * Soumet le mois : crée d'abord les saisies préremplies des sessions incluses, puis passe en « soumis » tous les
-     * brouillons du mois — en une transaction (R-T3-11).
+     * Soumet le mois entier : toutes les heures encodées (brouillons) du mois passent en « soumis », en une transaction.
+     * Rien n'est coché ni choisi par le professeur ; il n'existe pas de soumission ligne par ligne.
      *
-     * @param  list<array{course_session_id: int, nombre_heures?: float, type_activite?: string}>  $sessions
-     * @return array{creees: int, soumises: int}
+     * @return array{soumises: int}
+     *
+     * @throws RegleMetierException 422 mois déjà soumis, ou aucune heure à soumettre
      */
-    public function soumettreMois(User $user, int $annee, int $mois, array $sessions = []): array
+    public function soumettreMois(User $user, int $annee, int $mois): array
     {
-        return DB::transaction(function () use ($user, $annee, $mois, $sessions) {
-            $creees = 0;
-            foreach ($sessions as $s) {
-                $session = CourseSession::findOrFail($s['course_session_id']);
-                if ($session->date->year !== $annee || $session->date->month !== $mois) {
-                    throw RegleMetierException::invalide('Une session incluse n\'appartient pas au mois soumis.', ['sessions' => ['Session hors du mois.']]);
-                }
-                $dejaEncodee = Timesheet::where('professeur_id', $user->professeur->id)
-                    ->where('course_session_id', $session->id)
-                    ->where('type_activite', $s['type_activite'] ?? self::TYPE_ANIMATION)->exists();
-                if ($dejaEncodee) {
-                    continue; // idempotent : déjà saisie, elle sera soumise avec les autres brouillons
-                }
-                $this->creer($user, $s);
-                $creees++;
-            }
+        $professeurId = $user->professeur->id;
+        if ($this->moisSoumis($professeurId, $annee, $mois)) {
+            throw RegleMetierException::invalide('Ce mois est déjà soumis : il ne peut être soumis qu\'une fois.', ['mois' => ['Mois déjà soumis.']]);
+        }
 
-            $soumises = Timesheet::where('professeur_id', $user->professeur->id)
+        return DB::transaction(function () use ($professeurId, $annee, $mois) {
+            $soumises = Timesheet::where('professeur_id', $professeurId)
                 ->where('statut_validation', Timesheet::STATUT_BROUILLON)
                 ->whereYear('date_prestation', $annee)
                 ->whereMonth('date_prestation', $mois)
                 ->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
 
-            return ['creees' => $creees, 'soumises' => $soumises];
+            if ($soumises === 0) {
+                throw RegleMetierException::invalide('Aucune heure encodée à soumettre pour ce mois.', ['mois' => ['Aucune heure à soumettre.']]);
+            }
+
+            return ['soumises' => $soumises];
         });
     }
 }

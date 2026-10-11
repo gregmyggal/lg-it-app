@@ -236,7 +236,6 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/timesheets/{timesheet}', [TimesheetController::class, 'show']);
     Route::put('/timesheets/{timesheet}', [TimesheetController::class, 'update']);
     Route::delete('/timesheets/{timesheet}', [TimesheetController::class, 'destroy']);
-    Route::post('/timesheets/{timesheet}/submit', [TimesheetController::class, 'submit']);
     Route::post('/timesheets/{timesheet}/adapter', [TimesheetController::class, 'adapter']);
     Route::get('/timesheets/{timesheet}/historique', [TimesheetController::class, 'historique']);
     Route::post('/timesheets/{timesheet}/validate', [TimesheetController::class, 'validateEntry']);

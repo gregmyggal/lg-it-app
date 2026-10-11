@@ -4,6 +4,8 @@
 
 Sources de vérité : `CLS-01-modele-classes.md` (RG-5, RG-9, AC-3, AC-25 à AC-33, Q19 à Q23), `docs/mockups/CLS-01-T3/WORKFLOW_UX.md` (règles **R-T3-1 à 12**, états, textes) et ses mock-ups validés **01** (raccourci), **02-portail-mon-mois**, **03** (directeur), `docs/API_T2_PROFESSEURS_CLASSES.md`, `DEVELOPMENT_STANDARDS.md`.
 
+> **Mise à jour (TS-03) :** la soumission se fait **uniquement par mois entier, une seule fois** (R-T3-11 renforcé, RG-TS3-8 à 11). La soumission ligne par ligne (`POST /timesheets/{id}/submit`) est **supprimée**. Voir `docs/requirements/TS-03-encodage-seances-a-venir.md`.
+
 ## 0. Défaut existant à corriger (bloquant pour tout le workflow)
 
 `timesheets.statut_validation` est un `ENUM('brouillon','soumis','valide')` alors que le code écrit `confirmé` et `généré` (valeurs refusées par MySQL) : **la confirmation et la génération PDF échouent aujourd'hui**. T3 normalise les statuts **sans accent** : `brouillon` → `soumis` → `confirme` → `genere`.
