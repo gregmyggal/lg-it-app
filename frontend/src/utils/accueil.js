@@ -1,4 +1,4 @@
-/** Page d'arrivée du portail selon le rôle : « Aujourd'hui » pour le professeur (UI-M3), les classes pour la direction. */
-export function accueilPour(role) {
-  return role === 'professeur' ? '/aujourdhui' : '/admin/classes';
+/** Page d'arrivée du portail : « Aujourd'hui » pour le professeur (UI-M3) comme pour la direction (UI-M6). */
+export function accueilPour() {
+  return '/aujourdhui';
 }

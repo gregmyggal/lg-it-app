@@ -24,6 +24,8 @@ use App\Http\Controllers\HeuresDefrayablesController;
 use App\Http\Controllers\LienVersionController;
 use App\Http\Controllers\MesClassesController;
 use App\Http\Controllers\MonAccueilController;
+use App\Http\Controllers\AccueilDirectionController;
+use App\Http\Controllers\RemplacementLotController;
 use App\Http\Controllers\ProfesseurClasseController;
 use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\ProfesseurTarifController;
@@ -130,6 +132,13 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::put('/professeurs/{professeur}/classes/{classe}', [ProfesseurClasseController::class, 'update']);
     Route::delete('/professeurs/{professeur}/classes/{classe}', [ProfesseurClasseController::class, 'destroy']);
 
+    // UI-M6 : « Aujourd'hui » direction, fiche séance, candidats avec conflits, remplacement atomique en lot.
+    Route::get('/accueil-direction', [AccueilDirectionController::class, 'show']);
+    Route::get('/sessions/{session}/candidats', [SessionProfesseurController::class, 'candidats']);
+    Route::get('/professeurs/{professeur}/seances', [RemplacementLotController::class, 'seances']);
+    Route::post('/professeurs/{professeur}/remplacements/apercu', [RemplacementLotController::class, 'apercu']);
+    Route::post('/professeurs/{professeur}/remplacements', [RemplacementLotController::class, 'appliquer']);
+
     Route::get('/sessions/{session}/professeurs', [SessionProfesseurController::class, 'index']);
     Route::post('/sessions/{session}/professeurs', [SessionProfesseurController::class, 'ajouter']);
     Route::delete('/sessions/{session}/professeurs/{professeur}', [SessionProfesseurController::class, 'retirer']);
@@ -177,6 +186,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/classes/{classe}/sessions/bis', [ClasseSessionController::class, 'bis']);
 
     Route::get('/sessions', [CourseSessionController::class, 'index']);
+    Route::get('/sessions/{session}', [CourseSessionController::class, 'show']);
     Route::put('/sessions/{session}', [CourseSessionController::class, 'update']);
     Route::post('/sessions/{session}/deplacement/apercu', [CourseSessionController::class, 'apercuDeplacement']);
     Route::post('/sessions/{session}/cancel', [CourseSessionController::class, 'cancel']);

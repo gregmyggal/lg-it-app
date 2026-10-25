@@ -17,6 +17,7 @@ import ClassesProfesseurSection from './professeurs/ClassesProfesseurSection';
 import CompteProfesseurSection from './professeurs/CompteProfesseurSection';
 import CompteBancaireSection from './professeurs/CompteBancaireSection';
 import { ArchiverProfesseurModal, SupprimerProfesseurModal } from './professeurs/CycleVieProfesseurModals';
+import RemplacerPlusieursModal from './professeurs/RemplacerPlusieursModal';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../utils/dates';
 
@@ -306,6 +307,12 @@ export default function AdminProfesseurDetail() {
             ← Retour
           </AdminButton>
 
+          {actif && (
+            <AdminButton variant="secondary" onClick={() => setModal('remplacer')}>
+              Remplacer sur plusieurs séances
+            </AdminButton>
+          )}
+
           <AdminButton
             variant="secondary"
             icon="✏️"
@@ -331,6 +338,13 @@ export default function AdminProfesseurDetail() {
         </section>
       </AdminPageContent>
 
+      {modal === 'remplacer' && (
+        <RemplacerPlusieursModal
+          professeur={professeur}
+          onClose={() => setModal(null)}
+          onDone={(message) => { setModal(null); toast.success(message); }}
+        />
+      )}
       {modal === 'supprimer' && (
         <SupprimerProfesseurModal
           professeur={professeur}

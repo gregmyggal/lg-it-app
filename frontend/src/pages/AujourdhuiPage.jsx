@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import AujourdhuiDirectionPage from './AujourdhuiDirectionPage';
 import Banner from '../components/ui/Banner';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '../components/ui/DataStates';
 import { creerSaisie, supprimerSaisie } from '../hooks/useTimesheets';
@@ -40,6 +41,11 @@ function titreDuJour(iso) {
  */
 export default function AujourdhuiPage() {
   const { user } = useAuth();
+  if (user?.role !== 'professeur') return <AujourdhuiDirectionPage />;
+  return <AujourdhuiProfesseur user={user} />;
+}
+
+function AujourdhuiProfesseur({ user }) {
   const accueil = useMonAccueil();
   const [enCours, setEnCours] = useState(null);
   const [sorties, setSorties] = useState([]);

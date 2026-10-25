@@ -21,6 +21,7 @@ class SessionProfesseurController extends Controller
     public function __construct(
         private readonly SessionReplacementService $remplacements,
         private readonly CalendrierScolaireService $calendrier,
+        private readonly \App\Services\ClasseProfesseurAssignmentService $assignations,
     ) {}
 
     public function index(CourseSession $session): AnonymousResourceCollection
@@ -61,10 +62,30 @@ class SessionProfesseurController extends Controller
             $request->integer('professeur_remplacant_id')
         );
 
+        $this->remplacements->prevenirRemplacant([$resultat['session']], Professeur::findOrFail($request->integer('professeur_remplace_id')), $request->integer('professeur_remplacant_id'));
+
         return response()->json([
             'data' => $this->session($resultat['session']),
             'avertissements' => $resultat['avertissements'],
         ]);
+    }
+
+    /** UI-M6 : professeurs actifs pouvant intervenir sur cette séance, avec leurs conflits d'horaire AVANT le choix. */
+    public function candidats(CourseSession $session): JsonResponse
+    {
+        Gate::authorize('replace', $session);
+
+        $presents = $session->sessionProfesseurs()->pluck('professeur_id');
+
+        return response()->json(['data' => Professeur::where('statut', '!=', 'inactif')
+            ->whereNotIn('id', $presents)
+            ->orderBy('nom')->orderBy('prenom')->get()
+            ->map(fn (Professeur $p) => [
+                'id' => $p->id,
+                'nom' => trim($p->prenom.' '.$p->nom),
+                'telephone' => $p->telephone,
+                'conflits' => $this->assignations->conflits([$session], $p->id),
+            ])->values()]);
     }
 
     public function annulerRemplacement(CourseSession $session, Professeur $professeur): JsonResponse

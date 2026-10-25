@@ -44,9 +44,9 @@ export function navigationPour(user) {
 
   return {
     principal: [
+      { to: '/aujourdhui', label: "Aujourd'hui", icone: 'accueil' },
       { to: '/admin/timesheets', label: 'Timesheets', icone: 'timesheets', end: true },
       { to: '/admin/classes', label: 'Classes', icone: 'classes' },
-      { to: '/admin/calendrier', label: 'Calendrier', icone: 'mois' },
       { to: '/admin/professeurs', label: 'Professeurs', icone: 'professeurs' },
     ],
     groupes: [
@@ -61,6 +61,7 @@ export function navigationPour(user) {
       {
         label: 'Scolarité',
         items: [
+          { to: '/admin/calendrier', label: 'Calendrier' },
           { to: '/admin/annees-scolaires', label: 'Années scolaires' },
           { to: '/admin/calendrier-scolaire', label: 'Calendrier scolaire' },
         ],

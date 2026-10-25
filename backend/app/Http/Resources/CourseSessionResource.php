@@ -53,6 +53,7 @@ class CourseSessionResource extends JsonResource
             'professeurs' => $this->whenLoaded('sessionProfesseurs', fn () => $this->sessionProfesseurs
                 ->filter(fn ($l) => $l->relationLoaded('professeur'))
                 ->map(fn ($l) => ProfesseurClasseResource::professeurLeger($l->professeur) + [
+                    'telephone' => $staff ? $l->professeur->telephone : null,
                     'role' => $l->role,
                     'origine' => $l->origine,
                     'remplace' => $l->remplace,

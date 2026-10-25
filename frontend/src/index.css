@@ -2576,3 +2576,236 @@ form input[type='checkbox'] {
   justify-content: space-between;
   gap: 12px;
 }
+
+/* ---------- Direction : choix d'un professeur, impact, fiche séance (UI-M6) ---------- */
+.choix-prof__titre {
+  margin: 12px 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-2);
+}
+
+.choix-prof__liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.choix-prof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 6px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choix-prof:hover {
+  background: var(--c-primary-light);
+}
+
+.choix-prof__avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+  font-weight: 800;
+}
+
+.choix-prof__texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.choix-prof__texte small {
+  color: var(--c-text-2);
+}
+
+.choix-prof__conflit {
+  color: var(--tone-warning-fg) !important;
+}
+
+.impact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+.impact li {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  line-height: 1.35;
+}
+
+.impact li::before {
+  content: '✓';
+  color: var(--teal);
+  font-weight: 800;
+}
+
+.impact .impact--neutre::before {
+  content: '•';
+  color: var(--c-text-2);
+}
+
+.impact .impact--alerte::before {
+  content: '!';
+  color: var(--tone-warning-fg);
+}
+
+.seance-actions {
+  position: sticky;
+  bottom: var(--tabbar-h);
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  margin: 16px -16px 0;
+  background: var(--c-card);
+  border-top: 1px solid var(--c-border);
+}
+
+.seance-actions button {
+  flex: 1;
+  min-height: 52px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--c-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.seance-actions button:first-child {
+  background: var(--cta);
+  color: var(--cta-fg);
+}
+
+.seance-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dir-groupe {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-2);
+  margin: 16px 2px 8px;
+}
+
+.dir-carte {
+  display: block;
+  width: 100%;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-left: 5px solid var(--c-primary);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 2px var(--c-shadow);
+}
+
+.dir-carte--vide {
+  border-left-color: var(--c-error);
+}
+
+.dir-carte__heure {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--c-primary);
+}
+
+.dir-carte__titre {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dir-carte__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--c-text-2);
+}
+
+.prof-ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.prof-ligne:last-child {
+  border: 0;
+}
+
+.prof-ligne__texte {
+  flex: 1;
+  min-width: 0;
+}
+
+.prof-ligne__texte small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 2px;
+  color: var(--c-text-2);
+}
+
+.remp-lot {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 861px) {
+  .seance-actions {
+    position: static;
+    margin: 16px 0 0;
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+
+  .seance-actions button {
+    flex: 0 0 auto;
+    padding: 0 18px;
+    background: var(--c-primary-light);
+  }
+}
+
+.ib-lien {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-primary-light);
+  text-decoration: none;
+  font-size: 18px;
+}

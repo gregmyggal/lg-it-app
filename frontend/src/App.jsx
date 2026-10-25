@@ -24,6 +24,7 @@ import AdminProfesseursPage from './pages/AdminProfesseursPage';
 import AdminProfesseurDetail from './components/AdminProfesseurDetail';
 import AdminTimesheetsPage from './pages/AdminTimesheetsPage';
 import AujourdhuiPage from './pages/AujourdhuiPage';
+import SeancePage from './pages/SeancePage';
 import ProfesseurTariffPage from './pages/ProfesseurTariffPage';
 import AdminCalendarPage from './pages/AdminCalendarPage';
 import ToastProvider from './components/toast/ToastProvider';
@@ -75,9 +76,17 @@ export default function App() {
           <Route element={<PortalLayout />}>
             <Route path="mes-cours" element={<Navigate to="/mes-classes" replace />} />
             <Route
+              path="seances/:id"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <SeancePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="aujourdhui"
               element={
-                <ProtectedRoute roles={['professeur']}>
+                <ProtectedRoute roles={PORTAL}>
                   <AujourdhuiPage />
                 </ProtectedRoute>
               }

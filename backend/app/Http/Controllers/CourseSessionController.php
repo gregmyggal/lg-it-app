@@ -12,6 +12,7 @@ use App\Services\CourseSessionService;
 use App\Services\SessionReplanificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
 class CourseSessionController extends Controller
 {
@@ -51,6 +52,16 @@ class CourseSessionController extends Controller
         $this->calendrier->attachAlerts($page->getCollection());
 
         return CourseSessionResource::collection($page);
+    }
+
+    /** UI-M6 : fiche d'une séance (professeurs, remplacements, droits). */
+    public function show(CourseSession $session): CourseSessionResource
+    {
+        Gate::authorize('view', $session);
+        $session->load(['classe', 'classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur', 'sessionProfesseurs.remplacePar']);
+        $this->calendrier->attachAlerts([$session]);
+
+        return new CourseSessionResource($session);
     }
 
     public function update(MoveSessionRequest $request, CourseSession $session): CourseSessionResource

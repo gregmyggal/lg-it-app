@@ -9,6 +9,7 @@ use App\Models\ProfesseurClasse;
 use App\Models\SessionProfesseur;
 use App\Models\Timesheet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Remplacement (RG-9, AC-14, AC-25) et ajout ponctuel (CLS-04) d'un professeur sur UNE session. Possible sur une session
@@ -66,6 +67,72 @@ class SessionReplacementService
                 ),
             ];
         });
+    }
+
+    /**
+     * Remplace un professeur par un autre sur plusieurs séances en un bloc ATOMIQUE (UI-M6) : les règles du
+     * remplacement unitaire s'appliquent à chaque séance ; au premier refus, rien n'est modifié.
+     * Avec `$simulation`, tout est calculé puis annulé (aperçu sans écriture).
+     *
+     * @param  list<int>  $sessionIds
+     * @return array{sessions: list<CourseSession>, avertissements: list<array<string, mixed>>}
+     *
+     * @throws RegleMetierException 409/422 dès qu'une séance ne peut pas être remplacée
+     */
+    public function remplacerPlusieurs(Professeur $remplace, array $sessionIds, int $remplacantId, bool $simulation = false): array
+    {
+        $ids = array_values(array_unique($sessionIds));
+
+        DB::beginTransaction();
+        try {
+            $sessions = [];
+            $avertissements = [];
+            foreach (CourseSession::whereIn('id', $ids)->orderBy('date')->orderBy('heure_debut')->get() as $session) {
+                $resultat = $this->remplacer($session, $remplace->id, $remplacantId);
+                $sessions[] = $resultat['session'];
+                $avertissements = array_merge($avertissements, $resultat['avertissements']);
+            }
+            if (count($sessions) !== count($ids)) {
+                $this->invalide('session_ids', 'Une des séances est introuvable.');
+            }
+            $simulation ? DB::rollBack() : DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        return ['sessions' => $sessions, 'avertissements' => $avertissements];
+    }
+
+    /**
+     * Prévient le remplaçant (cloche + mail) APRÈS le remplacement : un échec d'envoi est journalisé et n'annule rien.
+     * Un appel = une notification, quel que soit le nombre de séances.
+     *
+     * @param  iterable<CourseSession>  $sessions
+     */
+    public function prevenirRemplacant(iterable $sessions, Professeur $remplace, int $remplacantId): void
+    {
+        try {
+            $remplacant = Professeur::with('user')->find($remplacantId);
+            if (! $remplacant?->user) {
+                return;
+            }
+            $lignes = collect($sessions)->map(function (CourseSession $s) {
+                $s->loadMissing('classePeriode.cours', 'classePeriode.periode');
+
+                return [
+                    'date' => $s->date->toDateString(),
+                    'heure_debut' => substr($s->heure_debut, 0, 5),
+                    'heure_fin' => substr($s->heure_fin, 0, 5),
+                    'cours' => $s->classePeriode->cours->titre ?? 'Cours',
+                    'libelle' => $s->libelleComplet(),
+                ];
+            })->sortBy(fn ($l) => $l['date'].$l['heure_debut'])->values()->all();
+
+            $remplacant->user->notify(new \App\Notifications\NotificationRemplacement(trim($remplace->prenom.' '.$remplace->nom), $lignes));
+        } catch (\Throwable $e) {
+            Log::warning('Notification de remplacement non envoyée : '.$e->getMessage());
+        }
     }
 
     /**
