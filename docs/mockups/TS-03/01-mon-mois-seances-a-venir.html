@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encoder mon mois — séances à venir — Maquette TS-03</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn:#f59e0b;--warn-d:#92400e;--warn-l:#fef3c7;--err:#ef4444;--err-d:#b91c1c;--err-l:#fee2e2;--info-d:#0e7490;--info-l:#cffafe;--bg:#f9fafb;--card:#fff;--hover:#f3f4f6;--t1:#111827;--t2:#4b5563;--t3:#6b7280;--bd:#e5e7eb;--bd-l:#f3f4f6;--deep:#0b3550}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--hover:#334155;--t1:#f1f5f9;--t2:#cbd5e1;--t3:#94a3b8;--bd:#334155;--bd-l:#273449;--primary-l:#1e3a8a;--ok-l:#064e3b;--warn-l:#78350f;--err-l:#7f1d1d;--info-l:#164e63}}
+:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--hover:#334155;--t1:#f1f5f9;--t2:#cbd5e1;--t3:#94a3b8;--bd:#334155;--bd-l:#273449;--primary-l:#1e3a8a;--ok-l:#064e3b;--warn-l:#78350f;--err-l:#7f1d1d;--info-l:#164e63}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.55;color:var(--t1);background:var(--bg)}
+h1,h2,p{margin:0}
+button,input{font:inherit}
+:focus-visible{outline:3px solid #1d4ed8;outline-offset:2px}
+.mockbar{position:sticky;top:0;z-index:50;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}
+.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+.mockbar .note{margin-left:auto;color:#d1d5db;font-size:12px}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px 120px}
+.crumb{font-size:13px;color:var(--t3)}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin:6px 0 16px}
+.head h1{font-size:28px;font-weight:700;line-height:1.2}
+.head p{color:var(--t3);margin-top:4px;max-width:620px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;min-height:38px;background:var(--card);color:var(--t1);border-color:var(--bd)}
+.btn-p{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-sm{padding:4px 10px;font-size:13px;min-height:30px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.mois{font-weight:700;min-width:150px;text-align:center}
+.banner{border-radius:8px;padding:12px 16px;margin-bottom:16px;border:1px solid;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.banner .tx{flex:1;min-width:220px}
+.banner.info{background:var(--info-l);border-color:#67e8f9;color:var(--info-d)}
+.banner.warn{background:var(--warn-l);border-color:#fcd34d;color:var(--warn-d)}
+.banner.err{background:var(--err-l);border-color:#fca5a5;color:var(--err-d)}
+.sect{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.sect>header{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.sect>header h2{font-size:16px;font-weight:600}
+.sect>header p{font-size:13px;color:var(--t3);max-width:560px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--bd-l);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.annulee td{color:var(--t3)}
+tr.annulee .date,tr.annulee .seance{text-decoration:line-through}
+.small{font-size:12px;color:var(--t3)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-avenir{background:var(--primary-l);color:#1e40af}
+.b-encoder{background:var(--warn-l);color:var(--warn-d)}
+.b-brouillon{background:var(--warn-l);color:var(--warn-d)}
+.b-soumis{background:#e0f2fe;color:#075985}
+.b-annulee{background:var(--hover);color:var(--t2);border:1px solid var(--bd)}
+.b-ok{background:var(--ok-l);color:var(--ok-d)}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--card)}
+.stepper button{border:0;background:var(--hover);width:30px;height:30px;cursor:pointer;color:var(--t1)}
+.stepper span{min-width:48px;text-align:center;font-weight:600}
+.chk{width:18px;height:18px}
+.tw{overflow-x:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--t2);padding:10px 16px;border-bottom:1px solid var(--bd)}
+.tot{padding:16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tot strong{font-size:18px}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:12px 16px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;z-index:40}
+.skel{display:block;height:40px;border-radius:6px;margin:12px 0;background:linear-gradient(90deg,var(--bd) 25%,var(--hover) 50%,var(--bd) 75%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+.empty{text-align:center;padding:40px 20px}
+.empty .ic{font-size:40px}
+.empty p{color:var(--t3);max-width:520px;margin:6px auto 14px}
+/* cartes mobile : une séance = une carte */
+@media (max-width:760px){
+  thead{display:none}
+  table,tbody,tr,td{display:block;width:100%}
+  tr{border-bottom:1px solid var(--bd);padding:12px 16px}
+  td{border:0;padding:4px 0}
+}
+/* états : seul l'état choisi est affiché */
+body:not([data-state=loading]) .s-loading{display:none}
+body:not([data-state=empty]) .s-empty{display:none}
+body:not([data-state=error]) .s-error{display:none}
+body:not([data-state=data]):not([data-state=annulee]) .s-data{display:none}
+body:not([data-state=annulee]) .s-annulee{display:none}
+body:not([data-state=data]) .s-only-annulee{display:none}
+body:not([data-state=annulee]) .s-only-annulee{display:none}
+body[data-state=loading] .s-data,body[data-state=loading] .sticky,body[data-state=empty] .sticky,body[data-state=error] .sticky{display:none}
+body:not([data-state=annulee]) .s-annulee-row{display:none}
+body[data-state=annulee] .s-hors-annulee{display:none}
+</style>
+</head>
+<body data-state="data">
+
+<div class="mockbar" role="region" aria-label="Contrôles de la maquette">
+  <strong>MAQUETTE TS-03</strong>
+  <span>État affiché :</span>
+  <button type="button" data-s="loading" aria-pressed="false" onclick="setState('loading')">Chargement</button>
+  <button type="button" data-s="empty" aria-pressed="false" onclick="setState('empty')">Vide</button>
+  <button type="button" data-s="error" aria-pressed="false" onclick="setState('error')">Erreur</button>
+  <button type="button" data-s="data" aria-pressed="true" onclick="setState('data')">Données (à venir)</button>
+  <button type="button" data-s="annulee" aria-pressed="false" onclick="setState('annulee')">Séance à venir annulée</button>
+  <span class="note">Date simulée : samedi 11/10/2026. Données fictives.</span>
+</div>
+
+<main class="wrap">
+  <div class="crumb">Accueil › Timesheets</div>
+  <div class="head">
+    <div>
+      <h1>Encoder mon mois</h1>
+      <p>Encodez chaque séance avec « Encoder », passée ou à venir, au fil du mois. Vous soumettez le mois entier une seule fois : toutes les heures encodées partent ensemble.</p>
+    </div>
+    <div class="row" role="group" aria-label="Choix du mois">
+      <button class="btn btn-sm" type="button" aria-label="Mois précédent">‹ Mois précédent</button>
+      <strong class="mois" aria-live="polite">Octobre 2026</strong>
+      <button class="btn btn-sm" type="button" aria-label="Mois suivant">Mois suivant ›</button>
+    </div>
+  </div>
+
+  <!-- Chargement -->
+  <div class="s-loading" role="status" aria-busy="true">
+    <span class="skel" aria-hidden="true"></span><span class="skel" aria-hidden="true" style="width:92%"></span><span class="skel" aria-hidden="true" style="width:84%"></span>
+    <p class="small">Chargement de votre mois…</p>
+  </div>
+
+  <!-- Erreur -->
+  <div class="s-error banner err" role="alert">
+    <div class="tx"><strong>Impossible de charger votre mois.</strong> Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez.</div>
+    <button class="btn btn-sm" type="button" onclick="setState('data')">Réessayer</button>
+  </div>
+
+  <!-- Vide : aucune séance ce mois-ci -->
+  <div class="s-empty sect empty">
+    <div class="ic" aria-hidden="true">🗓️</div>
+    <h2 style="font-size:20px;margin:8px 0">Rien à encoder pour ce mois</h2>
+    <p>Aucune séance n'est prévue ce mois-ci et vous n'avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.</p>
+    <div class="row" style="justify-content:center"><button class="btn btn-p" type="button">Ajouter des heures</button></div>
+  </div>
+
+  <!-- Données -->
+  <div class="s-data">
+    <div class="banner info" role="note">
+      <div class="tx"><strong>3 séances à venir ce mois-ci.</strong> Vous pouvez les encoder dès maintenant ; seules les heures encodées partent à la soumission. La direction peut encore intervenir avant de valider.</div>
+    </div>
+
+    <section class="sect" aria-labelledby="t-seances">
+      <header>
+        <div>
+          <h2 id="t-seances">1. Mes séances du mois</h2>
+          <p>Toutes vos séances du mois, passées et à venir. La durée défrayable est préremplie, modifiable ; « Encoder » enregistre la séance en brouillon.</p>
+        </div>
+      </header>
+      <div class="legend" aria-hidden="true">
+        <span>🔵 À venir : encodage anticipé possible</span>
+        <span>🔒 Soumis : verrouillé, en attente de la direction</span>
+      </div>
+      <div class="tw">
+        <table aria-label="Mes séances du mois d'octobre 2026">
+          <thead>
+            <tr>
+                            <th scope="col">Date</th>
+              <th scope="col">Classe · Séance</th>
+              <th scope="col">Heures (h)</th>
+              <th scope="col">Montant</th>
+              <th scope="col">État</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Passée, soumise, verrouillée -->
+            <tr>
+              <td><span class="date">Mer. 07/10</span><div class="small">14 h–17 h</div></td>
+              <td><strong>Scratch Junior</strong> · Séance 1</td>
+              <td>3,00</td>
+              <td>36,00 €</td>
+              <td><span class="badge b-soumis">🔒 Soumis</span></td>
+            </tr>
+            <!-- À venir, déjà encodée en brouillon, incluse -->
+            <tr>
+              <td><span class="date">Mer. 14/10</span><div class="small">14 h–17 h</div> <span class="badge b-avenir">À venir</span></td>
+              <td><strong>Scratch Junior</strong> · Séance 2</td>
+              <td>
+                <div class="stepper" role="group" aria-label="Heures pour la séance 2">
+                  <button type="button" aria-label="Diminuer de 0,5 h">−</button><span>3,00</span><button type="button" aria-label="Augmenter de 0,5 h">+</button>
+                </div>
+              </td>
+              <td>36,00 €</td>
+              <td><span class="badge b-brouillon">Brouillon</span></td>
+            </tr>
+            <!-- À venir, pas encore encodée, décochée -->
+            <tr class="s-hors-annulee">
+              <td><span class="date">Mer. 21/10</span><div class="small">14 h–17 h</div> <span class="badge b-avenir">À venir</span></td>
+              <td><strong>Scratch Junior</strong> · Séance 3</td>
+              <td>
+                <div class="stepper" role="group" aria-label="Heures pour la séance 3">
+                  <button type="button" aria-label="Diminuer de 0,5 h">−</button><span>3,00</span><button type="button" aria-label="Augmenter de 0,5 h">+</button>
+                </div>
+              </td>
+              <td>—</td>
+              <td><span class="badge b-encoder">À encoder</span> <button class="btn btn-sm" type="button" style="margin-top:6px">Encoder</button></td>
+            </tr>
+            <tr>
+              <td><span class="date">Mer. 28/10</span><div class="small">14 h–17 h</div> <span class="badge b-avenir">À venir</span></td>
+              <td><strong>Scratch Junior</strong> · Séance 4</td>
+              <td>
+                <div class="stepper" role="group" aria-label="Heures pour la séance 4">
+                  <button type="button" aria-label="Diminuer de 0,5 h">−</button><span>3,00</span><button type="button" aria-label="Augmenter de 0,5 h">+</button>
+                </div>
+              </td>
+              <td>—</td>
+              <td><span class="badge b-encoder">À encoder</span> <button class="btn btn-sm" type="button" style="margin-top:6px">Encoder</button></td>
+            </tr>
+            <!-- Séance annulée après encodage anticipé : affichée seulement dans l'état « annulee » -->
+            <tr class="annulee s-annulee-row">
+              <td><span class="date">Mer. 21/10</span><div class="small">14 h–17 h</div></td>
+              <td><span class="seance"><strong>Scratch Junior</strong> · Séance 3</span><div class="small">Annulée par la direction</div></td>
+              <td>3,00</td>
+              <td>—</td>
+              <td>
+                <span class="badge b-annulee">Annulée</span>
+                <div class="small" style="margin-top:6px">Brouillon : hors soumission.</div>
+                <button class="btn btn-sm" type="button" style="margin-top:6px">Supprimer ces heures</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sect" aria-labelledby="t-libres">
+      <header>
+        <div>
+          <h2 id="t-libres">2. Mes autres heures du mois</h2>
+          <p>Préparation, animation ou autre travail, avec ou sans cours.</p>
+        </div>
+        <button class="btn btn-sm" type="button">Ajouter des heures</button>
+      </header>
+      <div class="tw">
+        <table aria-label="Mes autres heures du mois">
+          <thead><tr><th scope="col">Date</th><th scope="col">Activité</th><th scope="col">Heures</th><th scope="col">Montant</th><th scope="col">État</th></tr></thead>
+          <tbody>
+            <tr><td>Sam. 03/10</td><td>Préparation</td><td>1,50</td><td>15,00 €</td><td><span class="badge b-soumis">🔒 Soumis</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="sect" aria-labelledby="t-total">
+      <header><div><h2 id="t-total">3. Total du mois</h2><p>Toutes les heures encodées. Une seule soumission : le mois entier part en une fois, jamais une ligne seule.</p></div></header>
+      <div class="tot">
+        <div><div class="small">Soumis</div><strong>4,50 h · 51,00 €</strong></div>
+        <div><div class="small">Encodées, pas encore soumises</div><strong>3,00 h · 36,00 €</strong></div>
+        <div><div class="small">Total</div><strong>7,50 h · 87,00 €</strong></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="sticky" role="region" aria-label="Actions du mois">
+  <button class="btn btn-p" type="button">Soumettre le mois entier</button>
+</div>
+
+<script>
+function setState(s){
+  document.body.dataset.state = s;
+  document.querySelectorAll('.mockbar button[data-s]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === s)));
+}
+</script>
+</body>
+</html>

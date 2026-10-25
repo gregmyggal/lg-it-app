@@ -79,6 +79,20 @@ COMPOSER_CMD="${COMPOSER_CMD:-${PHP_BIN} ~/composer.phar}"
 VITE_API_URL="${VITE_API_URL:-/api}"
 SSH_TARGET="${SSH_USER}@${SSH_HOST}"
 
+# --- Connexion SSH unique (multiplexage) ---
+# Une seule authentification (passphrase de VOTRE clé locale) : toutes les
+# commandes ssh/rsync du script réutilisent cette connexion via le socket.
+SSH_CTL_DIR="$(mktemp -d /tmp/lgit-ssh.XXXXXX)"
+SSH_CTL_PATH="${SSH_CTL_DIR}/cm"
+SSH_OPTS=(-o ControlMaster=auto -o ControlPath="${SSH_CTL_PATH}" -o ControlPersist=15m -o AddKeysToAgent=yes)
+ssh() { command ssh "${SSH_OPTS[@]}" "$@"; }
+cleanup_ssh() {
+  command ssh -o ControlPath="${SSH_CTL_PATH}" -O exit "${SSH_TARGET}" >/dev/null 2>&1 || true
+  rm -rf "${SSH_CTL_DIR}"
+}
+trap cleanup_ssh EXIT
+RSYNC_SSH="ssh -o ControlPath=${SSH_CTL_PATH}"
+
 # --- Vérifications git locales ---
 CURRENT_BRANCH="$(git -C "${ROOT_DIR}" rev-parse --abbrev-ref HEAD)"
 if [ "${CURRENT_BRANCH}" != "${GIT_BRANCH}" ]; then
@@ -146,7 +160,7 @@ echo ""
 # Seule étape qui contacte GitHub : ssh -t fournit un terminal pour que git
 # demande la passphrase de la clé du serveur. Un fetch ne modifie pas les
 # fichiers en ligne, donc un échec ici ne touche pas au site.
-echo "  1/5 — git fetch sur le serveur (passphrase de la clé GitHub du serveur)..."
+echo "  1/5 — git fetch sur le serveur (passphrase SSH, puis celle de la clé GitHub du serveur)..."
 if ! ssh -t "${SSH_TARGET}" "cd '${REMOTE_PATH}' && git fetch origin '${GIT_BRANCH}'"; then
   echo "❌ git fetch échoué sur le serveur (passphrase, accès GitHub ou REMOTE_PATH) — site inchangé."
   exit 1
@@ -227,9 +241,9 @@ EOF
 echo "  4/5 — Envoi du build frontend dans backend/public/..."
 # D'abord tout le build (nouveaux assets + index.html), sans rien supprimer :
 # index.php, .htaccess, robots.txt… de Laravel restent en place.
-rsync -az "${ROOT_DIR}/frontend/dist/" "${SSH_TARGET}:${REMOTE_PATH}/backend/public/"
+rsync -az -e "${RSYNC_SSH}" "${ROOT_DIR}/frontend/dist/" "${SSH_TARGET}:${REMOTE_PATH}/backend/public/"
 # Puis purge des anciens assets hashés devenus inutiles.
-rsync -az --delete "${ROOT_DIR}/frontend/dist/assets/" "${SSH_TARGET}:${REMOTE_PATH}/backend/public/assets/"
+rsync -az -e "${RSYNC_SSH}" --delete "${ROOT_DIR}/frontend/dist/assets/" "${SSH_TARGET}:${REMOTE_PATH}/backend/public/assets/"
 
 # --- 5. Remise en ligne + vérification ---
 echo "  5/5 — Sortie du mode maintenance..."
