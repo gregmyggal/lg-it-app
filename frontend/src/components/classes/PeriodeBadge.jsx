@@ -21,7 +21,9 @@ export default function PeriodeBadge({ numero, children }) {
         background: c.bg,
         color: c.fg,
         border: `1px solid ${c.border}`,
-        whiteSpace: 'nowrap',
+        maxWidth: '100%',
+        overflowWrap: 'anywhere',
+        lineHeight: 1.3,
       }}
     >
       {children || `P${numero}`}

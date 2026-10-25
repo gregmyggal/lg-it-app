@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX-MOBILE-02 — Workflows directeur sur mobile</title>
+<style>
+:root{--text:#16212e;--muted:#4b5a6b;--bg:#f4f6f8;--surface:#fff;--border:#dee3e8;--accent:#14568f;--accent-soft:#e3eef8;--cta:#d9531e;--teal:#0e8f79;--deep:#0b3550;--danger:#c0392b;--danger-bg:#fde8e6;--warn-bg:#fef3c7;--warn-fg:#92400e;--ok-bg:#d1fae5;--ok-fg:#047857;--shadow:0 1px 2px rgba(11,53,80,.08),0 6px 18px rgba(11,53,80,.06)}
+[data-theme=dark]{--text:#e7ebef;--muted:#a9b4bf;--bg:#0f1620;--surface:#16212e;--border:#263241;--accent:#5da0d6;--accent-soft:#12304a;--cta:#e8703f;--teal:#35c2a4;--danger:#f87171;--danger-bg:#3b1a1a;--warn-bg:#3a2d0c;--warn-fg:#fbbf24;--ok-bg:#0f3326;--ok-fg:#6ee7b7;--shadow:0 1px 2px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+html{font-family:'Manrope',system-ui,-apple-system,Segoe UI,sans-serif}
+body{margin:0;background:#e9edf1;color:#16212e;padding:20px 16px 56px}
+.page{max-width:1180px;margin:auto}
+h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px}
+.lead{color:#4b5a6b;max-width:780px;line-height:1.5;margin:0 0 16px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.bar button{font:inherit;font-weight:600;border:1px solid #c5cdd5;background:#fff;border-radius:999px;padding:8px 16px;cursor:pointer}
+.layout{display:grid;grid-template-columns:minmax(260px,380px) 372px;gap:36px;justify-content:center;align-items:start}
+@media (max-width:860px){.layout{grid-template-columns:1fr;justify-items:center}}
+.flows{display:flex;flex-direction:column;gap:8px;width:100%}
+.flow{text-align:left;border:1px solid #c5cdd5;background:#fff;border-radius:14px;padding:10px 14px;cursor:pointer;font:inherit}
+.flow b{display:block;font-size:14.5px}
+.flow small{color:#4b5a6b;font-size:12.5px}
+.flow.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);background:#f2f8fd}
+.brief{background:#fff;border-radius:14px;padding:14px;font-size:13.5px;line-height:1.5;margin-top:6px}
+.brief h3{margin:0 0 6px;font-size:15px}
+.brief ol{margin:0 0 8px;padding-left:20px}
+.brief .be{background:#fef3c7;color:#92400e;border-radius:10px;padding:8px 10px;font-size:12.5px}
+
+/* téléphone */
+.phone{width:372px;height:760px;border-radius:44px;background:#0b1118;padding:10px;box-shadow:0 20px 50px rgba(11,53,80,.25);position:sticky;top:12px}
+.screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+.status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0 24px 4px;font-size:12px;font-weight:700}
+.stage{position:relative;flex:1;overflow:hidden}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);animation:in .22s ease}
+.scr.on{display:flex}
+@keyframes in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.top{flex:none;display:flex;align-items:center;gap:6px;padding:2px 8px 2px 6px;min-height:52px}
+.top h2{flex:1;margin:0;font-size:18px;overflow-wrap:anywhere;line-height:1.2}
+.ib{width:44px;height:44px;border:0;background:none;color:var(--text);border-radius:50%;display:grid;place-items:center;cursor:pointer;position:relative;flex:none}
+.ib:active{background:var(--accent-soft)}
+.ib svg,.ico svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.body{flex:1;overflow-y:auto;padding:4px 16px 100px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.tabs{flex:none;display:flex;background:var(--surface);border-top:1px solid var(--border);padding:6px 2px 16px;z-index:3}
+.tab{flex:1;min-height:50px;border:0;background:none;color:var(--muted);font:inherit;font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative}
+.tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--accent)}
+.tab.on::before{content:"";position:absolute;top:-7px;width:26px;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+.dot{position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;border-radius:8px;background:var(--cta);color:#fff;font-size:10px;display:grid;place-items:center;padding:0 4px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--c,var(--accent));border-radius:16px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer}
+.card.flat{border-left-width:1px;cursor:default}
+.card .t{font-weight:700;font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.card .m{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:2px 10px}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1;min-width:0}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);max-width:100%}
+.badge.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.badge.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.badge.bad{background:var(--danger-bg);color:var(--danger)}
+.badge.grey{background:var(--border);color:var(--muted)}
+.btn{font:inherit;font-weight:700;border:0;border-radius:14px;min-height:48px;padding:0 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px}
+.btn.primary{background:var(--cta);color:#fff}.btn.soft{background:var(--accent-soft);color:var(--accent)}.btn.danger{background:var(--danger);color:#fff}.btn.text{background:none;color:var(--muted)}
+.btn.block{width:100%;margin-top:8px}
+.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.alerts{display:flex;gap:8px;overflow-x:auto;margin:2px -16px 12px;padding:0 16px;scrollbar-width:none}
+.alert{flex:none;border:0;border-radius:14px;padding:9px 12px;font:inherit;font-size:12.5px;font-weight:700;background:var(--warn-bg);color:var(--warn-fg);cursor:pointer;display:flex;gap:6px;align-items:center}
+.alert.r{background:var(--danger-bg);color:var(--danger)}
+.alert.b{background:var(--accent-soft);color:var(--accent)}
+.grp{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 2px 8px;display:flex;align-items:center;gap:6px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(14,143,121,.25)}
+.time{font-weight:800;font-size:13px;color:var(--c,var(--accent));white-space:nowrap}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
+.avatar.big{width:68px;height:68px;font-size:24px}
+.round{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.round button{flex:1;border:0;background:var(--accent-soft);color:var(--accent);border-radius:16px;min-height:60px;font:inherit;font-weight:700;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.round svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 10px;padding:0 16px;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;min-height:40px;padding:0 14px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.field{display:block;margin-bottom:12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.field input,.field select{display:block;width:100%;margin-top:4px;min-height:48px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;font-size:16px;padding:0 12px}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0 12px;min-height:48px;margin-bottom:10px}
+.search input{flex:1;border:0;background:none;color:var(--text);font:inherit;font-size:16px;outline:none;min-height:46px;min-width:0}
+.search svg{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round}
+details{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:10px;overflow:hidden}
+summary{min-height:54px;display:flex;align-items:center;padding:0 14px;font-weight:700;cursor:pointer;list-style:none;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"›";margin-left:auto;color:var(--muted);transition:transform .2s}
+details[open] summary::after{transform:rotate(90deg)}
+details .in{padding:0 14px 14px;font-size:14px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.kv:last-child{border:0}.kv span{color:var(--muted)}.kv b{text-align:right;overflow-wrap:anywhere}
+.stick{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:8px 10px 12px;display:flex;gap:6px;z-index:2}
+.stick button{flex:1;border:0;background:none;color:var(--accent);font:inherit;font-size:11.5px;font-weight:700;min-height:54px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.stick button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.stick button.main{background:var(--cta);color:#fff}
+.stick.single{padding:10px 14px 14px}.stick.single .btn{flex:1;margin:0}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);color:var(--text);border-radius:14px;padding:12px;font-size:13.5px;line-height:1.4;margin:10px 0}
+.banner svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.8;flex:none;stroke-linecap:round;stroke-linejoin:round}
+.banner.warn{background:var(--warn-bg);color:var(--warn-fg)}.banner.warn svg{stroke:var(--warn-fg)}
+.banner.bad{background:var(--danger-bg);color:var(--danger)}.banner.bad svg{stroke:var(--danger)}
+.pl{display:flex;align-items:center;gap:12px;min-height:60px;padding:6px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.pl:last-child{border:0}.pl.dis{opacity:.45;pointer-events:none}
+.pl .sub{font-size:12.5px;color:var(--muted)}.pl .sub.w{color:var(--warn-fg)}
+.chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);flex:none;display:grid;place-items:center;color:transparent;font-size:16px}
+.pl.sel .chk,.sel>.chk{background:var(--teal);border-color:var(--teal);color:#fff}
+.list{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.list a{display:flex;align-items:center;gap:12px;padding:0 14px;min-height:54px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;cursor:pointer}
+.list a:last-child{border:0}.list a .ico{color:var(--accent);display:grid}
+.list a em{margin-left:auto;font-style:normal;color:var(--muted);font-weight:400;font-size:13px;display:flex;align-items:center;gap:4px}
+.list a em svg{width:16px;height:16px}
+
+/* sheet / toast / done */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:26px 26px 0 0;padding:10px 18px 28px;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:88%;overflow:auto;z-index:11}
+.sheet.on{transform:none}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 12px}
+.sheet h4{margin:0 0 2px;font-size:19px}.sheet .sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.imp{list-style:none;margin:0 0 6px;padding:0;font-size:14px}
+.imp li{display:flex;gap:10px;padding:7px 0;line-height:1.35}
+.imp li::before{content:"✓";color:var(--teal);font-weight:800}.imp li.x::before{content:"•";color:var(--muted)}.imp li.w::before{content:"!";color:var(--warn-fg);font-weight:800}
+.toast{position:absolute;left:12px;right:12px;bottom:84px;background:#16212e;color:#fff;border-radius:14px;padding:6px 6px 6px 16px;display:flex;align-items:center;gap:4px;font-size:13.5px;transform:translateY(200%);transition:transform .25s;z-index:20}
+.toast.on{transform:none}.toast span{flex:1;line-height:1.3}
+.toast button{background:none;border:0;color:#ffb48f;font:inherit;font-weight:800;min-height:44px;padding:0 10px;cursor:pointer}
+.done{position:absolute;inset:0;background:var(--teal);color:#fff;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:30px}
+.done.on{display:flex}.done h4{font-size:24px;margin:0}.done p{margin:0 0 10px;line-height:1.4}
+.done svg{width:90px;height:90px;stroke:#fff;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.done .btn{background:#fff;color:var(--teal);width:100%}.done .btn.t2{background:rgba(255,255,255,.2);color:#fff}
+.hid{display:none!important}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>UX-MOBILE-02 — Directeur et admin, en direct sur smartphone</h1>
+  <p class="lead">Maquette cliquable : choisissez un scénario à gauche, puis jouez-le dans le téléphone. Tout est factice, rien n'est développé. Les zones « Manque côté backend » indiquent ce qu'il faudra ajouter à l'API.</p>
+  <div class="bar"><button id="theme">🌙 Mode sombre</button><button id="reset">↺ Recommencer le scénario</button></div>
+
+  <div class="layout">
+    <div>
+      <div class="flows" id="flows"></div>
+      <div class="brief" id="brief"></div>
+    </div>
+
+    <div class="phone"><div class="screen" id="app">
+      <div class="status"><span>8:12</span><span>●●● 5G ▮</span></div>
+      <div class="stage" id="stage">
+
+        <!-- ===== ROOT : Aujourd'hui ===== -->
+        <section class="scr on" id="today">
+          <div class="top"><h2>Aujourd'hui</h2><button class="ib" data-go="search" aria-label="Rechercher"><i data-i="search"></i></button><button class="ib" data-sheet="notifs" aria-label="Notifications"><i data-i="bell"></i><span class="dot" style="top:6px;right:6px">2</span></button></div>
+          <div class="body">
+            <div class="alerts">
+              <button class="alert r" data-go="absence"><i data-i="alert"></i><span id="alertSans">2 séances sans prof</span></button>
+              <button class="alert" data-go="prof"><i data-i="swap"></i>Marie D. : 3 séances</button>
+              <button class="alert b" data-go="ts"><i data-i="clock"></i>4 timesheets</button>
+            </div>
+            <div class="grp"><span class="live"></span>En cours</div>
+            <article class="card" style="--c:var(--teal)" data-go="session2"><div class="row"><div class="grow"><div class="time">10:30 – 12:00</div><div class="t">Minecraft Education · S6</div><div class="m"><span>Ath</span><span class="badge ok">Thomas L.</span></div></div><button class="ib" data-call="Thomas L." aria-label="Appeler Thomas"><i data-i="phone"></i></button></div></article>
+            <div class="grp">Plus tard</div>
+            <article class="card" style="--c:#7c3aed" id="cardPython" data-go="session"><div class="row"><div class="grow"><div class="time">14:00 – 16:00</div><div class="t">Python Ados · S8</div><div class="m"><span>Ath</span><span id="pyProfs"><span class="badge">Marie D.</span></span><span class="badge bad hid" id="pyCancel">Annulée</span></div></div><button class="ib" data-call="Marie D." aria-label="Appeler"><i data-i="phone"></i></button></div></article>
+            <article class="card" style="--c:var(--accent)" data-go="session3"><div class="row"><div class="grow"><div class="time">17:00 – 18:30</div><div class="t">Scratch Junior – lun. 17h · S8</div><div class="m"><span>Ath</span><span class="badge">Marie D.</span><span class="badge">Julie D.</span></div></div><button class="ib" data-call="Julie D." aria-label="Appeler"><i data-i="phone"></i></button></div></article>
+            <div class="grp">Demain</div>
+            <article class="card" style="--c:var(--danger)" data-go="session3"><div class="row"><div class="grow"><div class="time">09:00 – 12:00</div><div class="t">Stage Robotique – jour 2</div><div class="m"><span>Tournai</span><span class="badge bad">Sans professeur</span></div></div></div></article>
+          </div>
+        </section>
+
+        <!-- ===== ROOT : Timesheets (stub) ===== -->
+        <section class="scr" id="ts"><div class="top"><h2>Timesheets</h2></div><div class="body">
+          <div class="banner"><i data-i="info"></i><div>La validation par lot est déjà maquettée dans <b>UX-MOBILE-01</b>. On ajoute ici la contestation.</div></div>
+          <article class="card flat"><div class="row"><div class="avatar">TL</div><div class="grow"><div class="t">Thomas Leclercq</div><div class="m"><span class="badge bad">Contesté</span><span>96 €</span></div></div></div><button class="btn soft block" data-sheet="conteste">Voir la contestation</button></article>
+          <article class="card flat"><div class="row"><div class="avatar">MD</div><div class="grow"><div class="t">Marie Dupont</div><div class="m"><span class="badge warn">À valider</span><span>142 €</span></div></div></div></article>
+        </div></section>
+
+        <!-- ===== ROOT : Classes ===== -->
+        <section class="scr" id="classes"><div class="top"><h2>Classes</h2><button class="ib" data-go="search"><i data-i="search"></i></button></div><div class="body">
+          <div class="chips"><button class="chip on">Toutes · 24</button><button class="chip">Aujourd'hui · 5</button><button class="chip">Sans prof · 2</button><button class="chip">Terminées</button></div>
+          <article class="card" data-go="class"><div class="t">Scratch Junior – lun. 17h</div><div class="m"><span>Lun. 17:00</span><span>Ath</span><span>Marie D., Julie D.</span></div></article>
+          <article class="card" style="--c:#7c3aed" data-go="class"><div class="t">Python Ados – mer. 14h</div><div class="m"><span>Mer. 14:00</span><span>Ath</span><span>Marie D.</span></div></article>
+          <article class="card" style="--c:var(--teal)" data-go="class"><div class="t">Minecraft Education – sam. 10h30</div><div class="m"><span>Sam. 10:30</span><span>Ath</span><span>Thomas L.</span></div></article>
+          <a class="card flat" style="display:flex;gap:10px;align-items:center;border-style:dashed;cursor:pointer" data-go="desk"><span class="ico"><i data-i="screen"></i></span><div class="grow"><div class="t">Créer une classe</div><div class="m"><span>À faire sur ordinateur</span></div></div></a>
+        </div></section>
+
+        <!-- ===== ROOT : Profs ===== -->
+        <section class="scr" id="profs"><div class="top"><h2>Professeurs</h2><button class="ib" data-go="search"><i data-i="search"></i></button></div><div class="body">
+          <div class="chips"><button class="chip on">Actifs · 18</button><button class="chip">Archivés · 3</button><button class="chip">À affecter · 2</button></div>
+          <article class="card flat" style="cursor:pointer" data-go="prof"><div class="row"><div class="avatar">MD</div><div class="grow"><div class="t">Marie Dupont</div><div class="m"><span>ASBL Pays Vert</span><span class="badge warn" id="profListBadge">3 séances aujourd'hui</span></div></div><i data-i="chev"></i></div></article>
+          <article class="card flat" style="cursor:pointer" data-go="prof"><div class="row"><div class="avatar">JD</div><div class="grow"><div class="t">Julie Delmotte-Vandenbroeck</div><div class="m"><span>SRL Logiscool Ath</span></div></div><i data-i="chev"></i></div></article>
+          <article class="card flat" style="cursor:pointer" data-go="prof"><div class="row"><div class="avatar">TL</div><div class="grow"><div class="t">Thomas Leclercq</div><div class="m"><span>ASBL Pays Vert</span><span class="badge ok">En cours</span></div></div><i data-i="chev"></i></div></article>
+        </div></section>
+
+        <!-- ===== ROOT : Plus ===== -->
+        <section class="scr" id="more"><div class="top"><h2>Plus</h2></div><div class="body">
+          <div class="banner"><i data-i="screen"></i><div>Les entrées avec l'icône <b>écran</b> sont plus confortables sur ordinateur, mais restent accessibles ici.</div></div>
+          <div class="grp">Scolarité</div>
+          <div class="list"><a data-go="desk"><span class="ico"><i data-i="cal"></i></span>Calendrier<em><i data-i="screen"></i></em></a><a data-go="desk"><span class="ico"><i data-i="school"></i></span>Années scolaires<em><i data-i="screen"></i></em></a></div>
+          <div class="grp">Contenu</div>
+          <div class="list"><a data-go="desk"><span class="ico"><i data-i="book"></i></span>Cours & liens<em><i data-i="screen"></i></em></a><a data-go="desk"><span class="ico"><i data-i="book"></i></span>Stages · Formations<em><i data-i="screen"></i></em></a></div>
+          <div class="grp">Opérationnel</div>
+          <div class="list"><a><span class="ico"><i data-i="user"></i></span>Équipe<em>Admin</em></a><a><span class="ico"><i data-i="gear"></i></span>Paramètres timesheets<em><i data-i="screen"></i></em></a></div>
+        </div></section>
+
+        <!-- ===== Fiche séance : Python Ados ===== -->
+        <section class="scr" id="session">
+          <div class="top"><button class="ib" data-back aria-label="Retour"><i data-i="back"></i></button><h2>Python Ados · S8</h2></div>
+          <div class="body">
+            <div class="row" style="margin:2px 0 10px"><span class="badge" id="sStatus">Planifiée</span><span class="badge warn">Aujourd'hui</span></div>
+            <div class="card flat"><div class="kv"><span>Date</span><b id="kvDate">Mar. 25 oct.</b></div><div class="kv"><span>Horaire</span><b id="kvHeure">14:00 – 16:00</b></div><div class="kv"><span>Lieu</span><b id="kvLieu">Ath</b></div></div>
+            <div class="grp">Professeurs</div>
+            <div class="card flat" id="sProfs">
+              <div class="row" id="rowMarie"><div class="avatar">MD</div><div class="grow"><div class="t">Marie Dupont</div><div class="m"><span class="badge">Principal</span></div></div><button class="ib" data-call="Marie D." aria-label="Appeler"><i data-i="phone"></i></button></div>
+            </div>
+            <div class="banner warn hid" id="sCancelBanner"><i data-i="ban"></i><div><b>Séance annulée.</b> <span id="sReason"></span></div></div>
+          </div>
+          <div class="stick" id="sBar"><button data-sheet="pickR" data-mode="replace"><i data-i="swap"></i>Remplacer</button><button data-sheet="pickR" data-mode="add"><i data-i="plus"></i>Ajouter</button><button data-sheet="editS"><i data-i="edit"></i>Modifier</button><button data-sheet="moreS"><i data-i="more"></i>Plus</button></div>
+        </section>
+
+        <section class="scr" id="session2"><div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Minecraft Education · S6</h2></div><div class="body"><div class="row" style="margin:2px 0 10px"><span class="badge ok">En cours</span></div><div class="card flat"><div class="kv"><span>Horaire</span><b>10:30 – 12:00</b></div><div class="kv"><span>Lieu</span><b>Ath</b></div><div class="kv"><span>Professeur</span><b>Thomas Leclercq</b></div></div><div class="banner"><i data-i="info"></i><div>Même fiche et mêmes actions que « Python Ados ».</div></div></div></section>
+        <section class="scr" id="session3"><div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Fiche séance</h2></div><div class="body"><div class="banner"><i data-i="info"></i><div>Écran identique. Pour cette maquette, jouez les scénarios depuis « Python Ados ».</div></div></div></section>
+
+        <!-- ===== Fiche prof ===== -->
+        <section class="scr" id="prof">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Fiche professeur</h2></div>
+          <div class="body">
+            <div class="row"><div class="avatar big">MD</div><div class="grow"><div class="t" style="font-size:20px;font-weight:800">Marie Dupont</div><div class="m" style="display:flex;gap:6px;margin-top:4px"><span class="badge ok" id="pStatut">Actif</span><span style="font-size:12.5px;color:var(--muted)">ASBL Pays Vert</span></div></div></div>
+            <div class="round"><button data-call="Marie D."><i data-i="phone"></i>Appeler</button><button data-toast="SMS ouvert (démo)"><i data-i="sms"></i>SMS</button><button data-toast="Email ouvert (démo)"><i data-i="mail"></i>Email</button></div>
+            <details open><summary>Cette semaine · 3 séances</summary><div class="in"><div class="kv"><span>Mar. 14:00</span><b>Python Ados · S8</b></div><div class="kv"><span>Mar. 17:00</span><b>Scratch Junior · S8</b></div><div class="kv"><span>Sam. 10:30</span><b>Minecraft · S7</b></div><button class="btn primary block" data-go="absence"><i data-i="swap"></i>Remplacer sur plusieurs séances</button></div></details>
+            <details><summary>Classes · 2</summary><div class="in"><div class="kv"><span>Scratch Junior – lun. 17h</span><b>Principal</b></div><div class="kv"><span>Python Ados – mer. 14h</span><b>Principal</b></div></div></details>
+            <details><summary>Tarif en cours</summary><div class="in"><div class="kv"><span>Animation</span><b>18,50 € / h</b></div><div class="kv"><span>Depuis le</span><b>1 sept. 2026</b></div><button class="btn soft block" data-sheet="tarif"><i data-i="plus"></i>Ajouter un tarif</button><button class="btn soft block" data-sheet="tarif"><i data-i="edit"></i>Modifier le tarif en cours</button></div></details>
+            <details><summary>Compte de connexion</summary><div class="in"><div class="kv"><span>Email</span><b>marie.d@exemple.be</b></div><button class="btn soft block" data-toast="Invitation renvoyée à Marie D.">Renvoyer le lien de connexion</button></div></details>
+            <button class="btn block" style="background:var(--danger-bg);color:var(--danger);margin-top:14px" data-go="archive" id="btnArchive"><i data-i="ban"></i>Archiver ce professeur</button>
+          </div>
+        </section>
+
+        <!-- ===== Archivage : impact ===== -->
+        <section class="scr" id="archive">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Archiver Marie Dupont</h2></div>
+          <div class="body">
+            <div class="banner warn"><i data-i="alert"></i><div>Avant d'archiver, voici l'impact :</div></div>
+            <ul class="imp"><li class="w">14 séances à venir n'auront plus de professeur</li><li class="w">Dernière prof de « Python Ados – mer. 14h »</li><li>2 saisies d'heures non finalisées restent à valider</li><li class="x">Ses heures déjà encodées ne bougent pas</li></ul>
+            <label class="pl" style="min-height:56px"><input type="checkbox" checked style="width:22px;height:22px"> <span style="font-size:14px">Terminer ses assignations de classe</span></label>
+            <button class="btn primary block" data-go="absence"><i data-i="swap"></i>Remplacer d'abord ces séances</button>
+          </div>
+          <div class="stick single"><button class="btn danger" id="doArchive">Archiver quand même</button></div>
+        </section>
+
+        <!-- ===== Absence (D2) ===== -->
+        <section class="scr" id="absence">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Remplacer Marie D.</h2></div>
+          <div class="body">
+            <div class="chips"><button class="chip on">Aujourd'hui</button><button class="chip">Cette semaine</button><button class="chip">Dates…</button></div>
+            <div class="grp">Séances à couvrir</div>
+            <div class="card flat" id="absList">
+              <div class="pl sel" data-abs><span class="chk">✓</span><div class="grow"><div class="t" style="font-size:14.5px">Python Ados · S8</div><div class="sub">Mar. 14:00 – 16:00 · Ath</div></div></div>
+              <div class="pl sel" data-abs><span class="chk">✓</span><div class="grow"><div class="t" style="font-size:14.5px">Scratch Junior · S8</div><div class="sub">Mar. 17:00 – 18:30 · Ath</div></div></div>
+              <div class="pl sel" data-abs><span class="chk">✓</span><div class="grow"><div class="t" style="font-size:14.5px">Minecraft · S7</div><div class="sub">Sam. 10:30 – 12:00 · Ath</div><span class="badge warn" style="margin-top:4px">Heures déjà encodées</span></div></div>
+            </div>
+            <button class="btn text block" data-sheet="noRepl">Pas encore de remplaçant ?</button>
+          </div>
+          <div class="stick single"><button class="btn primary" data-sheet="pickR" data-mode="bulk" id="absNext">Choisir un remplaçant · 3 séances</button></div>
+        </section>
+
+        <section class="scr" id="recap">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Récapitulatif</h2></div>
+          <div class="body">
+            <div class="card flat"><div class="row"><div class="avatar" style="background:var(--ok-bg);color:var(--ok-fg)">JD</div><div class="grow"><div class="t" id="recWho">Julie D. remplace Marie D.</div><div class="m"><span>Sur 3 séances</span></div></div></div></div>
+            <div class="banner warn"><i data-i="alert"></i><div><b>1 conflit</b> : Julie D. a déjà « Minecraft 10:30 » sur sa disponibilité. Vous pouvez continuer.</div></div>
+            <ul class="imp"><li>Python Ados · mar. 14:00</li><li>Scratch Junior · mar. 17:00</li><li class="w">Minecraft · sam. 10:30 (conflit)</li><li class="x">Les heures déjà encodées ne bougent pas</li><li class="x">Tout ou rien : si une séance échoue, aucune n'est modifiée</li><li class="x">Julie D. sera prévenue par notification et email</li></ul>
+          </div>
+          <div class="stick single"><button class="btn primary" id="doBulk">Remplacer sur 3 séances</button></div>
+        </section>
+
+        <!-- ===== Classe ===== -->
+        <section class="scr" id="class">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Scratch Junior – lun. 17h</h2></div>
+          <div class="body">
+            <div class="card flat"><div class="kv"><span>Créneau</span><b id="clCren">Lundi 17:00 – 18:30</b></div><div class="kv"><span>Lieu</span><b id="clLieu">Ath</b></div><div class="kv"><span>Année</span><b>2026-2027</b></div><button class="btn soft block" data-sheet="editC"><i data-i="edit"></i>Modifier créneau et lieu</button></div>
+            <div class="grp">Professeurs</div>
+            <div class="card flat" id="clProfs">
+              <div class="pl" data-sheet="assign"><div class="avatar">MD</div><div class="grow"><div class="t" style="font-size:14.5px">Marie Dupont</div><div class="sub">Principal</div></div><i data-i="more"></i></div>
+              <div class="pl" data-sheet="assign"><div class="avatar">JD</div><div class="grow"><div class="t" style="font-size:14.5px">Julie Delmotte-Vandenbroeck</div><div class="sub">Co-professeur</div></div><i data-i="more"></i></div>
+            </div>
+            <button class="btn soft block" data-sheet="pickR" data-mode="assign"><i data-i="plus"></i>Ajouter un professeur</button>
+            <div class="grp">Prochaines séances</div>
+            <article class="card" data-go="session"><div class="t">S8 · Mar. 25 oct.</div><div class="m"><span>17:00 – 18:30</span></div></article>
+            <article class="card" data-go="session"><div class="t">S9 · Lun. 3 nov.</div><div class="m"><span>17:00 – 18:30</span></div></article>
+            <div class="banner"><i data-i="screen"></i><div>Périodes, congés et liens de cours : écrans denses, plus confortables sur ordinateur. <a style="color:var(--accent);font-weight:700" data-go="desk">Ouvrir quand même</a></div></div>
+          </div>
+        </section>
+
+        <!-- ===== Recherche ===== -->
+        <section class="scr" id="search">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><div class="search grow" style="margin:0"><i data-i="search"></i><input id="q" placeholder="Prof, classe, séance du jour…" autocomplete="off"></div></div>
+          <div class="body" id="results">
+            <div class="grp" data-g>Professeurs</div>
+            <div class="pl" data-r="marie dupont" data-go="prof"><div class="avatar">MD</div><div class="grow"><div class="t" style="font-size:14.5px">Marie Dupont</div><div class="sub">Actif · 3 séances aujourd'hui</div></div></div>
+            <div class="pl" data-r="julie delmotte" data-go="prof"><div class="avatar">JD</div><div class="grow"><div class="t" style="font-size:14.5px">Julie Delmotte-Vandenbroeck</div><div class="sub">Actif</div></div></div>
+            <div class="pl" data-r="thomas leclercq" data-go="prof"><div class="avatar">TL</div><div class="grow"><div class="t" style="font-size:14.5px">Thomas Leclercq</div><div class="sub">En cours de séance</div></div></div>
+            <div class="grp" data-g>Classes</div>
+            <div class="pl" data-r="scratch junior lundi" data-go="class"><div class="grow"><div class="t" style="font-size:14.5px">Scratch Junior – lun. 17h</div><div class="sub">Ath · 2 profs</div></div></div>
+            <div class="pl" data-r="python ados mercredi" data-go="class"><div class="grow"><div class="t" style="font-size:14.5px">Python Ados – mer. 14h</div><div class="sub">Ath · 1 prof</div></div></div>
+            <div class="pl" data-r="minecraft education samedi" data-go="class"><div class="grow"><div class="t" style="font-size:14.5px">Minecraft Education – sam. 10h30</div><div class="sub">Ath · 1 prof</div></div></div>
+            <div class="grp" data-g>Séances du jour</div>
+            <div class="pl" data-r="python ados 14:00 séance" data-go="session"><div class="grow"><div class="t" style="font-size:14.5px">Python Ados · S8</div><div class="sub">14:00 – 16:00</div></div></div>
+            <div class="empty hid" id="noRes" style="text-align:center;color:var(--muted);padding:30px 0">Aucun résultat</div>
+          </div>
+        </section>
+
+        <!-- ===== Desktop-only ===== -->
+        <section class="scr" id="desk">
+          <div class="top"><button class="ib" data-back><i data-i="back"></i></button><h2>Création de classe</h2></div>
+          <div class="body">
+            <div class="banner"><i data-i="screen"></i><div><b>Écran dense.</b> Consultable et utilisable ici, mais plus confortable sur ordinateur (aperçu des séances, congés, périodes).</div></div>
+            <label class="field">Cours<input value="Scratch Junior"></label><label class="field">Jour et heure<input value="Lundi 17:00 – 18:30"></label><label class="field">Lieu<input value="Ath"></label><label class="field">Année scolaire<input value="2026-2027"></label>
+            <button class="btn primary block" data-toast="Brouillon enregistré (démo)">Continuer ici</button><button class="btn soft block" data-toast="Lien copié — à reprendre sur ordinateur"><i data-i="share"></i>M'envoyer le lien pour plus tard</button>
+            <div class="grp">Ce que vous pouvez faire ici</div>
+            <div class="list"><a data-go="classes"><span class="ico"><i data-i="school"></i></span>Consulter les classes existantes<em><i data-i="chev"></i></em></a><a data-go="class"><span class="ico"><i data-i="edit"></i></span>Modifier créneau/lieu d'une classe<em><i data-i="chev"></i></em></a></div>
+          </div>
+        </section>
+
+        <!-- sheets -->
+        <div class="scrim" id="scrim"></div>
+
+        <div class="sheet" id="pickR">
+          <div class="grab"></div><h4 id="pickT">Choisir le remplaçant</h4><div class="sub" id="pickS">Python Ados · mar. 14:00 – 16:00</div>
+          <div class="search"><i data-i="search"></i><input placeholder="Rechercher un prof" aria-label="Rechercher"></div>
+          <div class="grp" style="margin-top:4px">Disponibles</div>
+          <div class="pl" data-pick="Julie D."><div class="avatar">JD</div><div class="grow"><div class="t" style="font-size:14.5px">Julie Delmotte</div><div class="sub">Libre à 14:00</div></div><button class="ib" data-call="Julie D." aria-label="Appeler"><i data-i="phone"></i></button></div>
+          <div class="pl" data-pick="Sofia K."><div class="avatar">SK</div><div class="grow"><div class="t" style="font-size:14.5px">Sofia Kowalski</div><div class="sub">Libre à 14:00</div></div><button class="ib" data-call="Sofia K." aria-label="Appeler"><i data-i="phone"></i></button></div>
+          <div class="grp">Conflit d'horaire</div>
+          <div class="pl" data-pick="Thomas L."><div class="avatar">TL</div><div class="grow"><div class="t" style="font-size:14.5px">Thomas Leclercq</div><div class="sub w">Déjà : Scratch Sr 14:00 – 15:30</div></div></div>
+          <div class="grp">Déjà sur la séance</div>
+          <div class="pl dis"><div class="avatar">MD</div><div class="grow"><div class="t" style="font-size:14.5px">Marie Dupont</div></div></div>
+        </div>
+
+        <div class="sheet" id="impact">
+          <div class="grab"></div><h4 id="impT">Julie D. remplace Marie D.</h4><div class="sub">Python Ados · mar. 14:00 – 16:00</div>
+          <ul class="imp"><li>Marie D. est retirée de cette séance</li><li class="x">Les heures déjà encodées ne bougent pas</li><li class="x">Julie D. est prévenue (notification + email)</li></ul>
+          <button class="btn primary block" id="doReplace">Remplacer</button><button class="btn text block" data-close>Annuler</button>
+        </div>
+
+        <div class="sheet" id="editS">
+          <div class="grab"></div><h4>Modifier la séance</h4><div class="sub">Seulement celle-ci. Les suivantes ne bougent pas.</div>
+          <label class="field">Date<input type="date" value="2026-10-25" id="fDate"></label>
+          <div class="row"><label class="field grow">Début<input type="time" value="14:00" id="fDeb"></label><label class="field grow">Fin<input type="time" value="16:00" id="fFin"></label></div>
+          <label class="field">Lieu<input value="Ath" id="fLieu"></label>
+          <label class="pl" style="min-height:52px"><input type="checkbox" style="width:22px;height:22px"> <span style="font-size:14px">Décaler aussi les séances suivantes<br><small style="color:var(--muted)">L'aperçu détaillé est plus lisible sur ordinateur.</small></span></label>
+          <button class="btn primary block" id="doEdit">Enregistrer</button>
+        </div>
+
+        <div class="sheet" id="moreS">
+          <div class="grab"></div><h4>Autres actions</h4><div class="sub" style="margin-bottom:6px">Python Ados · S8</div>
+          <div class="list"><a data-sheet="cancelS" style="color:var(--danger)"><span class="ico" style="color:var(--danger)"><i data-i="ban"></i></span>Annuler la séance</a><a data-toast="Lien copié"><span class="ico"><i data-i="share"></i></span>Partager la séance</a></div>
+        </div>
+
+        <div class="sheet" id="cancelS">
+          <div class="grab"></div><h4>Annuler la séance ?</h4><div class="sub">Motif obligatoire</div>
+          <div class="chips" style="flex-wrap:wrap;overflow:visible"><button class="chip" data-reason="Prof malade">Prof malade</button><button class="chip" data-reason="Météo">Météo</button><button class="chip" data-reason="Autre">Autre</button></div>
+          <ul class="imp"><li class="w">2 saisies d'heures non validées seront <b>supprimées</b></li><li class="x">Les élèves et les parents ne sont pas prévenus automatiquement</li></ul>
+          <div class="banner bad hid" id="err409"><i data-i="alert"></i><div>Impossible : des heures sont déjà <b>validées</b>. <a style="font-weight:800;text-decoration:underline" data-sheet="pickR" data-mode="replace">Remplacer plutôt</a></div></div>
+          <button class="btn danger block" id="doCancel" disabled style="opacity:.5">Annuler la séance</button>
+          <button class="btn text block" id="sim409">Simuler : heures validées</button>
+        </div>
+
+        <div class="sheet" id="assign">
+          <div class="grab"></div><h4>Assignation</h4><div class="sub">Scratch Junior – lun. 17h</div>
+          <div class="list"><a data-call="Marie D."><span class="ico"><i data-i="phone"></i></span>Appeler</a><a data-sheet="endAssign" style="color:var(--danger)"><span class="ico" style="color:var(--danger)"><i data-i="ban"></i></span>Terminer l'assignation</a></div>
+        </div>
+        <div class="sheet" id="endAssign">
+          <div class="grab"></div><h4>Terminer l'assignation</h4><div class="sub">Marie Dupont · Scratch Junior</div>
+          <label class="field">Date de fin<input type="date" value="2026-10-25"></label>
+          <ul class="imp"><li class="w">9 séances à venir n'auront plus Marie D.</li><li class="x">Ses heures encodées ne bougent pas</li></ul>
+          <button class="btn danger block" data-toast="Assignation terminée · Annuler" data-close>Terminer</button>
+        </div>
+        <div class="sheet" id="editC">
+          <div class="grab"></div><h4>Créneau et lieu</h4><div class="sub">Propagé aux séances à venir</div>
+          <div class="row"><label class="field grow">Début<input type="time" value="17:00"></label><label class="field grow">Fin<input type="time" value="18:30" id="cFin"></label></div>
+          <label class="field">Lieu<input value="Ath" id="cLieu"></label>
+          <ul class="imp"><li>12 séances à venir sont mises à jour</li><li class="x">Les séances passées ou déjà ajustées ne changent pas</li></ul>
+          <button class="btn primary block" id="doEditC">Enregistrer</button>
+        </div>
+        <div class="sheet" id="noRepl">
+          <div class="grab"></div><h4>Remplaçant à trouver</h4><div class="sub">Les séances sont marquées « à pourvoir » et remontent dans les alertes d'Aujourd'hui.</div>
+          <button class="btn primary block" id="doNoRepl">Marquer « à pourvoir »</button><button class="btn text block" data-close>Annuler</button>
+        </div>
+        <div class="sheet" id="tarif">
+          <div class="grab"></div><h4>Nouveau tarif</h4><div class="sub">Marie Dupont</div>
+          <label class="field">Montant (€ / h)<input inputmode="decimal" value="19,50"></label><label class="field">À partir du<input type="date" value="2026-11-01"></label>
+          <button class="btn primary block" data-toast="Tarif ajouté" data-close>Ajouter</button>
+        </div>
+        <div class="sheet" id="notifs">
+          <div class="grab"></div><h4>Notifications</h4><div class="sub">Appuyez pour ouvrir directement l'écran concerné</div>
+          <div class="list"><a data-go="ts" data-close><span class="ico"><i data-i="clock"></i></span>Marie D. a soumis octobre</a><a data-go="session" data-close><span class="ico"><i data-i="alert"></i></span>Séance sans prof : Python Ados 14:00</a></div>
+        </div>
+        <div class="sheet" id="conteste">
+          <div class="grab"></div><h4>Contestation · Thomas L.</h4><div class="sub">Séance du 18 oct. · Minecraft S6</div>
+          <div class="banner bad"><i data-i="alert"></i><div>« J'ai fait 2 h, pas 1 h 30. »</div></div>
+          <button class="btn primary block" data-toast="Heures adaptées à 2 h" data-close>Adapter à 2 h</button><button class="btn soft block" data-toast="Contestation rejetée" data-close>Rejeter</button>
+        </div>
+
+        <div class="toast" id="toast"><span id="toastT"></span><button id="toastA" class="hid"></button></div>
+        <div class="done" id="done"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><h4 id="doneT">Fait</h4><p id="doneP"></p><button class="btn" data-call="Julie D.">Appeler Julie</button><button class="btn t2" id="doneClose">Retour à Aujourd'hui</button></div>
+      </div>
+      <nav class="tabs" id="tabbar">
+        <button class="tab on" data-root="today"><i data-i="home"></i>Aujourd'hui</button>
+        <button class="tab" data-root="ts"><i data-i="clock"></i>Timesheets<span class="dot">4</span></button>
+        <button class="tab" data-root="classes"><i data-i="school"></i>Classes</button>
+        <button class="tab" data-root="profs"><i data-i="user"></i>Profs</button>
+        <button class="tab" data-root="more"><i data-i="more"></i>Plus</button>
+      </nav>
+    </div></div>
+  </div>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const ICONS={home:'<path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',school:'<path d="M3 9 12 4l9 5-9 5z"/><path d="M7 11.5V16c3 2 7 2 10 0v-4.5"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',bell:'<path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 0 1-6 0"/>',phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',sms:'<path d="M4 5h16v11H9l-5 4z"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',back:'<path d="m15 5-7 7 7 7"/>',chev:'<path d="m9 5 7 7-7 7"/>',plus:'<path d="M12 5v14M5 12h14"/>',swap:'<path d="M7 7h12l-3-3M17 17H5l3 3"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',ban:'<circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/>',alert:'<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17v.5"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/>',screen:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',share:'<path d="M12 15V4m0 0L8 8m4-4 4 4M5 13v6h14v-6"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',book:'<path d="M4 5h16v14H4zM4 9h16"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>'};
+$$('i[data-i]').forEach(i=>{i.outerHTML=`<svg viewBox="0 0 24 24" width="22" height="22" style="stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">${ICONS[i.dataset.i]||''}</svg>`});
+
+/* ---- navigation ---- */
+const ROOTS=['today','ts','classes','profs','more'];
+let stack=['today'];
+function show(id,push=true){
+  $$('.scr').forEach(s=>s.classList.toggle('on',s.id===id));
+  if(push&&stack[stack.length-1]!==id)stack.push(id);
+  const root=ROOTS.includes(id)?id:(ROOTS.find(r=>stack.includes(r)&&r!==undefined)&&[...stack].reverse().find(s=>ROOTS.includes(s)));
+  $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.root===root));
+  const b=$('.body',$('#'+id)); if(b)b.scrollTop=0;
+}
+function back(){ stack.pop(); show(stack[stack.length-1]||'today',false); }
+function root(id){ stack=[id]; show(id,false); }
+const sheets=()=>$$('.sheet');
+function openSheet(id){ closeSheets(); $('#'+id).classList.add('on'); $('#scrim').classList.add('on'); }
+function closeSheets(){ sheets().forEach(s=>s.classList.remove('on')); $('#scrim').classList.remove('on'); }
+let tt;
+function toast(msg,act,fn){ $('#toastT').textContent=msg; const a=$('#toastA'); a.classList.toggle('hid',!act); a.textContent=act||''; a.onclick=()=>{fn&&fn();$('#toast').classList.remove('on')}; $('#toast').classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>$('#toast').classList.remove('on'),5000); }
+function doneScreen(t,p){ $('#doneT').textContent=t; $('#doneP').textContent=p; $('#done').classList.add('on'); }
+
+$('#app').addEventListener('click',e=>{
+  const el=e.target.closest('[data-go],[data-back],[data-root],[data-sheet],[data-close],[data-call],[data-toast],[data-pick]');
+  if(!el)return;
+  if(el.dataset.call){ e.stopPropagation(); toast('Appel de '+el.dataset.call+'… (démo)'); return; }
+  if(el.dataset.pick){ pick(el.dataset.pick); return; }
+  if(el.hasAttribute('data-close')){ closeSheets(); }
+  if(el.dataset.toast){ toast(el.dataset.toast, /Annuler/.test(el.dataset.toast)?'Annuler':null); }
+  if(el.dataset.sheet){ if(el.dataset.mode)mode=el.dataset.mode; if(el.dataset.sheet==='pickR')prepPick(); openSheet(el.dataset.sheet); return; }
+  if(el.dataset.root){ closeSheets(); root(el.dataset.root); return; }
+  if(el.dataset.go){ closeSheets(); show(el.dataset.go); return; }
+  if(el.hasAttribute('data-back')){ back(); }
+});
+$('#scrim').onclick=closeSheets;
+
+/* ---- scénarios : état métier factice ---- */
+let mode='replace', chosen='Julie D.';
+function prepPick(){
+  const t={replace:['Choisir le remplaçant','Python Ados · mar. 14:00 – 16:00'],add:['Ajouter un professeur','Python Ados · mar. 14:00 – 16:00 · rôle Principal'],bulk:['Un remplaçant pour 3 séances','Absence de Marie D. · aujourd\'hui et samedi'],assign:['Ajouter à la classe','Scratch Junior – lun. 17h · aperçu des conflits avant confirmation']}[mode];
+  $('#pickT').textContent=t[0]; $('#pickS').textContent=t[1];
+}
+function pick(name){
+  chosen=name;
+  if(mode==='bulk'){ closeSheets(); $('#recWho').textContent=name+' remplace Marie D.'; $$('[data-call]',$('#done')).forEach(b=>{b.dataset.call=name;b.textContent='Appeler '+name}); show('recap'); return; }
+  if(mode==='assign'){ closeSheets(); toast(name+' ajouté(e) à la classe','Annuler'); return; }
+  if(mode==='add'){ closeSheets(); const r=document.createElement('div'); r.className='row'; r.style.marginTop='12px'; r.innerHTML=`<div class="avatar">${name.slice(0,1)}${name.split(' ')[1].slice(0,1)}</div><div class="grow"><div class="t">${name}</div><div class="m"><span class="badge">Principal</span><span class="badge warn">Ajouté</span></div></div>`; $('#sProfs').appendChild(r); $('#pyProfs').innerHTML+=` <span class="badge warn">${name}</span>`; toast(name+' ajouté(e) à la séance','Annuler'); return; }
+  $('#impT').textContent=name+' remplace Marie D.'; openSheet('impact');
+}
+$('#doReplace').onclick=()=>{
+  closeSheets();
+  $('#rowMarie .t').style.textDecoration='line-through'; $('#rowMarie .m').innerHTML='<span class="badge grey">Remplacée</span>';
+  const r=document.createElement('div'); r.className='row'; r.style.marginTop='12px'; r.innerHTML=`<div class="avatar">${chosen.slice(0,1)}${chosen.split(' ')[1].slice(0,1)}</div><div class="grow"><div class="t">${chosen}</div><div class="m"><span class="badge ok">Remplaçante</span></div></div><button class="ib" data-call="${chosen}"><svg viewBox="0 0 24 24" width="22" height="22" style="stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round">${ICONS.phone}</svg></button>`;
+  $('#sProfs').appendChild(r); $('#pyProfs').innerHTML=`<span class="badge ok">${chosen}</span>`;
+  toast(chosen+' remplace Marie D.','Appeler',()=>toast('Appel de '+chosen+'… (démo)'));
+};
+$$('[data-abs]').forEach(r=>r.onclick=()=>{ r.classList.toggle('sel'); const n=$$('[data-abs].sel').length; $('#absNext').textContent=n?`Choisir un remplaçant · ${n} séance${n>1?'s':''}`:'Sélectionnez au moins une séance'; $('#absNext').disabled=!n; });
+$('#doBulk').onclick=()=>{ doneScreen('3 séances remplacées', chosen+' est prévenue par notification et email.'); };
+$('#doneClose').onclick=()=>{ $('#done').classList.remove('on'); $('#alertSans').textContent='1 séance sans prof'; root('today'); };
+$('#doNoRepl').onclick=()=>{ closeSheets(); $('#alertSans').textContent='5 séances sans prof'; root('today'); toast('3 séances marquées « à pourvoir »'); };
+$('#doEdit').onclick=()=>{ closeSheets(); $('#kvDate').textContent='Mar. 25 oct.'; $('#kvHeure').textContent=$('#fDeb').value+' – '+$('#fFin').value; $('#kvLieu').textContent=$('#fLieu').value; $('#sStatus').textContent='Modifiée'; toast('Séance modifiée','Annuler'); };
+let reason='';
+$$('[data-reason]').forEach(c=>c.onclick=()=>{ $$('[data-reason]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); reason=c.dataset.reason; const b=$('#doCancel'); b.disabled=false; b.style.opacity=1; });
+$('#sim409').onclick=()=>$('#err409').classList.toggle('hid');
+$('#doCancel').onclick=()=>{ closeSheets(); $('#sStatus').textContent='Annulée'; $('#sStatus').className='badge bad'; $('#sCancelBanner').classList.remove('hid'); $('#sReason').textContent='Motif : '+reason; $('#pyCancel').classList.remove('hid'); $('#sBar').classList.add('hid'); toast('Séance annulée','Annuler',()=>{$('#sBar').classList.remove('hid');$('#sCancelBanner').classList.add('hid');$('#pyCancel').classList.add('hid');$('#sStatus').textContent='Planifiée';$('#sStatus').className='badge'}); };
+$('#doArchive').onclick=()=>{ $('#pStatut').textContent='Archivé'; $('#pStatut').className='badge grey'; $('#profListBadge').textContent='Archivé'; $('#profListBadge').className='badge grey'; $('#btnArchive').textContent='Réactiver ce professeur'; stack=['profs','prof']; show('prof',false); toast('Marie Dupont archivée','Annuler',()=>{$('#pStatut').textContent='Actif';$('#pStatut').className='badge ok';$('#btnArchive').textContent='Archiver ce professeur'}); };
+$('#doEditC').onclick=()=>{ closeSheets(); $('#clCren').textContent='Lundi 17:00 – '+$('#cFin').value; $('#clLieu').textContent=$('#cLieu').value; toast('12 séances à venir mises à jour','Annuler'); };
+$('#q').oninput=e=>{ const v=e.target.value.toLowerCase().trim(); let n=0; $$('[data-r]').forEach(r=>{ const ok=!v||r.dataset.r.includes(v); r.classList.toggle('hid',!ok); n+=ok; }); $$('[data-g]').forEach(g=>{ let x=g.nextElementSibling,any=false; while(x&&!x.hasAttribute('data-g')&&x.id!=='noRes'){ if(!x.classList.contains('hid'))any=true; x=x.nextElementSibling;} g.classList.toggle('hid',!any); }); $('#noRes').classList.toggle('hid',n>0); };
+
+/* ---- scénarios (panneau de gauche) ---- */
+const FLOWS=[
+ {t:'1 · Changer le professeur d\'une séance',s:'Aujourd\'hui → fiche séance → Remplacer',start:'today',steps:['Touchez la carte « Python Ados 14:00 » (alerte « Marie D. malade ? »).','Dans la fiche séance, « Remplacer » (barre du bas).','Choisissez Julie D. : les profs libres sont en premier, les conflits en orange.','Confirmez l\'impact, puis appelez-la depuis le toast.'],be:'Endpoint à ajouter : GET /sessions/{id}/candidats (conflits connus AVANT l\'action).'},
+ {t:'2 · Remplacer un professeur sur plusieurs séances',s:'Fiche prof → Remplacer sur plusieurs séances',start:'prof',steps:['Fiche de Marie Dupont → « Remplacer sur plusieurs séances » (décision de la direction ; le professeur ne se déclare pas absent dans l\'app).','Période « Aujourd\'hui / Semaine », séances cochées par défaut.','« Choisir un remplaçant · 3 séances » → Julie D.','Récapitulatif avec conflit → « Remplacer sur 3 séances » → écran de succès avec Appeler.','Variante : « Pas encore de remplaçant » → séances « à pourvoir ».'],be:'À ajouter : filtre professeur_id sur /sessions, remplacement en lot ATOMIQUE (tout ou rien) avec aperçu, mail au remplaçant, état « remplaçant à trouver ».'},
+ {t:'3 · Modifier ou annuler une séance',s:'Fiche séance → Modifier / Plus → Annuler',start:'session',steps:['« Modifier » : date, heures, lieu de cette séance seulement.','« Plus » → Annuler : motif obligatoire, impact chiffré.','Bouton « Simuler : heures validées » : erreur 409 et alternative « Remplacer plutôt ».','Le toast propose d\'annuler l\'annulation.'],be:'À ajouter : aperçu d\'annulation (nombre de saisies supprimées). Décaler les séances suivantes reste sur ordinateur.'},
+ {t:'4 · Fiche professeur et archivage',s:'Profs → fiche → Archiver',start:'profs',steps:['Liste à puces → fiche : appeler, SMS, email en un tap.','Sections repliables : semaine, classes, tarif, compte.','Ajouter un tarif (modifier/supprimer = ordinateur). Renvoyer le lien de connexion.','« Archiver » : écran d\'impact, avec « Remplacer d\'abord ces séances » qui renvoie vers le flux 2.'],be:'Endpoints existants : impact-desactivation, tarif-effectif, envoyer-lien.'},
+ {t:'5 · Classe : prof, créneau, lieu',s:'Classes → classe',start:'classes',steps:['Ouvrez « Scratch Junior – lun. 17h ».','« Modifier créneau et lieu » : impact chiffré sur les séances à venir.','Touchez un professeur → Terminer l\'assignation (date de fin, impact).','« Ajouter un professeur » avec aperçu des conflits.','Périodes, congés, liens : accessibles, avec un bandeau « plus confortable sur ordinateur ».'],be:'À ajouter : compteur d\'impact sur PUT /classes.'},
+ {t:'6 · Recherche globale',s:'Loupe d\'Aujourd\'hui',start:'search',steps:['Tapez « sc », « marie », « python »…','Résultats groupés Profs / Classes / Séances du jour.','Un tap ouvre la fiche directement.'],be:'Recherche côté client au début ; GET /recherche plus tard.'},
+ {t:'7 · Écrans denses (création, contenus)',s:'Plus → Création de classe',start:'more',steps:['Les écrans denses restent accessibles : icône écran dans « Plus », rien n\'est bloqué.','Un bandeau informatif signale qu\'ils sont plus confortables sur ordinateur.','« Continuer ici » ou « M\'envoyer le lien pour plus tard ».'],be:'v2 : « M\'envoyer le lien » par mail (POST /me/rappel-lien).'}
+];
+const fl=$('#flows'); let cur=0;
+function setFlow(i){
+  cur=i; $$('.flow').forEach((b,k)=>b.classList.toggle('on',k===i));
+  const f=FLOWS[i];
+  $('#brief').innerHTML=`<h3>${f.t}</h3><ol>${f.steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="be"><b>Manque côté backend :</b> ${f.be}</div>`;
+  location.reload&&0; reset(f.start);
+}
+function reset(start){
+  closeSheets(); $('#done').classList.remove('on'); $('#toast').classList.remove('on');
+  // état métier remis à zéro en rechargeant le DOM des éléments mutables
+  $('#rowMarie .t').style.textDecoration=''; $('#rowMarie .m').innerHTML='<span class="badge">Principal</span>';
+  $$('#sProfs .row:not(#rowMarie)').forEach(r=>r.remove()); $('#pyProfs').innerHTML='<span class="badge">Marie D.</span>';
+  $('#sStatus').textContent='Planifiée'; $('#sStatus').className='badge'; $('#sCancelBanner').classList.add('hid'); $('#pyCancel').classList.add('hid'); $('#sBar').classList.remove('hid');
+  $('#pStatut').textContent='Actif'; $('#pStatut').className='badge ok'; $('#btnArchive').textContent='Archiver ce professeur'; $('#alertSans').textContent='2 séances sans prof';
+  $('#err409').classList.add('hid'); $$('[data-abs]').forEach(r=>r.classList.add('sel')); $('#absNext').textContent='Choisir un remplaçant · 3 séances'; $('#absNext').disabled=false;
+  $$('[data-reason]').forEach(x=>x.classList.remove('on')); $('#doCancel').disabled=true; $('#doCancel').style.opacity=.5;
+  $('#q').value=''; $('#q').oninput({target:$('#q')});
+  stack=start==='prof'?['profs','prof']:start==='session'?['today','session']:[start]; show(start,false);
+}
+FLOWS.forEach((f,i)=>{ const b=document.createElement('button'); b.className='flow'; b.innerHTML=`<b>${f.t}</b><small>${f.s}</small>`; b.onclick=()=>setFlow(i); fl.appendChild(b); });
+$('#reset').onclick=()=>setFlow(cur);
+function setTheme(t){document.documentElement.dataset.theme=t;$('#theme').textContent=t==='dark'?'☀️ Mode clair':'🌙 Mode sombre'}
+$('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+setFlow(0);
+</script>
+</body>
+</html>

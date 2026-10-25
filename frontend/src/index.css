@@ -1428,23 +1428,43 @@ form input[type='checkbox'] {
     justify-content: center !important;
   }
 
-  /* Modales plein écran : en-tête fixe, corps défilant, pied collant au-dessus du clavier et de la barre d'accueil. */
+  /* Feuilles basses (UI-M1) : ancrées en bas, fond visible, en-tête fixe, corps défilant, pied collant au-dessus du clavier et de la barre d'accueil. */
   .adm-modal-overlay {
-    align-items: stretch !important;
+    align-items: flex-end !important;
     justify-content: stretch !important;
   }
 
   .adm-modal {
     width: 100% !important;
     max-width: none !important;
-    height: 100dvh;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    border: 0 !important;
+    max-height: 90dvh !important;
+    border-radius: 24px 24px 0 0 !important;
+    border-bottom: 0 !important;
+    animation: sheetUp 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    transition: transform 0.2s ease;
+  }
+
+  .adm-modal .adm-modal__grab {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 4px;
+    touch-action: none;
+    flex: none;
+  }
+
+  .adm-modal__grab span {
+    width: 42px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--c-border);
   }
 
   .adm-modal__head {
-    padding: calc(8px + env(safe-area-inset-top)) 16px 8px !important;
+    touch-action: none;
+  }
+
+  .adm-modal__head {
+    padding: 4px 8px 8px 16px !important;
   }
 
   .adm-modal__body {
@@ -1636,6 +1656,41 @@ form input[type='checkbox'] {
   .ui-table-wrap:not(.ui-table-wrap--cards) {
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Poignée de la feuille basse : visible uniquement sur smartphone (voir @media 640 px). */
+.adm-modal__grab {
+  display: none;
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-modal {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Libellés : les mots longs passent à la ligne au lieu de déborder du cadre (UI-M1). */
+.portal-page {
+  min-width: 0;
+}
+
+.portal-page h1,
+.portal-page h2,
+.portal-page h3,
+.portal-page strong,
+.portal-page li,
+.portal-page td {
+  overflow-wrap: anywhere;
 }
 
 /* Les modales de la barre latérale (ex. « Ma signature ») héritaient du texte blanc de l'aside. */

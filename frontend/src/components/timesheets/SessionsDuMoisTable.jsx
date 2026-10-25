@@ -50,7 +50,7 @@ export default function SessionsDuMoisTable({ sessions, heuresParSession, onHeur
               <Td label="Date">
                 <span style={{ textDecoration: s.annulee ? 'line-through' : undefined }}>{formatDateCourte(s.date)}</span>
                 {s.est_a_venir && !s.annulee && (
-                  <span className="badge" style={{ marginLeft: '6px', fontSize: '11px', background: '#dbeafe', color: '#1e40af', borderRadius: '9999px', padding: '1px 8px' }}>
+                  <span className="badge" style={{ marginLeft: '6px', fontSize: '11px', background: 'var(--tone-primary-bg)', color: 'var(--tone-primary-fg)', borderRadius: '9999px', padding: '1px 8px' }}>
                     À venir
                   </span>
                 )}

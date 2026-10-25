@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX-MOBILE-01 — Maquette mobile-first</title>
+<style>
+:root{
+  --text:#16212e;--muted:#4b5a6b;--bg:#f4f6f8;--surface:#fff;--border:#dee3e8;
+  --accent:#14568f;--accent-soft:#e3eef8;--cta:#d9531e;--teal:#0e8f79;--teal-bg:#e7f5f2;
+  --deep:#0b3550;--danger:#c0392b;--warn-bg:#fef3c7;--warn-fg:#92400e;--ok-bg:#d1fae5;--ok-fg:#047857;
+  --shadow:0 1px 2px rgba(11,53,80,.08),0 6px 18px rgba(11,53,80,.06);
+}
+[data-theme=dark]{
+  --text:#e7ebef;--muted:#a9b4bf;--bg:#0f1620;--surface:#16212e;--border:#263241;
+  --accent:#5da0d6;--accent-soft:#12304a;--cta:#e8703f;--teal:#35c2a4;--teal-bg:#123028;
+  --warn-bg:#3a2d0c;--warn-fg:#fbbf24;--ok-bg:#0f3326;--ok-fg:#6ee7b7;--shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{font-family:'Manrope',system-ui,-apple-system,Segoe UI,sans-serif}
+body{margin:0;background:#e9edf1;color:#16212e;padding:24px 16px 64px}
+.page{max-width:1280px;margin:auto}
+h1{font-size:clamp(22px,4vw,30px);margin:0 0 6px}
+.lead{color:#4b5a6b;max-width:760px;line-height:1.5;margin:0 0 20px}
+.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
+.bar button{font:inherit;font-weight:600;border:1px solid #c5cdd5;background:#fff;border-radius:999px;padding:8px 16px;cursor:pointer}
+.stage{display:flex;gap:36px;flex-wrap:wrap;justify-content:center}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px}
+.col h2{font-size:15px;margin:0;text-align:center}
+.col p{font-size:13px;color:#4b5a6b;margin:0;max-width:340px;text-align:center}
+
+/* ---- téléphone ---- */
+.phone{width:372px;height:760px;border-radius:44px;background:#0b1118;padding:10px;box-shadow:0 20px 50px rgba(11,53,80,.25)}
+.screen{position:relative;width:100%;height:100%;border-radius:34px;overflow:hidden;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+.status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0 24px 4px;font-size:12px;font-weight:700}
+.view{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 16px 96px;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.pane{display:none;animation:in .22s ease}
+.pane.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- tab bar ---- */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--border);padding:6px 4px 18px}
+.tab{flex:1;min-height:52px;border:0;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--accent)}
+.tab.on::before{content:"";position:absolute;top:-7px;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+.dot{position:absolute;top:4px;right:calc(50% - 18px);min-width:16px;height:16px;border-radius:8px;background:var(--cta);color:#fff;font-size:10px;display:grid;place-items:center;padding:0 4px}
+
+/* ---- composants ---- */
+.hello{display:flex;align-items:center;gap:14px;margin:6px 0 16px}
+.hello h3{margin:0;font-size:22px;line-height:1.15;overflow-wrap:anywhere}
+.hello small{color:var(--muted);font-size:13px}
+.ring{width:84px;height:84px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .bg{stroke:var(--border)}
+.ring .fg{stroke:var(--teal);transition:stroke-dashoffset .5s ease}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:18px}
+.hero{background:linear-gradient(140deg,var(--deep),var(--accent));color:#fff;border-radius:20px;padding:16px;margin-bottom:18px;box-shadow:var(--shadow)}
+.hero .kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-weight:700}
+.hero h4{margin:4px 0 2px;font-size:18px;overflow-wrap:anywhere}
+.hero .meta{font-size:13px;opacity:.9;display:flex;gap:6px 12px;flex-wrap:wrap}
+.hero .row{display:flex;gap:8px;margin-top:14px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:14px;min-height:48px;padding:0 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:15px}
+.btn.primary{background:var(--cta);color:#fff}
+.btn.ghost{background:rgba(255,255,255,.16);color:#fff}
+.btn.soft{background:var(--accent-soft);color:var(--accent)}
+.btn.block{width:100%}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px}
+.sec h5{margin:0;font-size:16px}
+.sec span{font-size:13px;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--c,var(--accent));border-radius:16px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);transition:transform .3s ease,opacity .3s ease}
+.card.out{transform:translateX(110%);opacity:0}
+.card .t{font-weight:700;font-size:15px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.card .m{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:2px 10px}
+.card .act{display:flex;gap:8px;margin-top:10px;align-items:center}
+.card .act .btn{flex:1;min-height:44px;font-size:14px}
+.card .act a{font-size:13px;font-weight:600;color:var(--accent);padding:12px 6px;cursor:pointer;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);max-width:100%}
+.badge.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.badge.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.empty{text-align:center;padding:26px 10px;color:var(--muted)}
+.empty b{display:block;color:var(--text);font-size:16px;margin-top:6px}
+.week{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px}
+.monthnav{display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px}
+.monthnav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:18px}
+.monthnav b{font-size:18px}
+.summary{display:flex;gap:10px;margin-bottom:6px}
+.summary div{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center}
+.summary strong{display:block;font-size:20px}
+.summary small{color:var(--muted);font-size:11.5px}
+.stick{position:absolute;left:12px;right:12px;bottom:84px;background:var(--deep);color:#fff;border-radius:18px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.stick span{flex:1;font-size:13px;line-height:1.25}
+.stick b{display:block;font-size:16px}
+.stick .btn{min-height:44px;font-size:14px;flex:none}
+.fab{position:absolute;right:16px;bottom:150px;width:56px;height:56px;border-radius:50%;background:var(--cta);color:#fff;border:0;font-size:28px;box-shadow:0 8px 20px rgba(217,83,30,.4);cursor:pointer}
+.list{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:14px}
+.list a{display:flex;align-items:center;gap:12px;padding:0 14px;min-height:54px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;cursor:pointer}
+.list a:last-child{border:0}
+.list a svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.list a em{margin-left:auto;font-style:normal;color:var(--muted);font-weight:400}
+.group{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 4px 8px}
+.chk{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);flex:none;display:grid;place-items:center;font-size:15px;color:#fff;margin-right:2px}
+[hidden]{display:none!important}
+.sel .chk{background:var(--teal);border-color:var(--teal)}
+.profrow{display:flex;gap:12px;align-items:center}
+.profrow .body{flex:1;min-width:0}
+.amount{font-weight:800;font-size:16px;white-space:nowrap}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
+
+/* ---- bottom sheet ---- */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:26px 26px 0 0;padding:10px 18px 30px;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:88%;overflow:auto;z-index:5}
+.sheet.on{transform:none}
+.grab{width:42px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 14px}
+.sheet h4{margin:0 0 2px;font-size:19px}
+.sheet .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.stepper{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 16px}
+.stepper button{width:56px;height:56px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:26px;cursor:pointer}
+.stepper output{font-size:36px;font-weight:800;min-width:110px;text-align:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;min-height:44px;padding:0 16px;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.toast{position:absolute;left:12px;right:12px;bottom:90px;background:#16212e;color:#fff;border-radius:14px;padding:6px 8px 6px 16px;display:flex;align-items:center;gap:8px;font-size:14px;transform:translateY(160%);transition:transform .25s;z-index:6}
+.toast.on{transform:none}
+.toast span{flex:1}
+.toast button{background:none;border:0;color:#ffb48f;font:inherit;font-weight:800;min-height:44px;padding:0 12px;cursor:pointer}
+.done{position:absolute;inset:0;background:var(--teal);color:#fff;z-index:8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:30px}
+.done.on{display:flex;animation:in .3s}
+.done svg{width:96px;height:96px;stroke:#fff;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;animation:draw .6s .1s ease both}
+@keyframes draw{from{stroke-dashoffset:60}to{stroke-dashoffset:0}}
+.done h4{font-size:24px;margin:0}
+
+/* ---- notes ---- */
+.notes{max-width:1000px;margin:48px auto 0;background:#fff;border-radius:20px;padding:24px;line-height:1.55;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.notes h2{margin-top:0}
+.notes li{margin-bottom:6px}
+.compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:12px}
+.compare div{background:#f4f6f8;border-radius:14px;padding:14px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>UX-MOBILE-01 — Logiscool, pensé pour le pouce</h1>
+  <p class="lead">Maquette interactive (390 px). Naviguez avec la barre d'onglets, touchez « Encoder », « Autre durée », « Soumettre le mois », faites un appui long (clic maintenu) sur une carte timesheet côté directeur. <strong>Rien n'est développé</strong> : cette maquette sert à valider la direction.</p>
+  <div class="bar">
+    <button id="theme">🌙 Mode sombre</button>
+    <button id="reset">↺ Réinitialiser</button>
+  </div>
+
+  <div class="stage">
+    <!-- ============ PROFESSEUR ============ -->
+    <div class="col">
+      <h2>Professeur · Marie</h2>
+      <div class="phone"><div class="screen" id="prof">
+        <div class="status"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="view">
+
+          <section class="pane on" data-pane="today">
+            <div class="hello">
+              <div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" id="fg" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="88"/></svg><b id="ringtxt">6/9</b></div>
+              <div><small>Mardi 25 octobre</small><h3>Bonjour Marie 👋</h3><small id="ringsub">6 séances encodées · 142 €</small></div>
+            </div>
+            <div class="hero">
+              <div class="kicker">Prochaine séance · dans 2 h</div>
+              <h4>Scratch Junior – lun. 17h</h4>
+              <div class="meta"><span>🕔 17:00 – 18:30</span><span>📍 Ath</span><span>S8 · Les boucles</span></div>
+              <div class="row"><button class="btn primary" style="flex:1">Liens du cours</button><button class="btn ghost" aria-label="Détail">⋯</button></div>
+            </div>
+            <div class="sec"><h5>À encoder</h5><span id="count">3 séances</span></div>
+            <div id="pile">
+              <article class="card" style="--c:#7c3aed"><div class="t">Python Ados – mer. 14h · Séance 7</div><div class="m"><span>Mer. 22 oct.</span><span>14:00 – 16:00</span></div><div class="act"><button class="btn primary" data-enc="2">Encoder 2 h</button><a data-sheet>Autre durée</a></div></article>
+              <article class="card" style="--c:#0e8f79"><div class="t">Minecraft Education – sam. 10h30 · Séance 6</div><div class="m"><span>Sam. 18 oct.</span><span>10:30 – 12:00</span><span class="badge warn">Remplacement</span></div><div class="act"><button class="btn primary" data-enc="1.5">Encoder 1 h 30</button><a data-sheet>Autre durée</a></div></article>
+              <article class="card" style="--c:#14568f"><div class="t">Scratch Junior – lun. 17h · Séance 7</div><div class="m"><span>Lun. 20 oct.</span><span>17:00 – 18:30</span></div><div class="act"><button class="btn primary" data-enc="1.5">Encoder 1 h 30</button><a data-sheet>Autre durée</a></div></article>
+            </div>
+            <div class="empty" id="empty" hidden><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg><b>Tout est à jour</b>Rien à encoder. Profitez-en !</div>
+          </section>
+
+          <section class="pane" data-pane="month">
+            <div class="monthnav"><button aria-label="Mois précédent">‹</button><b>Octobre 2026</b><button aria-label="Mois suivant" disabled style="opacity:.4">›</button></div>
+            <div class="summary"><div><strong>9 h</strong><small>encodées</small></div><div><strong>142 €</strong><small>brut estimé</small></div><div><strong>Brouillon</strong><small>statut</small></div></div>
+            <div class="week">Semaine du 20 oct.</div>
+            <article class="card" style="--c:#14568f"><div class="t">Scratch Junior · S7</div><div class="m"><span>Lun. 20</span><span>1 h 30</span></div><div style="margin-top:6px"><span class="badge ok">✓ Encodée</span></div></article>
+            <article class="card" style="--c:#7c3aed"><div class="t">Python Ados · S8</div><div class="m"><span>Mer. 22</span><span>2 h</span></div><div style="margin-top:6px"><span class="badge ok">✓ Encodée</span></div></article>
+            <div class="week">Autres heures</div>
+            <article class="card" style="--c:#d9531e"><div class="t">Préparation de stage</div><div class="m"><span>Jeu. 23</span><span>1 h</span></div><div style="margin-top:6px"><span class="badge">Autre activité</span></div></article>
+            <div class="week">Semaine du 27 oct. · à venir</div>
+            <article class="card" style="--c:#14568f;opacity:.7"><div class="t">Scratch Junior · S8</div><div class="m"><span>Lun. 27</span><span>17:00</span></div><div style="margin-top:6px"><span class="badge">À venir</span></div></article>
+          </section>
+
+          <section class="pane" data-pane="classes">
+            <div class="hello"><div><h3>Mes classes</h3><small>3 classes actives</small></div></div>
+            <article class="card"><div class="t">Scratch Junior – lun. 17h</div><div class="m"><span>2025-2026</span><span>Avec Julie D.</span></div><div style="margin:8px 0 2px;font-size:13px">Prochaine : <b>S8 · lun. 27 oct.</b></div><div class="act"><button class="btn soft">Voir les séances</button></div></article>
+            <article class="card" style="--c:#7c3aed"><div class="t">Python Ados – mer. 14h</div><div class="m"><span>2025-2026</span></div><div style="margin:8px 0 2px;font-size:13px">Prochaine : <b>S8 · mer. 29 oct.</b></div><div class="act"><button class="btn soft">Voir les séances</button></div></article>
+          </section>
+
+          <section class="pane" data-pane="me">
+            <div class="hello"><div class="avatar" style="width:64px;height:64px;font-size:22px">MD</div><div><h3>Marie Dupont</h3><small>Professeur</small></div></div>
+            <div class="list">
+              <a><svg viewBox="0 0 24 24"><path d="M4 20c2-6 5-6 7-3s4 1 5-3l4-8"/></svg>Ma signature<em>›</em></a>
+              <a><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Liens de mes cours<em>›</em></a>
+              <a id="themeInPhone"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Apparence<em>Auto ›</em></a>
+              <a><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 0 1-6 0"/></svg>Notifications<em>2 ›</em></a>
+            </div>
+            <button class="btn block soft" style="color:var(--danger)">Se déconnecter</button>
+          </section>
+        </div>
+
+        <!-- barre collante "mon mois" -->
+        <div class="stick" id="stickProf" hidden><span><b>12 h · 142 €</b>3 séances encodées</span><button class="btn primary" id="submitBtn">Soumettre</button></div>
+        <button class="fab" id="fabProf" hidden aria-label="Ajouter des heures">+</button>
+
+        <nav class="tabs">
+          <button class="tab on" data-go="today"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Aujourd'hui<span class="dot" id="dotToday">3</span></button>
+          <button class="tab" data-go="month"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Mon mois</button>
+          <button class="tab" data-go="classes"><svg viewBox="0 0 24 24"><path d="M3 9 12 4l9 5-9 5z"/><path d="M7 11.5V16c3 2 7 2 10 0v-4.5"/></svg>Classes</button>
+          <button class="tab" data-go="me"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Moi</button>
+        </nav>
+
+        <div class="scrim" id="scrimProf"></div>
+        <div class="sheet" id="sheetDuree">
+          <div class="grab"></div>
+          <h4>Python Ados · Séance 7</h4><div class="sub">Mer. 22 oct. · 14:00 – 16:00 · standard 2 h</div>
+          <div class="stepper"><button id="minus" aria-label="Moins 30 minutes">−</button><output id="val">2 h</output><button id="plus" aria-label="Plus 30 minutes">+</button></div>
+          <div class="chips"><button class="chip on">Animation</button><button class="chip">Préparation</button><button class="chip">Autre</button></div>
+          <button class="btn primary block" id="okDuree">Encoder</button>
+        </div>
+        <div class="sheet" id="sheetSubmit">
+          <div class="grab"></div>
+          <h4>Soumettre octobre 2026</h4><div class="sub">Vérifiez avant d'envoyer au directeur.</div>
+          <div class="summary"><div><strong>12 h</strong><small>défrayées</small></div><div><strong>142 €</strong><small>brut estimé</small></div></div>
+          <div class="card" style="--c:var(--teal);margin-top:12px"><div class="t">Signature</div><div class="m"><span>Votre spécimen enregistré sera apposé.</span></div></div>
+          <button class="btn primary block" id="okSubmit">Signer et soumettre</button>
+          <button class="btn block" style="margin-top:8px;background:none;color:var(--muted)" id="cancelSubmit">Pas maintenant</button>
+        </div>
+        <div class="toast" id="toastProf"><span>Encodé · 2 h</span><button id="undo">Annuler</button></div>
+        <div class="done" id="doneProf"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><h4>Mois soumis !</h4><p>Le directeur est prévenu par mail.<br>Vous serez notifiée de la validation.</p><button class="btn" style="background:#fff;color:var(--teal)" id="doneClose">Retour à l'accueil</button></div>
+      </div></div>
+      <p>Arrivée sur <strong>Aujourd'hui</strong> : la prochaine séance, ce qu'il reste à encoder (1 tap), la progression du mois.</p>
+    </div>
+
+    <!-- ============ DIRECTEUR ============ -->
+    <div class="col">
+      <h2>Directeur · Paul</h2>
+      <div class="phone"><div class="screen" id="dir">
+        <div class="status"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="view">
+
+          <section class="pane on" data-pane="ts">
+            <div class="monthnav"><button aria-label="Mois précédent">‹</button><b>Octobre 2026</b><button aria-label="Mois suivant">›</button></div>
+            <div class="chips" style="margin-bottom:10px"><button class="chip on">À valider · 4</button><button class="chip">Contestés · 1</button><button class="chip">Validés</button></div>
+            <div class="sec"><h5>Professeurs</h5><span id="selhint">Appui long pour sélectionner</span></div>
+            <div id="profs">
+              <article class="card" data-p="142"><div class="profrow"><span class="chk" hidden>✓</span><div class="avatar">MD</div><div class="body"><div class="t">Marie Dupont</div><div class="m"><span>ASBL Pays Vert</span></div><div style="margin-top:6px"><span class="badge warn">À valider</span></div></div><div class="amount">142 €</div></div></article>
+              <article class="card" data-p="198"><div class="profrow"><span class="chk" hidden>✓</span><div class="avatar">JD</div><div class="body"><div class="t">Julie Delmotte-Vandenbroeck</div><div class="m"><span>SRL Logiscool Ath</span></div><div style="margin-top:6px"><span class="badge warn">À valider</span> <span class="badge">⚠ Plafond</span></div></div><div class="amount">198 €</div></div></article>
+              <article class="card" data-p="96"><div class="profrow"><span class="chk" hidden>✓</span><div class="avatar">TL</div><div class="body"><div class="t">Thomas Leclercq</div><div class="m"><span>ASBL Pays Vert</span></div><div style="margin-top:6px"><span class="badge warn">À valider</span></div></div><div class="amount">96 €</div></div></article>
+              <article class="card" data-p="176"><div class="profrow"><span class="chk" hidden>✓</span><div class="avatar">SK</div><div class="body"><div class="t">Sofia Kowalski</div><div class="m"><span>SRL Logiscool Ath</span></div><div style="margin-top:6px"><span class="badge warn">À valider</span></div></div><div class="amount">176 €</div></div></article>
+            </div>
+          </section>
+
+          <section class="pane" data-pane="home">
+            <div class="hello"><div><small>Mardi 25 octobre</small><h3>Bonjour Paul 👋</h3></div></div>
+            <article class="card" style="--c:var(--cta)"><div class="t">4 timesheets à valider</div><div class="m"><span>612 € au total</span></div><div class="act"><button class="btn primary" data-go-dir="ts">Ouvrir</button></div></article>
+            <article class="card" style="--c:var(--danger)"><div class="t">1 contestation en attente</div><div class="m"><span>Thomas Leclercq</span></div></article>
+            <article class="card" style="--c:var(--warn-fg)"><div class="t">2 séances sans professeur cette semaine</div><div class="m"><span>Python Ados · Minecraft</span></div></article>
+          </section>
+
+          <section class="pane" data-pane="classesd">
+            <div class="hello"><div><h3>Classes</h3><small>24 actives</small></div></div>
+            <article class="card"><div class="t">Scratch Junior – lun. 17h</div><div class="m"><span>Marie D., Julie D.</span></div></article>
+            <article class="card" style="--c:#7c3aed"><div class="t">Python Ados – mer. 14h</div><div class="m"><span>Marie D.</span></div></article>
+          </section>
+
+          <section class="pane" data-pane="profsd">
+            <div class="hello"><div><h3>Professeurs</h3><small>18 actifs</small></div></div>
+            <article class="card"><div class="profrow"><div class="avatar">MD</div><div class="body"><div class="t">Marie Dupont</div><div class="m"><span>ASBL Pays Vert</span></div></div></div></article>
+            <article class="card"><div class="profrow"><div class="avatar">JD</div><div class="body"><div class="t">Julie Delmotte-Vandenbroeck</div><div class="m"><span>SRL Logiscool Ath</span></div></div></div></article>
+          </section>
+
+          <section class="pane" data-pane="more">
+            <div class="hello"><div><h3>Plus</h3></div></div>
+            <div class="group">Opérationnel</div>
+            <div class="list"><a><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.2-1.3L14 3h-4l-.4 2.5a7 7 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .9.1 1.3l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.2 1.3L10 21h4l.4-2.5a7 7 0 0 0 2.2-1.3l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/></svg>Paramètres timesheets<em>›</em></a><a><svg viewBox="0 0 24 24"><path d="M4 21V5l8-2v18M12 9h8v12M7 8h2M7 12h2M7 16h2"/></svg>Entités employeurs<em>›</em></a><a><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c.6-4 3-6 7-6s6.400 2 7 6M17 5a3.500 3.500 0 0 1 0 7M19 14c1.500.800 2.500 2.600 3 5"/></svg>Équipe<em>›</em></a></div>
+            <div class="group">Scolarité</div>
+            <div class="list"><a><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendrier<em>›</em></a><a><svg viewBox="0 0 24 24"><path d="M3 9 12 4l9 5-9 5z"/></svg>Années scolaires<em>›</em></a><a><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>Calendrier scolaire<em>›</em></a></div>
+            <div class="group">Contenu</div>
+            <div class="list"><a><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16"/></svg>Cours<em>›</em></a><a><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16"/></svg>Stages<em>›</em></a><a><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16"/></svg>Formations<em>›</em></a><a><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16"/></svg>Anniversaires<em>›</em></a></div>
+            <div class="group">Compte</div>
+            <div class="list"><a><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Apparence<em>Auto ›</em></a><a><svg viewBox="0 0 24 24"><path d="M9 21H5V3h4M16 17l5-5-5-5M21 12H9"/></svg>Se déconnecter</a></div>
+          </section>
+        </div>
+
+        <div class="stick" id="stickDir" hidden><span><b id="selTxt">0 · 0 €</b>sélectionnés</span><button class="btn primary" id="validBtn">Valider</button></div>
+
+        <nav class="tabs">
+          <button class="tab" data-go="home"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Accueil</button>
+          <button class="tab on" data-go="ts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Timesheets<span class="dot">4</span></button>
+          <button class="tab" data-go="classesd"><svg viewBox="0 0 24 24"><path d="M3 9 12 4l9 5-9 5z"/><path d="M7 11.5V16c3 2 7 2 10 0v-4.5"/></svg>Classes</button>
+          <button class="tab" data-go="profsd"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profs</button>
+          <button class="tab" data-go="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.500"/><circle cx="12" cy="12" r="1.500"/><circle cx="19" cy="12" r="1.500"/></svg>Plus</button>
+        </nav>
+
+        <div class="scrim" id="scrimDir"></div>
+        <div class="sheet" id="sheetValid">
+          <div class="grab"></div>
+          <h4 id="vTitle">Valider 0 timesheets</h4><div class="sub">Les professeurs seront notifiés par mail.</div>
+          <div class="summary"><div><strong id="vCount">0</strong><small>professeurs</small></div><div><strong id="vSum">0 €</strong><small>total brut</small></div></div>
+          <button class="btn primary block" style="margin-top:14px" id="okValid">Confirmer la validation</button>
+          <button class="btn block" style="margin-top:8px;background:none;color:var(--muted)" id="cancelValid">Annuler</button>
+        </div>
+        <div class="toast" id="toastDir"><span>Timesheets validés ✓</span><button id="dismissDir">OK</button></div>
+      </div></div>
+      <p>5 onglets max. Les 15 entrées du menu burger sont rangées dans <strong>Plus</strong>, par groupe. Validation par lot : appui long → sélection → barre collante.</p>
+    </div>
+  </div>
+
+  <section class="notes">
+    <h2>Ce que cette maquette change</h2>
+    <div class="compare">
+      <div><strong>Navigation</strong><br>Avant : bouton « Menu » + 15 liens empilés au-dessus du contenu (2 taps par page).<br>Après : barre d'onglets basse par rôle, accessible au pouce, avec « Plus » pour le reste.</div>
+      <div><strong>Encoder une séance</strong><br>Avant : tableau, stepper + ⓘ + bouton dans une cellule, ou modale complète.<br>Après : 1 tap avec la durée standard (annulable 5 s) ; « Autre durée » ouvre une feuille basse.</div>
+      <div><strong>Libellés</strong><br>Titres sur 2 lignes max, coupure des mots longs, un seul badge d'état par carte, icônes SVG au lieu des emojis.</div>
+      <div><strong>Modales → feuilles basses</strong><br>Actions collées en bas, pleine largeur, fermeture par glissement ou tap sur le fond.</div>
+      <div><strong>Validation directeur</strong><br>Avant : tableau à 11 colonnes. Après : cartes compactes, sélection multiple, total « Valider 4 · 612 € ».</div>
+      <div><strong>Immersif</strong><br>Anneau de progression du mois, transitions fluides entre écrans, écran de confirmation plein écran, installation sur l'écran d'accueil (PWA, sans hors-ligne).</div>
+    </div>
+    <h2 style="margin-top:24px">À valider avant de développer</h2>
+    <ol>
+      <li><strong>Encodage en 1 tap</strong> avec la durée standard, sans confirmation, mais annulable 5 s puis modifiable tant que c'est un brouillon : OK ?</li>
+      <li><strong>Page d'arrivée du professeur</strong> : « Aujourd'hui » à la place de « Mes classes » (nécessite un endpoint d'accueil côté backend).</li>
+      <li><strong>Signature</strong> : spécimen enregistré une fois et apposé à la soumission (comme ici), ou tracé à chaque fois ?</li>
+      <li><strong>Directeur sur mobile</strong> : validation et consultation uniquement ; les écrans de paramétrage lourds restent conçus pour l'ordinateur. D'accord ?</li>
+      <li><strong>Ordinateur</strong> : on garde la barre latérale (regroupée comme « Plus »). D'accord ?</li>
+    </ol>
+    <h2>Découpage proposé (tranches verticales)</h2>
+    <ol>
+      <li>UI-M1 Socle : débordements, feuille basse, mode sombre</li>
+      <li>UI-M2 Navigation par onglets</li>
+      <li>UI-M3 « Aujourd'hui » + encodage en 1 tap</li>
+      <li>UI-M4 « Mon mois » en cartes + soumission</li>
+      <li>UI-M5 Validation par lot du directeur</li>
+      <li>UI-M6 Finitions immersives (manifest, transitions, illustrations)</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=h=>{const m=Math.round(h*60);const hh=Math.floor(m/60),mm=m%60;return mm?`${hh} h ${String(mm).padStart(2,'0')}`:`${hh} h`};
+function tabs(root,after){
+  $$('.tab',root).forEach(t=>t.onclick=()=>go(root,t.dataset.go,after));
+}
+function go(root,name,after){
+  $$('.pane',root).forEach(p=>p.classList.toggle('on',p.dataset.pane===name));
+  $$('.tab',root).forEach(t=>t.classList.toggle('on',t.dataset.go===name));
+  $('.view',root).scrollTop=0; after&&after(name);
+}
+
+/* ---- professeur ---- */
+const prof=$('#prof');
+let done=6, todo=3, lastCard=null;
+const TOTAL=9, C=263.9;
+function ring(){
+  $('#fg').style.strokeDashoffset=C*(1-done/TOTAL);
+  $('#ringtxt').textContent=done+'/'+TOTAL;
+  $('#ringsub').textContent=done+' séances encodées · '+(142+(done-6)*30)+' €';
+  $('#count').textContent=todo+' séance'+(todo>1?'s':'');
+  const d=$('#dotToday'); d.textContent=todo; d.hidden=!todo;
+  $('#empty').hidden=!!todo;
+}
+tabs(prof,n=>{ $('#stickProf').hidden=n!=='month'; $('#fabProf').hidden=n!=='month'; });
+let tt;
+function toast(el,msg){ if(msg)$('span',el).textContent=msg; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),5000); }
+$$('[data-enc]',prof).forEach(b=>b.onclick=()=>{
+  const card=b.closest('.card'); card.classList.add('out'); lastCard=card;
+  setTimeout(()=>{card.hidden=true; },300);
+  done++; todo--; ring(); if(navigator.vibrate)navigator.vibrate(10);
+  toast($('#toastProf'),'Encodé · '+fmt(+b.dataset.enc));
+});
+$('#undo').onclick=()=>{ if(!lastCard)return; lastCard.hidden=false; requestAnimationFrame(()=>lastCard.classList.remove('out')); done--; todo++; lastCard=null; ring(); $('#toastProf').classList.remove('on'); };
+let dur=2;
+const open=(sh,sc)=>{$(sh).classList.add('on');$(sc).classList.add('on')}, close=(sh,sc)=>{$(sh).classList.remove('on');$(sc).classList.remove('on')};
+$$('[data-sheet]',prof).forEach(a=>a.onclick=()=>{dur=2;$('#val').textContent=fmt(dur);open('#sheetDuree','#scrimProf')});
+$('#minus').onclick=()=>{dur=Math.max(.5,dur-.5);$('#val').textContent=fmt(dur)};
+$('#plus').onclick=()=>{dur=Math.min(24,dur+.5);$('#val').textContent=fmt(dur)};
+$$('.chip',$('#sheetDuree')).forEach(c=>c.onclick=()=>{$$('.chip',$('#sheetDuree')).forEach(x=>x.classList.remove('on'));c.classList.add('on')});
+$('#okDuree').onclick=()=>{close('#sheetDuree','#scrimProf'); const first=$$('#pile .card:not([hidden])')[0]; if(first){const b=$('[data-enc]',first); b.dataset.enc=dur; b.click();}};
+$('#scrimProf').onclick=()=>{close('#sheetDuree','#scrimProf');close('#sheetSubmit','#scrimProf')};
+$('#submitBtn').onclick=()=>open('#sheetSubmit','#scrimProf');
+$('#cancelSubmit').onclick=()=>close('#sheetSubmit','#scrimProf');
+$('#okSubmit').onclick=()=>{close('#sheetSubmit','#scrimProf');$('#doneProf').classList.add('on')};
+$('#doneClose').onclick=()=>{$('#doneProf').classList.remove('on');go(prof,'today',n=>{$('#stickProf').hidden=true;$('#fabProf').hidden=true})};
+ring();
+
+/* ---- directeur ---- */
+const dir=$('#dir');
+let sel=new Set(), pressT, selMode=false;
+tabs(dir,n=>{ $('#stickDir').hidden=!(n==='ts'&&selMode); });
+$$('[data-go-dir]',dir).forEach(b=>b.onclick=()=>go(dir,'ts',()=>{}));
+function refresh(){
+  const cards=$$('#profs .card'); const sum=[...sel].reduce((t,c)=>t+(+c.dataset.p),0);
+  cards.forEach(c=>{c.classList.toggle('sel',sel.has(c)); $('.chk',c).hidden=!selMode; $('.chk',c).style.background=sel.has(c)?'':'transparent'; $('.chk',c).style.color=sel.has(c)?'#fff':'transparent'});
+  $('#stickDir').hidden=!selMode;
+  $('#selTxt').textContent=sel.size+' · '+sum+' €';
+  $('#validBtn').textContent=sel.size?`Valider ${sel.size}`:'Valider';
+  $('#validBtn').disabled=!sel.size; $('#validBtn').style.opacity=sel.size?1:.5;
+  $('#selhint').textContent=selMode?'Touchez pour (dé)sélectionner':'Appui long pour sélectionner';
+}
+$$('#profs .card').forEach(c=>{
+  const start=()=>{pressT=setTimeout(()=>{selMode=true;sel.add(c);c._long=true;if(navigator.vibrate)navigator.vibrate(15);refresh()},450)};
+  const end=()=>clearTimeout(pressT);
+  c.addEventListener('pointerdown',start); ['pointerup','pointerleave','pointercancel'].forEach(e=>c.addEventListener(e,end));
+  c.addEventListener('click',()=>{ if(c._long){c._long=false;return} if(!selMode)return; sel.has(c)?sel.delete(c):sel.add(c); if(!sel.size)selMode=false; refresh(); });
+});
+$('#validBtn').onclick=()=>{
+  const sum=[...sel].reduce((t,c)=>t+(+c.dataset.p),0);
+  $('#vTitle').textContent=`Valider ${sel.size} timesheet${sel.size>1?'s':''}`; $('#vCount').textContent=sel.size; $('#vSum').textContent=sum+' €';
+  open('#sheetValid','#scrimDir');
+};
+$('#cancelValid').onclick=$('#scrimDir').onclick=()=>close('#sheetValid','#scrimDir');
+$('#okValid').onclick=()=>{ close('#sheetValid','#scrimDir'); sel.forEach(c=>{$('.badge',c).className='badge ok';$('.badge',c).textContent='✓ Validé'}); sel.clear(); selMode=false; refresh(); toast($('#toastDir')); };
+$('#dismissDir').onclick=()=>$('#toastDir').classList.remove('on');
+refresh();
+
+/* ---- thème / reset ---- */
+function setTheme(t){document.documentElement.dataset.theme=t;$('#theme').textContent=t==='dark'?'☀️ Mode clair':'🌙 Mode sombre'}
+$('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('#themeInPhone').onclick=$('#theme').onclick;
+$('#reset').onclick=()=>location.reload();
+</script>
+</body>
+</html>

@@ -34,7 +34,7 @@ export function AdminPageHeader({ icon, title, description, badge, action, bread
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
             {icon && <span aria-hidden="true" style={{ fontSize: '28px', flex: '0 0 auto' }}>{icon}</span>}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 12px', flex: 1, minWidth: 0 }}>
-              <h1 style={{ margin: 0, fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: 700, color: 'var(--c-text)' }}>
+              <h1 style={{ margin: 0, fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: 700, color: 'var(--c-text)', overflowWrap: 'anywhere' }}>
                 {title}
               </h1>
               {badge && (

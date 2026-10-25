@@ -26,7 +26,9 @@ export default function StatutBadge({ table, valeur, label, tone }) {
         fontWeight: 700,
         background: couleurs.bg,
         color: couleurs.fg,
-        whiteSpace: 'nowrap',
+        maxWidth: '100%',
+        overflowWrap: 'anywhere',
+        lineHeight: 1.3,
       }}
     >
       {statut.label}

@@ -1,5 +1,8 @@
 import { useEffect, useId, useRef } from 'react';
 
+const SEUIL_MOBILE = '(max-width: 640px)';
+const SEUIL_FERMETURE = 100;
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -27,6 +30,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const glisse = useRef(null);
 
   useEffect(() => {
     const declencheur = document.activeElement;
@@ -67,6 +71,35 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
       }
     };
   }, []);
+
+  // Feuille basse (≤ 640 px) : un glissement vers le bas sur la poignée ou l'en-tête ferme la fenêtre.
+  function debutGlisse(e) {
+    if (!window.matchMedia(SEUIL_MOBILE).matches || e.target.closest('button')) return;
+    glisse.current = { y: e.clientY, dy: 0 };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  }
+  function glisseEnCours(e) {
+    if (!glisse.current) return;
+    const dy = Math.max(0, e.clientY - glisse.current.y);
+    glisse.current.dy = dy;
+    dialogRef.current.style.transition = 'none';
+    dialogRef.current.style.transform = `translateY(${dy}px)`;
+  }
+  function finGlisse() {
+    if (!glisse.current) return;
+    const { dy } = glisse.current;
+    glisse.current = null;
+    const dialog = dialogRef.current;
+    dialog.style.transition = '';
+    dialog.style.transform = '';
+    if (dy > SEUIL_FERMETURE) onCloseRef.current?.();
+  }
+  const poigneeGlisse = {
+    onPointerDown: debutGlisse,
+    onPointerMove: glisseEnCours,
+    onPointerUp: finGlisse,
+    onPointerCancel: finGlisse,
+  };
 
   const sizeMap = {
     sm: '400px',
@@ -114,9 +147,13 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="adm-modal__grab" aria-hidden="true" {...poigneeGlisse}>
+          <span />
+        </div>
         {/* Header */}
         <div
           className="adm-modal__head"
+          {...poigneeGlisse}
           style={{
             padding: '24px',
             borderBottom: '1px solid var(--c-border)',

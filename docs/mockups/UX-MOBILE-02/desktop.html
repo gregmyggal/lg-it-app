@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX-MOBILE-02 — Version ordinateur alignée</title>
+<style>
+:root{--text:#16212e;--muted:#4b5a6b;--bg:#f4f6f8;--surface:#fff;--border:#dee3e8;--accent:#14568f;--accent-soft:#e3eef8;--cta:#d9531e;--teal:#0e8f79;--deep:#0b3550;--danger:#c0392b;--danger-bg:#fde8e6;--warn-bg:#fef3c7;--warn-fg:#92400e;--ok-bg:#d1fae5;--ok-fg:#047857;--shadow:0 1px 2px rgba(11,53,80,.08),0 6px 18px rgba(11,53,80,.06)}
+[data-theme=dark]{--text:#e7ebef;--muted:#a9b4bf;--bg:#0f1620;--surface:#16212e;--border:#263241;--accent:#5da0d6;--accent-soft:#12304a;--cta:#e8703f;--teal:#35c2a4;--danger:#f87171;--danger-bg:#3b1a1a;--warn-bg:#3a2d0c;--warn-fg:#fbbf24;--ok-bg:#0f3326;--ok-fg:#6ee7b7;--shadow:0 1px 2px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Manrope',system-ui,-apple-system,Segoe UI,sans-serif;background:#e9edf1;color:#16212e;padding:16px}
+.intro{max-width:1200px;margin:0 auto 12px}
+.intro h1{font-size:clamp(20px,3vw,26px);margin:0 0 4px}.intro p{margin:0 0 10px;color:#4b5a6b;line-height:1.5}
+.intro button{font:inherit;font-weight:600;border:1px solid #c5cdd5;background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;margin-right:8px}
+.win{max-width:1200px;margin:0 auto;height:720px;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(11,53,80,.25);display:grid;grid-template-columns:230px 1fr;background:var(--bg);color:var(--text);position:relative}
+.side{background:var(--deep);color:#fff;padding:16px 10px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.brand{font-weight:800;padding:4px 10px 14px;display:flex;align-items:center;gap:8px}.brand i{width:10px;height:10px;border-radius:50%;background:var(--cta)}
+.nav{display:flex;align-items:center;gap:10px;min-height:42px;padding:0 12px;border-radius:10px;color:#cfe0ee;font-weight:600;font-size:14px;cursor:pointer;border:0;background:none;font-family:inherit;text-align:left;width:100%}
+.nav:hover{background:rgba(255,255,255,.08)}.nav.on{background:rgba(255,255,255,.16);color:#fff}
+.nav svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav .n{margin-left:auto;background:var(--cta);color:#fff;border-radius:9px;font-size:11px;padding:1px 7px}
+.nav em{margin-left:auto;font-style:normal;opacity:.6;font-size:11px}
+.glab{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#8fb0cc;padding:14px 12px 4px;font-weight:700}
+.main{display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface)}
+.bar h2{margin:0;font-size:18px;flex:1}
+.sbox{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:12px;padding:0 12px;min-height:38px;width:280px;color:var(--muted);font-size:14px;background:var(--bg)}
+.sbox kbd{margin-left:auto;font:inherit;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:1px 6px}
+.ib{width:38px;height:38px;border:0;background:none;color:var(--text);border-radius:50%;display:grid;place-items:center;cursor:pointer;position:relative}
+.ib:hover{background:var(--accent-soft)}.ib svg,.ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.view{flex:1;display:none;min-height:0}.view.on{display:grid}
+#v-today,#v-profs,#v-classes{grid-template-columns:minmax(320px,1fr) 400px}
+.col{overflow:auto;padding:16px 20px}
+.panel{border-left:1px solid var(--border);background:var(--surface);overflow:auto;padding:18px 20px}
+.alerts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.alert{border:0;border-radius:12px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;background:var(--warn-bg);color:var(--warn-fg);cursor:pointer}
+.alert.r{background:var(--danger-bg);color:var(--danger)}.alert.b{background:var(--accent-soft);color:var(--accent)}
+.grp{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 2px 8px;display:flex;align-items:center;gap:6px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(14,143,121,.25)}
+.card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--c,var(--accent));border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer}
+.card:hover{border-color:var(--accent)}.card.sel{outline:2px solid var(--accent)}
+.card.flat{border-left-width:1px;cursor:default}.card.flat:hover{border-color:var(--border)}
+.card .t{font-weight:700;font-size:15px;overflow-wrap:anywhere}.card .m{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.time{font-weight:800;font-size:13px;color:var(--c,var(--accent))}
+.row{display:flex;gap:10px;align-items:center}.grow{flex:1;min-width:0}
+.badge{display:inline-flex;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.badge.warn{background:var(--warn-bg);color:var(--warn-fg)}.badge.ok{background:var(--ok-bg);color:var(--ok-fg)}.badge.bad{background:var(--danger-bg);color:var(--danger)}.badge.grey{background:var(--border);color:var(--muted)}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;min-height:40px;padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:14px}
+.btn.primary{background:var(--cta);color:#fff}.btn.soft{background:var(--accent-soft);color:var(--accent)}.btn.danger{background:var(--danger);color:#fff}.btn.text{background:none;color:var(--muted)}.btn.ghost{background:none;border:1px solid var(--border);color:var(--text)}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}.avatar.big{width:64px;height:64px;font-size:22px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}.kv:last-child{border:0}.kv span{color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:60px 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.box h4{margin:0 0 6px;font-size:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;min-height:34px;padding:0 14px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.banner{display:flex;gap:10px;background:var(--accent-soft);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.4;margin:10px 0}.banner.warn{background:var(--warn-bg);color:var(--warn-fg)}.banner.bad{background:var(--danger-bg);color:var(--danger)}
+.imp{list-style:none;margin:0 0 6px;padding:0;font-size:14px}.imp li{display:flex;gap:10px;padding:6px 0}.imp li::before{content:"✓";color:var(--teal);font-weight:800}.imp li.x::before{content:"•";color:var(--muted)}.imp li.w::before{content:"!";color:var(--warn-fg);font-weight:800}
+.field{display:block;margin-bottom:10px;font-size:12.5px;color:var(--muted);font-weight:600}.field input{display:block;width:100%;margin-top:4px;min-height:40px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font:inherit;padding:0 10px}
+table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 8px}td{padding:10px 8px;border-top:1px solid var(--border)}tr.sel td{background:var(--accent-soft)}
+.pl{display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 8px;border-radius:10px;cursor:pointer}.pl:hover{background:var(--accent-soft)}.pl .sub{font-size:12.5px;color:var(--muted)}.pl .sub.w{color:var(--warn-fg)}
+.pl.dis{opacity:.45;pointer-events:none}
+/* dialogs : équivalent des feuilles basses */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;place-items:center;z-index:10}.scrim.on{display:grid}
+.dlg{background:var(--surface);border-radius:18px;padding:20px 22px;width:min(520px,92%);max-height:90%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);display:none}.dlg.on{display:block}.dlg.wide{width:min(860px,94%)}
+.dlg h3{margin:0 0 2px;font-size:19px}.dlg .sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.toast{position:absolute;right:20px;bottom:20px;background:#16212e;color:#fff;border-radius:12px;padding:6px 8px 6px 16px;display:flex;align-items:center;gap:6px;font-size:14px;transform:translateY(200%);transition:transform .25s;z-index:20}.toast.on{transform:none}
+.toast button{background:none;border:0;color:#ffb48f;font:inherit;font-weight:800;min-height:36px;padding:0 10px;cursor:pointer}
+.hid{display:none!important}
+.cmp{max-width:1200px;margin:20px auto 0;background:#fff;border-radius:14px;padding:18px 22px;line-height:1.5}.cmp h2{margin-top:0}.cmp table td,.cmp table th{padding:8px 10px}
+@media (max-width:900px){.win{grid-template-columns:1fr;height:auto;min-height:620px}.side{display:none}#v-today,#v-profs,#v-classes{grid-template-columns:1fr}.panel{border-left:0;border-top:1px solid var(--border)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>UX-MOBILE-02 — La même logique sur ordinateur</h1>
+  <p>Mêmes cinq entrées, mêmes vocabulaires, mêmes actions et mêmes écrans d'impact que sur mobile. Seul le conteneur change : barre latérale à la place des onglets bas, panneau latéral à la place de la page de détail, boîtes de dialogue à la place des feuilles basses. Cliquez une séance, puis « Remplacer ».</p>
+  <button id="theme">🌙 Mode sombre</button><button id="reset">↺ Recommencer</button>
+</div>
+
+<div class="win" id="win">
+  <aside class="side">
+    <div class="brand"><i></i>Logiscool Pays Vert</div>
+    <button class="nav on" data-v="today"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Aujourd'hui</button>
+    <button class="nav" data-v="ts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Timesheets<span class="n">4</span></button>
+    <button class="nav" data-v="classes"><svg viewBox="0 0 24 24"><path d="M3 9 12 4l9 5-9 5z"/><path d="M7 11.5V16c3 2 7 2 10 0v-4.5"/></svg>Classes</button>
+    <button class="nav" data-v="profs"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Professeurs</button>
+    <div class="glab">Plus</div>
+    <button class="nav" data-v="plus">Calendrier · Années</button>
+    <button class="nav" data-v="plus">Cours · Stages · Formations</button>
+    <button class="nav" data-v="plus">Équipe · Paramètres</button>
+  </aside>
+
+  <div class="main">
+    <div class="bar"><h2 id="title">Aujourd'hui</h2><div class="sbox"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Prof, classe, séance…<kbd>⌘K</kbd></div><button class="ib" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 0 1-6 0"/></svg></button></div>
+
+    <section class="view on" id="v-today">
+      <div class="col">
+        <div class="alerts"><button class="alert r" id="alSans">2 séances sans prof</button><button class="alert b" data-v="ts">4 timesheets à valider</button></div>
+        <div id="timeline"></div>
+      </div>
+      <aside class="panel" id="sPanel"></aside>
+    </section>
+
+    <section class="view" id="v-ts"><div class="col" style="grid-column:1/-1"><div class="banner">La validation par lot (cases à cocher, barre « Valider 4 · 612 € ») est déjà maquettée dans UX-MOBILE-01 ; même logique ici.</div></div></section>
+    <section class="view" id="v-plus"><div class="col" style="grid-column:1/-1"><div class="banner">Écrans denses (création de classe, contenus, calendrier scolaire) : sur ordinateur ils gardent leurs formulaires complets ; sur mobile ils restent accessibles, avec un bandeau informatif.</div></div></section>
+
+    <section class="view" id="v-profs">
+      <div class="col"><div class="chips"><button class="chip on">Actifs · 18</button><button class="chip">Archivés · 3</button><button class="chip">À affecter · 2</button></div><div id="profList"></div></div>
+      <aside class="panel" id="pPanel"></aside>
+    </section>
+
+    <section class="view" id="v-classes">
+      <div class="col"><div class="chips"><button class="chip on">Toutes · 24</button><button class="chip">Aujourd'hui · 5</button><button class="chip">Sans prof · 2</button></div><div id="classList"></div></div>
+      <aside class="panel" id="cPanel"></aside>
+    </section>
+  </div>
+
+  <div class="scrim" id="scrim">
+    <!-- choisir un prof -->
+    <div class="dlg" id="d-pick">
+      <h3 id="pickT">Choisir le remplaçant</h3><div class="sub" id="pickS"></div>
+      <div id="pickList"></div>
+      <div class="foot"><button class="btn text" data-close>Annuler</button></div>
+    </div>
+    <!-- impact -->
+    <div class="dlg" id="d-impact">
+      <h3 id="impT"></h3><div class="sub" id="impS"></div>
+      <ul class="imp" id="impL"></ul>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn primary" id="impOk">Confirmer</button></div>
+    </div>
+    <!-- modifier séance -->
+    <div class="dlg" id="d-edit">
+      <h3>Modifier la séance</h3><div class="sub">Seulement celle-ci. Les suivantes ne bougent pas.</div>
+      <div class="grid2"><label class="field">Début<input type="time" id="eDeb"></label><label class="field">Fin<input type="time" id="eFin"></label></div>
+      <label class="field">Lieu<input id="eLieu"></label>
+      <label class="row" style="font-size:14px"><input type="checkbox"> Décaler aussi les séances suivantes</label>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn primary" id="eOk">Enregistrer</button></div>
+    </div>
+    <!-- annuler séance -->
+    <div class="dlg" id="d-cancel">
+      <h3>Annuler la séance ?</h3><div class="sub">Motif obligatoire</div>
+      <div class="chips" id="reasons"><button class="chip">Prof malade</button><button class="chip">Météo</button><button class="chip">Autre</button></div>
+      <ul class="imp"><li class="w">2 saisies d'heures non validées seront <b>supprimées</b></li><li class="x">Élèves et parents ne sont pas prévenus automatiquement</li></ul>
+      <div class="foot"><button class="btn text" data-close>Retour</button><button class="btn danger" id="cOk" disabled>Annuler la séance</button></div>
+    </div>
+    <!-- remplacement multiple (atomique) -->
+    <div class="dlg wide" id="d-bulk">
+      <h3 id="bT">Remplacer Marie D. sur plusieurs séances</h3><div class="sub">Tout ou rien : si une séance échoue, aucune n'est modifiée.</div>
+      <div class="grid2" style="grid-template-columns:1.2fr 1fr;gap:20px">
+        <div><table><thead><tr><th></th><th>Séance</th><th>Date</th></tr></thead><tbody id="bRows"></tbody></table></div>
+        <div><div class="grp" style="margin-top:0">Remplaçant</div><div id="bPick"></div></div>
+      </div>
+      <div id="bWarn" class="banner warn hid"></div>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn text" id="bNone">Pas encore de remplaçant</button><button class="btn primary" id="bOk" disabled>Remplacer</button></div>
+    </div>
+    <!-- archivage -->
+    <div class="dlg" id="d-arch">
+      <h3>Archiver Marie Dupont</h3><div class="sub">Voici l'impact avant de confirmer</div>
+      <ul class="imp"><li class="w">14 séances à venir n'auront plus de professeur</li><li class="w">Dernière prof de « Python Ados – mer. 14h »</li><li>2 saisies d'heures non finalisées restent à valider</li><li class="x">Ses heures déjà encodées ne bougent pas</li></ul>
+      <label class="row" style="font-size:14px"><input type="checkbox" checked> Terminer ses assignations de classe</label>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn soft" id="aRepl">Remplacer d'abord ces séances</button><button class="btn danger" id="aOk">Archiver quand même</button></div>
+    </div>
+    <!-- tarif -->
+    <div class="dlg" id="d-tarif">
+      <h3>Tarif</h3><div class="sub">Marie Dupont · visible par la direction et l'admin</div>
+      <div class="grid2"><label class="field">Montant (€ / h)<input value="19,50"></label><label class="field">À partir du<input type="date" value="2026-11-01"></label></div>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn primary" data-toast="Tarif enregistré" data-close>Enregistrer</button></div>
+    </div>
+    <!-- terminer assignation -->
+    <div class="dlg" id="d-end">
+      <h3>Terminer l'assignation</h3><div class="sub" id="endS"></div>
+      <label class="field">Date de fin<input type="date" value="2026-10-25"></label>
+      <ul class="imp"><li class="w">9 séances à venir n'auront plus ce professeur</li><li class="x">Ses heures encodées ne bougent pas</li></ul>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn danger" data-toast="Assignation terminée" data-close>Terminer</button></div>
+    </div>
+    <!-- classe -->
+    <div class="dlg" id="d-class">
+      <h3>Créneau et lieu</h3><div class="sub">Propagé aux séances à venir</div>
+      <div class="grid2"><label class="field">Début<input type="time" value="17:00"></label><label class="field">Fin<input type="time" value="18:30" id="ccFin"></label></div>
+      <label class="field">Lieu<input value="Ath"></label>
+      <ul class="imp"><li>12 séances à venir sont mises à jour</li><li class="x">Les séances passées ou déjà ajustées ne changent pas</li></ul>
+      <div class="foot"><button class="btn text" data-close>Annuler</button><button class="btn primary" data-toast="12 séances mises à jour" data-close>Enregistrer</button></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"><span id="toastT"></span><button id="toastA" class="hid"></button></div>
+</div>
+
+<section class="cmp">
+  <h2>Correspondance mobile ↔ ordinateur</h2>
+  <table>
+    <thead><tr><th>Élément</th><th>Smartphone</th><th>Ordinateur</th></tr></thead>
+    <tbody>
+      <tr><td>Navigation</td><td>Onglets bas : Aujourd'hui · Timesheets · Classes · Profs · Plus</td><td>Barre latérale : mêmes 4 entrées + groupe « Plus » (mêmes libellés)</td></tr>
+      <tr><td>Détail d'une séance / fiche</td><td>Page plein écran, retour en haut à gauche</td><td>Panneau latéral à droite, la liste reste visible</td></tr>
+      <tr><td>Actions principales</td><td>Barre collante en bas : Remplacer · Ajouter · Modifier · Plus</td><td>Mêmes boutons, mêmes libellés, en tête du panneau</td></tr>
+      <tr><td>Confirmation / saisie courte</td><td>Feuille basse</td><td>Boîte de dialogue centrée (même contenu, mêmes verbes)</td></tr>
+      <tr><td>Impact avant confirmation</td><td>Liste chiffrée ✓ / ! / •</td><td>Identique</td></tr>
+      <tr><td>Remplacer sur plusieurs séances</td><td>Étapes : séances → remplaçant → récapitulatif</td><td>Une seule boîte à deux colonnes (séances | remplaçant), même règle « tout ou rien »</td></tr>
+      <tr><td>Sélection multiple</td><td>Appui long</td><td>Cases à cocher</td></tr>
+      <tr><td>Recherche</td><td>Loupe</td><td>Champ en haut + ⌘K</td></tr>
+      <tr><td>Annuler une action</td><td>Toast avec « Annuler » 5 s</td><td>Identique, en bas à droite</td></tr>
+      <tr><td>Écrans denses (création de classe, contenus)</td><td>Accessibles, bandeau « plus confortable sur ordinateur »</td><td>Formulaires complets, aucun bandeau</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const ph='<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>';
+const sw='<svg viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>',pl='<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',ed='<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',ml='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
+let S, sel, vsel='marie';
+const CANDS=[['Julie D.','Libre',0],['Sofia K.','Libre',0],['Thomas L.','Déjà : Scratch Sr 14:00 – 15:30',1]];
+function init(){
+  S=[{id:1,c:'var(--teal)',time:'10:30 – 12:00',t:'Minecraft Education · S6',lieu:'Ath',profs:[['Thomas L.','ok']],live:1,st:'En cours'},
+     {id:2,c:'#7c3aed',time:'14:00 – 16:00',t:'Python Ados · S8',lieu:'Ath',profs:[['Marie D.','']],st:'Planifiée'},
+     {id:3,c:'var(--accent)',time:'17:00 – 18:30',t:'Scratch Junior – lun. 17h · S8',lieu:'Ath',profs:[['Marie D.',''],['Julie D.','']],st:'Planifiée'},
+     {id:4,c:'var(--danger)',time:'Demain 09:00 – 12:00',t:'Stage Robotique – jour 2',lieu:'Tournai',profs:[],st:'Sans professeur'}];
+  sel=null; vsel='marie'; $('#alSans').textContent='2 séances sans prof';
+  render(); renderProfs(); renderClasses(); go('today');
+}
+function badges(s){return s.profs.length?s.profs.map(p=>`<span class="badge ${p[1]}">${p[0]}</span>`).join(''):'<span class="badge bad">Sans professeur</span>'}
+function render(){
+  const g=(l,f)=>{const l2=S.filter(f);return l2.length?`<div class="grp">${l}</div>`+l2.map(card).join(''):''};
+  $('#timeline').innerHTML=g('<span class="live"></span>En cours',s=>s.live)+g('Plus tard',s=>!s.live&&s.id<4)+g('Demain',s=>s.id===4);
+  $$('#timeline .card').forEach(c=>c.onclick=()=>{sel=+c.dataset.id;render()});
+  panel();
+}
+function card(s){return `<article class="card ${sel===s.id?'sel':''}" data-id="${s.id}" style="--c:${s.c}"><div class="time">${s.time}</div><div class="t">${s.t}${s.st==='Annulée'?' <span class="badge bad">Annulée</span>':''}</div><div class="m"><span>${s.lieu}</span>${badges(s)}</div></article>`}
+function panel(){
+  const p=$('#sPanel'); const s=S.find(x=>x.id===sel);
+  if(!s){p.innerHTML='<div class="empty">Sélectionnez une séance pour agir dessus.</div>';return}
+  const off=s.st==='Annulée';
+  p.innerHTML=`<div class="row"><h3 style="margin:0;flex:1">${s.t}</h3><span class="badge ${off?'bad':''}">${s.st}</span></div>
+  <div class="box" style="margin-top:12px"><div class="kv"><span>Horaire</span><b>${s.time}</b></div><div class="kv"><span>Lieu</span><b>${s.lieu}</b></div></div>
+  <div class="grp">Professeurs</div>
+  ${s.profs.length?s.profs.map(p=>`<div class="pl" style="cursor:default"><div class="avatar">${p[0].slice(0,1)}${p[0].split(' ')[1][0]}</div><div class="grow"><b>${p[0]}</b><div class="sub">${p[1]==='ok'?'Remplaçant(e)':'Principal'}</div></div><button class="ib" data-call="${p[0]}" aria-label="Appeler">${ph}</button></div>`).join(''):'<div class="banner bad">Aucun professeur. Utilisez « Ajouter ».</div>'}
+  ${off?'':`<div class="actions"><button class="btn primary" data-act="replace" ${s.profs.length?'':'disabled'}>${sw}Remplacer</button><button class="btn soft" data-act="add">${pl}Ajouter</button><button class="btn soft" data-act="edit">${ed}Modifier</button><button class="btn ghost" data-act="cancel">Annuler la séance</button></div>`}`;
+}
+let mode='replace', target=null, chosen=null;
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-v],[data-close],[data-act],[data-call],[data-toast],[data-pick],[data-pf],[data-cl],[data-p-act]'); if(!el)return;
+  if(el.dataset.call){toast('Appel de '+el.dataset.call+'… (démo)');return}
+  if(el.dataset.v){go(el.dataset.v);return}
+  if(el.hasAttribute('data-close'))closeD();
+  if(el.dataset.toast)toast(el.dataset.toast);
+  if(el.dataset.act)act(el.dataset.act);
+  if(el.dataset.pick)pick(el.dataset.pick);
+  if(el.dataset.pf){vsel=el.dataset.pf;renderProfs()}
+  if(el.dataset.pAct)pAct(el.dataset.pAct);
+});
+function go(v){
+  $$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v)); $$('.nav').forEach(n=>n.classList.toggle('on',n.dataset.v===v&&!['plus'].includes(v)||(v==='plus'&&n.dataset.v==='plus'&&false)));
+  $('#title').textContent={today:"Aujourd'hui",ts:'Timesheets',classes:'Classes',profs:'Professeurs',plus:'Plus'}[v];
+}
+function openD(id){$$('.dlg').forEach(d=>d.classList.remove('on'));$('#'+id).classList.add('on');$('#scrim').classList.add('on')}
+function closeD(){$('#scrim').classList.remove('on');$$('.dlg').forEach(d=>d.classList.remove('on'))}
+$('#scrim').onclick=e=>{if(e.target.id==='scrim')closeD()};
+let tt;function toast(m,a,fn){$('#toastT').textContent=m;const b=$('#toastA');b.classList.toggle('hid',!a);b.textContent=a||'';b.onclick=()=>{fn&&fn();$('#toast').classList.remove('on')};$('#toast').classList.add('on');clearTimeout(tt);tt=setTimeout(()=>$('#toast').classList.remove('on'),5000)}
+function pickList(el,filter){el.innerHTML=`<div class="grp" style="margin-top:0">Disponibles</div>`+CANDS.filter(c=>!c[2]).map(c=>row(c)).join('')+`<div class="grp">Conflit d'horaire</div>`+CANDS.filter(c=>c[2]).map(c=>row(c)).join('')+`<div class="grp">Déjà sur la séance</div><div class="pl dis"><div class="avatar">MD</div><b>Marie Dupont</b></div>`}
+const row=c=>`<div class="pl" data-pick="${c[0]}"><div class="avatar">${c[0][0]}${c[0].split(' ')[1][0]}</div><div class="grow"><b>${c[0]}</b><div class="sub ${c[2]?'w':''}">${c[1]}</div></div></div>`;
+function act(a){
+  const s=S.find(x=>x.id===sel); target=s;
+  if(a==='replace'||a==='add'){mode=a;$('#pickT').textContent=a==='replace'?'Choisir le remplaçant':'Ajouter un professeur';$('#pickS').textContent=s.t+' · '+s.time;pickList($('#pickList'));openD('d-pick')}
+  if(a==='edit'){const [d,f]=s.time.replace('Demain ','').split(' – ');$('#eDeb').value=d;$('#eFin').value=f;$('#eLieu').value=s.lieu;openD('d-edit')}
+  if(a==='cancel'){$$('#reasons .chip').forEach(c=>c.classList.remove('on'));$('#cOk').disabled=true;openD('d-cancel')}
+}
+function pick(name){
+  chosen=name;
+  if(mode==='bulk'){$$('#bPick .pl').forEach(p=>p.classList.toggle('sel',p.dataset.pick===name));bPrep();return}
+  if(mode==='assign'){closeD();toast(name+' ajouté(e) à la classe','Annuler');return}
+  if(mode==='add'){imp(name+' est ajouté(e) à la séance',target.t,['Rôle : Principal','Notification et mail envoyés à '+name].map(x=>[x,'']),()=>{target.profs.push([name,'']);render();toast(name+' ajouté(e)','Annuler')});return}
+  imp(name+' remplace '+target.profs[0][0],target.t+' · '+target.time,[[target.profs[0][0]+' est retirée de cette séance',''],['Les heures déjà encodées ne bougent pas','x'],[name+' est prévenu(e) par notification et par mail','']],()=>{target.profs=[[name,'ok']];render();toast(name+' remplace Marie D. · mail envoyé','Annuler')});
+}
+function imp(t,s,l,fn){$('#impT').textContent=t;$('#impS').textContent=s;$('#impL').innerHTML=l.map(x=>`<li class="${x[1]}">${x[0]}</li>`).join('');$('#impOk').onclick=()=>{closeD();fn()};openD('d-impact')}
+$('#eOk').onclick=()=>{closeD();target.time=$('#eDeb').value+' – '+$('#eFin').value;target.lieu=$('#eLieu').value;target.st='Modifiée';render();toast('Séance modifiée','Annuler')};
+$$('#reasons .chip').forEach(c=>c.onclick=()=>{$$('#reasons .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');$('#cOk').disabled=false});
+$('#cOk').onclick=()=>{closeD();target.st='Annulée';render();toast('Séance annulée','Annuler',()=>{target.st='Planifiée';render()})};
+
+/* remplacement multiple atomique */
+let BR=[];
+function bulk(){
+  mode='bulk';chosen=null;BR=[{t:'Python Ados · S8',d:'Mar. 14:00',on:1,ids:2},{t:'Scratch Junior · S8',d:'Mar. 17:00',on:1,ids:3},{t:'Minecraft · S7',d:'Sam. 10:30',on:1,w:'Heures déjà encodées'}];
+  $('#bRows').innerHTML=BR.map((r,i)=>`<tr class="sel" data-i="${i}" style="cursor:pointer"><td><input type="checkbox" checked></td><td>${r.t}${r.w?'<br><span class="badge warn">'+r.w+'</span>':''}</td><td>${r.d}</td></tr>`).join('');
+  $$('#bRows tr').forEach(tr=>tr.onclick=e=>{const i=+tr.dataset.i;BR[i].on=BR[i].on?0:1;tr.classList.toggle('sel',!!BR[i].on);tr.querySelector('input').checked=!!BR[i].on;bPrep()});
+  pickList($('#bPick'));bPrep();openD('d-bulk');
+}
+function bPrep(){const n=BR.filter(r=>r.on).length;$('#bOk').disabled=!(n&&chosen);$('#bOk').textContent=n?`Remplacer sur ${n} séance${n>1?'s':''}`:'Remplacer';
+  const w=$('#bWarn');if(chosen==='Thomas L.'||(chosen&&BR[2].on&&chosen==='Julie D.')){w.classList.remove('hid');w.innerHTML='<b>1 conflit</b> : '+chosen+' a déjà une séance sur ce créneau. Vous pouvez continuer.'}else w.classList.add('hid')}
+$('#bOk').onclick=()=>{closeD();BR.forEach(r=>{if(r.on&&r.ids){const s=S.find(x=>x.id===r.ids);s.profs=s.profs.map(p=>p[0]==='Marie D.'?[chosen,'ok']:p)}});$('#alSans').textContent='2 séances sans prof';render();renderProfs();toast(chosen+' remplace Marie D. · mail envoyé (tout ou rien)','Annuler')};
+$('#bNone').onclick=()=>{closeD();toast('Séances marquées « à pourvoir »')};
+$('#aRepl').onclick=()=>bulk();
+$('#aOk').onclick=()=>{closeD();toast('Marie Dupont archivée','Annuler')};
+
+/* professeurs */
+const PF={marie:['Marie Dupont','MD','ASBL Pays Vert'],julie:['Julie Delmotte-Vandenbroeck','JD','SRL Logiscool Ath'],thomas:['Thomas Leclercq','TL','ASBL Pays Vert']};
+function renderProfs(){
+  $('#profList').innerHTML=Object.entries(PF).map(([k,p])=>`<article class="card flat ${vsel===k?'sel':''}" style="cursor:pointer" data-pf="${k}"><div class="row"><div class="avatar">${p[1]}</div><div class="grow"><div class="t">${p[0]}</div><div class="m"><span>${p[2]}</span></div></div></div></article>`).join('');
+  const p=PF[vsel];
+  $('#pPanel').innerHTML=`<div class="row"><div class="avatar big">${p[1]}</div><div class="grow"><h3 style="margin:0">${p[0]}</h3><div class="m" style="margin-top:4px"><span class="badge ok">Actif</span> <span style="color:var(--muted);font-size:13px">${p[2]}</span></div></div></div>
+  <div class="actions"><button class="btn soft" data-call="${p[0]}">${ph}Appeler</button><button class="btn soft" data-toast="Mail ouvert (démo)">${ml}Email</button></div>
+  <div class="box"><h4>Cette semaine · 3 séances</h4><div class="kv"><span>Mar. 14:00</span><b>Python Ados · S8</b></div><div class="kv"><span>Mar. 17:00</span><b>Scratch Junior · S8</b></div><div class="kv"><span>Sam. 10:30</span><b>Minecraft · S7</b></div><div class="actions" style="margin-bottom:0"><button class="btn primary" data-p-act="bulk">${sw}Remplacer sur plusieurs séances</button></div></div>
+  <div class="box"><h4>Tarif en cours</h4><div class="kv"><span>Animation</span><b>18,50 € / h</b></div><div class="kv"><span>Depuis le</span><b>1 sept. 2026</b></div><div class="actions" style="margin-bottom:0"><button class="btn soft" data-p-act="tarif">${pl}Ajouter un tarif</button><button class="btn soft" data-p-act="tarif">${ed}Modifier</button></div></div>
+  <div class="box"><h4>Compte de connexion</h4><div class="kv"><span>Email</span><b>marie.d@exemple.be</b></div><div class="actions" style="margin-bottom:0"><button class="btn soft" data-toast="Invitation renvoyée">Renvoyer le lien de connexion</button></div></div>
+  <button class="btn" style="background:var(--danger-bg);color:var(--danger)" data-p-act="arch">Archiver ce professeur</button>`;
+}
+function pAct(a){if(a==='bulk')bulk();if(a==='tarif')openD('d-tarif');if(a==='arch')openD('d-arch')}
+
+/* classes */
+function renderClasses(){
+  $('#classList').innerHTML=[['Scratch Junior – lun. 17h','Lun. 17:00 · Marie D., Julie D.','var(--accent)'],['Python Ados – mer. 14h','Mer. 14:00 · Marie D.','#7c3aed'],['Minecraft Education – sam. 10h30','Sam. 10:30 · Thomas L.','var(--teal)']].map((c,i)=>`<article class="card ${i===0?'sel':''}" style="--c:${c[2]}"><div class="t">${c[0]}</div><div class="m"><span>${c[1]}</span></div></article>`).join('');
+  $('#cPanel').innerHTML=`<h3 style="margin:0 0 10px">Scratch Junior – lun. 17h</h3>
+  <div class="box"><div class="kv"><span>Créneau</span><b>Lundi 17:00 – 18:30</b></div><div class="kv"><span>Lieu</span><b>Ath</b></div><div class="kv"><span>Année</span><b>2026-2027</b></div><div class="actions" style="margin-bottom:0"><button class="btn soft" id="cEdit">${ed}Modifier créneau et lieu</button></div></div>
+  <div class="grp">Professeurs</div>
+  ${['Marie Dupont|Principal','Julie Delmotte-Vandenbroeck|Co-professeur'].map(x=>{const [n,r]=x.split('|');return `<div class="pl" style="cursor:default"><div class="avatar">${n[0]}${n.split(' ')[1][0]}</div><div class="grow"><b>${n}</b><div class="sub">${r}</div></div><button class="btn ghost" data-end="${n}">Terminer</button></div>`}).join('')}
+  <div class="actions"><button class="btn soft" id="cAdd">${pl}Ajouter un professeur</button></div>
+  <div class="banner">Périodes, congés, liens de cours : formulaires complets sur cet écran (sur mobile : accessibles, avec un bandeau d'information).</div>`;
+  $('#cEdit').onclick=()=>openD('d-class');
+  $('#cAdd').onclick=()=>{mode='assign';$('#pickT').textContent='Ajouter à la classe';$('#pickS').textContent='Scratch Junior – lun. 17h · aperçu des conflits avant confirmation';pickList($('#pickList'));openD('d-pick')};
+  $$('[data-end]').forEach(b=>b.onclick=()=>{$('#endS').textContent=b.dataset.end+' · Scratch Junior';openD('d-end')});
+}
+
+function setTheme(t){document.documentElement.dataset.theme=t;$('#theme').textContent=t==='dark'?'☀️ Mode clair':'🌙 Mode sombre'}
+$('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+$('#reset').onclick=()=>{closeD();init()};
+init();
+</script>
+</body>
+</html>

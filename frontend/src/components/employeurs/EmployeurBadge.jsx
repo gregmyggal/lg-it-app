@@ -29,7 +29,9 @@ export default function EmployeurBadge({ employeur, source, verrouille = false, 
         background: couleurs.bg,
         color: couleurs.fg,
         border: `1px ${estHerite ? 'dashed' : 'solid'} ${couleurs.border}`,
-        whiteSpace: 'nowrap',
+        maxWidth: '100%',
+        overflowWrap: 'anywhere',
+        lineHeight: 1.3,
       }}
     >
       {verrouille && <span role="img" aria-label="Mois verrouillé">🔒</span>}
