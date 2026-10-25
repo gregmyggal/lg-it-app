@@ -90,6 +90,12 @@ class ClasseController extends Controller
         return new ClasseResource(self::charger($classe));
     }
 
+    /** UI-M7 : combien de séances à venir une modification de créneau/lieu touchera (aucune écriture). */
+    public function apercuModification(UpdateClasseRequest $request, Classe $classe): JsonResponse
+    {
+        return response()->json(['data' => $this->service->apercuModification($classe, $request->validated())]);
+    }
+
     public function update(UpdateClasseRequest $request, Classe $classe): ClasseResource
     {
         return new ClasseResource(self::charger($this->service->modifier($classe, $request->validated())));

@@ -18,6 +18,9 @@ import CompteProfesseurSection from './professeurs/CompteProfesseurSection';
 import CompteBancaireSection from './professeurs/CompteBancaireSection';
 import { ArchiverProfesseurModal, SupprimerProfesseurModal } from './professeurs/CycleVieProfesseurModals';
 import RemplacerPlusieursModal from './professeurs/RemplacerPlusieursModal';
+import FicheRapideProfesseur from './professeurs/FicheRapideProfesseur';
+import ModifierProfesseurModal from './professeurs/ModifierProfesseurModal';
+import Pliable from './Pliable';
 import { useToast } from '../hooks/useToast';
 import { formatDate } from '../utils/dates';
 
@@ -29,7 +32,6 @@ export default function AdminProfesseurDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [editMode, setEditMode] = useState(false);
   const [modal, setModal] = useState(null); // 'archiver' | 'supprimer'
   const toast = useToast();
 
@@ -113,6 +115,15 @@ export default function AdminProfesseurDetail() {
           </div>
         )}
 
+        <FicheRapideProfesseur
+          professeur={professeur}
+          actif={actif}
+          onRemplacer={() => setModal('remplacer')}
+          onEditer={() => setModal('editer')}
+          onArchiver={() => setModal('archiver')}
+        />
+
+        <Pliable titre="Coordonnées et contrat">
         <div
           style={{
             display: 'grid',
@@ -187,21 +198,29 @@ export default function AdminProfesseurDetail() {
             </AdminCardBody>
           </AdminCard>
         </div>
+        </Pliable>
 
-        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
-          <CompteProfesseurSection professeur={professeur} onChange={apresChangement} />
-        </div>
+        <Pliable titre="Compte de connexion">
+          <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+            <CompteProfesseurSection professeur={professeur} onChange={apresChangement} />
+          </div>
+        </Pliable>
 
-        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
-          <CompteBancaireSection professeur={professeur} onSaved={loadProfesseur} />
-        </div>
+        <Pliable titre="Compte bancaire">
+          <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+            <CompteBancaireSection professeur={professeur} onSaved={loadProfesseur} />
+          </div>
+        </Pliable>
 
         {/* Classes (CLS-01 T2 : remplace l'assignation de cours) */}
-        <div style={{ marginBottom: ADMIN_SPACING.xl }}>
-          <ClassesProfesseurSection professeur={professeur} />
-        </div>
+        <Pliable titre="Classes" ouvert>
+          <div style={{ marginBottom: ADMIN_SPACING.xl }}>
+            <ClassesProfesseurSection professeur={professeur} />
+          </div>
+        </Pliable>
 
-        {/* Tarifs */}
+        {/* Tarifs, activité (repliés sur smartphone) */}
+        <Pliable titre="Tarif horaire et activité">
         <div style={{ marginBottom: ADMIN_SPACING.xl }}>
         <AdminCard>
           <AdminCardHeader
@@ -285,11 +304,14 @@ export default function AdminProfesseurDetail() {
             </AdminButton>
           </AdminCardFooter>
         </AdminCard>
+        </Pliable>
 
         {/* EMP-01 : employeur par mois */}
-        <div style={{ marginTop: ADMIN_SPACING.lg }}>
-          <EmployeurMoisSection professeurId={professeur.id} professeurNom={`${professeur.prenom} ${professeur.nom}`} />
-        </div>
+        <Pliable titre="Employeur par mois">
+          <div style={{ marginTop: ADMIN_SPACING.lg }}>
+            <EmployeurMoisSection professeurId={professeur.id} professeurNom={`${professeur.prenom} ${professeur.nom}`} />
+          </div>
+        </Pliable>
 
         {/* Actions */}
         <div
@@ -316,7 +338,7 @@ export default function AdminProfesseurDetail() {
           <AdminButton
             variant="secondary"
             icon="✏️"
-            onClick={() => setEditMode(true)}
+            onClick={() => setModal('editer')}
           >
             Éditer
           </AdminButton>
@@ -338,6 +360,13 @@ export default function AdminProfesseurDetail() {
         </section>
       </AdminPageContent>
 
+      {modal === 'editer' && (
+        <ModifierProfesseurModal
+          professeur={professeur}
+          onClose={() => setModal(null)}
+          onDone={(message) => { setModal(null); apresChangement(message); }}
+        />
+      )}
       {modal === 'remplacer' && (
         <RemplacerPlusieursModal
           professeur={professeur}

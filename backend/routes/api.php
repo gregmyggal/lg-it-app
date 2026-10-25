@@ -172,6 +172,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/classes', [ClasseController::class, 'store']);
     Route::post('/classes/apercu', [ClasseController::class, 'apercu']);
     Route::get('/classes/{classe}', [ClasseController::class, 'show']);
+    Route::post('/classes/{classe}/apercu-modification', [ClasseController::class, 'apercuModification']);
     Route::get('/classes/{classe}/duplication', [ClasseController::class, 'duplication']);
     Route::put('/classes/{classe}', [ClasseController::class, 'update']);
     Route::delete('/classes/{classe}', [ClasseController::class, 'destroy']);

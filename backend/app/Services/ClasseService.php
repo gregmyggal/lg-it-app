@@ -44,6 +44,46 @@ class ClasseService
     }
 
     /**
+     * Aperçu SANS écriture d'une modification de créneau/lieu (UI-M7) : combien de séances à venir seront mises à jour
+     * (mêmes critères que `modifier`) et combien resteront inchangées (passées, annulées ou déjà ajustées à la main).
+     *
+     * @param  array<string, mixed>  $data  heure_debut, heure_fin, lieu (valeurs proposées)
+     * @return array{seances_a_mettre_a_jour: int, seances_inchangees: int}
+     */
+    public function apercuModification(Classe $classe, array $data): array
+    {
+        $aujourdhui = now('Europe/Brussels')->toDateString();
+        $actives = CourseSession::query()->where('classe_id', $classe->id)->where('statut', '!=', CourseSession::STATUT_ANNULEE);
+
+        $concernees = (clone $actives)
+            ->where('statut', CourseSession::STATUT_PLANIFIEE)
+            ->where('date', '>=', $aujourdhui)
+            ->where(function ($q) use ($classe, $data) {
+                $modifie = false;
+                foreach (['heure_debut', 'heure_fin', 'lieu'] as $champ) {
+                    if (! array_key_exists($champ, $data) || $this->egal($champ, $data[$champ], $classe->{$champ})) {
+                        continue;
+                    }
+                    $modifie = true;
+                    $q->orWhere($champ, $classe->{$champ});
+                }
+                if (! $modifie) {
+                    $q->whereRaw('1 = 0');
+                }
+            })
+            ->count();
+
+        return ['seances_a_mettre_a_jour' => $concernees, 'seances_inchangees' => (clone $actives)->count() - $concernees];
+    }
+
+    private function egal(string $champ, mixed $propose, mixed $actuel): bool
+    {
+        return $champ === 'lieu'
+            ? (string) $propose === (string) $actuel
+            : substr((string) $propose, 0, 5) === substr((string) $actuel, 0, 5);
+    }
+
+    /**
      * Suppression physique. Sans forçage, seulement si la classe n'a aucun historique (heure encodée,
      * session passée, commencée, terminée ou annulée) ; sinon 409 avec le résumé de l'historique.
      * CLS-08 : avec forçage (admin/directeur, motif), la classe et toutes ses sessions sont supprimées ;

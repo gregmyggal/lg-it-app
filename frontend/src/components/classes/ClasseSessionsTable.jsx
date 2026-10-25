@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Table, Th, Td, Tr } from '../ui/Table';
+import LinkButton from '../ui/LinkButton';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { liensDeSession, resumeLiens } from '../../utils/liens';
 import StatutBadge from '../ui/StatutBadge';
 import AdminButton from '../AdminButton';
 import { ADMIN_COLORS, ADMIN_TONES } from '../../styles/AdminDesignSystem';
 import { STATUTS_SESSION, TYPES_CALENDRIER, estSessionBarree, getStatut } from '../../utils/statuts';
-import { formatDate, formatDateCourte, formatHoraire } from '../../utils/dates';
+import { aujourdhuiISO, formatDate, formatDateCourte, formatHoraire } from '../../utils/dates';
 import { formatDuree } from '../../utils/format';
 import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
 
@@ -20,11 +23,20 @@ import { libelleSession, libelleSessionPhrase } from '../../utils/classes';
  * @param {string} [props.legendeId] id de la légende décrivant le verrou 🔒
  * @param {(session: object) => void} [props.onProfesseurs] ouvre la gestion des professeurs de la session : ajout, retrait, remplacement (staff)
  */
-export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs, liens, caption = 'Sessions de la classe', legendeId = 'legende-sessions' }) {
-  const parId = new Map(sessions.map((s) => [s.id, s]));
-  const remplacantDe = new Map(sessions.filter((s) => s.remplace_session_id).map((s) => [s.remplace_session_id, s]));
+const LIMITE_MOBILE = 5;
+
+export default function ClasseSessionsTable({ sessions: toutes, onAjuster, onProfesseurs, liens, caption = 'Sessions de la classe', legendeId = 'legende-sessions' }) {
+  const mobile = useMediaQuery('(max-width: 860px)');
+  const [toutVoir, setToutVoir] = useState(false);
+  // Smartphone : les prochaines séances d'abord (UI-M7) ; le reste derrière « Voir toutes les séances ».
+  const plafonne = mobile && !toutVoir && toutes.length > LIMITE_MOBILE + 1;
+  const aVenir = toutes.filter((s) => s.date >= aujourdhuiISO());
+  const sessions = plafonne ? (aVenir.length > 0 ? aVenir : toutes.slice(-LIMITE_MOBILE)).slice(0, LIMITE_MOBILE) : toutes;
+  const parId = new Map(toutes.map((s) => [s.id, s]));
+  const remplacantDe = new Map(toutes.filter((s) => s.remplace_session_id).map((s) => [s.remplace_session_id, s]));
 
   return (
+    <>
     <Table caption={caption} minWidth="760px" cards>
       <thead>
         <tr>
@@ -125,6 +137,13 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
                     Professeurs
                   </AdminButton>
                 )}
+                {onProfesseurs && !barree && (
+                  <span style={{ display: 'inline-block', marginRight: 6, marginBottom: 6 }}>
+                    <LinkButton to={`/seances/${s.id}`} size="sm">
+                      Fiche
+                    </LinkButton>
+                  </span>
+                )}
                 {barree ? (
                   remplacee ? (
                     <span style={{ fontSize: '13px' }}>
@@ -158,5 +177,13 @@ export default function ClasseSessionsTable({ sessions, onAjuster, onProfesseurs
         })}
       </tbody>
     </Table>
+    {plafonne && (
+      <p style={{ textAlign: 'center', margin: '12px 0 0' }}>
+        <AdminButton size="sm" variant="secondary" onClick={() => setToutVoir(true)}>
+          Voir toutes les séances ({toutes.length})
+        </AdminButton>
+      </p>
+    )}
+    </>
   );
 }

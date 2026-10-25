@@ -23,6 +23,8 @@ import { SuppressionClasseModal } from '../../components/classes/SuppressionClas
 import { AjouterPeriodeModal, ChangerCoursModal, SupprimerPeriodeModal, HistoriqueCoursModal } from '../../components/classes/PeriodeModals';
 import { useClasse, useClasseSessions, modifierClasse, supprimerClasse } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import ModifierClasseModal from '../../components/classes/ModifierClasseModal';
 import { getErrorData, getErrorMessage, getStatus } from '../../api/errors';
 import { STATUTS_CLASSE, STATUT_CLASSE_ARCHIVEE, estClasseArchivee, estSessionBarree } from '../../utils/statuts';
 import { formatDate, formatDateCourte, jourDeClasseApres, libelleClasse } from '../../utils/dates';
@@ -41,6 +43,9 @@ export default function ClasseDetailPage() {
   const [ajustement, setAjustement] = useState(null); // { session, mode }
   const [suppression, setSuppression] = useState(null); // { etape: 'confirmer'|'refus', message, resume?, forcable? } (CLS-08)
   const [enCours, setEnCours] = useState(false);
+  const mobile = useMediaQuery('(max-width: 860px)');
+  const [modifierCreneau, setModifierCreneau] = useState(false);
+  const [plusActions, setPlusActions] = useState(false);
   const [modalePeriode, setModalePeriode] = useState(null); // { type: 'ajout'|'cours'|'suppression', numero?, periode? }
   const annees = useAnneesScolaires();
   const [params] = useSearchParams();
@@ -188,31 +193,54 @@ export default function ClasseDetailPage() {
     }
   }
 
-  const actionsEntete = (
+  const peutModifier = c.can?.update && !estClasseArchivee(c.statut);
+  const boutonCreneau = peutModifier && (
+    <AdminButton size="sm" onClick={() => setModifierCreneau(true)}>
+      Modifier créneau et lieu
+    </AdminButton>
+  );
+  const boutonDupliquer = c.can?.update && (
+    <LinkButton
+      to={`/admin/classes/nouvelle?source=${c.id}`}
+      size="sm"
+      title="Créer une nouvelle classe avec les mêmes cours et le même lieu, sur un autre jour ou un autre horaire."
+    >
+      ⧉ Dupliquer la classe
+    </LinkButton>
+  );
+  const boutonArchiver = peutModifier && (
+    <AdminButton variant="secondary" size="sm" onClick={archiver} loading={enCours}>
+      Archiver la classe (P1 et P2)
+    </AdminButton>
+  );
+  const boutonSupprimer = c.can?.delete && (
+    <AdminButton variant="secondary" size="sm" onClick={() => setSuppression({ etape: 'confirmer' })} style={{ color: ADMIN_TONES.error.fg }}>
+      Supprimer la classe
+    </AdminButton>
+  );
+
+  // Smartphone : l'essentiel d'abord, les actions rares ou destructives dans « Plus d'actions » (UI-M7).
+  const actionsEntete = mobile ? (
     <>
       <StatutBadge table={STATUTS_CLASSE} valeur={c.statut} />
+      {boutonCreneau}
       <LinkButton to={`/admin/calendrier?classe_id=${c.id}&annee_scolaire_id=${c.annee_scolaire_id}`} size="sm">
         Voir dans le calendrier
       </LinkButton>
-      {c.can?.update && (
-        <LinkButton
-          to={`/admin/classes/nouvelle?source=${c.id}`}
-          size="sm"
-          title="Créer une nouvelle classe avec les mêmes cours et le même lieu, sur un autre jour ou un autre horaire."
-        >
-          ⧉ Dupliquer la classe
-        </LinkButton>
-      )}
-      {c.can?.update && !estClasseArchivee(c.statut) && (
-        <AdminButton variant="secondary" size="sm" onClick={archiver} loading={enCours}>
-          Archiver la classe (P1 et P2)
-        </AdminButton>
-      )}
-      {c.can?.delete && (
-        <AdminButton variant="secondary" size="sm" onClick={() => setSuppression({ etape: 'confirmer' })} style={{ color: ADMIN_TONES.error.fg }}>
-          Supprimer la classe
-        </AdminButton>
-      )}
+      <AdminButton variant="secondary" size="sm" onClick={() => setPlusActions(true)}>
+        ⋯ Plus d'actions
+      </AdminButton>
+    </>
+  ) : (
+    <>
+      <StatutBadge table={STATUTS_CLASSE} valeur={c.statut} />
+      {boutonCreneau}
+      <LinkButton to={`/admin/calendrier?classe_id=${c.id}&annee_scolaire_id=${c.annee_scolaire_id}`} size="sm">
+        Voir dans le calendrier
+      </LinkButton>
+      {boutonDupliquer}
+      {boutonArchiver}
+      {boutonSupprimer}
     </>
   );
 
@@ -324,6 +352,26 @@ export default function ClasseDetailPage() {
         })}
       </AdminPageContent>
 
+      {modifierCreneau && (
+        <ModifierClasseModal
+          classe={c}
+          onClose={() => setModifierCreneau(false)}
+          onDone={(message) => {
+            setModifierCreneau(false);
+            toast.success(message);
+            recharger();
+          }}
+        />
+      )}
+      {plusActions && (
+        <AdminModal isOpen title="Plus d'actions" size="sm" onClose={() => setPlusActions(false)}>
+          <div className="pm-actions" onClick={() => setPlusActions(false)}>
+            {boutonDupliquer}
+            {boutonArchiver}
+            {boutonSupprimer}
+          </div>
+        </AdminModal>
+      )}
       {ajustement && (
         <SessionAdjustModal
           classe={c}
