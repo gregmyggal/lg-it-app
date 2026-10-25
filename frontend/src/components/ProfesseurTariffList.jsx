@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import client from '../api/client';
 import AdminButton from './AdminButton';
 import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
+import { formatDate } from '../utils/dates';
 
 export default function ProfesseurTariffList({
   professeurId,
@@ -131,9 +132,9 @@ export default function ProfesseurTariffList({
         <tbody>
           {tariffs.map((tariff, idx) => {
             const effective = isEffective(tariff);
-            const dateDebut = new Date(tariff.date_debut).toLocaleDateString('fr-FR');
+            const dateDebut = formatDate(tariff.date_debut);
             const dateFin = tariff.date_fin
-              ? new Date(tariff.date_fin).toLocaleDateString('fr-FR')
+              ? formatDate(tariff.date_fin)
               : '∞ (toujours)';
 
             return (

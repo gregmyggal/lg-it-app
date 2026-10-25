@@ -74,7 +74,7 @@ class TimesheetSessionTest extends TestCase
             ->assertJsonPath('type_activite', 'animation')
             ->assertJsonPath('statut_validation', 'brouillon')
             ->assertJsonPath('session.libelle', 'Séance 2');
-        $this->assertSame($s->date->toDateString(), substr($r->json('date_prestation'), 0, 10));
+        $this->assertSame($s->date->toDateString(), $r->json('date_prestation'));
         $this->assertEquals(2, $r->json('nombre_heures')); // heures défrayables (14h–17h au calendrier)
     }
 

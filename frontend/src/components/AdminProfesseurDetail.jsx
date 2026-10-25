@@ -18,6 +18,7 @@ import CompteProfesseurSection from './professeurs/CompteProfesseurSection';
 import CompteBancaireSection from './professeurs/CompteBancaireSection';
 import { ArchiverProfesseurModal, SupprimerProfesseurModal } from './professeurs/CycleVieProfesseurModals';
 import { useToast } from '../hooks/useToast';
+import { formatDate } from '../utils/dates';
 
 export default function AdminProfesseurDetail() {
   const { id } = useParams();
@@ -175,9 +176,9 @@ export default function AdminProfesseurDetail() {
                     PÉRIODE D'EMPLOI
                   </div>
                   <div style={{ fontSize: '14px' }}>
-                    {new Date(professeur.date_entree).toLocaleDateString('fr-FR')}
+                    {formatDate(professeur.date_entree)}
                     {professeur.date_sortie &&
-                      ` → ${new Date(professeur.date_sortie).toLocaleDateString('fr-FR')}`}
+                      ` → ${formatDate(professeur.date_sortie)}`}
                     {!professeur.date_sortie && ' → ∞'}
                   </div>
                 </div>

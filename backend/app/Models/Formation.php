@@ -34,7 +34,7 @@ class Formation extends Model
     ];
 
     protected $casts = [
-        'prochaine_date' => 'date',
+        'prochaine_date' => 'date:Y-m-d',
         'prix' => 'decimal:2',
         'section_competences' => 'array',
         'section_approche' => 'array',

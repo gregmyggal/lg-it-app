@@ -17,8 +17,8 @@ class ProfesseurTarif extends Model
     ];
 
     protected $casts = [
-        'date_debut' => 'date',
-        'date_fin' => 'date',
+        'date_debut' => 'date:Y-m-d',
+        'date_fin' => 'date:Y-m-d',
         'tarif_horaire_eur' => 'decimal:2',
     ];
 

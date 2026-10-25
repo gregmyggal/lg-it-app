@@ -25,7 +25,7 @@ class Timesheet extends Model
     ];
 
     protected $casts = [
-        'date_prestation' => 'date',
+        'date_prestation' => 'date:Y-m-d',
         'nombre_heures' => 'decimal:2',
         'validated_at' => 'datetime',
     ];

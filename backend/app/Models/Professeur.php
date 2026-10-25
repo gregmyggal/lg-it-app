@@ -32,8 +32,8 @@ class Professeur extends Model
 
     protected $casts = [
         'compte_bancaire' => 'encrypted',
-        'date_entree' => 'date',
-        'date_sortie' => 'date',
+        'date_entree' => 'date:Y-m-d',
+        'date_sortie' => 'date:Y-m-d',
     ];
 
     public function user(): BelongsTo

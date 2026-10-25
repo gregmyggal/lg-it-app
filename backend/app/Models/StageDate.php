@@ -10,7 +10,7 @@ class StageDate extends Model
     protected $fillable = ['stage_id', 'date_session'];
 
     protected $casts = [
-        'date_session' => 'date',
+        'date_session' => 'date:Y-m-d',
     ];
 
     public function stage(): BelongsTo

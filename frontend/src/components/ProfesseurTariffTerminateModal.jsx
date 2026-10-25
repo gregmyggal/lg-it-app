@@ -3,6 +3,7 @@ import client from '../api/client';
 import AdminButton from './AdminButton';
 import { AdminFormField, AdminInput } from './AdminFormField';
 import { ADMIN_COLORS } from '../styles/AdminDesignSystem';
+import { formatDate } from '../utils/dates';
 
 export default function ProfesseurTariffTerminateModal({
   professeurId,
@@ -105,7 +106,7 @@ export default function ProfesseurTariffTerminateModal({
           </div>
           <div>
             <strong>Depuis:</strong>{' '}
-            {new Date(tariff.date_debut).toLocaleDateString('fr-FR')}
+            {formatDate(tariff.date_debut)}
           </div>
         </div>
 
