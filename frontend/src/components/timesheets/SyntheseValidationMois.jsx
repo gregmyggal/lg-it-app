@@ -300,7 +300,11 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                       ))}
                     </Td>
                     <Td xl label="Dernière action">{l.derniere_action_at ? formatDateHeure(l.derniere_action_at) : '—'}</Td>
-                    <Td label="Ouvrir"><AdminButton variant="secondary" size="sm" onClick={() => onOuvrir(l.professeur_id)}>Ouvrir</AdminButton></Td>
+                    <Td label="Ouvrir" className="ui-td--action">
+                      <AdminButton variant="secondary" size="sm" className="btn-ouvrir" onClick={() => onOuvrir(l.professeur_id)} aria-label={`Ouvrir ${l.professeur}`}>
+                        Ouvrir <span aria-hidden="true">›</span>
+                      </AdminButton>
+                    </Td>
                   </Tr>
                 ))}
               </tbody>

@@ -28,7 +28,9 @@ export function NavIcon({ nom }) {
  * @returns {{principal: object[], groupes: {label: string, items: object[]}[], dernierOnglet: string}}
  */
 export function navigationPour(user) {
-  const staff = user?.role === 'admin' || user?.role === 'directeur';
+  // Session en cours de chargement : aucune entrée (évite d'afficher un instant le menu d'un autre rôle).
+  if (!user) return { principal: [], groupes: [], dernierOnglet: '' };
+  const staff = user.role === 'admin' || user.role === 'directeur';
 
   if (!staff) {
     return {

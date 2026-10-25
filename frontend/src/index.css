@@ -1604,9 +1604,20 @@ form input[type='checkbox'] {
 .portal-page h2,
 .portal-page h3,
 .portal-page strong,
-.portal-page li,
-.portal-page td {
+.portal-page li {
   overflow-wrap: anywhere;
+}
+
+/* Cellules : mots longs coupés seulement sur smartphone ; boutons et actions jamais coupés. */
+@media (max-width: 640px) {
+  .portal-page td {
+    overflow-wrap: anywhere;
+  }
+}
+
+.portal-page button,
+.portal-page .adm-btn {
+  overflow-wrap: normal;
 }
 
 /* Les modales de la barre latérale (ex. « Ma signature ») héritaient du texte blanc de l'aside. */
@@ -3012,5 +3023,82 @@ form input[type='checkbox'] {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+}
+
+
+/* ---------- Tableaux : colonne d'action et contrôle segmenté (design plus sobre) ---------- */
+.ui-td--action {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.ui-table .adm-btn,
+.actions-bar .adm-btn {
+  white-space: nowrap;
+}
+
+.btn-ouvrir {
+  background: transparent !important;
+  border: 1px solid var(--c-border) !important;
+  color: var(--c-primary) !important;
+  box-shadow: none !important;
+  gap: 6px !important;
+}
+
+.btn-ouvrir:hover {
+  background: var(--c-primary-light) !important;
+  border-color: var(--c-primary) !important;
+}
+
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-bg);
+}
+
+.seg__btn {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seg__btn:hover {
+  color: var(--c-text);
+}
+
+.seg__btn--on {
+  background: var(--c-card);
+  color: var(--c-primary);
+  box-shadow: 0 1px 2px var(--c-shadow);
+}
+
+@media (max-width: 640px) {
+  .seg {
+    width: 100%;
+  }
+
+  .seg__btn {
+    flex: 1;
+    min-height: 44px;
+    padding: 0 6px;
+  }
+}
+
+/* Badge employeur : une seule ligne sur ordinateur (il ne forme plus une pastille écrasée) ; retour à la ligne sur smartphone. */
+@media (min-width: 641px) {
+  .employeur-badge {
+    white-space: nowrap;
   }
 }

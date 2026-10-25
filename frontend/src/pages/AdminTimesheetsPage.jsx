@@ -221,45 +221,28 @@ export default function AdminTimesheetsPage() {
               </select>
             </div>
 
-            {/* Mode de vue */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              <AdminButton
-                variant={viewMode === 'validation' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => setViewMode('validation')}
-              >
-                ✅ Validation
-              </AdminButton>
-              <AdminButton
-                variant={viewMode === 'monthly' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => setViewMode('monthly')}
-              >
-                📅 Mois
-              </AdminButton>
-              <AdminButton
-                variant={viewMode === 'professor' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => setViewMode('professor')}
-              >
-                👨‍🏫 Profs
-              </AdminButton>
-              <AdminButton
-                variant={viewMode === 'session' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => setViewMode('session')}
-              >
-                🏫 Sessions
-              </AdminButton>
+            {/* Mode de vue : contrôle segmenté */}
+            <div className="seg" role="group" aria-label="Vue">
+              {[
+                ['validation', 'Validation'],
+                ['monthly', 'Mois'],
+                ['professor', 'Profs'],
+                ['session', 'Sessions'],
+              ].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`seg__btn${viewMode === mode ? ' seg__btn--on' : ''}`}
+                  aria-pressed={viewMode === mode}
+                  onClick={() => setViewMode(mode)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             {/* Rafraîchir */}
-            <AdminButton
-              variant="secondary"
-              size="sm"
-              icon="🔄"
-              onClick={loadData}
-            >
+            <AdminButton variant="secondary" size="sm" onClick={loadData}>
               Rafraîchir
             </AdminButton>
           </div>

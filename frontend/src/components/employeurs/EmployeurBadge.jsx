@@ -35,8 +35,10 @@ export default function EmployeurBadge({ employeur, source, verrouille = false, 
       }}
     >
       {verrouille && <span role="img" aria-label="Mois verrouillé">🔒</span>}
-      {employeur?.nom || '—'}
-      {estHerite && <span style={{ fontWeight: 400 }}>· {SOURCES_EMPLOYEUR[source]}</span>}
+      <span>
+        {employeur?.nom || '—'}
+        {estHerite && <span style={{ fontWeight: 400 }}> · {SOURCES_EMPLOYEUR[source]}</span>}
+      </span>
     </span>
   );
 }

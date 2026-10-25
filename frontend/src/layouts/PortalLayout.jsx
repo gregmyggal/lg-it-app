@@ -81,7 +81,7 @@ export default function PortalLayout() {
         </div>
       </main>
 
-      {mobile && (
+      {mobile && user && (
         <nav className="portal-tabs" aria-label="Navigation principale">
           {nav.principal.map((e) => (
             <NavLienTransition key={e.to} to={e.to} end={e.end} className={() => (actif === e ? 'portal-tab active' : 'portal-tab')} aria-current={actif === e ? 'page' : undefined}>
