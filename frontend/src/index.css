@@ -786,6 +786,23 @@ button[type='submit']:hover {
   border-radius: 5px;
 }
 
+.portal-side nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .portal-side nav a:hover {
   color: #fff;
 }
@@ -848,10 +865,6 @@ button[type='submit']:hover {
 
   .portal-shell {
     grid-template-columns: 1fr;
-  }
-
-  .portal-side {
-    padding: 16px;
   }
 }
 
@@ -1027,77 +1040,11 @@ button[type='submit']:hover {
   outline-offset: 2px;
 }
 
-/* Menu mobile : les liens sont repliés derrière un bouton « Menu » */
+/* Barre latérale (ordinateur) : l'en-tête ne porte plus que la marque ; le smartphone a barre du haut + onglets (UI-M2). */
 .portal-side__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.portal-side__toggle {
-  display: none;
-}
-
-@media (max-width: 860px) {
-  .portal-shell {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-  }
-
-  .portal-side {
-    position: static;
-    height: auto;
-    overflow: visible;
-  }
-
-  .portal-side nav {
-    overflow-y: visible;
-  }
-
-  .portal-side .brand-mark {
-    margin-bottom: 0;
-  }
-
-  .portal-side__toggle {
-    display: inline-flex;
-    align-items: center;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    color: #fff;
-    border-radius: 6px;
-    padding: 8px 14px;
-    min-height: 44px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .portal-side__toggle:hover {
-    color: #fff;
-    border-color: #fff;
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .portal-side nav,
-  .portal-side__account {
-    display: none;
-  }
-
-  .portal-side--open nav {
-    display: flex;
-    margin-top: 16px;
-  }
-
-  .portal-side--open .portal-side__account {
-    display: flex;
-  }
-
-  .portal-side nav a {
-    padding: 12px 10px;
-  }
-
-  .portal-main {
-    padding: 16px;
-  }
 }
 
 /* Cases à cocher et boutons radio dans les formulaires : taille native (et non 100 % de large) */
@@ -1317,37 +1264,6 @@ form input[type='checkbox'] {
 
   .portal-shell {
     min-height: 100dvh;
-  }
-
-  /* Barre du haut collante ; le menu ouvert défile dans l'écran au lieu de dépasser. */
-  .portal-side {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    max-height: 100dvh;
-    overflow-y: auto;
-    padding: calc(8px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));
-  }
-
-  .portal-side__head {
-    gap: 8px;
-  }
-
-  .portal-side__head > div {
-    margin-left: auto;
-  }
-
-  .portal-side__head .notif-btn {
-    background: transparent;
-    border-color: rgba(255, 255, 255, 0.5);
-    color: #fff;
-    min-width: 44px;
-  }
-
-  .portal-side nav a {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
   }
 
   .portal-main {
@@ -1717,5 +1633,213 @@ form input[type='checkbox'] {
   /* Les notifications passent au-dessus de la barre d'actions collante. */
   .toast-zone {
     bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ---------- navigation smartphone (UI-M2) : barre du haut, onglets, feuille « Plus / Moi » ---------- */
+:root {
+  --tabbar-h: 0px;
+}
+
+.portal-top {
+  background: var(--brand-deep);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: calc(8px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.portal-top .brand-mark {
+  color: #fff;
+  margin: 0;
+  min-width: 0;
+}
+
+.portal-top .notif-btn {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+  min-width: 44px;
+}
+
+.portal-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  display: flex;
+  background: var(--c-card);
+  border-top: 1px solid var(--c-border);
+  padding: 4px calc(4px + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(4px + env(safe-area-inset-left));
+}
+
+.portal-tab {
+  flex: 1;
+  min-width: 0;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.portal-tab span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-tab .nav-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.portal-tab.active {
+  color: var(--c-primary);
+}
+
+.portal-tab.active::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--c-primary);
+}
+
+.portal-tab:focus-visible {
+  outline: 3px solid var(--c-focus);
+  outline-offset: -3px;
+}
+
+.sheet-nav__label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-2);
+  margin: 16px 2px 6px;
+}
+
+.sheet-nav__label:first-child {
+  margin-top: 0;
+}
+
+.sheet-nav__list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--c-card);
+}
+
+.sheet-nav__list li + li {
+  border-top: 1px solid var(--c-border);
+}
+
+.sheet-nav__list a,
+.sheet-nav__list button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sheet-nav__list a.active {
+  color: var(--c-primary);
+  background: var(--c-primary-light);
+}
+
+.sheet-nav__compte {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--c-text);
+}
+
+.sheet-nav .theme-toggle {
+  border-color: var(--c-border);
+  margin-bottom: 12px;
+}
+
+.sheet-nav .theme-toggle button {
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  padding: 10px 4px;
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--c-card);
+  color: var(--c-text);
+}
+
+.sheet-nav .theme-toggle button[aria-pressed='true'] {
+  background: var(--c-primary);
+  color: var(--c-on-solid);
+  font-weight: 700;
+}
+
+@media (max-width: 860px) {
+  :root {
+    --tabbar-h: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .portal-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    min-height: 100dvh;
+  }
+
+  /* Le contenu défile au-dessus des onglets ; barre d'actions collante et notifications remontées d'autant. */
+  .portal-main {
+    padding-bottom: calc(16px + var(--tabbar-h)) !important;
+  }
+
+  .sticky-actions {
+    bottom: var(--tabbar-h);
+    margin-bottom: -16px;
+    padding-bottom: 10px;
+  }
+
+  .toast-zone {
+    bottom: calc(var(--tabbar-h) + 96px) !important;
+  }
+}
+
+@media (min-width: 861px) {
+  .portal-tabs,
+  .portal-top {
+    display: none;
   }
 }
