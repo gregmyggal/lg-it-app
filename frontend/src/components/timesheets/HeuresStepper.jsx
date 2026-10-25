@@ -6,7 +6,7 @@ const arrondi = (n) => Math.round(n * 2) / 2;
  * Saisie d'heures : champ numérique (clavier décimal) encadré de boutons − / + par pas de 0,5 h.
  * Les boutons ne s'affichent que sur mobile (classe `.heures-stepper__btn`), où ils offrent de grandes cibles tactiles.
  */
-export default function HeuresStepper({ value, onChange, disabled, min = 0.5, max = 24, step = 0.5, 'aria-label': ariaLabel }) {
+export default function HeuresStepper({ id, value, onChange, disabled, min = 0.5, max = 24, step = 0.5, 'aria-label': ariaLabel }) {
   function bouger(delta) {
     const base = Number(value) || 0;
     const suivant = Math.min(max, Math.max(min, arrondi(base + delta)));
@@ -25,6 +25,7 @@ export default function HeuresStepper({ value, onChange, disabled, min = 0.5, ma
         −
       </button>
       <AdminInput
+        id={id}
         type="number"
         inputMode="decimal"
         step={step}

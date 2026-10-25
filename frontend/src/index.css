@@ -2103,3 +2103,322 @@ form input[type='checkbox'] {
     transition: none;
   }
 }
+
+/* ---------- « Mon mois » en cartes (UI-M4) ---------- */
+.mm {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.mm-mois {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mm-mois strong {
+  font-size: 18px;
+}
+
+.mm-mois__fleche {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: var(--c-card);
+  color: var(--c-text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.mm-employeur {
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.mm-employeur span {
+  display: block;
+  font-size: 12px;
+  color: var(--c-text-2);
+}
+
+.mm-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 4px;
+}
+
+.mm-tete h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.mm-semaine {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-2);
+  margin: 18px 2px 8px;
+}
+
+.mm-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mm-carte {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-left: 5px solid var(--c-primary);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px var(--c-shadow);
+  min-width: 0;
+}
+
+.mm-carte--libre {
+  border-left-color: var(--c-info);
+}
+
+.mm-carte--annulee {
+  border-left-color: var(--c-border);
+  opacity: 0.75;
+}
+
+.mm-carte--annulee .mm-carte__titre {
+  text-decoration: line-through;
+}
+
+.mm-carte__titre {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.mm-carte__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--c-text-2);
+}
+
+.mm-saisie {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--c-border);
+}
+
+.mm-saisie__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+
+.mm-montant {
+  color: var(--c-text-2);
+}
+
+.mm-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--c-text-2);
+}
+
+.mm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mm-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mm-btn--cta {
+  background: var(--cta);
+  color: var(--cta-fg);
+  flex: 1;
+}
+
+.mm-btn--cta:hover {
+  background: var(--cta-hover);
+}
+
+.mm-btn--soft {
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+}
+
+.mm-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.mm-lien {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--c-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mm-recap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.mm-recap div {
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 8px;
+  text-align: center;
+}
+
+.mm-recap dt {
+  font-size: 11px;
+  color: var(--c-text-2);
+  font-weight: 600;
+}
+
+.mm-recap dd {
+  margin: 2px 0 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.mm-fait {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: var(--teal);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+  animation: mm-fondu 0.3s ease;
+}
+
+.mm-fait svg {
+  width: 96px;
+  height: 96px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 60;
+  animation: mm-trace 0.6s 0.1s ease both;
+}
+
+.mm-fait h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.mm-fait p {
+  margin: 0 0 8px;
+  max-width: 360px;
+  line-height: 1.45;
+}
+
+.mm-fait__btn {
+  width: min(100%, 320px);
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  color: #0b6b59;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mm-fait__lien {
+  min-height: 44px;
+  background: none;
+  border: 0;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@keyframes mm-fondu {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mm-trace {
+  from {
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-fait,
+  .mm-fait svg {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Tuiles de synthèse compactes : les trois chiffres du mois tiennent sur une ligne. */
+  .mm dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .mm dl > div {
+    padding: 10px 8px !important;
+  }
+
+  .mm dl dt {
+    font-size: 11px !important;
+  }
+
+  .mm dl dd {
+    font-size: 16px !important;
+  }
+}

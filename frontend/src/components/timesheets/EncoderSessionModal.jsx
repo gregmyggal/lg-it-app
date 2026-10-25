@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import AdminModal from '../AdminModal';
 import AdminButton from '../AdminButton';
-import { AdminFormField, AdminInput, AdminSelect, AdminTextarea } from '../AdminFormField';
+import { AdminFormField, AdminSelect, AdminTextarea } from '../AdminFormField';
+import HeuresStepper from './HeuresStepper';
 import Banner from '../ui/Banner';
 import { creerSaisie } from '../../hooks/useTimesheets';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
@@ -85,7 +86,7 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
         error={erreurs.nombre_heures}
         description={`Préremplies avec les heures défrayables${session.duree_seance != null ? ` (${formatDuree(session.duree_seance)} de séance + préparation)` : ''} ; modifiables (0,5 à 24 h).${Number(heures) !== Number(session.duree_par_defaut) ? ` Valeur standard : ${formatDuree(session.duree_par_defaut)}.` : ''}`}
       >
-        <AdminInput id="enc-duree" type="number" step="0.5" min="0.5" max="24" value={heures} onChange={(e) => setHeures(e.target.value)} />
+        <HeuresStepper id="enc-duree" aria-label="Heures défrayées" value={heures} onChange={setHeures} />
       </AdminFormField>
       <AdminFormField label="Commentaire (facultatif)" htmlFor="enc-comm" error={erreurs.commentaire}>
         <AdminTextarea id="enc-comm" rows={2} value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />

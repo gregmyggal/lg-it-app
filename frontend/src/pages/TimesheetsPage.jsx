@@ -1,31 +1,32 @@
-import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { AdminPageHeader, AdminPageContent } from '../components/AdminPageLayout';
 import AdminButton from '../components/AdminButton';
 import AdminModal from '../components/AdminModal';
-import { Section } from '../components/ui/Card';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '../components/ui/DataStates';
 import LinkButton from '../components/ui/LinkButton';
 import Banner from '../components/ui/Banner';
-import { Table, Th, Td, Tr } from '../components/ui/Table';
-import StatutBadge from '../components/ui/StatutBadge';
-import SessionsDuMoisTable from '../components/timesheets/SessionsDuMoisTable';
+import CarteMois from '../components/timesheets/CarteMois';
+import { grouperParSemaine, titreSemaine } from '../utils/semaines';
 import SyntheseMois from '../components/timesheets/SyntheseMois';
 import AjouterHeuresModal from '../components/timesheets/AjouterHeuresModal';
+import EncoderSessionModal from '../components/timesheets/EncoderSessionModal';
+import SoumettreMoisModal from '../components/timesheets/SoumettreMoisModal';
+import MoisSoumisConfirmation from '../components/timesheets/MoisSoumisConfirmation';
 import ReconfirmationMois from '../components/timesheets/ReconfirmationMois';
+import MaSignatureModal from '../components/signature/MaSignatureModal';
 import { creerSaisie, soumettreMois, supprimerSaisie, useMonMois } from '../hooks/useTimesheets';
 import { useCours } from '../hooks/useCours';
 import { useToast } from '../hooks/useToast';
 import { getErrorMessage } from '../api/errors';
-import { STATUTS_TIMESHEET, TYPES_ACTIVITE, getStatut } from '../utils/statuts';
 import { MOIS_LONGS, formatDateCourte } from '../utils/dates';
-import { formatEuros, formatHeures } from '../utils/format';
+import { formatDuree, formatEuros, formatHeures } from '../utils/format';
 import { libelleSession } from '../utils/classes';
 
 const pad = (n) => String(n).padStart(2, '0');
 
-/** Écran mensuel « Encoder mon mois » du professeur (mock-up 02) ; le staff passe par `/admin/timesheets`. */
+/** Écran mensuel « Mon mois » du professeur (UI-M4, mobile-first) ; le staff passe par `/admin/timesheets`. */
 export default function TimesheetsPage() {
   const { user } = useAuth();
   if (user.role !== 'professeur') return <Navigate to="/admin/timesheets" replace />;
@@ -34,29 +35,20 @@ export default function TimesheetsPage() {
 
 function MonMois({ user }) {
   const toast = useToast();
+  const navigate = useNavigate();
   const aujourdhui = new Date();
   const [periode, setPeriode] = useState({ annee: aujourdhui.getFullYear(), mois: aujourdhui.getMonth() + 1 });
   const mon = useMonMois(periode.annee, periode.mois);
   const cours = useCours();
-  const [heuresParSession, setHeuresParSession] = useState({});
   const [ajout, setAjout] = useState(false);
   const [edition, setEdition] = useState(null);
+  const [autreDuree, setAutreDuree] = useState(null);
   const [suppression, setSuppression] = useState(null);
   const [soumission, setSoumission] = useState(false);
+  const [confirmation, setConfirmation] = useState(false);
+  const [signature, setSignature] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
-
-  // Heures proposées pour chaque séance à encoder : la durée défrayable, modifiable avant d'encoder la séance.
-  useEffect(() => {
-    if (!mon.data) return;
-    setHeuresParSession(
-      Object.fromEntries(
-        mon.data.sessions
-          .filter((s) => s.encodage === 'a_encoder' && s.peut_encoder)
-          .map((s) => [s.id, String(s.duree_par_defaut)]),
-      ),
-    );
-  }, [mon.data]);
 
   function aller(delta) {
     const d = new Date(periode.annee, periode.mois - 1 + delta, 1);
@@ -64,37 +56,40 @@ function MonMois({ user }) {
     setErreur(null);
   }
 
-  function modifierHeures(id, heures) {
-    setHeuresParSession((prev) => ({ ...prev, [id]: heures }));
-  }
-
   async function agir(fn, succes) {
     setEnvoi(true);
     setErreur(null);
     try {
       await fn();
-      toast.success(succes);
+      if (succes) toast.success(succes);
       mon.reload();
+      return true;
     } catch (err) {
       setErreur(getErrorMessage(err));
+      return false;
     } finally {
       setEnvoi(false);
     }
   }
 
-  // Encoder une séance = enregistrer ses heures en brouillon. Rien n'est soumis ici.
-  const encoder = (session, heures) =>
-    agir(() => creerSaisie({ course_session_id: session.id, nombre_heures: Number(heures) }), 'Heures encodées en brouillon. Elles partiront avec le mois entier.');
+  // Encoder une séance = enregistrer ses heures défrayables en brouillon. Rien n'est soumis ici.
+  const encoder = (session) =>
+    agir(
+      () => creerSaisie({ course_session_id: session.id, nombre_heures: Number(session.duree_par_defaut) }),
+      `Encodé · ${formatDuree(session.duree_par_defaut)}. Ces heures partiront avec le mois entier.`,
+    );
 
   // Soumission du mois entier : toutes les heures encodées du mois, sans sélection.
   async function soumettre() {
-    await agir(() => soumettreMois({ annee: periode.annee, mois: periode.mois }), 'Mois soumis. La direction peut maintenant valider vos heures.');
+    const ok = await agir(() => soumettreMois({ annee: periode.annee, mois: periode.mois }));
     setSoumission(false);
+    if (ok) setConfirmation(true);
   }
 
   const titreMois = `${MOIS_LONGS[periode.mois - 1][0].toUpperCase()}${MOIS_LONGS[periode.mois - 1].slice(1)} ${periode.annee}`;
   const data = mon.data;
   const vide = data && data.sessions.length === 0 && data.libres.length === 0;
+  const semaines = data ? grouperParSemaine(data.sessions, data.libres) : [];
   const seances = (data?.sessions || [])
     .filter((s) => s.peut_encoder && s.encodage === 'a_encoder')
     .map((s) => ({ value: String(s.id), label: `${formatDateCourte(s.date)} — ${s.classe_libelle} · ${libelleSession(s)}` }));
@@ -102,155 +97,102 @@ function MonMois({ user }) {
 
   return (
     <>
-      <AdminPageHeader
-        icon="📋"
-        title="Encoder mon mois"
-        description="Encodez vos heures au fil du mois. Vous soumettez le mois entier une seule fois, quand il est complet."
-      />
+      <AdminPageHeader icon="📋" title="Mon mois" description="Encodez vos heures au fil du mois ; vous les soumettez une seule fois, quand le mois est complet." />
       <AdminPageContent>
-        <nav aria-label="Choix du mois" className="month-nav" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-          <AdminButton size="sm" variant="secondary" onClick={() => aller(-1)} aria-label="Mois précédent">
-            ‹<span className="hide-mobile"> Mois précédent</span>
-          </AdminButton>
-          <strong className="month-nav__titre" style={{ minWidth: '140px', textAlign: 'center' }}>{titreMois}</strong>
-          <AdminButton size="sm" variant="secondary" onClick={() => aller(1)} aria-label="Mois suivant">
-            <span className="hide-mobile">Mois suivant </span>›
-          </AdminButton>
-        </nav>
+        <div className="mm">
+          <nav aria-label="Choix du mois" className="mm-mois">
+            <button type="button" className="mm-mois__fleche" onClick={() => aller(-1)} aria-label="Mois précédent">
+              ‹
+            </button>
+            <strong>{titreMois}</strong>
+            <button type="button" className="mm-mois__fleche" onClick={() => aller(1)} aria-label="Mois suivant">
+              ›
+            </button>
+          </nav>
 
-        {erreur && (
-          <Banner tone="error" role="alert">
-            <strong>{erreur}</strong>
-          </Banner>
-        )}
-        {data?.mois_soumis && (
-          <Banner tone="info" role="status">
-            <strong>Ce mois est soumis à la direction.</strong> Il ne peut être soumis qu'une fois : vos heures ne sont plus modifiables. Une correction passe par la direction (remise en brouillon du mois).
-          </Banner>
-        )}
-        {data?.employeur && (
-          <p style={{ margin: '0 0 16px', fontSize: 14 }} data-testid="employeur-du-mois">
-            Employeur ce mois : <strong>{data.employeur.nom}</strong>
-            <span style={{ display: 'block', fontSize: 12, color: 'var(--c-text-2)' }}>Pour toute question sur votre contrat ou vos données, contactez la direction.</span>
-          </p>
-        )}
-        <ReconfirmationMois key={`${periode.annee}-${periode.mois}`} professeurId={user.professeur?.id} annee={periode.annee} mois={periode.mois} onChange={mon.reload} />
-        {mon.loading && <LoadingBlock message="Chargement de votre mois…" lignes={4} />}
-        {mon.error && <ErrorBlock message="Impossible de charger votre mois. Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez." onRetry={mon.reload} />}
+          {erreur && (
+            <Banner tone="error" role="alert">
+              <strong>{erreur}</strong>
+            </Banner>
+          )}
+          {data?.mois_soumis && (
+            <Banner tone="info" role="status">
+              <strong>Ce mois est soumis à la direction.</strong> Vos heures ne sont plus modifiables. Une correction passe par la direction (remise en brouillon du mois).
+            </Banner>
+          )}
+          {data?.employeur && (
+            <p className="mm-employeur" data-testid="employeur-du-mois">
+              Employeur ce mois : <strong>{data.employeur.nom}</strong>
+              <span>Pour toute question sur votre contrat ou vos données, contactez la direction.</span>
+            </p>
+          )}
+          <ReconfirmationMois key={`${periode.annee}-${periode.mois}`} professeurId={user.professeur?.id} annee={periode.annee} mois={periode.mois} onChange={mon.reload} />
+          {mon.loading && !data && <LoadingBlock message="Chargement de votre mois…" lignes={4} />}
+          {mon.error && <ErrorBlock message="Impossible de charger votre mois. Vos saisies ne sont pas perdues. Vérifiez votre connexion puis réessayez." onRetry={mon.reload} />}
 
-        {vide && (
-          <EmptyBlock
-            icon="🗓️"
-            title="Rien à encoder pour ce mois"
-            actions={
-              <>
-                <AdminButton onClick={() => setAjout(true)}>Ajouter des heures</AdminButton>
-                <LinkButton to="/mes-classes">Aller à Mes classes</LinkButton>
-              </>
-            }
-          >
-            Aucune séance n'est prévue ce mois-ci et vous n'avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.
-          </EmptyBlock>
-        )}
-
-        {data && !vide && (
-          <>
-            <Section
-              title="1. Mes sessions du mois"
-              subtitle="Encodez chaque séance avec « Encoder » : la durée défrayable est préremplie, modifiable. Toutes les heures encodées partent avec le mois entier."
-              bodyPadding={false}
-            >
-              {data.sessions.length === 0 ? (
-                <p style={{ padding: '16px', margin: 0 }}>Aucune séance ce mois-ci.</p>
-              ) : (
-                <SessionsDuMoisTable
-                  sessions={data.sessions}
-                  heuresParSession={heuresParSession}
-                  onHeures={modifierHeures}
-                  onEncoder={encoder}
-                  onModifier={setEdition}
-                  onSupprimer={setSuppression}
-                  verrouille={data.mois_soumis}
-                />
-              )}
-            </Section>
-
-            <Section
-              title="2. Mes autres heures du mois"
-              subtitle="Préparation, animation ou autre travail, avec ou sans cours : à la date où vous l'avez réalisé."
-              bodyPadding={false}
+          {vide && (
+            <EmptyBlock
+              icon="🗓️"
+              title="Rien à encoder pour ce mois"
               actions={
-                <AdminButton size="sm" onClick={() => setAjout(true)} disabled={data.mois_soumis}>
-                  Ajouter des heures
-                </AdminButton>
+                <>
+                  <AdminButton onClick={() => setAjout(true)}>Ajouter des heures</AdminButton>
+                  <LinkButton to="/mes-classes">Aller à Mes classes</LinkButton>
+                </>
               }
             >
-              {data.libres.length === 0 ? (
-                <p style={{ padding: '16px', margin: 0 }}>Aucune autre heure encodée ce mois-ci.</p>
-              ) : (
-                <Table caption="Mes autres heures du mois" minWidth="640px" cards>
-                  <thead>
-                    <tr>
-                      <Th>Date</Th>
-                      <Th>Activité</Th>
-                      <Th>Cours</Th>
-                      <Th>Durée</Th>
-                      <Th>Montant</Th>
-                      <Th>État</Th>
-                      <Th>Actions</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.libres.map((x) => (
-                      <Tr key={x.id}>
-                        <Td label="Date">{formatDateCourte(x.date_prestation.slice(0, 10))}</Td>
-                        <Td label="Activité">{getStatut(TYPES_ACTIVITE, x.type_activite).label}</Td>
-                        <Td label="Cours">{x.cours?.titre || '—'}</Td>
-                        <Td label="Durée">{formatHeures(x.nombre_heures)}</Td>
-                        <Td label="Montant">{formatEuros(x.montant_brut)}</Td>
-                        <Td label="État">
-                          <StatutBadge table={STATUTS_TIMESHEET} valeur={x.statut_validation} />
-                        </Td>
-                        <Td label="Actions">
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            {x.can?.update && (
-                              <AdminButton size="sm" variant="secondary" onClick={() => setEdition(x)}>
-                                Modifier
-                              </AdminButton>
-                            )}
-                            {x.can?.delete && (
-                              <AdminButton size="sm" variant="secondary" onClick={() => setSuppression(x)}>
-                                Supprimer
-                              </AdminButton>
-                            )}
-                          </div>
-                        </Td>
-                      </Tr>
-                    ))}
-                  </tbody>
-                </Table>
-              )}
-            </Section>
+              Aucune séance n'est prévue ce mois-ci et vous n'avez encodé aucune heure. Vous pouvez tout de même ajouter des heures (préparation, réunion…) à la date de votre choix.
+            </EmptyBlock>
+          )}
 
-            <Section title="3. Total du mois" subtitle="Toutes les heures encodées ce mois, soumises ou non.">
+          {data && !vide && (
+            <>
               <SyntheseMois synthese={data.synthese} />
-            </Section>
 
-            <div className="sticky-actions">
-              <div className="sticky-actions__total only-mobile" aria-live="polite">
-                <span>Total du mois</span>
-                <strong>
-                  {formatHeures(data.synthese.heures)} · {formatEuros(data.synthese.montant)}
-                </strong>
-              </div>
-              <div className="sticky-actions__boutons">
-                <AdminButton onClick={() => setSoumission(true)} disabled={data.mois_soumis || data.synthese.nb_brouillons === 0 || envoi}>
-                  Soumettre<span className="hide-mobile"> le mois</span>
+              <div className="mm-tete">
+                <h2>Séances et heures du mois</h2>
+                <AdminButton size="sm" variant="secondary" onClick={() => setAjout(true)} disabled={data.mois_soumis}>
+                  + Ajouter des heures
                 </AdminButton>
               </div>
-            </div>
-          </>
-        )}
+
+              {semaines.map((semaine) => (
+                <section key={semaine.lundi} aria-label={titreSemaine(semaine.lundi)}>
+                  <h3 className="mm-semaine">{titreSemaine(semaine.lundi)}</h3>
+                  <ul className="mm-liste">
+                    {semaine.cartes.map((c) => (
+                      <CarteMois
+                        key={c.cle}
+                        carte={c}
+                        verrouille={data.mois_soumis}
+                        occupe={envoi}
+                        onEncoder={encoder}
+                        onAutreDuree={setAutreDuree}
+                        onModifier={setEdition}
+                        onSupprimer={setSuppression}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+
+              <div className="sticky-actions">
+                <div className="sticky-actions__total only-mobile" aria-live="polite">
+                  <span>Total du mois</span>
+                  <strong>
+                    {formatHeures(data.synthese.heures)} · {formatEuros(data.synthese.montant)}
+                  </strong>
+                </div>
+                <div className="sticky-actions__boutons">
+                  <AdminButton onClick={() => setSoumission(true)} disabled={data.mois_soumis || data.synthese.nb_brouillons === 0 || envoi}>
+                    {data.mois_soumis ? 'Mois soumis' : 'Soumettre'}
+                    <span className="hide-mobile">{data.mois_soumis ? '' : ' le mois'}</span>
+                  </AdminButton>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </AdminPageContent>
 
       {ajout && (
@@ -273,6 +215,18 @@ function MonMois({ user }) {
           onClose={() => setEdition(null)}
           onDone={(m) => {
             setEdition(null);
+            toast.success(m);
+            mon.reload();
+          }}
+        />
+      )}
+      {autreDuree && (
+        <EncoderSessionModal
+          session={autreDuree}
+          classeLibelle={autreDuree.classe_libelle}
+          onClose={() => setAutreDuree(null)}
+          onDone={(m) => {
+            setAutreDuree(null);
             toast.success(m);
             mon.reload();
           }}
@@ -307,28 +261,18 @@ function MonMois({ user }) {
           </p>
         </AdminModal>
       )}
-      {soumission && (
-        <AdminModal
-          isOpen
-          title="Soumettre mon mois"
-          size="sm"
+      {soumission && data && (
+        <SoumettreMoisModal
+          data={data}
+          titreMois={titreMois}
+          envoi={envoi}
+          onConfirmer={soumettre}
+          onCreerSignature={() => setSignature(true)}
           onClose={() => setSoumission(false)}
-          footer={
-            <>
-              <AdminButton variant="secondary" onClick={() => setSoumission(false)}>
-                Annuler
-              </AdminButton>
-              <AdminButton loading={envoi} onClick={soumettre}>
-                Soumettre les heures
-              </AdminButton>
-            </>
-          }
-        >
-          <p style={{ margin: 0 }}>
-            Vous ne pouvez soumettre ce mois qu'une seule fois, entièrement : toutes vos heures du mois partent ensemble. Ensuite vous ne pourrez plus ajouter ni modifier d'heures pour ce mois. La direction les valide ensuite.
-          </p>
-        </AdminModal>
+        />
       )}
+      {signature && <MaSignatureModal nom={user?.name} onClose={() => setSignature(false)} />}
+      {confirmation && <MoisSoumisConfirmation titreMois={titreMois} onAccueil={() => navigate('/aujourdhui')} onFermer={() => setConfirmation(false)} />}
     </>
   );
 }
