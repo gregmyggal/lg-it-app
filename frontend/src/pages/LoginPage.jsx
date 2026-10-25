@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { getStatus } from '../api/errors';
+import { accueilPour } from '../utils/accueil';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -23,7 +24,7 @@ export default function LoginPage() {
         navigate('/mot-de-passe');
         return;
       }
-      navigate(connecte?.role === 'professeur' ? '/mes-classes' : '/admin/classes');
+      navigate(accueilPour(connecte?.role));
     } catch (err) {
       // 403 : compte désactivé (message du serveur, révélé seulement avec un mot de passe correct) ;
       // 429 : trop de tentatives (RGPD-01).

@@ -1843,3 +1843,263 @@ form input[type='checkbox'] {
     display: none;
   }
 }
+
+/* ---------- « Aujourd'hui » du professeur (UI-M3) ---------- */
+.auj {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auj-salut {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.auj-salut h1 {
+  margin: 0;
+  font-size: clamp(22px, 6vw, 28px);
+  line-height: 1.15;
+}
+
+.auj-salut small {
+  color: var(--c-text-2);
+  display: block;
+}
+
+.auj-anneau {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex: none;
+}
+
+.auj-anneau svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.auj-anneau circle {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.auj-anneau__fond {
+  stroke: var(--c-border);
+}
+
+.auj-anneau__val {
+  stroke: var(--teal);
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.auj-anneau b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+}
+
+.auj-hero {
+  background: linear-gradient(140deg, var(--brand-deep), var(--accent));
+  color: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 6px 18px var(--c-shadow);
+}
+
+.auj-hero__kicker {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.auj-hero h2 {
+  margin: 4px 0 2px;
+  font-size: 19px;
+}
+
+.auj-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 13px;
+  opacity: 0.92;
+}
+
+.auj-hero__note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.auj-hero__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.auj-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.auj-btn--cta {
+  background: var(--cta);
+  color: var(--cta-fg);
+  flex: 1;
+}
+
+.auj-btn--cta:hover {
+  background: var(--cta-hover);
+}
+
+.auj-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.auj-btn--ghost {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.auj-titre {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.auj-titre h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.auj-titre span {
+  font-size: 13px;
+  color: var(--c-text-2);
+}
+
+.auj-pile {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auj-carte {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-left: 5px solid var(--c-primary);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px var(--c-shadow);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.auj-carte--sort {
+  transform: translateX(110%);
+  opacity: 0;
+}
+
+.auj-carte__titre {
+  font-weight: 700;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.auj-carte__meta {
+  font-size: 13px;
+  color: var(--c-text-2);
+  margin-top: 3px;
+}
+
+.auj-carte__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.auj-carte__actions .auj-btn {
+  min-height: 46px;
+  font-size: 14px;
+}
+
+.auj-lien {
+  color: var(--c-primary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 6px;
+  white-space: nowrap;
+}
+
+.auj-vide,
+.auj-pied {
+  text-align: center;
+  color: var(--c-text-2);
+  margin: 0;
+}
+
+.auj-toast {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--tabbar-h) + 16px);
+  z-index: 60;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #16212e;
+  color: #fff;
+  border-radius: 14px;
+  padding: 6px 6px 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  box-shadow: 0 8px 24px var(--c-shadow);
+}
+
+.auj-toast span {
+  flex: 1;
+}
+
+.auj-toast button {
+  background: none;
+  border: 0;
+  color: #ffb48f;
+  font: inherit;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auj-carte,
+  .auj-anneau__val {
+    transition: none;
+  }
+}

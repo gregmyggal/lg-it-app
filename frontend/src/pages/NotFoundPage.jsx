@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { accueilPour } from '../utils/accueil';
 
 /** Page « introuvable » (404) : URL inconnue ou supprimée (ex. l'ancien écran « Types de cours », CLS-01 T5). */
 export default function NotFoundPage() {
   const { user } = useAuth();
-  const accueil = !user ? '/connexion' : user.role === 'professeur' ? '/mes-classes' : '/admin/classes';
+  const accueil = !user ? '/connexion' : accueilPour(user.role);
 
   return (
     <main style={{ maxWidth: '520px', margin: '15vh auto', padding: '0 24px', textAlign: 'center' }}>

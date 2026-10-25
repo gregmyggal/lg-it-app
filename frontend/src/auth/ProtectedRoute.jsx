@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { accueilPour } from '../utils/accueil';
 
 export default function ProtectedRoute({ roles, children }) {
   const { user, loading } = useAuth();
@@ -20,7 +21,7 @@ export default function ProtectedRoute({ roles, children }) {
 
   // Rôle insuffisant : retour à l'accueil du portail (et non à la page de connexion).
   if (roles && !roles.includes(user.role)) {
-    const accueil = user.role === 'professeur' ? '/mes-classes' : '/admin/classes';
+    const accueil = accueilPour(user.role);
     if (pathname === accueil) {
       return <p role="alert">Votre rôle ne permet pas d'accéder à cette page.</p>;
     }

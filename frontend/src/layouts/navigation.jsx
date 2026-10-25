@@ -2,6 +2,7 @@ import { matchPath } from 'react-router-dom';
 
 /** Icônes de navigation (SVG en ligne, 24×24) partagées par les onglets, la feuille « Plus » et la barre latérale. */
 const ICONES = {
+  accueil: <><path d="M3 11 12 4l9 7v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></>,
   classes: <><path d="M3 9 12 4l9 5-9 5z" /><path d="M7 11.5V16c3 2 7 2 10 0v-4.5" /></>,
   mois: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
   liens: <><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>,
@@ -32,11 +33,11 @@ export function navigationPour(user) {
   if (!staff) {
     return {
       principal: [
-        { to: '/mes-classes', label: 'Classes', icone: 'classes' },
+        { to: '/aujourdhui', label: "Aujourd'hui", icone: 'accueil' },
         { to: '/timesheets', label: 'Mon mois', icone: 'mois' },
-        { to: '/mes-ressources', label: 'Liens', icone: 'liens' },
+        { to: '/mes-classes', label: 'Classes', icone: 'classes' },
       ],
-      groupes: [],
+      groupes: [{ label: 'Ressources', items: [{ to: '/mes-ressources', label: 'Liens de mes cours' }] }],
       dernierOnglet: 'Moi',
     };
   }

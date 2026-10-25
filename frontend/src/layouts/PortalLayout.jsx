@@ -94,7 +94,7 @@ export default function PortalLayout() {
             aria-haspopup="dialog"
             onClick={() => setFeuilleOuverte(true)}
           >
-            <NavIcon nom={nav.groupes.length ? 'plus' : 'moi'} />
+            <NavIcon nom={nav.dernierOnglet === 'Moi' ? 'moi' : 'plus'} />
             <span>{nav.dernierOnglet}</span>
           </button>
         </nav>

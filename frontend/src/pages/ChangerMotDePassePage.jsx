@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { getErrorMessage, getFieldErrors } from '../api/errors';
+import { accueilPour } from '../utils/accueil';
 
 /** Changement du mot de passe (obligatoire après un mot de passe provisoire). */
 export default function ChangerMotDePassePage() {
@@ -22,7 +23,7 @@ export default function ChangerMotDePassePage() {
     try {
       const res = await client.post('/me/mot-de-passe', form);
       setUser(res.data);
-      navigate(res.data.role === 'professeur' ? '/mes-classes' : '/admin/classes');
+      navigate(accueilPour(res.data.role));
     } catch (err) {
       setChamps(getFieldErrors(err));
       setErreur(getErrorMessage(err));

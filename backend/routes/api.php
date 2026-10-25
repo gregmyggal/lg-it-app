@@ -23,6 +23,7 @@ use App\Http\Controllers\FormationController;
 use App\Http\Controllers\HeuresDefrayablesController;
 use App\Http\Controllers\LienVersionController;
 use App\Http\Controllers\MesClassesController;
+use App\Http\Controllers\MonAccueilController;
 use App\Http\Controllers\ProfesseurClasseController;
 use App\Http\Controllers\ProfesseurController;
 use App\Http\Controllers\ProfesseurTarifController;
@@ -134,6 +135,9 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::delete('/sessions/{session}/professeurs/{professeur}', [SessionProfesseurController::class, 'retirer']);
     Route::post('/sessions/{session}/remplacer', [SessionProfesseurController::class, 'remplacer']);
     Route::delete('/sessions/{session}/remplacements/{professeur}', [SessionProfesseurController::class, 'annulerRemplacement']);
+
+    // UI-M3 : page d'arrivée « Aujourd'hui » du professeur.
+    Route::get('/mon-accueil', [MonAccueilController::class, 'show']);
 
     Route::get('/mes-classes', [MesClassesController::class, 'index']);
     Route::get('/mes-classes/{classe}/sessions', [MesClassesController::class, 'sessions']);
