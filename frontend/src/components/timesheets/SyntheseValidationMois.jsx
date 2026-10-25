@@ -6,6 +6,9 @@ import { Table, Th, Td, Tr } from '../ui/Table';
 import { FilterField, FilterSearch } from '../ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../ui/DataStates';
 import ValiderLotModal from './ValiderLotModal';
+import CarteProfesseurMois from './CarteProfesseurMois';
+import AdminModal from '../AdminModal';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
 import DefinirEmployeurModal from '../employeurs/DefinirEmployeurModal';
 import { useEmployeurs } from '../../hooks/useEmployeurs';
@@ -59,6 +62,9 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
   const [lot, setLot] = useState(false);
   const [pdfEnCours, setPdfEnCours] = useState(false);
   const [bloquants, setBloquants] = useState(null);
+  const mobile = useMediaQuery('(max-width: 860px)');
+  const [modeSelection, setModeSelection] = useState(false);
+  const [actionsOuvertes, setActionsOuvertes] = useState(false);
 
   const lignes = useMemo(() => (synthese.data?.professeurs || []).filter((l) => (
     (!statut || l.statut_mois === statut)
@@ -110,6 +116,22 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
     });
   }
 
+  function quitterSelection() {
+    setModeSelection(false);
+    setSelection(new Set());
+  }
+
+  function appuiLong(id) {
+    setModeSelection(true);
+    setSelection((prev) => new Set(prev).add(id));
+  }
+
+  function toutValider() {
+    const validables = new Set((saisies.data || []).filter((t) => t.statut_validation === 'soumis' && t.can?.validate).map((t) => t.professeur_id));
+    setModeSelection(true);
+    setSelection(new Set(lignes.filter((l) => validables.has(l.professeur_id)).map((l) => l.professeur_id)));
+  }
+
   function decaler(delta) {
     const d = new Date(annee, moisNum - 1 + delta, 1);
     onMoisChange(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
@@ -119,6 +141,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
   function apresValidation(message) {
     setLot(false);
     setSelection(new Set());
+    setModeSelection(false);
     toast.success(message);
     synthese.reload();
     saisies.reload();
@@ -141,6 +164,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
 
       {kpis && (
         <>
+          {!mobile && (
           <div className="kpi-grid" style={{ marginBottom: ADMIN_SPACING.lg }}>
             {[['Profs ayant soumis', kpis.soumis], ['À valider', kpis.a_valider], ['Attente professeur', kpis.attente_prof], ['Contestés', kpis.conteste], ['Prêts PDF', kpis.pret_pdf], ['Générés', kpis.generes]].map(([titre, v]) => (
               <div key={titre} style={{ border: `1px solid ${ADMIN_COLORS.border}`, borderRadius: 8, padding: 10, background: 'var(--c-card)' }}>
@@ -149,7 +173,9 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               </div>
             ))}
           </div>
+          )}
 
+          {!mobile && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: ADMIN_SPACING.md, alignItems: 'flex-end', marginBottom: ADMIN_SPACING.md }}>
             <FilterSearch id="synthese-recherche" value={recherche} onChange={setRecherche} placeholder="Nom du professeur" />
             <FilterField label="Statut" value={statut} onChange={setStatut} options={OPTIONS_STATUT} placeholder="Tous les statuts" />
@@ -172,11 +198,46 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               >
                 {pdfEnCours ? 'Génération…' : `Générer les PDF (zip)${pdfPossible ? ` (${choisis.length})` : ''}`}
               </AdminButton>
-              <AdminButton className="hide-mobile" onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
+              <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
                 Valider la sélection ({saisiesChoisies.length > 0 ? selection.size : 0})
               </AdminButton>
             </div>
           </div>
+          )}
+
+          {mobile && (
+            <>
+              <div className="pm-outils">
+                <FilterSearch id="synthese-recherche-mobile" value={recherche} onChange={setRecherche} placeholder="Nom du professeur" />
+              </div>
+              <div className="pm-puces" role="group" aria-label="Filtrer par statut">
+                <button type="button" className={`pm-puce${statut === '' ? ' pm-puce--on' : ''}`} onClick={() => setStatut('')}>
+                  Tous · {synthese.data.professeurs.length}
+                </button>
+                {OPTIONS_STATUT.map((o) => {
+                  const n = synthese.data.professeurs.filter((l) => l.statut_mois === o.value).length;
+                  return n > 0 ? (
+                    <button key={o.value} type="button" className={`pm-puce${statut === o.value ? ' pm-puce--on' : ''}`} onClick={() => setStatut(statut === o.value ? '' : o.value)}>
+                      {o.label} · {n}
+                    </button>
+                  ) : null;
+                })}
+              </div>
+              <div className="pm-barre">
+                <AdminButton variant="secondary" size="sm" onClick={() => (modeSelection ? quitterSelection() : setModeSelection(true))}>
+                  {modeSelection ? 'Annuler la sélection' : 'Sélectionner'}
+                </AdminButton>
+                {modeSelection && (
+                  <AdminButton variant="secondary" size="sm" onClick={toutValider}>
+                    Tout ce qui est à valider
+                  </AdminButton>
+                )}
+                <AdminButton variant="secondary" size="sm" onClick={() => setActionsOuvertes(true)}>
+                  ⋯ Actions du mois
+                </AdminButton>
+              </div>
+            </>
+          )}
 
           {bloquants && (
             <Banner tone="error" role="alert">
@@ -193,6 +254,20 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
           )}
           {synthese.data.professeurs.length === 0 ? (
             <EmptyBlock icon="📭" title="Aucune timesheet pour ce mois">Aucun professeur n’a encodé ni soumis d’heures sur cette période.</EmptyBlock>
+          ) : mobile ? (
+            <ul className="pm-liste" aria-label="Professeurs du mois">
+              {lignes.map((l) => (
+                <CarteProfesseurMois
+                  key={l.professeur_id}
+                  ligne={l}
+                  modeSelection={modeSelection}
+                  selectionnee={selection.has(l.professeur_id)}
+                  onOuvrir={onOuvrir}
+                  onBasculer={basculer}
+                  onAppuiLong={appuiLong}
+                />
+              ))}
+            </ul>
           ) : (
             <Table caption="Validation du mois par professeur" minWidth="980px" cards>
               <thead>
@@ -234,16 +309,43 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
           {synthese.data.professeurs.length > 0 && lignes.length === 0 && (
             <Banner tone="info">Aucun professeur ne correspond aux filtres.</Banner>
           )}
-          <div className="sticky-actions only-mobile">
-            <div className="sticky-actions__boutons">
-              <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
-                Valider la sélection ({saisiesChoisies.length > 0 ? selection.size : 0})
-              </AdminButton>
+          {mobile && modeSelection && (
+            <div className="sticky-actions">
+              <div className="sticky-actions__total" aria-live="polite">
+                <span>
+                  {selection.size} sélectionné{selection.size > 1 ? 's' : ''}
+                </span>
+                <strong>{formatEuros(lignes.filter((l) => selection.has(l.professeur_id)).reduce((t, l) => t + Number(l.total_eur || 0), 0))}</strong>
+              </div>
+              <div className="sticky-actions__boutons">
+                <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
+                  {saisiesChoisies.length > 0 ? `Valider ${selection.size}` : 'Rien à valider'}
+                </AdminButton>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
+      {mobile && actionsOuvertes && (
+        <AdminModal isOpen title="Actions du mois" size="sm" onClose={() => setActionsOuvertes(false)}>
+          <div className="pm-actions">
+            <p className="pm-actions__aide">Les trois premières s'appliquent aux professeurs sélectionnés.</p>
+            <AdminButton variant="secondary" className="adm-btn--block" disabled={ciblesEmployeur.length === 0} onClick={() => { setActionsOuvertes(false); setDefinition('choisir'); }}>
+              Définir l’employeur…
+            </AdminButton>
+            <AdminButton variant="secondary" className="adm-btn--block" disabled={ciblesEmployeur.length === 0} onClick={() => { setActionsOuvertes(false); setDefinition('reprendre'); }}>
+              Reprendre le mois précédent
+            </AdminButton>
+            <AdminButton variant="secondary" className="adm-btn--block" disabled={!pdfPossible || pdfEnCours} onClick={() => { setActionsOuvertes(false); genererLot(); }}>
+              {pdfPossible ? `Générer les PDF (zip) (${choisis.length})` : 'Générer les PDF (zip)'}
+            </AdminButton>
+            <AdminButton variant="secondary" className="adm-btn--block" disabled={lignes.length === 0} onClick={() => { setActionsOuvertes(false); exporterCsv(lignes, annee, moisNum); }}>
+              Exporter CSV
+            </AdminButton>
+          </div>
+        </AdminModal>
+      )}
       {definition && synthese.data && (
         <DefinirEmployeurModal annee={annee} mois={moisNum} cibles={ciblesEmployeur} modeInitial={definition} onClose={() => setDefinition(null)} onDone={apresEmployeur} />
       )}

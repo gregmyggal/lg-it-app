@@ -2422,3 +2422,157 @@ form input[type='checkbox'] {
     font-size: 16px !important;
   }
 }
+
+/* ---------- Validation du mois sur smartphone (UI-M5) ---------- */
+.pm-puces {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px 10px;
+  padding: 0 16px 2px;
+  scrollbar-width: none;
+}
+
+.pm-puces::-webkit-scrollbar {
+  display: none;
+}
+
+.pm-puce {
+  flex: none;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pm-puce--on {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: var(--c-on-solid);
+}
+
+.pm-barre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pm-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pm-carte {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px var(--c-shadow);
+}
+
+.pm-carte--selection {
+  outline: 2px solid var(--c-primary);
+  background: var(--c-primary-light);
+}
+
+.pm-carte__corps {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.pm-coche {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  border: 2px solid var(--c-border);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  color: #fff;
+}
+
+.pm-carte--selection .pm-coche {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.pm-carte__texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pm-carte__ligne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pm-carte__nom {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.pm-carte__montant {
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.pm-carte__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-heures {
+  font-size: 12px;
+  color: var(--c-text-2);
+}
+
+.pm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pm-actions__aide {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-text-2);
+}
+
+.sticky-actions__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import client from '../api/client';
 import TimesheetsParSession from '../components/timesheets/TimesheetsParSession';
 import DetailProfesseurMois from '../components/timesheets/DetailProfesseurMois';
@@ -41,6 +42,8 @@ export default function AdminTimesheetsPage() {
   const [professeurs, setProfesseurs] = useState([]);
   const [pdfGenerationHistory, setPdfGenerationHistory] = useState([]);
   const [saisieAAdapter, setSaisieAAdapter] = useState(null);
+  const mobile = useMediaQuery('(max-width: 860px)');
+  const [filtresOuverts, setFiltresOuverts] = useState(false);
   const [params] = useSearchParams();
   const toast = useToast();
 
@@ -144,7 +147,8 @@ export default function AdminTimesheetsPage() {
           </div>
         )}
 
-        {/* Contrôles */}
+        {/* Contrôles : repliés sur smartphone pour la validation (UI-M5) */}
+        {(!mobile || filtresOuverts || !['validation', 'detail'].includes(viewMode)) && (
         <div style={{
           background: 'var(--c-card)',
           borderRadius: '8px',
@@ -260,6 +264,7 @@ export default function AdminTimesheetsPage() {
             </AdminButton>
           </div>
         </div>
+        )}
 
         {viewMode === 'validation' && (
           <SyntheseValidationMois
@@ -283,6 +288,14 @@ export default function AdminTimesheetsPage() {
             }}
             onChange={loadData}
           />
+        )}
+
+        {mobile && ['validation', 'detail'].includes(viewMode) && (
+          <p style={{ textAlign: 'center', margin: '16px 0 0' }}>
+            <AdminButton variant="secondary" size="sm" onClick={() => setFiltresOuverts((ouvert) => !ouvert)} aria-expanded={filtresOuverts}>
+              {filtresOuverts ? 'Masquer les vues et filtres' : 'Autres vues et filtres'}
+            </AdminButton>
+          </p>
         )}
 
         {viewMode === 'session' && <TimesheetsParSession mois={selectedMonth} onChange={loadData} />}
