@@ -7,6 +7,7 @@ use App\Models\CourseSession;
 use App\Models\Timesheet;
 use App\Services\EmployeurMoisService;
 use App\Services\TimesheetLissingService;
+use App\Services\TimesheetNotifier;
 use App\Services\TimesheetService;
 use App\Services\TimesheetSignatureService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Gate;
 /** « Encoder mon mois » (CLS-01 T3, mock-up 02) : sessions du mois, heures libres, synthèse, soumission du mois. */
 class TimesheetMoisController extends Controller
 {
-    public function __construct(private readonly TimesheetService $service, private readonly EmployeurMoisService $employeurs) {}
+    public function __construct(private readonly TimesheetService $service, private readonly EmployeurMoisService $employeurs, private readonly TimesheetNotifier $notifier) {}
 
     public function monMois(Request $request): JsonResponse
     {
@@ -107,6 +108,9 @@ class TimesheetMoisController extends Controller
             'mois' => ['required', 'integer', 'min:1', 'max:12'],
         ]);
 
-        return response()->json($this->service->soumettreMois($request->user(), (int) $v['annee'], (int) $v['mois']));
+        $resultat = $this->service->soumettreMois($request->user(), (int) $v['annee'], (int) $v['mois']);
+        $this->notifier->moisSoumis($request->user()->professeur, (int) $v['annee'], (int) $v['mois']);
+
+        return response()->json($resultat);
     }
 }

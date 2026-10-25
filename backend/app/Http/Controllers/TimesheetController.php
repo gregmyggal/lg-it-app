@@ -257,7 +257,7 @@ class TimesheetController extends Controller
     }
 
     // SIG-01 : le professeur signe son mois (signature visible + preuve scellée). La direction ne signe jamais à sa place.
-    public function signMonth(Request $request, SignatureNumeriqueService $signatures)
+    public function signMonth(Request $request, SignatureNumeriqueService $signatures, TimesheetNotifier $notifier)
     {
         Gate::authorize('viewAny', Timesheet::class);
 
@@ -268,7 +268,9 @@ class TimesheetController extends Controller
             'certification' => ['accepted'],
         ], ['certification.accepted' => 'Cochez la certification pour signer.']);
 
-        $sig = $signatures->signer(Professeur::findOrFail($v['professeur_id']), (int) $v['year'], (int) $v['month'], $request->user(), $request->ip(), $request->userAgent());
+        $professeur = Professeur::findOrFail($v['professeur_id']);
+        $sig = $signatures->signer($professeur, (int) $v['year'], (int) $v['month'], $request->user(), $request->ip(), $request->userAgent());
+        $notifier->moisSigne($professeur, (int) $v['year'], (int) $v['month']);
 
         return response()->json([
             'success' => true,

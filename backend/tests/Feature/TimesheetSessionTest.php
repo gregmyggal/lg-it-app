@@ -116,13 +116,28 @@ class TimesheetSessionTest extends TestCase
     {
         Sanctum::actingAs($this->alice->user);
 
-        // TS-03 : une séance à venir s'encode à l'avance (brouillon).
-        $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(8)->id])->assertCreated();
+        // TS-03 : une séance à venir s'encode à l'avance (brouillon), tant qu'elle reste dans le mois courant.
+        $this->allerApres(2);
+        $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(4)->id])->assertCreated();
+        // Au-delà du mois courant : refusé (la séance 5 tombe en novembre).
+        $this->postJson('/api/timesheets', ['course_session_id' => $this->seance(5)->id])->assertStatus(422)->assertJsonValidationErrors(['date_prestation']);
 
         $annulee = $this->seance(2);
         $annulee->update(['statut' => CourseSession::STATUT_ANNULEE]);
         $this->postJson('/api/timesheets', ['course_session_id' => $annulee->id])->assertStatus(422);
         $this->assertSame(1, Timesheet::count());
+    }
+
+    public function test_encodage_libre_futur_limite_au_mois_courant(): void
+    {
+        Carbon::setTestNow('2026-10-10 10:00:00');
+        Sanctum::actingAs($this->alice->user);
+
+        $this->postJson('/api/timesheets', ['date_prestation' => '2026-10-31', 'type_activite' => 'preparation', 'nombre_heures' => 2])->assertCreated();
+        $this->postJson('/api/timesheets', ['date_prestation' => '2026-11-01', 'type_activite' => 'preparation', 'nombre_heures' => 2])
+            ->assertStatus(422)->assertJsonValidationErrors(['date_prestation']);
+        // Un mois passé reste encodable.
+        $this->postJson('/api/timesheets', ['date_prestation' => '2026-09-15', 'type_activite' => 'preparation', 'nombre_heures' => 2])->assertCreated();
     }
 
     public function test_le_remplace_ne_peut_plus_creer_mais_garde_ses_saisies_et_le_remplacant_encode_ac25_ac27(): void
@@ -161,10 +176,11 @@ class TimesheetSessionTest extends TestCase
     {
         Sanctum::actingAs($this->alice->user);
 
-        $this->postJson('/api/timesheets', ['date_prestation' => '2026-11-02', 'type_activite' => 'preparation', 'nombre_heures' => 2])
+        $jour = Carbon::now('Europe/Brussels')->toDateString();
+        $this->postJson('/api/timesheets', ['date_prestation' => $jour, 'type_activite' => 'preparation', 'nombre_heures' => 2])
             ->assertCreated()->assertJsonPath('course_session_id', null)->assertJsonPath('cours_id', null)->assertJsonPath('session', null);
         // Plusieurs saisies libres du même type le même jour sont permises (aucune unicité sans session)
-        $this->postJson('/api/timesheets', ['date_prestation' => '2026-11-02', 'type_activite' => 'preparation', 'nombre_heures' => 1])->assertCreated();
+        $this->postJson('/api/timesheets', ['date_prestation' => $jour, 'type_activite' => 'preparation', 'nombre_heures' => 1])->assertCreated();
         $this->postJson('/api/timesheets', ['type_activite' => 'preparation'])->assertStatus(422)->assertJsonValidationErrors(['nombre_heures', 'date_prestation']);
     }
 

@@ -35,7 +35,7 @@ class TimesheetService
      * @param  array<string, mixed>  $data  session : course_session_id (+ type_activite, nombre_heures, commentaire) ;
      *                                      libre : date_prestation, type_activite, nombre_heures (+ cours_id, commentaire)
      *
-     * @throws RegleMetierException 422 session annulée, mois soumis ou doublon
+     * @throws RegleMetierException 422 session annulée, date au-delà du mois courant, mois soumis ou doublon
      */
     public function creer(User $user, array $data): Timesheet
     {
@@ -43,6 +43,7 @@ class TimesheetService
         $type = $data['type_activite'] ?? self::TYPE_ANIMATION;
 
         if (empty($data['course_session_id'])) {
+            $this->verifierDansMoisCourant(Carbon::parse($data['date_prestation']));
             $this->verifierMoisNonSoumis($professeur->id, Carbon::parse($data['date_prestation']));
 
             return Timesheet::create([
@@ -63,6 +64,7 @@ class TimesheetService
             if ($session->isAnnulee()) {
                 throw RegleMetierException::invalide('Cette session est annulée : aucune heure ne peut y être encodée.', ['course_session_id' => ['Session annulée.']]);
             }
+            $this->verifierDansMoisCourant($session->date);
             $this->verifierMoisNonSoumis($professeur->id, $session->date);
             if (Timesheet::where('professeur_id', $professeur->id)->where('course_session_id', $session->id)->where('type_activite', $type)->lockForUpdate()->exists()) {
                 throw RegleMetierException::invalide('Ces heures sont déjà encodées pour cette session.', ['course_session_id' => ['Doublon (professeur, session, type d\'activité).']]);
@@ -79,6 +81,22 @@ class TimesheetService
                 'statut_validation' => Timesheet::STATUT_BROUILLON,
             ]);
         });
+    }
+
+    /**
+     * Le professeur encode librement dans le futur tant que la date reste dans le mois courant (Europe/Brussels) :
+     * il peut ainsi clôturer sa timesheet avant la fin du mois, le paiement se faisant sur base du document.
+     *
+     * @throws RegleMetierException 422 si la date est postérieure à la fin du mois courant
+     */
+    private function verifierDansMoisCourant(Carbon $date): void
+    {
+        if ($date->toDateString() > Carbon::now('Europe/Brussels')->endOfMonth()->toDateString()) {
+            throw RegleMetierException::invalide(
+                'Les heures ne peuvent être encodées que jusqu\'à la fin du mois en cours.',
+                ['date_prestation' => ['Date postérieure au mois en cours.']]
+            );
+        }
     }
 
     /** Un mois se soumet une seule fois : après soumission, plus aucune saisie dans ce mois (sauf remise en brouillon par la direction). */

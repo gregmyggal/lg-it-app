@@ -17,6 +17,14 @@ class NotificationTimesheet extends Notification
 
     public const REMISE_BROUILLON = 'remise_brouillon';
 
+    public const MOIS_SOUMIS = 'mois_soumis';
+
+    public const MOIS_SIGNE = 'mois_signe';
+
+    public const HEURES_TRAITEES = 'heures_traitees';
+
+    public const PDF_GENERE = 'pdf_genere';
+
     public function __construct(
         public readonly string $code,
         public readonly string $titre,

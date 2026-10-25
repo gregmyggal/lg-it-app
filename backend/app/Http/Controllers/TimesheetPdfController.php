@@ -6,6 +6,7 @@ use App\Models\AccesDonneeSensible;
 use App\Models\Professeur;
 use App\Models\TimesheetPdf;
 use App\Services\JournalAccesService;
+use App\Services\TimesheetNotifier;
 use App\Services\TimesheetPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 /** TS-01 T5 : fiche de défraiement PDF — génération (staff), lot en zip, déverrouillage (admin), téléchargement. */
 class TimesheetPdfController extends Controller
 {
-    public function __construct(private readonly TimesheetPdfService $service, private readonly JournalAccesService $journal) {}
+    public function __construct(private readonly TimesheetPdfService $service, private readonly JournalAccesService $journal, private readonly TimesheetNotifier $notifier) {}
 
     public function generer(Request $request, Professeur $professeur): JsonResponse
     {
@@ -23,6 +24,7 @@ class TimesheetPdfController extends Controller
         $p = $this->periode($request);
 
         $pdf = $this->service->generer($professeur, $p['annee'], $p['mois'], $request->user());
+        $this->notifier->pdfGenere($professeur, $p['annee'], $p['mois']);
 
         return response()->json(['data' => $this->vue($pdf)], 201);
     }
@@ -49,6 +51,8 @@ class TimesheetPdfController extends Controller
         ]);
 
         $r = $this->service->lot($v['professeur_ids'], (int) $v['annee'], (int) $v['mois'], $request->user());
+        Professeur::with('user')->whereIn('id', $v['professeur_ids'])->get()
+            ->each(fn (Professeur $prof) => $this->notifier->pdfGenere($prof, (int) $v['annee'], (int) $v['mois']));
 
         return response()->download($r['zip'], sprintf('fiches-defraiement-%04d-%02d.zip', $v['annee'], $v['mois']), ['Content-Type' => 'application/zip'])->deleteFileAfterSend(true);
     }

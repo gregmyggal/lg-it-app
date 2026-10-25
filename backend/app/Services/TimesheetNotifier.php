@@ -19,7 +19,19 @@ class TimesheetNotifier
     /** Le mois du professeur attend sa signature (heures validées, ou ajustées après signature). */
     public function siMoisAConfirmer(Professeur $prof, int $annee, int $mois): void
     {
-        if (! $prof->user || $this->confirmation->statutMois($prof, $annee, $mois) !== TimesheetSyntheseMoisService::STATUT_ATTENTE_PROF) {
+        if (! $prof->user) {
+            return;
+        }
+        if ($this->confirmation->statutMois($prof, $annee, $mois) !== TimesheetSyntheseMoisService::STATUT_ATTENTE_PROF) {
+            // Le mois n'est pas encore complet côté direction : le professeur est tout de même prévenu du changement.
+            $this->envoyer($prof->user, new NotificationTimesheet(
+                NotificationTimesheet::HEURES_TRAITEES,
+                'Vos heures ont été traitées',
+                'La direction a validé ou ajusté une partie de vos heures de '.$this->libelle($annee, $mois).'. Vous serez prévenu quand le mois entier attendra votre confirmation.',
+                '/timesheets',
+                $prof->id, $annee, $mois,
+            ));
+
             return;
         }
         $this->envoyer($prof->user, new NotificationTimesheet(
@@ -29,6 +41,47 @@ class TimesheetNotifier
             '/timesheets',
             $prof->id, $annee, $mois,
         ));
+    }
+
+    /** Le professeur a soumis son mois : la direction et l'admin sont prévenus (pas de dédoublonnage : acte rare et distinct). */
+    public function moisSoumis(Professeur $prof, int $annee, int $mois): void
+    {
+        $this->prevenirDirection(NotificationTimesheet::MOIS_SOUMIS, 'Un professeur a soumis son mois', ' a soumis ses heures de ', ' : elles attendent votre validation.', $prof, $annee, $mois);
+    }
+
+    /** Le professeur a signé son mois : la fiche est prête pour la génération du PDF. */
+    public function moisSigne(Professeur $prof, int $annee, int $mois): void
+    {
+        $this->prevenirDirection(NotificationTimesheet::MOIS_SIGNE, 'Un professeur a signé son mois', ' a confirmé et signé ses heures de ', ' : la fiche peut être générée.', $prof, $annee, $mois);
+    }
+
+    /** La direction a généré la fiche PDF du mois (les heures passent en « généré »). */
+    public function pdfGenere(Professeur $prof, int $annee, int $mois): void
+    {
+        if (! $prof->user) {
+            return;
+        }
+        $this->envoyer($prof->user, new NotificationTimesheet(
+            NotificationTimesheet::PDF_GENERE,
+            'Votre fiche de défraiement est prête',
+            'La fiche de '.$this->libelle($annee, $mois).' a été générée par la direction : votre mois est clôturé.',
+            '/timesheets',
+            $prof->id, $annee, $mois,
+        ), dedoublonner: false);
+    }
+
+    private function prevenirDirection(string $code, string $titre, string $milieu, string $fin, Professeur $prof, int $annee, int $mois): void
+    {
+        $staff = User::whereIn('role', ['admin', 'directeur'])->where('statut', 'actif')->get();
+        foreach ($staff as $user) {
+            $this->envoyer($user, new NotificationTimesheet(
+                $code,
+                $titre,
+                trim($prof->prenom.' '.$prof->nom).$milieu.$this->libelle($annee, $mois).$fin,
+                "/admin/timesheets?professeur={$prof->id}&mois=".sprintf('%04d-%02d', $annee, $mois),
+                $prof->id, $annee, $mois,
+            ), dedoublonner: false);
+        }
     }
 
     public function contestation(Professeur $prof, int $annee, int $mois, string $motif): void

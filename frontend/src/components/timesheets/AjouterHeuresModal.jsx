@@ -20,6 +20,14 @@ import { optionsStatut, TYPES_ACTIVITE } from '../../utils/statuts';
  * @param {() => void} props.onClose
  * @param {(message: string) => void} props.onDone
  */
+/** Dernier jour du mois courant (`YYYY-MM-DD`) : l'encodage à l'avance s'arrête à la fin du mois en cours. */
+function finDuMoisCourant() {
+  const maintenant = new Date();
+  const fin = new Date(maintenant.getFullYear(), maintenant.getMonth() + 1, 0);
+  const deuxChiffres = (n) => String(n).padStart(2, '0');
+  return `${fin.getFullYear()}-${deuxChiffres(fin.getMonth() + 1)}-${deuxChiffres(fin.getDate())}`;
+}
+
 export default function AjouterHeuresModal({ dateParDefaut, cours = [], seances = [], saisie, onClose, onDone }) {
   const edition = Boolean(saisie);
   const [type, setType] = useState(saisie?.type_activite || 'preparation');
@@ -92,7 +100,7 @@ export default function AjouterHeuresModal({ dateParDefaut, cours = [], seances 
         )}
         {!liee && (
           <AdminFormField label="Date" htmlFor="heures-date" required error={erreurs.date_prestation}>
-            <AdminInput id="heures-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <AdminInput id="heures-date" type="date" max={finDuMoisCourant()} value={date} onChange={(e) => setDate(e.target.value)} />
           </AdminFormField>
         )}
         <AdminFormField label="Durée (heures)" htmlFor="heures-duree" required error={erreurs.nombre_heures} description="Entre 0,5 et 24 heures.">
