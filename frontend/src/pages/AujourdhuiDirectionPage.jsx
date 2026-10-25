@@ -5,6 +5,7 @@ import StatutBadge from '../components/ui/StatutBadge';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '../components/ui/DataStates';
 import { useAccueilDirection } from '../hooks/useDirection';
 import { formatHoraire, MOIS_LONGS } from '../utils/dates';
+import { avecTransition } from '../utils/transition';
 
 function titreDuJour(iso) {
   const [annee, mois, jour] = iso.split('-').map(Number);
@@ -75,7 +76,7 @@ export default function AujourdhuiDirectionPage() {
             <section key={titre} aria-label={titre}>
               <h2 className="dir-groupe">{titre}</h2>
               {liste.map((s) => (
-                <button key={s.id} type="button" className={`dir-carte${s.professeurs.length === 0 ? ' dir-carte--vide' : ''}`} onClick={() => navigate(`/seances/${s.id}`)} aria-label={`Ouvrir la séance ${s.classe_libelle} ${formatHoraire(s.heure_debut, s.heure_fin)}`}>
+                <button key={s.id} type="button" className={`dir-carte${s.professeurs.length === 0 ? ' dir-carte--vide' : ''}`} onClick={() => avecTransition(() => navigate(`/seances/${s.id}`))} aria-label={`Ouvrir la séance ${s.classe_libelle} ${formatHoraire(s.heure_debut, s.heure_fin)}`}>
                   <span className="dir-carte__heure">{formatHoraire(s.heure_debut, s.heure_fin)}</span>
                   <span className="dir-carte__titre"> {s.classe_libelle} · {s.libelle_complet}</span>
                   <span className="dir-carte__meta">

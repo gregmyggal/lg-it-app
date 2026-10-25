@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { LienTransition } from '../ui/LienTransition';
 import AdminButton from '../AdminButton';
 import { LoadingBlock } from '../ui/DataStates';
 import { useApiQuery } from '../../hooks/useApiQuery';
@@ -49,14 +49,14 @@ export default function FicheRapideProfesseur({ professeur, actif, onRemplacer, 
             <ul className="fiche-rapide__liste">
               {liste.slice(0, 5).map((s) => (
                 <li key={s.id}>
-                  <Link to={`/seances/${s.id}`}>
+                  <LienTransition to={`/seances/${s.id}`}>
                     <strong>
                       {s.classe_libelle} · {s.libelle_complet}
                     </strong>
                     <small>
                       {formatDateCourte(s.date)} · {formatHoraire(s.heure_debut, s.heure_fin)}
                     </small>
-                  </Link>
+                  </LienTransition>
                 </li>
               ))}
             </ul>

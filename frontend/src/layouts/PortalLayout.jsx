@@ -6,6 +6,7 @@ import NotificationsBell from '../components/NotificationsBell';
 import ThemeToggle from '../components/ThemeToggle';
 import AdminModal from '../components/AdminModal';
 import MaSignatureModal from '../components/signature/MaSignatureModal';
+import { NavLienTransition } from '../components/ui/LienTransition';
 import { NavIcon, estActive, navigationPour, ongletActif } from './navigation';
 
 const navClass = ({ isActive }) => (isActive ? 'active' : undefined);
@@ -45,18 +46,18 @@ export default function PortalLayout() {
 
           <nav id="portal-nav" aria-label="Navigation principale">
             {nav.principal.map((e) => (
-              <NavLink key={e.to} to={e.to} end={e.end} className={navClass}>
+              <NavLienTransition key={e.to} to={e.to} end={e.end} className={navClass}>
                 <NavIcon nom={e.icone} />
                 {e.label}
-              </NavLink>
+              </NavLienTransition>
             ))}
             {nav.groupes.map((g) => (
               <div key={g.label} className="portal-side__group">
                 <div className="portal-side__group-label">{g.label}</div>
                 {g.items.map((e) => (
-                  <NavLink key={e.to} to={e.to} className={navClass}>
+                  <NavLienTransition key={e.to} to={e.to} className={navClass}>
                     {e.label}
-                  </NavLink>
+                  </NavLienTransition>
                 ))}
               </div>
             ))}
@@ -83,10 +84,10 @@ export default function PortalLayout() {
       {mobile && (
         <nav className="portal-tabs" aria-label="Navigation principale">
           {nav.principal.map((e) => (
-            <NavLink key={e.to} to={e.to} end={e.end} className={() => (actif === e ? 'portal-tab active' : 'portal-tab')} aria-current={actif === e ? 'page' : undefined}>
+            <NavLienTransition key={e.to} to={e.to} end={e.end} className={() => (actif === e ? 'portal-tab active' : 'portal-tab')} aria-current={actif === e ? 'page' : undefined}>
               <NavIcon nom={e.icone} />
               <span>{e.label}</span>
-            </NavLink>
+            </NavLienTransition>
           ))}
           <button
             type="button"
@@ -108,9 +109,9 @@ export default function PortalLayout() {
               <ul className="sheet-nav__list">
                 {g.items.map((e) => (
                   <li key={e.to}>
-                    <NavLink to={e.to} className={navClass}>
+                    <NavLienTransition to={e.to} className={navClass}>
                       {e.label}
-                    </NavLink>
+                    </NavLienTransition>
                   </li>
                 ))}
               </ul>

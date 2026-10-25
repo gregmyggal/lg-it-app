@@ -1,6 +1,8 @@
 import { ADMIN_COLORS, ADMIN_SPACING, ADMIN_RADIUS } from '../../styles/AdminDesignSystem';
 import AdminButton from '../AdminButton';
 import Banner from './Banner';
+import Illustration from './Illustration';
+import { nomIllustration } from '../../utils/illustrations';
 
 /** Squelette de chargement (texte pour lecteur d'écran). Animation désactivée si prefers-reduced-motion. */
 export function LoadingBlock({ message, lignes = 5 }) {
@@ -60,7 +62,7 @@ export function EmptyBlock({ icon, title, children, actions }) {
     >
       {icon && (
         <div aria-hidden="true" style={{ fontSize: '40px', marginBottom: ADMIN_SPACING.md }}>
-          {icon}
+          {nomIllustration(icon) ? <Illustration nom={nomIllustration(icon)} /> : icon}
         </div>
       )}
       <h2 style={{ margin: `0 0 ${ADMIN_SPACING.sm}`, fontSize: '18px', color: ADMIN_COLORS.textPrimary }}>{title}</h2>

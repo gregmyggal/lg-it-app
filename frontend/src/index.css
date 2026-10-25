@@ -2921,3 +2921,96 @@ form input[type='checkbox'] {
 .pliable__corps :is(h2, h3):first-of-type {
   display: none;
 }
+
+/* ---------- Finitions immersives (UI-M8) ---------- */
+
+/* Illustrations d'états vides : couleurs du thème (clair et sombre). */
+.illustration {
+  display: inline-block;
+}
+
+.illustration .ill-fond {
+  fill: var(--c-primary-light);
+}
+
+.illustration .ill-plein {
+  fill: var(--c-primary);
+  stroke: none;
+}
+
+.illustration .ill-accent-plein {
+  fill: var(--cta);
+  stroke: none;
+}
+
+.illustration .ill-trait,
+.illustration .ill-accent {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.illustration .ill-trait {
+  stroke: var(--c-primary);
+}
+
+.illustration .ill-accent {
+  stroke: var(--teal);
+}
+
+/* Application installée : pas de rebond de page, marges de sécurité déjà gérées par les barres (safe-area). */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Transitions entre écrans (View Transitions API, via `viewTransition` du routeur) : le contenu s'anime, les barres restent fixes. */
+.portal-top {
+  view-transition-name: portal-top;
+}
+
+.portal-tabs {
+  view-transition-name: portal-tabs;
+}
+
+.portal-side {
+  view-transition-name: portal-side;
+}
+
+.portal-main {
+  view-transition-name: portal-contenu;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(portal-contenu) {
+    animation: vt-sortie 0.12s ease both;
+  }
+
+  ::view-transition-new(portal-contenu) {
+    animation: vt-entree 0.2s ease 0.04s both;
+  }
+
+  @keyframes vt-sortie {
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes vt-entree {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
