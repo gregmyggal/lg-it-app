@@ -1,0 +1,100 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Soumission forcée — Maquette TS-05</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn-d:#92400e;--warn-l:#fef3c7;--err-d:#b91c1c;--err-l:#fee2e2;--sub-l:#f3f4f6;--t1:#111827;--t2:#374151;--t3:#6b7280;--bd:#e5e7eb;--bg:#f9fafb;--card:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--t1);background:var(--bg)}
+h1,h2,h3,p{margin:0}button{font:inherit;cursor:pointer}
+.mockbar{position:sticky;top:0;z-index:9;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}
+.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:13px}th{color:var(--t3);font-weight:600;font-size:12px}.num{text-align:right}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.b.g{background:var(--sub-l);color:var(--t2)}.b.o{background:var(--warn-l);color:var(--warn-d)}.b.v{background:var(--ok-l);color:var(--ok-d)}.b.bl{background:var(--primary-l);color:#1d4ed8}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:7px;padding:6px 12px;min-height:36px}.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}.btn.off{opacity:.45;cursor:not-allowed}
+.alert{padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.alert.w{background:var(--warn-l);color:var(--warn-d)}.alert.i{background:var(--primary-l);color:#1e3a8a}.alert.e{background:var(--err-l);color:var(--err-d)}.alert.s{background:var(--ok-l);color:var(--ok-d)}
+.note{font-size:12px;color:var(--t3);margin-top:6px}
+.ov{background:rgba(17,24,39,.45);padding:24px 12px;border-radius:10px}.dlg{background:#fff;border-radius:10px;max-width:560px;margin:0 auto;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.recap{display:flex;gap:8px;margin:10px 0}.recap div{flex:1;border:1px solid var(--bd);border-radius:8px;padding:8px}.recap b{display:block;font-size:18px}.recap span{font-size:12px;color:var(--t3)}
+.cons{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:10px}.cons ul{margin:6px 0 0;padding-left:18px}.cons li{margin:3px 0}
+label{display:block;font-size:12px;color:var(--t2);margin:8px 0 3px}textarea{width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font:inherit}
+.tl{list-style:none;margin:0;padding:0;border-left:2px solid var(--bd)}.tl li{padding:0 0 12px 12px}.tl .d{color:var(--t3)}
+.phone{width:375px;max-width:100%;margin:0 auto;border:10px solid #1f2937;border-radius:30px;background:var(--bg);padding:12px;min-height:520px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.sticky{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--bd);padding:10px;margin:12px -12px -12px;border-radius:0 0 18px 18px}
+</style></head><body>
+<div class="mockbar"><strong>MAQUETTE TS-05</strong><span>Soumission forcée du mois par la direction — Bruno Leroy, octobre 2026</span>
+<span class="row" style="gap:6px"><button data-s="a" aria-pressed="true">A. Détail du mois</button><button data-s="b" aria-pressed="false">B. Modale de confirmation</button><button data-s="c" aria-pressed="false">C. Côté professeur</button><button data-s="d" aria-pressed="false">D. Versions et frise</button><button data-s="e" aria-pressed="false">E. Synthèse, états, mobile</button></span></div>
+<main>
+
+<section class="screen on" id="a">
+<div class="card"><div class="row sp"><div><h2>Bruno Leroy — Octobre 2026</h2><div class="row" style="margin-top:8px"><span class="b g">Brouillon</span><span>Total <b>186,00 €</b> · 8,5 h</span></div></div>
+<div class="row"><button class="btn pri">Soumettre à la place du professeur…</button><button class="btn off" disabled aria-disabled="true" title="Aucune saisie soumise">Valider le mois (0)</button></div></div></div>
+<div class="alert w"><span><b>8,5 heures en brouillon, non soumises.</b> Le professeur n'a pas soumis son mois. Vous pouvez le soumettre en l'état pour lancer la validation.</span><button class="btn">Soumettre à sa place…</button></div>
+<div class="card"><h3 style="margin-bottom:8px">Saisies du mois</h3>
+<table><thead><tr><th>Date</th><th>Session / cours</th><th>Type</th><th class="num">Heures</th><th class="num">Montant</th><th>Statut</th></tr></thead><tbody>
+<tr><td>08/10</td><td>Scratch – Cl. A / S3</td><td>Animation</td><td class="num">3 h</td><td class="num">72 €</td><td><span class="b g">Brouillon</span></td></tr>
+<tr><td>15/10</td><td>Python – Cl. C / S2</td><td>Animation</td><td class="num">2,5 h</td><td class="num">60 €</td><td><span class="b g">Brouillon</span></td></tr>
+<tr><td>24/10</td><td>Heures libres</td><td>Préparation</td><td class="num">3 h</td><td class="num">54 €</td><td><span class="b g">Brouillon</span></td></tr></tbody></table>
+<p class="note">Le bouton n'apparaît que si le mois a des heures en brouillon et n'est pas encore soumis. Une fois le mois soumis, « Valider le mois » devient l'action principale. Aucun bouton désactivé sans explication : s'il n'y a rien à soumettre, le texte « Aucune heure encodée : rien à soumettre. » s'affiche.</p></div>
+</section>
+
+<section class="screen" id="b">
+<div class="ov"><div class="dlg"><h3>Soumettre le mois de Bruno Leroy</h3><p class="note" style="margin:4px 0 8px">Octobre 2026</p>
+<div class="recap"><div><b>8,5 h</b><span>Heures</span></div><div><b>186,00 €</b><span>Montant brut</span></div><div><b>3</b><span>Lignes en brouillon</span></div></div>
+<div class="alert w" style="display:block"><b>Le mois n'est pas terminé.</b> Les séances à venir ne seront pas incluses, et Bruno ne pourra plus ajouter d'heures pour octobre.</div>
+<div class="alert w" style="display:block"><b>2 séances passées sans heures</b> (17/10, 22/10) : elles ne seront pas incluses.</div>
+<div class="alert i" style="display:block">Plafond journalier dépassé le 24/10 : vous pourrez lisser à la validation.</div>
+<div class="cons"><b>Conséquences</b><ul>
+<li>Les 3 lignes en brouillon passent en « soumis » en l'état, d'un coup. Le mois passe en « À valider ».</li>
+<li>Bruno ne pourra plus ajouter ni modifier d'heures pour ce mois. Une correction passera par vous (adaptation ou remise en brouillon).</li>
+<li>Une version « soumise » est enregistrée au nom de la direction. Ensuite : validation, signature du professeur, PDF.</li>
+<li>Bruno est prévenu par notification et par e-mail.</li></ul></div>
+<label for="mt">Message au professeur (obligatoire, 500 caractères max.)</label><textarea id="mt" rows="3" placeholder="Ex. : échéance de paie, heures confirmées par téléphone">Échéance de paie du 5 novembre : heures confirmées avec toi par téléphone.</textarea>
+<p class="note">Ce message est repris dans la notification, l'e-mail et l'historique du mois.</p>
+<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn">Annuler</button><button class="btn pri">Soumettre le mois de Bruno</button></div></div></div>
+</section>
+
+<section class="screen" id="c">
+<div class="grid2"><div>
+<div class="card"><h3 style="margin-bottom:8px">Mon mois — Octobre 2026</h3>
+<div class="alert i" style="display:block"><b>Votre mois a été soumis par la direction le 03/11.</b><br>Vos 8,5 h encodées en brouillon ont été envoyées en l'état.<br>Message de M. Dupont : « Échéance de paie du 5 novembre : heures confirmées avec toi par téléphone. »<br><span class="note">Vous ne pouvez plus modifier ce mois. Si quelque chose est faux, contactez la direction ; vous pourrez aussi contester à la validation. Vous serez prévenu(e) à la validation.</span></div>
+<p class="note">Aucun écran plein de confirmation : il n'est utilisé que pour votre propre soumission.</p></div></div>
+<div><div class="card"><h3 style="margin-bottom:8px">Notification et e-mail</h3>
+<p><b>Octobre 2026 : vos heures ont été soumises par la direction</b></p>
+<p style="margin-top:8px;font-size:13px">Bonjour Bruno, M. Dupont a soumis vos heures d'octobre 2026 en l'état : 3 lignes, 8,5 h, 186,00 €.<br><br>Son message : « Échéance de paie du 5 novembre : heures confirmées avec toi par téléphone. »<br><br>Vous serez prévenu(e) quand le mois aura été validé. En cas d'erreur, contactez la direction.</p>
+<p class="note">Lien : Mon mois.</p></div></div></div>
+</section>
+
+<section class="screen" id="d">
+<div class="grid2"><div class="card"><h3 style="margin-bottom:8px">Versions (écran directeur)</h3>
+<div class="row"><span class="b g">Soumise v1 — par M. Dupont (direction) · 03/11 09:40</span><span>→</span><span class="b v">Validée v1 · 04/11 10:12</span></div>
+<p class="note" style="margin-top:8px">Pour une soumission du professeur : « Soumise v1 · 31/10 18:42 » (inchangé).</p></div>
+<div class="card"><h3 style="margin-bottom:8px">Historique (frise)</h3>
+<ul class="tl"><li><b>Soumis par la direction</b><div class="d">03/11 09:40 · M. Dupont</div><div>3 lignes · 186,00 € · 8,5 h — « Échéance de paie du 5 novembre : heures confirmées avec toi par téléphone. »</div></li>
+<li><b>Soumise · v1</b><div class="d">03/11 09:40</div><div>186,00 € · 8,5 h</div></li>
+<li><b>Validée · v1</b><div class="d">04/11 10:12</div><div>186,00 € · 8,5 h</div></li></ul></div></div>
+</section>
+
+<section class="screen" id="e">
+<div class="grid2"><div>
+<div class="card"><h3 style="margin-bottom:8px">1. Synthèse : repérage</h3>
+<table><thead><tr><th>Professeur</th><th>Statut</th><th>Alertes</th></tr></thead><tbody>
+<tr><td>Bruno Leroy</td><td><span class="b g">Brouillon</span></td><td><span class="b o">Brouillon non soumis · 8,5 h</span></td></tr>
+<tr><td>Alice Martin</td><td><span class="b bl">À valider</span></td><td></td></tr></tbody></table>
+<p class="note">Pas de bouton sur la ligne : un clic ouvre le détail (trajet existant). L'action groupée viendra dans une seconde tranche.</p></div>
+<div class="card"><h3 style="margin-bottom:8px">2. Aucune heure encodée</h3><p class="note">Aucune heure encodée : rien à soumettre. (Ni bouton ni bannière.)</p></div>
+<div class="card"><h3 style="margin-bottom:8px">3. Concurrence (409)</h3><div class="alert e" role="alert" style="display:block">Ce mois vient d'être soumis par le professeur. Le détail a été rechargé.</div></div>
+<div class="card"><h3 style="margin-bottom:8px">4. Mois déjà soumis ou plus avancé</h3><p class="note">Action masquée ; « Valider le mois » est l'action principale.</p></div>
+<div class="card"><h3 style="margin-bottom:8px">5. Succès</h3><div class="alert s" style="display:block">Mois soumis pour Bruno Leroy : à valider.</div></div></div>
+<div><div class="phone"><div class="row sp"><b>Bruno Leroy</b><span class="b g">Brouillon</span></div>
+<div class="alert w" style="display:block;margin-top:10px"><b>8,5 h en brouillon, non soumises.</b> Soumettez le mois en l'état pour lancer la validation.</div>
+<p class="note">Détail du mois (liste des saisies sous la bannière).</p>
+<div class="sticky"><button class="btn pri" style="width:100%;min-height:44px">Soumettre à la place du professeur…</button></div></div></div></div>
+</section>
+</main>
+<script>document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s))});</script>
+</body></html>
