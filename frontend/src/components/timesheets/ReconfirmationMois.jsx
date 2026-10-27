@@ -6,7 +6,8 @@ import Banner from '../ui/Banner';
 import SignerMoisModal from '../signature/SignerMoisModal';
 import { useAuth } from '../../auth/AuthContext';
 import { Table, Th, Td, Tr } from '../ui/Table';
-import { contesterMois, telechargerPdf, useMaConfirmation } from '../../hooks/useTimesheets';
+import ComparaisonVersions from './ComparaisonVersions';
+import { contesterMois, telechargerPdf, useMaConfirmation, useMesVersions } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage } from '../../api/errors';
 import { formatDateCourte, formatDateHeure } from '../../utils/dates';
@@ -36,6 +37,7 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
   const toast = useToast();
   const { user } = useAuth();
   const conf = useMaConfirmation(annee, mois);
+  const mesVersions = useMesVersions(annee, mois, conf.data);
   const [signature, setSignature] = useState(false);
   const [contestation, setContestation] = useState(false);
   const [motif, setMotif] = useState('');
@@ -43,6 +45,9 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
   const [erreur, setErreur] = useState(null);
   const d = conf.data;
   if (!d) return null;
+  // TS-04 : la comparaison soumise / validée remplace le tableau des ajustements quand les deux versions existent.
+  const vs = mesVersions.data;
+  const comparable = Boolean(vs?.soumise && vs?.validee && vs?.ecart);
 
   const attente = d.statut_mois === 'attente_prof';
   const termine = ['pret_pdf', 'genere'].includes(d.statut_mois);
@@ -118,7 +123,8 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
               <p style={{ margin: '0 0 12px' }}>Vérifiez-les puis confirmez-les en signant, ou contestez-les avec un motif.</p>
             </>
           )}
-          {d.ajustements.length > 0 && (
+          {comparable && <ComparaisonVersions versions={vs} />}
+          {!comparable && d.ajustements.length > 0 && (
             <Table caption="Ajustements de la direction" minWidth="560px">
               <thead><tr><Th>Saisie du</Th><Th>Ajustement</Th><Th>Motif</Th></tr></thead>
               <tbody>
@@ -134,11 +140,14 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
           )}
           {erreur && <Banner tone="error" role="alert">{erreur}</Banner>}
           {aSigner && (
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
-              <AdminButton disabled={!d.peut_signer || envoi} onClick={() => setSignature(true)}>
-                Accepter et signer…
-              </AdminButton>
-              <AdminButton variant="secondary" disabled={!d.peut_contester || envoi} onClick={() => setContestation(true)}>Contester…</AdminButton>
+            <div className="sticky-actions">
+              <div className="sticky-actions__boutons">
+                <AdminButton disabled={!d.peut_signer || envoi} onClick={() => setSignature(true)} style={{ minHeight: 44 }}>
+                  {comparable ? `Signer la version validée (${formatEuros(vs.validee.total_eur)})…` : 'Accepter et signer…'}
+                </AdminButton>
+                <AdminButton variant="secondary" disabled={!d.peut_contester || envoi} onClick={() => setContestation(true)} style={{ minHeight: 44 }}>Contester…</AdminButton>
+              </div>
+              {comparable && <p style={{ margin: 0, fontSize: 13 }}>En signant, vous signez uniquement la version validée. Votre version soumise reste conservée.</p>}
             </div>
           )}
           {aSigner && !d.peut_signer && d.erreurs_signature.length > 0 && (

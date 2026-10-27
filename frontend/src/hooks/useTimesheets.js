@@ -167,3 +167,11 @@ export function useVersionsMois(professeurId, annee, mois, { soumiseNumero, vali
     [professeurId, annee, mois, soumiseNumero, valideeNumero, rafraichir],
   );
 }
+
+/** TS-04 : mes versions « soumise » et « validée » d'un mois (professeur : ses propres mois, sans empreinte). */
+export function useMesVersions(annee, mois, rafraichir) {
+  return useApiQuery(
+    () => client.get('/timesheets/mes-versions', { params: { annee, mois } }).then((res) => res.data),
+    [annee, mois, rafraichir],
+  );
+}

@@ -26,7 +26,7 @@ function Vue({ children, label }) {
   return <section aria-label={label}>{children}</section>;
 }
 
-function TableVersion({ version, titre }) {
+export function TableVersion({ version, titre }) {
   if (version.detail_efface) {
     return (
       <Banner tone="info">
@@ -53,7 +53,7 @@ function TableVersion({ version, titre }) {
   );
 }
 
-function TableEcarts({ ecart }) {
+export function TableEcarts({ ecart }) {
   return (
     <Table caption="Écarts entre la version soumise et la version validée" minWidth="720px" cards>
       <thead><tr><Th>Date</Th><Th>Session / type</Th><Th>Soumise</Th><Th>Validée</Th><Th>Écart</Th><Th>Motif</Th></tr></thead>
@@ -86,7 +86,7 @@ function TableEcarts({ ecart }) {
   );
 }
 
-function CoteACote({ soumise, validee, ecart }) {
+export function CoteACote({ soumise, validee, ecart, titreSoumise = 'Soumise', titreValidee = 'Validée' }) {
   const etat = Object.fromEntries((ecart?.lignes || []).map((l) => [l.id, l.etat]));
   const ids = [...new Set([...soumise.lignes.map((l) => l.id), ...validee.lignes.map((l) => l.id)])];
   const parId = (v) => Object.fromEntries(v.lignes.map((l) => [l.id, l]));
@@ -94,7 +94,7 @@ function CoteACote({ soumise, validee, ecart }) {
   const b = parId(validee);
   return (
     <Table caption="Version soumise et version validée côte à côte" minWidth="720px" cards>
-      <thead><tr><Th>Date</Th><Th>Session / type</Th><Th>Soumise</Th><Th>Validée</Th></tr></thead>
+      <thead><tr><Th>Date</Th><Th>Session / type</Th><Th>{titreSoumise}</Th><Th>{titreValidee}</Th></tr></thead>
       <tbody>
         {ids.map((id) => {
           const ref = b[id] || a[id];
@@ -102,13 +102,13 @@ function CoteACote({ soumise, validee, ecart }) {
             <Tr key={id} fond={ETATS[etat[id] || 'identique'].fond}>
               <Td label="Date">{formatDateCourte(ref.date)}</Td>
               <Td label="Session / type">{objet(ref)}{etat[id] && etat[id] !== 'identique' ? ` — ${ETATS[etat[id]].label.toLowerCase()}` : ''}</Td>
-              <Td label="Soumise">{valeur(a[id])}</Td>
-              <Td label="Validée">{valeur(b[id])}</Td>
+              <Td label={titreSoumise}>{valeur(a[id])}</Td>
+              <Td label={titreValidee}>{valeur(b[id])}</Td>
             </Tr>
           );
         })}
       </tbody>
-      <tfoot><tr><Td label="Total" colSpan={2}><strong>Total</strong></Td><Td label="Soumise"><strong>{formatHeures(soumise.total_heures)} · {formatEuros(soumise.total_eur)}</strong></Td><Td label="Validée"><strong>{formatHeures(validee.total_heures)} · {formatEuros(validee.total_eur)}</strong></Td></tr></tfoot>
+      <tfoot><tr><Td label="Total" colSpan={2}><strong>Total</strong></Td><Td label={titreSoumise}><strong>{formatHeures(soumise.total_heures)} · {formatEuros(soumise.total_eur)}</strong></Td><Td label={titreValidee}><strong>{formatHeures(validee.total_heures)} · {formatEuros(validee.total_eur)}</strong></Td></tr></tfoot>
     </Table>
   );
 }
