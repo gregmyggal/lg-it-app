@@ -68,7 +68,7 @@
 3. **Consultation** : écran de détail du mois → sélecteur Soumise (complète) / Validée (complète) / Côte à côte / Écarts (par défaut).
 4. **Signature** : le professeur voit soumise et validée côte à côte, puis signe la validée ; la signature référence l'identifiant et l'empreinte de la version validée.
 5. **PDF** : généré depuis la version validée active signée.
-6. **Alternatives** : remise en brouillon puis resoumission → soumise v2 (v1 reste consultable). Contestation traitée ou déverrouillage avant PDF → validée v2 ; la v1 passe `remplacee`, la signature associée devient « remplacée ». Mois sans ajustement → « Identique à la soumission ». Mois antérieur à TS-04 → « Non disponible avec TS-04 ».
+6. **Alternatives** : remise en brouillon puis resoumission → soumise v2 (v1 reste consultable) ; la validée `active` passe `remplacee` à la remise en brouillon. Toute modification d'un mois validé (adaptation, lissage, contestation traitée puis nouvelle validation, déverrouillage après génération du PDF) → validée v+1 ; la v1 passe `remplacee`, la signature associée devient « remplacée » et une nouvelle signature est demandée. Mois sans ajustement → « Identique à la soumission ». Mois antérieur à TS-04 → « Non disponible avec TS-04 ».
 
 ### 5.3 Critères d'acceptation
 | ID | Étant donné… | Quand… | Alors… | Test |
@@ -80,20 +80,29 @@
 | AC-5 | une version de type soumise | une signature ou un PDF est demandé sur elle | refus 422, rien n'est créé | Feature |
 | AC-6 | une validée signée | une tentative de mise à jour d'une version est faite | refus (immutabilité) | Unit |
 | AC-7 | un mois soumis avant la mise en production | la direction ouvre le détail | « Non disponible avec TS-04 » sur la version absente, sans erreur | Feature + Front |
-| AC-8 | une validation partielle | l'API est appelée avec des lignes du mois non toutes sélectionnées | refus 422 : la validation porte sur le mois entier | Feature |
+| AC-8 | une validation partielle (lignes du mois non toutes sélectionnées, ou mois contenant d'anciennes lignes `confirme`) | l'API de validation est appelée | refus 422 de tout le lot avec la liste des mois fautifs ; la route `validateEntry` n'existe plus | Feature |
+| AC-11 | un mois validé (validée v1) | une ligne est adaptée ou lissée | validée v2 `active` dans la même transaction, v1 `remplacee`, signature remplacée | Feature |
+| AC-12 | un mois validé (validée active) | il est remis en brouillon | la validée passe `remplacee` ; la soumise est inchangée | Feature |
+| AC-13 | un mois validé avant la mise en production | la direction génère le PDF ou le professeur signe | autorisé comme aujourd'hui, sans validée | Feature |
+| AC-14 | deux soumissions simultanées du même mois | les deux requêtes arrivent | une seule réussit, une seule version soumise v1 | Feature |
+| AC-15 | une validée v2 existante | le PDF est généré | refusé si les lignes courantes ou le total diffèrent de la validée | Feature |
+| AC-16 | toute mutation de mois validé | après chaque chemin applicatif | la validée `active` égale le contenu courant (test d'invariant) | Feature |
 | AC-9 | un professeur A | il lit les versions du professeur B | 403 | Feature |
 | AC-10 | des versions de plus de 24 mois | le job de rétention s'exécute | le contenu détaillé est effacé, totaux, empreinte et dates conservés | Feature |
 
 ## 6. Règles métier et cycle de vie
 - **RG-1 :** une version soumise est créée dans la transaction de `soumettreMois`, une seule par soumission.
-- **RG-2 :** une version validée est créée dans la transaction de validation, pour le mois entier d'un seul professeur ; la validation partielle est refusée.
+- **RG-2 :** une version validée est créée dans la transaction de validation du mois ; la validation porte sur le mois entier, professeur par professeur ; la validation partielle est refusée et la route `validateEntry` est supprimée. Le lot est tout ou rien : un mois incomplet fait échouer tout le lot (422, liste des mois fautifs).
 - **RG-3 :** une version est immuable ; seul `statut` peut passer de `active` à `remplacee`.
 - **RG-4 :** signature et PDF ne ciblent qu'une version validée `active` ; le PDF vérifie que l'empreinte des lignes courantes égale celle de la validée.
-- **RG-5 :** toute nouvelle validation après contestation ou déverrouillage crée validée v+1 ; l'ancienne reste consultable.
+- **RG-5 :** toute mutation de contenu d'un mois ayant une validée `active` (adaptation, lissage, contestation traitée puis revalidation, déverrouillage après PDF) crée validée v+1 dans la même transaction ; l'ancienne reste consultable.
 - **RG-6 :** soumise et validée sont strictement indépendantes du statut de `timesheets` (aucun nouveau statut).
-- **RG-7 :** pas de reconstitution pour l'existant : tout mois sans version enregistrée affiche « Non disponible avec TS-04 ». Un mois déjà soumis à la mise en production a donc sa soumise « non disponible » mais sa validée sera créée normalement à sa validation.
+- **RG-7 :** pas de reconstitution pour l'existant : tout mois sans version enregistrée affiche « Non disponible avec TS-04 ». Un mois déjà soumis à la mise en production a sa soumise « non disponible » ; sa validée sera créée normalement à sa validation. Un mois déjà validé avant la mise en production (2026-10-27, soir), y compris partiellement, n'a pas de validée : il reste signable et générable comme aujourd'hui (garde conditionnelle, RG-11).
 - **RG-8 :** rétention : détail des versions effacé 24 mois après la fin du mois concerné (totaux et empreinte conservés) ; PDF et signatures conservés 84 mois (voir §7).
 - **RG-9 :** l'écart est calculé côté serveur par appariement sur l'identifiant de ligne ; une ligne issue d'un lissage est « ajoutée » et reliée à sa ligne d'origine.
+- **RG-10 :** à la remise en brouillon du mois, la validée `active` passe `remplacee` ; la soumise reste inchangée.
+- **RG-11 :** la garde « signature et PDF uniquement sur une validée `active` à jour » s'applique aux mois validés à partir de la mise en production ; elle est activée en dernière tranche (T1c). Le PDF contrôle que les lignes brutes courantes égalent la validée et que le total recalculé égale son total figé (tarif figé à la validation).
+- **RG-12 :** le lissage (validation, adaptation, lissage direct) passe par un seul service du mois, avec contrôle de statut, audit et lien vers la ligne d'origine.
 
 **Carte des statuts (axe version) :**
 | Valeur | Libellé | Badge | Modifiable | Transition | Déclencheur |
@@ -111,7 +120,10 @@
 | `type` | string(10) | oui | `soumise` ou `validee` | validee |
 | `numero` | smallint | oui | unique (prof, année, mois, type, numero) | 1 |
 | `statut` | string(10) | oui | `active` ou `remplacee` | active |
-| `lignes` | JSON canonique | oui (nul après purge) | immuable | [{id, date, type, heures, tarif, montant, session…}] |
+| `lignes` | LONGTEXT (texte canonique, pas de JSON natif) | oui (nul après purge) | immuable ; décimaux en chaînes ; champ `format` | [{id, date, type, heures, tarif, montant, session, origine_id…}] |
+| `actif_cle` | string nullable | non | unique ; renseignée seulement si `statut = active` | |
+| `purge_at` | timestamp nullable | non | index de rétention `(annee, mois)` | |
+| `timesheet_signatures.version_hash` | char(64) nullable | non | copie de l'empreinte de version (survit à l'anonymisation) | |
 | `total_heures`, `total_eur` | decimal | oui | | 11.00, 231.00 |
 | `content_hash` | char(64) | oui | SHA-256 | |
 | `auteur_id`, `created_at` | FK users, timestamp | oui | | |
@@ -168,14 +180,14 @@ Aucune nouvelle page : tout s'insère dans les écrans existants.
 | Couche | Changements prévus | Taille |
 |---|---|---|
 | **DB** | migration `timesheet_versions` ; `version_id` sur signatures et PDF | S |
-| **Back** | `TimesheetVersionService` (créer, canoniser, hasher, écart) ; appels dans `soumettreMois` et la validation ; validation du mois entier imposée dans `validerLot` ; `SignatureNumeriqueService` et `TimesheetPdfService` ciblent la validée ; policy ; job de rétention 24 mois | M |
+| **Back** | `TimesheetVersionService` (canoniser, hasher, `figerValidee`, écart) ; `soumettreMois` (verrou avant contrôle) ; `validerLot` atomique avec complétude ; `TimesheetAdaptationService`, `TimesheetLissageMoisService`, `TimesheetConfirmationService` (remise en brouillon, contestation), `TimesheetPdfService` (déverrouillage, `bloquants`), `TimesheetSignatureService::canSignMonth`, `SignatureNumeriqueService` (`version: 2`, `estPerimee`) ; suppression de `TimesheetController::validateEntry` et de `TimesheetLissingService::executeLissage` ; `apply-lissage` repris par le service du mois ; policy ; job de rétention 24 mois | L |
 | **API** | `GET` versions d'un mois (soumise, validée, écart) pour direction/admin et pour le professeur (les siennes) ; rétrocompatible | S |
-| **Front** | sélecteur 4 vues, vue côte à côte, bandeau « non disponible », écran professeur avant signature, via `client.js` | M |
+| **Front** | sélecteur 4 vues, vue côte à côte, bandeau « non disponible », écran professeur avant signature, via `client.js` ; migration de `TimesheetLissingModal.jsx` vers l'API du mois ; `ValiderLotModal` explique la validation du mois entier | M |
 | **Tests** | feature (AC-1 à AC-10), unit (hash, écart, immutabilité), recette | M |
 | **Docs / ADR** | `docs/API_TS04.md` ; ADR « instantanés de version vs lignes versionnées » | S |
 
 - **Risques :** dérive de la canonisation (la versionner) ; lissage créant des lignes (conserver le lien d'origine, aujourd'hui seulement dans l'audit) ; durcissement de `validerLot` à valider avec l'UX.
-- **Tranches :** T1 = instantanés soumise + validée, écran directeur (4 vues), garde-fou signature/PDF ; T2 = écran professeur avant signature + smartphone ; T3 = historique, job de rétention 24 mois.
+- **Tranches (ADR-0002) :** T1a = fondations (migration, service de version, `soumettreMois`, retrait de `validateEntry`, unification du lissage, `validerLot` atomique), sans garde ; T1b = validée v+1 sur toute mutation, API de lecture, écran directeur (4 vues) ; T1c = garde signature/PDF, activée après T1b ; T2 = écran professeur avant signature + smartphone ; T3 = historique, job de rétention 24 mois.
 - **Déploiement / retour arrière :** migration additive ; retour arrière possible (colonnes nullables) ; date de mise en production à tracer pour le message « Non disponible ».
 - **ADR requise :** ☑ oui → `docs/adr/0002-versions-timesheet.md`.
 
@@ -200,15 +212,18 @@ Aucune nouvelle page : tout s'insère dans les écrans existants.
 | Résolue | Reconstitution des mois existants | PO | — | Non : « Non disponible avec TS-04 » (2026-10-27) |
 | Résolue | Moment de la validée | PO | — | Validation du mois entier, professeur par professeur (2026-10-27) |
 | Résolue | Conservation | PO | — | 24 mois (2026-10-27) |
+| Résolue | PDF à 84 mois | PO | — | Durée minimale, sans purge automatique (2026-10-27) |
+| Résolue | Revue d'architecture B1 à B3 | PO | — | `validateEntry` supprimé et lissage unifié ; validée v+1 sur toute mutation ; garde conditionnelle pour les mois déjà validés ; tranches T1a/T1b/T1c (2026-10-27) |
+| Q5 | Écart avec `docs/AUDIT_RGPD.md` : IP et user-agent des signatures conservés 7 ans au lieu de 12 à 24 mois | PO / RGPD | T3 | non bloquante ; à trancher avant la rétention |
 
 ## 13. Validation (Definition of Ready)
 | Rôle | Nom | Date | ☐ Validé | Réserves |
 |---|---|---|---|---|
 | Analyste fonctionnel | | | ☐ | |
 | UX/UI | Sub-agent UX Expert | 2026-10-27 | ☑ | Workflow §8 |
-| Architecte | À désigner | | ☐ | ADR-0002 « Proposé » : validation à la revue |
+| Architecte | Sub-agent architecte | 2026-10-27 | ☑ avec réserves | ADR-0002 révisée (« Accepté avec réserves ») ; réserves à lever par tranche |
 | Directeur / Sponsor métier | PO | 2026-10-27 | ☑ | Maquette, règles, rétention et date de mise en production validées |
 
 **DoR :** ☑ Workflow UX (sub-agent) + mock-ups validés ☑ §1–7 complets ☑ Matrice des permissions ☑ Carte des statuts ☑ 4 états d'écran ☑ AC testables ☑ Impact données ☑ Questions bloquantes résolues (Q1 à Q4)
 
-> Statut « Validé (DoR) » prononcé par le PO le 2026-10-27. Réserve : l'ADR-0002 reste « Proposé » jusqu'à la revue de l'architecte, avant le début de T1.
+> Statut « Validé (DoR) » prononcé par le PO le 2026-10-27. L'ADR-0002 a été relue par l'architecte (verdict initial « À revoir », trois points bloquants traités par le PO le 2026-10-27), puis révisée.
