@@ -1,0 +1,80 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Soumission forcée groupée — Maquette TS-05 T2</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok-d:#047857;--ok-l:#d1fae5;--warn-d:#92400e;--warn-l:#fef3c7;--err-d:#b91c1c;--err-l:#fee2e2;--sub-l:#f3f4f6;--t1:#111827;--t2:#374151;--t3:#6b7280;--bd:#e5e7eb;--bg:#f9fafb;--card:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--t1);background:var(--bg)}
+h2,h3,p{margin:0}button{font:inherit;cursor:pointer}
+.mockbar{position:sticky;top:0;z-index:9;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px}.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:13px}th{color:var(--t3);font-weight:600;font-size:12px}.num{text-align:right}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}.b.g{background:var(--sub-l);color:var(--t2)}.b.o{background:var(--warn-l);color:var(--warn-d)}.b.bl{background:var(--primary-l);color:#1d4ed8}.b.v{background:var(--ok-l);color:var(--ok-d)}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:7px;padding:6px 12px;min-height:36px}.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}.btn.off{opacity:.45;cursor:not-allowed}
+.alert{padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px}.alert.w{background:var(--warn-l);color:var(--warn-d)}.alert.i{background:var(--primary-l);color:#1e3a8a}.alert.s{background:var(--ok-l);color:var(--ok-d)}.alert.e{background:var(--err-l);color:var(--err-d)}
+.note{font-size:12px;color:var(--t3);margin-top:6px}
+.ov{background:rgba(17,24,39,.45);padding:24px 12px;border-radius:10px}.dlg{background:#fff;border-radius:10px;max-width:640px;margin:0 auto;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.cons{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin:10px 0}.cons ul{margin:6px 0 0;padding-left:18px}
+label{display:block;font-size:12px;color:var(--t2);margin:8px 0 3px}textarea{width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font:inherit}
+.phone{width:375px;max-width:100%;margin:0 auto;border:10px solid #1f2937;border-radius:30px;background:var(--bg);padding:12px;min-height:420px}
+.sticky{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--bd);padding:10px;margin:12px -12px -12px;border-radius:0 0 18px 18px}
+.ign{color:var(--t3)}
+</style></head><body>
+<div class="mockbar"><strong>MAQUETTE TS-05 T2</strong><span>Soumission forcée groupée depuis la synthèse — octobre 2026</span>
+<span class="row" style="gap:6px"><button data-s="a" aria-pressed="true">A. Synthèse et sélection</button><button data-s="b" aria-pressed="false">B. Modale groupée</button><button data-s="c" aria-pressed="false">C. Résultat</button><button data-s="d" aria-pressed="false">D. Smartphone et états</button></span></div>
+<main>
+
+<section class="screen on" id="a">
+<div class="card"><div class="row sp"><h2>Synthèse — Octobre 2026</h2>
+<div class="row"><button class="btn">Annuler la sélection</button><button class="btn">Tout ce qui est à valider</button><button class="btn">Tout ce qui est en brouillon</button>
+<button class="btn pri">Soumettre à leur place (3)</button><button class="btn pri">Valider le mois (0)</button></div></div>
+<table style="margin-top:12px"><thead><tr><th></th><th>Professeur</th><th>Statut</th><th>Alertes</th><th class="num">Total</th></tr></thead><tbody>
+<tr><td><input type="checkbox" checked aria-label="Sélectionner Bruno Leroy"></td><td>Bruno Leroy</td><td><span class="b g">Brouillon</span></td><td><span class="b o">Brouillon non soumis · 8,5 h</span></td><td class="num">186,00 €</td></tr>
+<tr><td><input type="checkbox" checked aria-label="Sélectionner Clara Dubois"></td><td>Clara Dubois</td><td><span class="b g">Brouillon</span></td><td><span class="b o">Brouillon non soumis · 12 h</span></td><td class="num">264,00 €</td></tr>
+<tr><td><input type="checkbox" checked aria-label="Sélectionner David Renard"></td><td>David Renard</td><td><span class="b g">Brouillon</span></td><td><span class="b o">Brouillon non soumis · 4 h</span></td><td class="num">88,00 €</td></tr>
+<tr><td><input type="checkbox" aria-label="Sélectionner Alice Martin"></td><td>Alice Martin</td><td><span class="b bl">À valider</span></td><td></td><td class="num">240,00 €</td></tr></tbody></table>
+<p class="note">« Soumettre à leur place (N) » compte les professeurs cochés dont le mois est en brouillon non soumis ; « Valider le mois (N) » compte ceux dont le mois est à valider. Chaque bouton n'agit que sur les professeurs concernés, jamais en silence : la modale les liste. « Tout ce qui est en brouillon » est un raccourci de sélection (nouveau, comme « Tout ce qui est à valider »).</p></div>
+</section>
+
+<section class="screen" id="b">
+<div class="ov"><div class="dlg"><h3>Soumettre le mois de 3 professeurs à leur place</h3><p class="note" style="margin:4px 0 8px">Octobre 2026</p>
+<table><thead><tr><th>Professeur</th><th class="num">Lignes</th><th class="num">Heures</th><th class="num">Montant</th><th>Avertissement</th></tr></thead><tbody>
+<tr><td>Bruno Leroy</td><td class="num">3</td><td class="num">8,5 h</td><td class="num">186,00 €</td><td><span class="b o">2 séances sans heures</span></td></tr>
+<tr><td>Clara Dubois</td><td class="num">5</td><td class="num">12 h</td><td class="num">264,00 €</td><td></td></tr>
+<tr><td>David Renard</td><td class="num">2</td><td class="num">4 h</td><td class="num">88,00 €</td><td><span class="b o">plafond dépassé le 24/10</span></td></tr></tbody>
+<tfoot><tr><th>Total</th><th class="num">10</th><th class="num">24,5 h</th><th class="num">538,00 €</th><th></th></tr></tfoot></table>
+<div class="alert i" style="margin-top:10px">1 professeur sélectionné est ignoré : <b>Alice Martin</b> (mois déjà soumis).</div>
+<div class="alert w">Le mois n'est pas terminé : les séances à venir ne seront pas incluses, et les professeurs ne pourront plus ajouter d'heures pour ce mois.</div>
+<div class="cons"><b>Conséquences</b><ul>
+<li>Pour chaque professeur, les lignes en brouillon passent en « soumis » en l'état. Le mois passe en « À valider ».</li>
+<li>Chaque professeur est traité séparément : si l'un échoue, les autres sont quand même soumis, et le résultat vous dit lesquels.</li>
+<li>Une version « soumise » est enregistrée au nom de la direction pour chacun ; chaque professeur est prévenu par notification et e-mail, avec votre message.</li></ul></div>
+<label for="mt">Message aux professeurs (obligatoire, 500 caractères max., commun à tous)</label><textarea id="mt" rows="3">Échéance de paie du 5 novembre : heures soumises en l'état.</textarea>
+<div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn">Annuler</button><button class="btn pri">Soumettre le mois de 3 professeurs</button></div></div></div>
+</section>
+
+<section class="screen" id="c">
+<div class="card"><h3 style="margin-bottom:8px">Résultat</h3>
+<div class="alert s"><b>3 mois soumis.</b> Les professeurs concernés sont prévenus.</div>
+<h3 style="margin:16px 0 8px">Variante avec échec partiel</h3>
+<div class="alert w"><b>2 mois soumis, 1 ignoré.</b></div>
+<table><tbody>
+<tr><td>Bruno Leroy</td><td><span class="b v">Soumis</span> · 3 lignes · 186,00 €</td></tr>
+<tr><td>Clara Dubois</td><td><span class="b v">Soumis</span> · 5 lignes · 264,00 €</td></tr>
+<tr class="ign"><td>David Renard</td><td><span class="b g">Ignoré</span> Ce mois vient d'être soumis par le professeur.</td></tr></tbody></table>
+<p class="note">La synthèse se recharge ; les professeurs ignorés restent cochés pour permettre de réessayer ou d'agir autrement.</p></div>
+</section>
+
+<section class="screen" id="d">
+<div class="row" style="align-items:flex-start"><div style="flex:1;min-width:300px"><div class="phone"><div class="row sp"><b>3 sélectionnés</b><b>538,00 €</b></div>
+<p class="note">Cartes des professeurs avec case à cocher (mode sélection existant).</p>
+<div class="sticky"><div class="row"><button class="btn pri" style="flex:1;min-height:44px">Soumettre à leur place (3)</button></div></div></div></div>
+<div style="flex:1;min-width:300px"><div class="card"><h3 style="margin-bottom:8px">États</h3>
+<p><b>Aucun professeur éligible</b> : « Aucun mois en brouillon dans la sélection : rien à soumettre. » (bouton absent, pas désactivé sans explication).</p>
+<p style="margin-top:8px"><b>Limite</b> : 50 professeurs par opération ; au-delà, message « Sélectionnez 50 professeurs au plus. »</p>
+<p style="margin-top:8px"><b>Erreur réseau</b> : « La soumission n'a pas pu être envoyée. Rien n'a été modifié ; réessayez. »</p>
+<p style="margin-top:8px"><b>Chargement</b> : bouton en attente pendant l'envoi, modale non fermable.</p></div></div></div>
+</section>
+</main>
+<script>document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s))});</script>
+</body></html>
