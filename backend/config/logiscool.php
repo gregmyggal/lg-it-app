@@ -7,6 +7,9 @@ return [
         'contact' => env('MAIL_CONTACT'),
     ],
 
+    // TS-04 T1c : garde signature/PDF sur la version validée du mois (drapeau de déploiement ; true en production).
+    'garde_versions' => (bool) env('TIMESHEET_GARDE_VERSIONS', true),
+
     // EMP-01 : valeurs d'AMORÇAGE des entités employeurs (la table `employeurs`, éditable par l'admin, fait foi à
     // l'exécution). Ne plus lire ces clés pour émettre une fiche ou une signature.
     'association' => [

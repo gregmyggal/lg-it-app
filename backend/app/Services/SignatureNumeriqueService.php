@@ -8,6 +8,7 @@ use App\Models\Professeur;
 use App\Models\SignatureSpecimen;
 use App\Models\Timesheet;
 use App\Models\TimesheetSignature;
+use App\Models\TimesheetVersion;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class SignatureNumeriqueService
         private readonly FicheDefraiementLignes $fiche,
         private readonly SignatureCle $cle,
         private readonly EmployeurMoisService $employeurs,
+        private readonly TimesheetVersionService $versions,
     ) {}
 
     /** Signe le mois : seul le professeur concerné, avec sa signature enregistrée et la certification cochée. */
@@ -60,14 +62,17 @@ class SignatureNumeriqueService
             TimesheetSignature::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'statut' => TimesheetSignature::STATUT_VALIDE])
                 ->update(['statut' => TimesheetSignature::STATUT_REMPLACEE]);
 
+            // TS-04 T1c : la signature porte sur la version validée du mois (absente pour un mois antérieur à TS-04).
+            $version = $this->versions->garde($prof, $annee, $mois)['version'];
             $publicId = $this->nouvelId();
             $signeA = now()->utc()->startOfSecond();
             $hash = $this->empreinte($prof, $annee, $mois);
             $verification = ParametreSite::booleen(ParametreSite::SIGNATURE_VERIFICATION_PUBLIQUE);
             $payload = $this->json([
-                'version' => 1,
+                'version' => $version ? 2 : 1,
                 'id' => $publicId,
                 'contenu_sha256' => $hash,
+                ...($version ? ['version_timesheet_id' => $version->id, 'version_hash' => $version->content_hash] : []),
                 'professeur_id' => $prof->id,
                 'annee' => $annee,
                 'mois' => $mois,
@@ -92,6 +97,7 @@ class SignatureNumeriqueService
                 'signed_at' => $signeA, 'ip' => $ip, 'user_agent' => $userAgent ? mb_substr($userAgent, 0, 255) : null,
                 'payload' => $payload, 'content_hash' => $hash, 'seal' => $this->cle->sceller($payload), 'key_id' => $this->cle->id(),
                 'specimen_type' => $specimen->type, 'specimen_chemin' => $copie, 'verification_publique' => $verification,
+                'version_id' => $version?->id, 'version_hash' => $version?->content_hash,
             ]);
         });
     }
@@ -106,6 +112,11 @@ class SignatureNumeriqueService
     /** Le contenu actuel du mois (lignes, montants, IBAN) diffère-t-il de ce qui a été signé ? */
     public function estPerimee(TimesheetSignature $sig): bool
     {
+        // TS-04 : une signature liée à une version validée est périmée dès que cette version n'est plus l'active.
+        if ($sig->version_id !== null && $this->versions->active($sig->professeur, $sig->annee, $sig->mois, TimesheetVersion::TYPE_VALIDEE)?->id !== $sig->version_id) {
+            return true;
+        }
+
         return ! hash_equals($sig->content_hash, $this->empreinte($sig->professeur, $sig->annee, $sig->mois));
     }
 

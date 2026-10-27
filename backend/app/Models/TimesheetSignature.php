@@ -17,7 +17,7 @@ class TimesheetSignature extends Model
 
     protected $fillable = [
         'public_id', 'professeur_id', 'user_id', 'annee', 'mois', 'statut', 'signed_at', 'ip', 'user_agent', 'payload',
-        'content_hash', 'seal', 'key_id', 'specimen_type', 'specimen_chemin', 'verification_publique', 'anonymisee_at',
+        'content_hash', 'seal', 'key_id', 'specimen_type', 'specimen_chemin', 'verification_publique', 'anonymisee_at', 'version_id', 'version_hash',
     ];
 
     protected $casts = [

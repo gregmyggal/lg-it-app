@@ -111,9 +111,15 @@ class TimesheetSignatureService
             $aSigner = collect([true]);
         }
 
+        // TS-04 T1c : un mois validé ne se signe que sur sa version validée, encore à jour.
+        $garde = ($prof = Professeur::find($professeurId)) && $timesheets->isNotEmpty()
+            ? app(TimesheetVersionService::class)->garde($prof, $year, $month)
+            : ['ok' => true, 'erreur' => null];
+
         return [
-            'can_sign' => $nonConfirmees->isEmpty() && $aSigner->isNotEmpty() && empty($monthData['depassements']),
+            'can_sign' => $nonConfirmees->isEmpty() && $aSigner->isNotEmpty() && empty($monthData['depassements']) && $garde['ok'],
             'errors' => array_values(array_filter([
+                $garde['erreur'],
                 $contestees->isNotEmpty() ? 'Contestation en cours : en attente de la direction' : null,
                 $nonConfirmees->count() > $contestees->count() ? ($nonConfirmees->count() - $contestees->count()).' entrée(s) non confirmées' : null,
                 $nonConfirmees->isEmpty() && $aSigner->isEmpty() && $timesheets->isNotEmpty() ? 'Mois déjà signé' : null,

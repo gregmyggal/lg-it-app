@@ -34,6 +34,7 @@ class TimesheetPdfService
         private readonly FicheDefraiementLignes $fiche,
         private readonly SignatureNumeriqueService $signatures,
         private readonly EmployeurMoisService $employeurs,
+        private readonly TimesheetVersionService $versions,
     ) {}
 
     /** Motifs qui empêchent la génération (liste vide = prêt). */
@@ -60,6 +61,9 @@ class TimesheetPdfService
         }
         if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF && $this->signatures->aResigner($prof, $annee, $mois)) {
             $bloquants[] = 'Données modifiées depuis la signature : nouvelle signature du professeur requise';
+        }
+        if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF && ($garde = $this->versions->garde($prof, $annee, $mois))['erreur'] !== null) {
+            $bloquants[] = $garde['erreur'];
         }
         if ($statut === TimesheetSyntheseMoisService::STATUT_PRET_PDF) {
             $tarifsProf = ProfesseurTarif::where('professeur_id', $prof->id)->get();
@@ -92,6 +96,7 @@ class TimesheetPdfService
                 'professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'version' => $version,
                 'chemin' => $chemin, 'total_eur' => $contenu['total'], 'generated_by' => $auteur->id, 'generated_at' => now(),
                 'employeur_id' => $employeur->id, 'employeur_snapshot' => $employeur->snapshot(),
+                'version_id' => $this->versions->garde($prof, $annee, $mois)['version']?->id,
             ]);
 
             Timesheet::whereIn('id', $saisies->pluck('id'))->update([

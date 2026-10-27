@@ -47,6 +47,35 @@ class TimesheetVersionService
             ->get()->each->update(['statut' => TimesheetVersion::STATUT_REMPLACEE, 'actif_cle' => null]);
     }
 
+    /**
+     * Garde signature/PDF (ADR-0002, RG-11) : un mois qui a une version validée ne se signe et ne se génère que si la
+     * validée active correspond encore exactement au contenu courant (lignes et montants figés à la validation).
+     * Un mois sans aucune validée (validé avant TS-04) n'est pas concerné.
+     *
+     * @return array{active: bool, ok: bool, version: ?TimesheetVersion, erreur: ?string}
+     */
+    public function garde(Professeur $prof, int $annee, int $mois): array
+    {
+        $inactive = ['active' => false, 'ok' => true, 'version' => null, 'erreur' => null];
+        if (! config('logiscool.garde_versions')) {
+            return $inactive;
+        }
+        $existe = TimesheetVersion::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'type' => TimesheetVersion::TYPE_VALIDEE])->exists();
+        if (! $existe) {
+            return $inactive;
+        }
+
+        $validee = $this->active($prof, $annee, $mois, TimesheetVersion::TYPE_VALIDEE);
+        if ($validee === null) {
+            return ['active' => true, 'ok' => false, 'version' => null, 'erreur' => 'Aucune version validée à jour pour ce mois : la direction doit valider le mois'];
+        }
+        if (! hash_equals($validee->content_hash, $this->canoniser($prof, $annee, $mois)['hash'])) {
+            return ['active' => true, 'ok' => false, 'version' => $validee, 'erreur' => 'Le contenu ou les montants du mois ont changé depuis sa validation : la direction doit valider le mois à nouveau'];
+        }
+
+        return ['active' => true, 'ok' => true, 'version' => $validee, 'erreur' => null];
+    }
+
     public function active(Professeur|int $prof, int $annee, int $mois, string $type): ?TimesheetVersion
     {
         return TimesheetVersion::where([

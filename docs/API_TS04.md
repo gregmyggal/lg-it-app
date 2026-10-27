@@ -1,4 +1,4 @@
-# API — TS-04 Versions soumise / validée (tranches T1a et T1b)
+# API — TS-04 Versions soumise / validée (tranches T1a, T1b et T1c)
 
 Contexte : `docs/adr/0002-versions-timesheet.md`, `docs/requirements/TS-04-versions-soumise-validee.md`.
 T1a pose les instantanés et durcit la validation ; T1b met la validée à jour à chaque modification et ajoute la lecture des versions.
@@ -32,6 +32,13 @@ Seul `statut` (et `actif_cle`) peut changer après création ; une suppression e
 
 `ecart` (calculé côté serveur, appariement sur l'identifiant de ligne) : `identique`, `lignes[]` (`etat` = `identique|modifiee|ajoutee|retiree`, `avant`, `apres`, `ecart_heures`, `ecart_eur`, `motif`, `auteur`), `total_avant`, `total_apres`, `ecart_heures`, `ecart_eur`. Une ligne issue d'un lissage est `ajoutee` et reprend le motif de sa ligne d'origine. `ecart` est `null` si une des deux versions manque ou si son détail est effacé (`detail_efface`). Un mois sans version répond 200 avec `disponibilite: { soumise: false, validee: false }` (« Non disponible avec TS-04 »).
 
+## T1c — garde signature / PDF
+Règle (ADR-0002, RG-11) : un mois qui a au moins une version **validée** ne se signe et ne se génère en PDF que si la validée **active** correspond exactement au contenu courant (lignes et montants figés à la validation). Sinon : 422, message « Le contenu ou les montants du mois ont changé depuis sa validation : la direction doit valider le mois à nouveau » (ou « Aucune version validée à jour pour ce mois… »).
+- **Signature** (`POST /timesheets/sign-month`) : `canSignMonth` renvoie `can_sign: false` avec l'erreur ci-dessus (visible dans `erreurs_signature` de `GET /timesheets/ma-confirmation`). La signature enregistre `version_id` et `version_hash` ; son payload scellé passe en `version: 2` avec `version_timesheet_id` et `version_hash`. `contenu_sha256` reste lu par la vérification du sceau.
+- **Périmée** : une signature liée à une version est périmée dès que cette version n'est plus la validée active (adaptation, lissage, revalidation). Une nouvelle signature du professeur est alors requise ; l'ancienne passe `remplacee`.
+- **PDF** (`POST /professeurs/{id}/timesheet-pdfs`) : le contrôle est ajouté aux `bloquants` (aperçu, lot et génération). Le PDF enregistre `version_id`.
+- **Mois antérieurs à TS-04** (aucune validée) : non concernés, signature et PDF comme avant, `version_id` nul.
+- **Drapeau de déploiement** : `config('logiscool.garde_versions')`, variable `TIMESHEET_GARDE_VERSIONS` (défaut `true`). À `false`, la garde est inactive.
+
 ## Pas encore couvert (tranches suivantes)
-- T1c : garde signature/PDF sur une version validée.
 - T3 : rétention.
