@@ -1,4 +1,4 @@
-# API — TS-04 Versions soumise / validée (tranches T1a, T1b et T1c)
+# API — TS-04 Versions soumise / validée (tranches T1a, T1b, T1c et T3)
 
 Contexte : `docs/adr/0002-versions-timesheet.md`, `docs/requirements/TS-04-versions-soumise-validee.md`.
 T1a pose les instantanés et durcit la validation ; T1b met la validée à jour à chaque modification et ajoute la lecture des versions.
@@ -40,5 +40,11 @@ Règle (ADR-0002, RG-11) : un mois qui a au moins une version **validée** ne se
 - **Mois antérieurs à TS-04** (aucune validée) : non concernés, signature et PDF comme avant, `version_id` nul.
 - **Drapeau de déploiement** : `config('logiscool.garde_versions')`, variable `TIMESHEET_GARDE_VERSIONS` (défaut `true`). À `false`, la garde est inactive.
 
-## Pas encore couvert (tranches suivantes)
-- T3 : rétention.
+## T3 — rétention et historique
+- **Commande** `php artisan timesheets:purger-versions [--simulation]`, planifiée tous les jours à 04:00 (`routes/console.php`). Elle efface `lignes` (et renseigne `purge_at`) des versions dont le mois s'est terminé il y a plus de 24 mois ; totaux, empreinte, dates et numéro sont conservés. Idempotente. C'est la seule écriture hors du modèle immuable.
+- Une version purgée est lue avec `detail_efface: true` et `lignes: []` ; `ecart` est alors `null`.
+- **Frise du mois** (écran directeur) : `FriseMois` rassemble versions soumises/validées (API `versions`), adaptations, lissages, remises en brouillon, contestations, signature et PDF, du plus ancien au plus récent.
+- Conservation : PDF et signatures, 84 mois minimum, sans purge automatique ; l'anonymisation de la signature (IP, appareil, payload) reste à 7 ans (`signatures:anonymiser`).
+
+## Pas encore couvert
+- Rien de prévu pour TS-04 ; question RGPD Q5 (IP des signatures à 12–24 mois) à trancher.

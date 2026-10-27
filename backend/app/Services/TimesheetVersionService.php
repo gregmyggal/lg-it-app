@@ -163,6 +163,25 @@ class TimesheetVersionService
             ->all();
     }
 
+    /** Durée de conservation du détail des versions, en mois après la fin du mois concerné (TS-04, RG-8). */
+    public const RETENTION_MOIS = 24;
+
+    /**
+     * Rétention : efface le détail (`lignes`) des versions dont le mois s'est terminé il y a plus de 24 mois ; les
+     * totaux, l'empreinte, les dates et le numéro sont conservés. Idempotent. Seule exception à l'immuabilité (ADR-0002) :
+     * écriture directe en base, hors du modèle qui refuse toute modification des lignes.
+     *
+     * @return int nombre de versions purgées
+     */
+    public function purger(?Carbon $maintenant = null, bool $simulation = false): int
+    {
+        $limite = ($maintenant ?? Carbon::now())->copy()->subMonths(self::RETENTION_MOIS);
+        // Le mois M est purgeable quand son dernier jour est antérieur à « maintenant − 24 mois », soit M avant le mois de cette date.
+        $requete = DB::table('timesheet_versions')->whereNotNull('lignes')->whereRaw('annee * 12 + mois < ?', [$limite->year * 12 + $limite->month]);
+
+        return $simulation ? $requete->count() : $requete->update(['lignes' => null, 'purge_at' => now()]);
+    }
+
     /** Bornes du mois, pour les verrous et les requêtes (comme `FicheDefraiementLignes::saisies`). @return array{string, string} */
     public static function bornes(int $annee, int $mois): array
     {

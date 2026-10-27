@@ -8,6 +8,7 @@ import AdapterSaisieModal from './AdapterSaisieModal';
 import LisserMoisModal from './LisserMoisModal';
 import ValiderLotModal from './ValiderLotModal';
 import VersionsMois from './VersionsMois';
+import FriseMois from './FriseMois';
 import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
@@ -20,7 +21,7 @@ import { getErrorMessage } from '../../api/errors';
 import { useAuth } from '../../auth/AuthContext';
 import { enregistrerBlob, ouvrirPdf } from '../../utils/telechargement';
 import { STATUTS_MOIS_PROF, STATUTS_TIMESHEET, TYPES_ACTIVITE } from '../../utils/statuts';
-import { formatDateCourte, formatDateHeure } from '../../utils/dates';
+import { formatDateCourte } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
 import { libelleSession } from '../../utils/classes';
@@ -296,17 +297,16 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               </section>
               <section style={{ border: '1px solid var(--c-border)', borderRadius: 8, background: 'var(--c-card)', padding: 16 }}>
               <h3 style={{ marginTop: 0 }}>Historique</h3>
-              {d.historique.length === 0 ? (
-                <p style={{ color: 'var(--c-text-2)' }}>Aucune adaptation ce mois-ci.</p>
-              ) : (
-                <ul style={{ paddingLeft: 18, fontSize: 13 }}>
-                  {d.historique.map((h) => (
-                    <li key={h.id}>
-                      {formatDateHeure(h.created_at)} — {h.auteur || 'Système'} · saisie du {formatDateCourte(h.date_prestation)} : {texteAudit(h)} — « {h.motif} »
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <FriseMois
+                professeurId={professeurId}
+                annee={annee}
+                mois={moisNum}
+                historique={d.historique}
+                signature={d.signature}
+                pdfs={d.pdf.versions}
+                texteAudit={texteAudit}
+                rafraichir={d}
+              />
               </section>
             </aside>
           </div>
