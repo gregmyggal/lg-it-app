@@ -22,6 +22,7 @@ class TimesheetConfirmationService
         private readonly TimesheetSyntheseMoisService $synthese,
         private readonly FicheDefraiementLignes $fiche,
         private readonly SignatureNumeriqueService $signatures,
+        private readonly TimesheetVersionService $versions,
     ) {}
 
     private function lignes(Professeur $prof, int $annee, int $mois)
@@ -135,6 +136,8 @@ class TimesheetConfirmationService
                 $t->update(['statut_validation' => Timesheet::STATUT_SOUMIS, 'signature_professeur' => null]);
                 $this->audit($t, $auteur, TimesheetAudit::ACTION_REPONSE, Timesheet::STATUT_CONTESTE, Timesheet::STATUT_SOUMIS, $reponse);
             }
+            // TS-04 : le mois repasse en revue, la validée active ne représente plus un mois validé.
+            $this->versions->remplacerValidee($prof, $annee, $mois);
 
             return $cibles->count();
         });
@@ -165,6 +168,8 @@ class TimesheetConfirmationService
                     'avant' => ['statut' => $avant], 'apres' => ['statut' => Timesheet::STATUT_BROUILLON], 'motif' => $motif,
                 ]);
             }
+            // TS-04 (RG-10) : le mois n'est plus validé ; la soumise reste inchangée.
+            $this->versions->remplacerValidee($prof, $annee, $mois);
 
             return $cibles->count();
         });

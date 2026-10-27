@@ -7,6 +7,7 @@ import { LoadingBlock, ErrorBlock } from '../ui/DataStates';
 import AdapterSaisieModal from './AdapterSaisieModal';
 import LisserMoisModal from './LisserMoisModal';
 import ValiderLotModal from './ValiderLotModal';
+import VersionsMois from './VersionsMois';
 import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
@@ -245,6 +246,10 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             >
               {nbDepassements} jour(s) dépassent le plafond de {formatEuros(d.periode.plafond_journalier_eur)}.
             </Banner>
+          )}
+
+          {d.lignes.some((t) => t.statut_validation !== 'brouillon') && (
+            <VersionsMois professeurId={professeurId} annee={annee} mois={moisNum} rafraichir={d} />
           )}
 
           <div className="detail-grid">

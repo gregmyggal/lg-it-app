@@ -23,7 +23,7 @@ class TimesheetLissageMoisService
 {
     private const EPS = 0.005;
 
-    public function __construct(private readonly TimesheetParametreService $parametres, private readonly TarifResolver $tarifs) {}
+    public function __construct(private readonly TimesheetParametreService $parametres, private readonly TarifResolver $tarifs, private readonly TimesheetVersionService $versions) {}
 
     /** Proposition automatique : pour chaque jour au-delà du plafond, déplace l'excédent vers les jours proches avec capacité. */
     public function proposer(Professeur $prof, int $annee, int $mois): array
@@ -216,6 +216,9 @@ class TimesheetLissageMoisService
                     'motif' => $motif,
                 ]);
             }
+
+            // TS-04 : un mois déjà validé change de contenu, nouvelle version validée (v+1) dans la même transaction.
+            $this->versions->actualiserValidee($prof, $annee, $mois, $auteur);
 
             return ['deplacements' => count($apercu['deplacements'])];
         });

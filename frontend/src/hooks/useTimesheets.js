@@ -158,3 +158,12 @@ export function genererPdfLot(professeurIds, annee, mois) {
 export function deverrouillerMois(professeurId, payload) {
   return client.post(`/professeurs/${professeurId}/timesheets-mois/deverrouiller`, payload).then((res) => res.data);
 }
+
+/** TS-04 : versions « soumise » et « validée » d'un mois et écart (direction/admin). `rafraichir` relance la lecture quand le détail du mois change. */
+export function useVersionsMois(professeurId, annee, mois, { soumiseNumero, valideeNumero, rafraichir } = {}) {
+  const params = { annee, mois, ...(soumiseNumero ? { soumise_numero: soumiseNumero } : {}), ...(valideeNumero ? { validee_numero: valideeNumero } : {}) };
+  return useApiQuery(
+    () => client.get(`/professeurs/${professeurId}/timesheets-mois/versions`, { params }).then((res) => res.data),
+    [professeurId, annee, mois, soumiseNumero, valideeNumero, rafraichir],
+  );
+}

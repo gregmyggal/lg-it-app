@@ -34,6 +34,19 @@ class TimesheetVersionService
         return $this->figer(TimesheetVersion::TYPE_VALIDEE, $prof, $annee, $mois, $auteur);
     }
 
+    /** Une modification de contenu d'un mois déjà validé : nouvelle validée (v+1) ; sans validée active, rien à faire. */
+    public function actualiserValidee(Professeur $prof, int $annee, int $mois, ?User $auteur): ?TimesheetVersion
+    {
+        return $this->active($prof, $annee, $mois, TimesheetVersion::TYPE_VALIDEE) ? $this->figerValidee($prof, $annee, $mois, $auteur) : null;
+    }
+
+    /** Le mois n'est plus validé (remise en brouillon, contestation traitée) : la validée active devient « remplacée ». */
+    public function remplacerValidee(Professeur $prof, int $annee, int $mois): void
+    {
+        TimesheetVersion::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'type' => TimesheetVersion::TYPE_VALIDEE, 'statut' => TimesheetVersion::STATUT_ACTIVE])
+            ->get()->each->update(['statut' => TimesheetVersion::STATUT_REMPLACEE, 'actif_cle' => null]);
+    }
+
     public function active(Professeur|int $prof, int $annee, int $mois, string $type): ?TimesheetVersion
     {
         return TimesheetVersion::where([

@@ -17,6 +17,8 @@ class TimesheetAdaptationService
 {
     public const CHAMPS = ['nombre_heures', 'date_prestation', 'type_activite'];
 
+    public function __construct(private readonly TimesheetVersionService $versions) {}
+
     /** @param array<string, mixed> $changements sous-ensemble de CHAMPS */
     public function adapter(Timesheet $timesheet, User $auteur, array $changements, string $motif): Timesheet
     {
@@ -68,6 +70,9 @@ class TimesheetAdaptationService
                 'apres' => $apres,
                 'motif' => $motif,
             ]);
+
+            // TS-04 : un mois déjà validé change de contenu, nouvelle version validée (v+1) dans la même transaction.
+            $this->versions->actualiserValidee($timesheet->professeur, (int) $timesheet->date_prestation->format('Y'), (int) $timesheet->date_prestation->format('n'), $auteur);
 
             return $timesheet;
         });

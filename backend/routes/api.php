@@ -45,6 +45,7 @@ use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\TimesheetMoisController;
 use App\Http\Controllers\TimesheetValidationController;
+use App\Http\Controllers\TimesheetVersionController;
 use App\Http\Controllers\TypeFormationController;
 use Illuminate\Support\Facades\Route;
 
@@ -220,6 +221,9 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/timesheets/soumettre-mois', [TimesheetMoisController::class, 'soumettreMois']);
     Route::get('/timesheets/sessions-sans-heures', [TimesheetValidationController::class, 'sessionsSansHeures']);
     Route::get('/professeurs/{professeur}/timesheets-mois', [TimesheetDetailMoisController::class, 'show']);
+    // TS-04 : versions soumise / validée d'un mois (lecture seule).
+    Route::get('/professeurs/{professeur}/timesheets-mois/versions', [TimesheetVersionController::class, 'show']);
+    Route::get('/timesheets/mes-versions', [TimesheetVersionController::class, 'moi']);
     Route::post('/professeurs/{professeur}/timesheets-mois/lissage/apercu', [TimesheetLissageController::class, 'apercu']);
     Route::post('/professeurs/{professeur}/timesheets-mois/lissage', [TimesheetLissageController::class, 'appliquer']);
     Route::post('/professeurs/{professeur}/timesheet-pdfs', [TimesheetPdfController::class, 'generer']);
