@@ -1,0 +1,159 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Versions soumise / validée — Maquette TS-04</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok:#10b981;--ok-d:#047857;--ok-l:#d1fae5;--warn-d:#92400e;--warn-l:#fef3c7;--err-d:#b91c1c;--err-l:#fee2e2;--sub:#6b7280;--sub-l:#f3f4f6;--sch-l:#ede9fe;--sch:#7c3aed;--t1:#111827;--t2:#374151;--t3:#6b7280;--bd:#e5e7eb;--bg:#f9fafb;--card:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--t1);background:var(--bg)}
+h1,h2,h3,p{margin:0}button{font:inherit;cursor:pointer}
+.mockbar{position:sticky;top:0;z-index:9;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px}
+.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+main{max-width:1180px;margin:0 auto;padding:20px 16px}
+.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:13px;vertical-align:middle}th{color:var(--t3);font-weight:600;font-size:12px}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.b.s{background:var(--sub-l);color:var(--t2)}.b.v{background:var(--ok-l);color:var(--ok-d)}.b.o{background:var(--warn-l);color:var(--warn-d)}.b.p{background:var(--sch-l);color:var(--sch)}.b.bl{background:var(--primary-l);color:#1d4ed8}.b.r{background:var(--err-l);color:var(--err-d)}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:7px;padding:6px 12px}.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}.btn.off{opacity:.45;cursor:not-allowed}.btn.sm{padding:3px 9px;font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:#fff}.seg button{border:0;background:#fff;padding:6px 14px}.seg button[aria-pressed=true]{background:var(--primary);color:#fff;font-weight:600}
+.vcol{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.vcol{grid-template-columns:1fr}}
+.vhead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.vc{border-radius:10px;border:1px solid var(--bd);padding:14px;background:#fff}.vc.soum{border-top:4px solid #9ca3af}.vc.val{border-top:4px solid var(--ok)}
+.tot{font-size:22px;font-weight:700}.tot small{font-size:12px;color:var(--t3);font-weight:400}
+.d-mod{background:var(--warn-l)}.d-add{background:var(--ok-l)}.d-del{background:var(--err-l)}.old{text-decoration:line-through;color:var(--t3)}
+.alert{padding:10px 12px;border-radius:8px;background:var(--primary-l);color:#1e3a8a;margin-bottom:12px;font-size:13px}
+.alert.w{background:var(--warn-l);color:var(--warn-d)}
+.note{font-size:12px;color:var(--t3);margin-top:8px}
+.tl{list-style:none;margin:0;padding:0;position:relative}.tl:before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:var(--bd)}
+.tl li{position:relative;padding:0 0 16px 36px}.tl li i{position:absolute;left:3px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #9ca3af}
+.tl li.v i{border-color:var(--ok)}.tl li.p i{border-color:var(--sch)}.tl li.o i{border-color:#f59e0b}
+.lock{color:var(--ok-d);font-weight:600}.nolock{color:var(--t3)}
+.phone{width:375px;max-width:100%;margin:0 auto;border:10px solid #1f2937;border-radius:30px;background:var(--bg);padding:12px;min-height:640px}
+.legend span{margin-right:12px;font-size:12px;color:var(--t3)}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.sticky{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--bd);padding:10px;margin:12px -12px -12px;border-radius:0 0 18px 18px}
+.blk{display:none}.blk.on{display:block}
+</style></head><body>
+<div class="mockbar"><strong>MAQUETTE TS-04</strong><span>Versions « soumise » et « validée » côte à côte — Bruno Leroy, octobre 2026</span>
+<span class="row" style="gap:6px"><button data-s="a" aria-pressed="true">A. Directeur · détail du mois</button><button data-s="b" aria-pressed="false">B. Professeur · avant signature</button><button data-s="c" aria-pressed="false">C. Historique &amp; documents</button><button data-s="d" aria-pressed="false">D. Smartphone</button><button data-s="e" aria-pressed="false">E. États particuliers</button></span></div>
+<main>
+
+<!-- A. DIRECTEUR -->
+<section class="screen on" id="a">
+<div class="card"><div class="row sp"><div><h2>Bruno Leroy — Octobre 2026</h2>
+<div class="row" style="margin-top:8px;gap:6px"><span class="b s">Soumise · v1 · 31/10 18:42</span><span>→</span><span class="b v">Validée · v1 · 03/11 09:15</span><span class="b o">3 lignes ajustées</span><span class="b p">Signée le 04/11</span></div></div>
+<div class="row"><button class="btn">Remettre en brouillon…</button><button class="btn pri">Générer la fiche PDF</button></div></div></div>
+
+<div class="alert"><b>Seule la version validée est signée et générée en PDF.</b> La version soumise est conservée comme référence ; elle ne peut être ni modifiée ni signée.</div>
+
+<div class="card">
+<div class="row sp" style="margin-bottom:10px"><div class="seg" role="group" aria-label="Affichage"><button data-v="cmp" aria-pressed="true">Écarts</button><button data-v="sou" aria-pressed="false">Soumise</button><button data-v="val" aria-pressed="false">Validée</button><button data-v="sbs" aria-pressed="false">Côte à côte</button></div><span class="note" aria-live="polite">Vue Écarts affichée · 3 lignes</span>
+<div class="legend"><span><i style="background:var(--warn-l);border:1px solid #f59e0b"></i>Modifiée</span><span><i style="background:var(--ok-l);border:1px solid var(--ok)"></i>Ajoutée</span><span><i style="background:var(--err-l);border:1px solid #ef4444"></i>Retirée</span></div></div>
+
+<div class="blk on" data-b="cmp">
+<table><thead><tr><th>Date</th><th>Session / type</th><th class="num">Soumise</th><th class="num">Validée</th><th class="num">Écart</th><th>Motif de l'ajustement</th></tr></thead><tbody>
+<tr><td>08/10</td><td>Scratch – Cl. A / S3 · Animation</td><td class="num">3 h · 72 €</td><td class="num">3 h · 72 €</td><td class="num">—</td><td></td></tr>
+<tr class="d-mod"><td>10/10</td><td>Scratch – Cl. A / S3 · Préparation</td><td class="num old">2 h · 36 €</td><td class="num"><b>1,5 h · 27 €</b></td><td class="num"><b>Modifiée</b> · −0,5 h · −9 €</td><td>Préparation plafonnée à 1,5 h par séance <span class="note">— M. Dupont, 02/11</span></td></tr>
+<tr><td>15/10</td><td>Python – Cl. C / S2 · Animation</td><td class="num">2,5 h · 60 €</td><td class="num">2,5 h · 60 €</td><td class="num">—</td><td></td></tr>
+<tr class="d-mod"><td>24/10</td><td>Python – Cl. C / S3 · Préparation</td><td class="num old">4 h · 72 €</td><td class="num"><b>2 h · 36 €</b></td><td class="num"><b>Modifiée</b> · −2 h · −36 €</td><td rowspan="2">Lissage : plafond journalier dépassé <span class="note">— M. Dupont, 02/11</span></td></tr>
+<tr class="d-add"><td>25/10</td><td>Python – Cl. C / S3 · Préparation <span class="b o">lissée depuis le 24/10</span></td><td class="num">—</td><td class="num"><b>2 h · 36 €</b></td><td class="num"><b>Ajoutée</b> · +2 h · +36 €</td></tr>
+</tbody><tfoot><tr><th colspan="2">Total du mois</th><th class="num">11,5 h · 240 €</th><th class="num">11 h · 231 €</th><th class="num">−0,5 h · −9 €</th><th></th></tr></tfoot></table>
+</div>
+
+<div class="blk" data-b="val"><div class="vc val"><div class="vhead"><div><span class="b v">Validée · v1 — mois complet</span> <span class="lock">🔒 signée et générée</span></div><div class="tot">231 € <small>11 h · 5 lignes</small></div></div>
+<table><thead><tr><th>Date</th><th>Session / type</th><th class="num">Heures</th><th class="num">Tarif</th><th class="num">Montant</th></tr></thead><tbody>
+<tr><td>08/10</td><td>Scratch – Cl. A / S3 · Animation</td><td class="num">3 h</td><td class="num">24 €</td><td class="num">72 €</td></tr>
+<tr><td>10/10</td><td>Scratch – Cl. A / S3 · Préparation</td><td class="num">1,5 h</td><td class="num">18 €</td><td class="num">27 €</td></tr>
+<tr><td>15/10</td><td>Python – Cl. C / S2 · Animation</td><td class="num">2,5 h</td><td class="num">24 €</td><td class="num">60 €</td></tr>
+<tr><td>24/10</td><td>Python – Cl. C / S3 · Préparation</td><td class="num">2 h</td><td class="num">18 €</td><td class="num">36 €</td></tr>
+<tr><td>25/10</td><td>Python – Cl. C / S3 · Préparation <span class="b o">lissée</span></td><td class="num">2 h</td><td class="num">18 €</td><td class="num">36 €</td></tr></tbody>
+<tfoot><tr><th colspan="2">Total</th><th class="num">11 h</th><th></th><th class="num">231 €</th></tr></tfoot></table>
+<p class="note">Validée par M. Dupont le 03/11 à 09:15 (mois entier) · empreinte 9f3c…a71e · sceau Ed25519 vérifié ✓ · version payée.</p></div></div>
+<div class="blk" data-b="sou"><div class="vc soum"><div class="vhead"><div><span class="b s">Soumise · v1 — mois complet</span> <span class="nolock">référence — non signable</span></div><div class="tot">240 € <small>11,5 h · 4 lignes</small></div></div>
+<table><thead><tr><th>Date</th><th>Session / type</th><th class="num">Heures</th><th class="num">Tarif</th><th class="num">Montant</th></tr></thead><tbody>
+<tr><td>08/10</td><td>Scratch – Cl. A / S3 · Animation</td><td class="num">3 h</td><td class="num">24 €</td><td class="num">72 €</td></tr>
+<tr><td>10/10</td><td>Scratch – Cl. A / S3 · Préparation</td><td class="num">2 h</td><td class="num">18 €</td><td class="num">36 €</td></tr>
+<tr><td>15/10</td><td>Python – Cl. C / S2 · Animation</td><td class="num">2,5 h</td><td class="num">24 €</td><td class="num">60 €</td></tr>
+<tr><td>24/10</td><td>Python – Cl. C / S3 · Préparation</td><td class="num">4 h</td><td class="num">18 €</td><td class="num">72 €</td></tr></tbody>
+<tfoot><tr><th colspan="2">Total</th><th class="num">11,5 h</th><th></th><th class="num">240 €</th></tr></tfoot></table>
+<p class="note">Soumise par Bruno Leroy le 31/10 à 18:42 · empreinte 41bd…02c9 · jamais modifiée.</p></div></div>
+<div class="blk" data-b="sbs"><div class="vcol">
+<div class="vc soum"><div class="vhead"><span class="b s">Soumise · v1</span><div class="tot">240 € <small>11,5 h</small></div></div>
+<table><tbody><tr><td>08/10 Animation</td><td class="num">3 h</td><td class="num">72 €</td></tr><tr class="d-mod"><td>10/10 Préparation</td><td class="num">2 h</td><td class="num">36 €</td></tr><tr><td>15/10 Animation</td><td class="num">2,5 h</td><td class="num">60 €</td></tr><tr class="d-mod"><td>24/10 Préparation</td><td class="num">4 h</td><td class="num">72 €</td></tr><tr><td class="note">—</td><td></td><td></td></tr></tbody></table></div>
+<div class="vc val"><div class="vhead"><span class="b v">Validée · v1</span><div class="tot">231 € <small>11 h</small></div></div>
+<table><tbody><tr><td>08/10 Animation</td><td class="num">3 h</td><td class="num">72 €</td></tr><tr class="d-mod"><td>10/10 Préparation</td><td class="num">1,5 h</td><td class="num">27 €</td></tr><tr><td>15/10 Animation</td><td class="num">2,5 h</td><td class="num">60 €</td></tr><tr class="d-mod"><td>24/10 Préparation</td><td class="num">2 h</td><td class="num">36 €</td></tr><tr class="d-add"><td>25/10 Préparation <span class="b o">lissée</span></td><td class="num">2 h</td><td class="num">36 €</td></tr></tbody></table></div>
+</div><p class="note">Deux mois complets alignés : les lignes surlignées sont celles qui diffèrent.</p></div>
+</div>
+</section>
+
+<!-- B. PROFESSEUR -->
+<section class="screen" id="b">
+<div class="card"><h2>Ma confirmation — Octobre 2026</h2><p class="note">La direction a validé votre mois avec 3 ajustements. Comparez avant de signer.</p></div>
+<div class="vcol">
+<div class="vc soum"><div class="vhead"><div><span class="b s">Ce que j'ai soumis</span><div class="note">31/10 à 18:42</div></div><div class="tot">240 € <small>11,5 h</small></div></div>
+<table><tbody><tr><td>08/10 Animation</td><td class="num">3 h</td></tr><tr class="d-mod"><td>10/10 Préparation</td><td class="num old">2 h</td></tr><tr><td>15/10 Animation</td><td class="num">2,5 h</td></tr><tr class="d-mod"><td>24/10 Préparation</td><td class="num old">4 h</td></tr></tbody></table></div>
+<div class="vc val"><div class="vhead"><div><span class="b v">Version validée (à signer)</span><div class="note">validée le 03/11 à 09:15</div></div><div class="tot">231 € <small>11 h</small></div></div>
+<table><tbody><tr><td>08/10 Animation</td><td class="num">3 h</td></tr><tr class="d-mod"><td>10/10 Préparation</td><td class="num"><b>1,5 h</b></td></tr><tr><td>15/10 Animation</td><td class="num">2,5 h</td></tr><tr class="d-mod"><td>24/10 Préparation</td><td class="num"><b>2 h</b></td></tr><tr class="d-add"><td>25/10 Préparation</td><td class="num"><b>2 h</b></td></tr></tbody></table></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Pourquoi ces changements ?</h3><ul style="margin:8px 0 0;padding-left:18px;font-size:13px"><li>10/10 : préparation plafonnée à 1,5 h par séance.</li><li>24/10 → 25/10 : 2 h déplacées (plafond journalier).</li></ul>
+<div class="row" style="margin-top:14px"><button class="btn pri">Signer la version validée (231 €)</button><button class="btn">Contester…</button></div>
+<p class="note">En signant, vous signez uniquement la version validée. Votre version soumise reste conservée dans l'historique.</p></div>
+</section>
+
+<!-- C. HISTORIQUE -->
+<section class="screen" id="c">
+<div class="vcol" style="grid-template-columns:3fr 2fr">
+<div class="card"><h3 style="margin-bottom:12px">Historique du mois</h3>
+<ul class="tl">
+<li><i></i><b>Soumise · v1</b> <span class="b s">240 € · 11,5 h</span><div class="note">31/10 18:42 · Bruno Leroy · empreinte 41bd…02c9</div></li>
+<li class="o"><i></i><b>Remise en brouillon</b> <div class="note">01/11 10:03 · M. Dupont — « Date du 10/10 erronée »</div></li>
+<li><i></i><b>Soumise · v2</b> <span class="b s">240 € · 11,5 h</span><div class="note">01/11 20:11 · Bruno Leroy</div></li>
+<li class="o"><i></i><b>3 ajustements direction</b> <div class="note">02/11 · M. Dupont — plafond préparation, lissage</div></li>
+<li class="v"><i></i><b>Validée · v1</b> <span class="b v">231 € · 11 h</span> <span class="lock">🔒</span><div class="note">03/11 09:15 · empreinte 9f3c…a71e</div></li>
+<li class="p"><i></i><b>Signée par le professeur</b> <div class="note">04/11 08:40 · sceau Ed25519 ✓ · vérification publique : activée</div></li>
+<li class="v"><i></i><b>Fiche PDF v1 générée</b> <div class="note">05/11 14:02 · « 202610 Fiche de défraiement_Bruno Leroy.pdf »</div></li></ul></div>
+<div><div class="card"><h3>Documents</h3><table><tbody>
+<tr><td>Fiche PDF v1<div class="note">basée sur Validée v1</div></td><td><button class="btn sm">Télécharger</button></td></tr>
+<tr><td>Soumise v2 (référence)<div class="note">pas de PDF — non signable</div></td><td><button class="btn sm off" disabled>Signer</button></td></tr></tbody></table></div>
+<div class="card"><h3>Garanties</h3><p class="note" style="margin-top:6px">✓ Les versions soumises sont immuables (empreinte)<br>✓ La signature et le PDF pointent vers la version validée<br>✓ Toute nouvelle validation crée une version v+1 ; l'ancienne reste consultable</p></div></div>
+</div></section>
+
+<!-- D. MOBILE -->
+<section class="screen" id="d"><div class="phone">
+<div class="row sp"><b>Octobre 2026</b><span class="b v">Validée</span></div>
+<div class="seg" style="margin:10px 0;width:100%" role="group" aria-label="Affichage des versions"><button style="flex:1;min-height:44px" data-m="cmp" aria-pressed="true">Écarts</button><button style="flex:1;min-height:44px" data-m="val" aria-pressed="false">Validée</button><button style="flex:1;min-height:44px" data-m="sou" aria-pressed="false">Soumise</button></div>
+<div class="blk" data-mb="val"><div class="tot">231 € <small>11 h · à signer</small></div><table style="margin-top:6px"><tbody><tr><td>08/10 Animation</td><td class="num">3 h</td></tr><tr class="d-mod"><td>10/10 Préparation <div class="note">2 h → 1,5 h</div></td><td class="num">1,5 h</td></tr><tr><td>15/10 Animation</td><td class="num">2,5 h</td></tr><tr class="d-mod"><td>24/10 Préparation <div class="note">4 h → 2 h</div></td><td class="num">2 h</td></tr><tr class="d-add"><td>25/10 Préparation <div class="note">lissée depuis le 24</div></td><td class="num">2 h</td></tr></tbody></table></div>
+<div class="blk" data-mb="sou"><div class="tot" style="color:var(--t3)">240 € <small>11,5 h · référence</small></div><table style="margin-top:6px"><tbody><tr><td>08/10 Animation</td><td class="num">3 h</td></tr><tr><td>10/10 Préparation</td><td class="num">2 h</td></tr><tr><td>15/10 Animation</td><td class="num">2,5 h</td></tr><tr><td>24/10 Préparation</td><td class="num">4 h</td></tr></tbody></table></div>
+<div class="blk on" data-mb="cmp"><div class="tot">−9 € <small>−0,5 h · 3 lignes</small></div><ul style="padding-left:18px;font-size:13px"><li><b>Modifiée</b> 10/10 : avant 2 h → 1,5 h</li><li><b>Modifiée</b> 24/10 : avant 4 h → 2 h</li><li><b>Ajoutée</b> 25/10 : +2 h (lissage)</li></ul><p class="note">Motifs : préparation plafonnée ; plafond journalier.</p></div>
+<div class="sticky"><button class="btn pri" style="width:100%;min-height:44px">Signer la version validée</button></div></div></section>
+
+<!-- E. ÉTATS PARTICULIERS -->
+<section class="screen" id="e">
+<div class="card"><h3>1. Mois antérieur à TS-04 (soumis avant la mise en production)</h3>
+<div class="seg" style="margin:10px 0"><button disabled aria-disabled="true" class="off" style="opacity:.45">Écarts</button><button disabled aria-disabled="true" style="opacity:.45">Soumise</button><button aria-pressed="true">Validée</button><button disabled aria-disabled="true" style="opacity:.45">Côte à côte</button></div>
+<div class="alert w"><b>Non disponible avec TS-04.</b> Ce mois a été soumis avant la mise en place des versions : la soumission d'origine n'a pas été conservée. Les vues Soumise, Écarts et Côte à côte sont indisponibles ; la version validée reste affichée.</div></div>
+
+<div class="card"><h3>2. Mois validé tel que soumis</h3>
+<div class="alert"><b>Identique à la soumission.</b> Aucun écart : le mois a été validé tel que soumis. <a href="#" onclick="return false">Voir la version validée</a></div></div>
+
+<div class="card"><h3>3. Versions multiples (remise en brouillon, contestation)</h3>
+<div class="row" style="margin-bottom:8px"><label for="vs">Version :</label><select id="vs" style="width:auto"><option>Validée v2 (active)</option><option>Validée v1 (remplacée)</option></select><span class="b v">Validée v2</span></div>
+<div class="alert w"><b>Validée v2 remplace la v1</b> (contestation du 05/11). La signature de la v1 est remplacée : une nouvelle signature est demandée. Le bouton « Signer » ne porte que sur la v2 active.</div>
+<div class="row"><span class="b s">Remplacée</span><span class="note">La v1 reste consultable en lecture seule.</span></div></div>
+
+<div class="card"><h3>4. Version purgée (plus de 24 mois après la fin du mois)</h3>
+<div class="seg" style="margin:10px 0"><button disabled style="opacity:.45">Écarts</button><button disabled style="opacity:.45">Soumise</button><button disabled style="opacity:.45">Validée</button><button disabled style="opacity:.45">Côte à côte</button></div>
+<div class="vc soum"><b>Détail effacé après 24 mois.</b> Totaux et empreinte conservés : 240 € · 11,5 h · empreinte 41bd…02c9. <span class="note">Écarts ligne à ligne non disponibles.</span></div></div>
+
+<div class="card"><h3>5. Validation du mois entier (côté directeur)</h3>
+<div class="alert w">La validation porte toujours sur le <b>mois entier</b> du professeur : il n'est plus possible de valider des lignes isolées. Ajustez ou lissez les lignes au besoin, puis validez le mois.</div>
+<div class="row"><button class="btn pri">Valider le mois de Bruno Leroy</button><button class="btn off" disabled>Valider la sélection (indisponible)</button></div></div>
+
+<div class="card"><h3>6. Erreur de chargement</h3>
+<div class="alert w">Impossible de charger les versions de ce mois. Réessayez. <button class="btn sm">Réessayer</button></div><p class="note">Les saisies courantes restent affichées sous le bandeau.</p></div>
+</section>
+</main>
+<script>
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s))});
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('[data-b]').forEach(s=>s.classList.toggle('on',s.dataset.b===b.dataset.v))});
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('[data-mb]').forEach(s=>s.classList.toggle('on',s.dataset.mb===b.dataset.m))});
+</script></body></html>
