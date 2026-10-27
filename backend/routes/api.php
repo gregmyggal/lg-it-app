@@ -227,6 +227,8 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/timesheets/mes-versions', [TimesheetVersionController::class, 'moi']);
     // TS-05 : soumission du mois d'un professeur par la direction ou l'admin.
     Route::post('/professeurs/{professeur}/timesheets-mois/forcer-soumission', [TimesheetSoumissionForceeController::class, 'store']);
+    Route::post('/timesheets-mois/forcer-soumission-lot/apercu', [TimesheetSoumissionForceeController::class, 'apercuLot']);
+    Route::post('/timesheets-mois/forcer-soumission-lot', [TimesheetSoumissionForceeController::class, 'lot']);
     Route::post('/professeurs/{professeur}/timesheets-mois/lissage/apercu', [TimesheetLissageController::class, 'apercu']);
     Route::post('/professeurs/{professeur}/timesheets-mois/lissage', [TimesheetLissageController::class, 'appliquer']);
     Route::post('/professeurs/{professeur}/timesheet-pdfs', [TimesheetPdfController::class, 'generer']);

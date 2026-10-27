@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **ID / Titre** | TS-05 — L'admin et la direction soumettent le mois d'un professeur en l'état quand celui-ci a des heures en brouillon |
-| **Statut** | ☐ Brouillon ☐ En revue ☑ Validé (DoR, product owner, 2026-10-27) ☑ En dev (T1) ☐ En recette ☐ Livré |
+| **Statut** | ☐ Brouillon ☐ En revue ☑ Validé (DoR, product owner, 2026-10-27) ☑ En dev (T1 et T2 codées) ☐ En recette ☐ Livré |
 | **Analyste** | Analyste (Claude) + product owner | **UX/UI** | Sub-agent UX Expert ; maquette validée par le PO |
 | **Architecte** | À désigner | **Dev back / front** | À désigner |
 | **Date / Version** | 2026-10-27 — v0.1 | **Sprint cible** | À planifier |
@@ -23,7 +23,7 @@
 | Traçabilité | Soumissions forcées identifiées (auteur, message, version « par la direction ») | 100 % | Tests + R2 |
 | Information du professeur | Professeur prévenu (notification et e-mail) | 100 % | Test e-mail + R3 |
 
-**Hors périmètre :** soumission groupée depuis la synthèse (seconde tranche) ; soumission d'un mois sans heure encodée ; forcer la signature ou la validation à la place d'un autre acteur.
+**Hors périmètre :** (la soumission groupée depuis la synthèse est la tranche T2, maquette `docs/mockups/TS-05/02-soumission-groupee.html`) ; soumission d'un mois sans heure encodée ; forcer la signature ou la validation à la place d'un autre acteur.
 
 ## 3. Acteurs, rôles et permissions
 | Action | Admin | Direction (staff) | Professeur |

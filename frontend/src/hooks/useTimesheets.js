@@ -180,3 +180,16 @@ export function useMesVersions(annee, mois, rafraichir) {
 export function forcerSoumission(professeurId, payload) {
   return client.post(`/professeurs/${professeurId}/timesheets-mois/forcer-soumission`, payload).then((res) => res.data);
 }
+
+/** TS-05 T2 : aperçu de la soumission forcée groupée (éligibilité et avertissements par professeur). */
+export function useApercuSoumissionLot(annee, mois, professeurIds) {
+  return useApiQuery(
+    () => client.post('/timesheets-mois/forcer-soumission-lot/apercu', { annee, mois, professeur_ids: professeurIds }).then((res) => res.data.data),
+    [annee, mois, professeurIds.join(',')],
+  );
+}
+
+/** TS-05 T2 : soumission forcée groupée ; un résultat par professeur (pas de tout ou rien). */
+export function forcerSoumissionLot(payload) {
+  return client.post('/timesheets-mois/forcer-soumission-lot', payload).then((res) => res.data);
+}

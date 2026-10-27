@@ -6,6 +6,7 @@ import { Table, Th, Td, Tr } from '../ui/Table';
 import { FilterField, FilterSearch } from '../ui/Filters';
 import { LoadingBlock, ErrorBlock, EmptyBlock } from '../ui/DataStates';
 import ValiderLotModal from './ValiderLotModal';
+import SoumettreGroupeModal from './SoumettreGroupeModal';
 import CarteProfesseurMois from './CarteProfesseurMois';
 import AdminModal from '../AdminModal';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -60,6 +61,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
   const [recap, setRecap] = useState(null);
   const [selection, setSelection] = useState(new Set());
   const [lot, setLot] = useState(false);
+  const [groupe, setGroupe] = useState(false);
   const [pdfEnCours, setPdfEnCours] = useState(false);
   const [bloquants, setBloquants] = useState(null);
   const mobile = useMediaQuery('(max-width: 860px)');
@@ -86,6 +88,9 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
   const saisiesChoisies = (saisies.data || []).filter((t) => selection.has(t.professeur_id) && t.statut_validation === 'soumis' && t.can?.validate);
 
   const choisis = lignes.filter((l) => selection.has(l.professeur_id));
+  // TS-05 T2 : estimation d'après la synthèse (brouillon non soumis) ; le serveur décide dans la modale.
+  const enBrouillon = (l) => l.alertes?.some((a) => a.code === 'brouillon_non_soumis');
+  const forcables = choisis.filter(enBrouillon);
   const pdfPossible = choisis.length > 0 && choisis.every((l) => l.statut_mois === 'pret_pdf');
 
   async function genererLot() {
@@ -130,6 +135,21 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
     const validables = new Set((saisies.data || []).filter((t) => t.statut_validation === 'soumis' && t.can?.validate).map((t) => t.professeur_id));
     setModeSelection(true);
     setSelection(new Set(lignes.filter((l) => validables.has(l.professeur_id)).map((l) => l.professeur_id)));
+  }
+
+  function toutBrouillon() {
+    setModeSelection(true);
+    setSelection(new Set(lignes.filter(enBrouillon).map((l) => l.professeur_id)));
+  }
+
+  function apresSoumissionGroupe(resultats) {
+    setGroupe(false);
+    // Les professeurs ignorés restent cochés : on peut réessayer ou agir autrement.
+    setSelection(new Set(resultats.filter((r) => r.statut === 'ignore').map((r) => r.professeur_id)));
+    toast.success(`${resultats.filter((r) => r.statut === 'soumis').length} mois soumis.`);
+    synthese.reload();
+    saisies.reload();
+    onChange?.();
   }
 
   function decaler(delta) {
@@ -198,6 +218,10 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
               >
                 {pdfEnCours ? 'Génération…' : `Générer les PDF (zip)${pdfPossible ? ` (${choisis.length})` : ''}`}
               </AdminButton>
+              <AdminButton variant="secondary" onClick={toutBrouillon} disabled={!lignes.some(enBrouillon)}>Tout ce qui est en brouillon</AdminButton>
+              <AdminButton variant="secondary" onClick={() => setGroupe(true)} disabled={forcables.length === 0}>
+                Soumettre à leur place ({forcables.length})
+              </AdminButton>
               <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
                 Valider le mois ({saisiesChoisies.length > 0 ? selection.size : 0})
               </AdminButton>
@@ -228,9 +252,14 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                   {modeSelection ? 'Annuler la sélection' : 'Sélectionner'}
                 </AdminButton>
                 {modeSelection && (
-                  <AdminButton variant="secondary" size="sm" onClick={toutValider}>
-                    Tout ce qui est à valider
-                  </AdminButton>
+                  <>
+                    <AdminButton variant="secondary" size="sm" onClick={toutValider}>
+                      Tout ce qui est à valider
+                    </AdminButton>
+                    <AdminButton variant="secondary" size="sm" onClick={toutBrouillon}>
+                      Tout ce qui est en brouillon
+                    </AdminButton>
+                  </>
                 )}
                 <AdminButton variant="secondary" size="sm" onClick={() => setActionsOuvertes(true)}>
                   ⋯ Actions du mois
@@ -322,6 +351,11 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                 <strong>{formatEuros(lignes.filter((l) => selection.has(l.professeur_id)).reduce((t, l) => t + Number(l.total_eur || 0), 0))}</strong>
               </div>
               <div className="sticky-actions__boutons">
+                {forcables.length > 0 && (
+                  <AdminButton variant="secondary" onClick={() => setGroupe(true)} style={{ minHeight: 44 }}>
+                    Soumettre à leur place ({forcables.length})
+                  </AdminButton>
+                )}
                 <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
                   {saisiesChoisies.length > 0 ? `Valider ${selection.size}` : 'Rien à valider'}
                 </AdminButton>
@@ -352,6 +386,16 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
       )}
       {definition && synthese.data && (
         <DefinirEmployeurModal annee={annee} mois={moisNum} cibles={ciblesEmployeur} modeInitial={definition} onClose={() => setDefinition(null)} onDone={apresEmployeur} />
+      )}
+      {groupe && synthese.data && (
+        <SoumettreGroupeModal
+          annee={annee}
+          mois={moisNum}
+          professeurIds={choisis.map((l) => l.professeur_id)}
+          titreMois={new Date(annee, moisNum - 1, 1).toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' })}
+          onClose={() => setGroupe(false)}
+          onTermine={apresSoumissionGroupe}
+        />
       )}
       {lot && synthese.data && (
         <ValiderLotModal

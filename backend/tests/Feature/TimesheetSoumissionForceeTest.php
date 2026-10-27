@@ -218,4 +218,90 @@ class TimesheetSoumissionForceeTest extends TestCase
         $this->assertSame(['confirme', 'confirme'], Timesheet::orderBy('id')->pluck('statut_validation')->all());
         $this->assertSame(1, TimesheetVersion::where('type', 'validee')->count());
     }
+
+    // --- T2 : soumission groupée -------------------------------------------------------------------------------
+
+    private function autre(string $statut = 'brouillon', float $h = 1.0): Professeur
+    {
+        $p = Professeur::factory()->create();
+        Timesheet::create(['professeur_id' => $p->id, 'date_prestation' => '2026-10-12', 'nombre_heures' => $h, 'type_activite' => 'animation', 'statut_validation' => $statut]);
+
+        return $p;
+    }
+
+    private function lot(array $ids, array $donnees = []): \Illuminate\Testing\TestResponse
+    {
+        return $this->postJson('/api/timesheets-mois/forcer-soumission-lot', $donnees + ['annee' => 2026, 'mois' => 10, 'professeur_ids' => $ids, 'motif' => 'Échéance de paie']);
+    }
+
+    public function test_le_lot_soumet_chaque_professeur_et_les_prévient(): void
+    {
+        $b = $this->autre();
+        $directeur = $this->actingAsRole('directeur');
+
+        $r = $this->lot([$this->prof->id, $b->id])->assertOk();
+
+        $this->assertSame(2, $r->json('soumis'));
+        $this->assertSame(0, $r->json('ignores'));
+        $this->assertSame(['soumis', 'soumis'], collect($r->json('resultats'))->pluck('statut')->all());
+        $this->assertSame(2, TimesheetVersion::where('origine', 'direction')->count());
+        $this->assertSame([NotificationTimesheet::SOUMISSION_FORCEE], $this->codes($this->prof->user));
+        $this->assertSame([NotificationTimesheet::SOUMISSION_FORCEE], $this->codes($b->user));
+        $this->assertSame([], $this->codes($directeur));
+    }
+
+    public function test_un_professeur_deja_soumis_est_ignore_sans_bloquer_les_autres(): void
+    {
+        $dejaSoumis = $this->autre('soumis');
+        $sansHeures = Professeur::factory()->create();
+        $this->actingAsRole('admin');
+
+        $r = $this->lot([$this->prof->id, $dejaSoumis->id, $sansHeures->id])->assertOk();
+
+        $this->assertSame(1, $r->json('soumis'));
+        $this->assertSame(2, $r->json('ignores'));
+        $par = collect($r->json('resultats'))->keyBy('professeur_id');
+        $this->assertSame('soumis', $par[$this->prof->id]['statut']);
+        $this->assertSame('ignore', $par[$dejaSoumis->id]['statut']);
+        $this->assertSame('Ce mois est déjà soumis.', $par[$dejaSoumis->id]['raison']);
+        $this->assertSame('ignore', $par[$sansHeures->id]['statut']);
+        $this->assertSame('soumis', $this->a->fresh()->statut_validation);
+        $this->assertSame([], $this->codes($dejaSoumis->user));
+    }
+
+    public function test_le_lot_exige_un_message_et_au_plus_50_professeurs(): void
+    {
+        $this->actingAsRole('directeur');
+
+        $this->lot([$this->prof->id], ['motif' => 'ok'])->assertStatus(422);
+        $this->lot([])->assertStatus(422);
+        $ids = Professeur::factory()->count(51)->create()->pluck('id')->all();
+        $this->lot($ids)->assertStatus(422)->assertJsonValidationErrors('professeur_ids');
+        $this->assertSame('brouillon', $this->a->fresh()->statut_validation);
+        $this->assertSame(0, TimesheetVersion::count());
+    }
+
+    public function test_le_lot_est_reserve_au_staff(): void
+    {
+        Sanctum::actingAs($this->prof->user);
+        $this->lot([$this->prof->id])->assertForbidden();
+        $this->postJson('/api/timesheets-mois/forcer-soumission-lot/apercu', ['annee' => 2026, 'mois' => 10, 'professeur_ids' => [$this->prof->id]])->assertForbidden();
+        $this->assertSame('brouillon', $this->a->fresh()->statut_validation);
+    }
+
+    public function test_l_apercu_du_lot_liste_l_eligibilite_sans_rien_modifier(): void
+    {
+        $dejaSoumis = $this->autre('soumis');
+        $this->actingAsRole('directeur');
+
+        $r = $this->postJson('/api/timesheets-mois/forcer-soumission-lot/apercu', ['annee' => 2026, 'mois' => 10, 'professeur_ids' => [$this->prof->id, $dejaSoumis->id]])->assertOk();
+
+        $par = collect($r->json('data'))->keyBy('professeur_id');
+        $this->assertTrue($par[$this->prof->id]['possible']);
+        $this->assertSame(2, $par[$this->prof->id]['lignes']);
+        $this->assertFalse($par[$dejaSoumis->id]['possible']);
+        $this->assertSame('deja_soumis', $par[$dejaSoumis->id]['raison_impossible']);
+        $this->assertSame('brouillon', $this->a->fresh()->statut_validation);
+        $this->assertSame(0, TimesheetVersion::count());
+    }
 }
