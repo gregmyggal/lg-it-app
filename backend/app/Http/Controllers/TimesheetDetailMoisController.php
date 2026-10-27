@@ -81,6 +81,7 @@ class TimesheetDetailMoisController extends Controller
             'lignes' => TimesheetResource::collection($lignes)->resolve($request),
             'jours' => $jours,
             'historique' => $historique,
+            'soumission_forcee' => app(\App\Services\TimesheetSoumissionForceeService::class)->etat($professeur, (int) $v['annee'], (int) $v['mois']),
             'remise_brouillon' => app(\App\Services\TimesheetConfirmationService::class)->etatRemiseBrouillon($professeur, (int) $v['annee'], (int) $v['mois']),
             'signature' => ($sig = $signatures->derniere($professeur, (int) $v['annee'], (int) $v['mois'])) ? $signatures->preuve($sig, $request->user()) : null,
             'pdf' => [

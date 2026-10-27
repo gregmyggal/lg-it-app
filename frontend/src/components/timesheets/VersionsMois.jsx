@@ -159,7 +159,7 @@ export default function VersionsMois({ professeurId, annee, mois, rafraichir }) 
   return (
     <div style={{ marginBottom: ADMIN_SPACING.lg }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: ADMIN_SPACING.sm, alignItems: 'center', marginBottom: ADMIN_SPACING.sm }}>
-        {soumise ? <StatutBadge label={`Soumise v${soumise.numero} · ${formatDateHeure(soumise.created_at)}`} tone="neutral" /> : <StatutBadge label="Soumise : non disponible avec TS-04" tone="warning" />}
+        {soumise ? <StatutBadge label={`Soumise v${soumise.numero}${soumise.origine === 'direction' ? ` — par ${soumise.auteur || 'la direction'} (direction)` : ''} · ${formatDateHeure(soumise.created_at)}`} tone="neutral" /> : <StatutBadge label="Soumise : non disponible avec TS-04" tone="warning" />}
         <span aria-hidden="true">→</span>
         {validee ? <StatutBadge label={`Validée v${validee.numero} · ${formatDateHeure(validee.created_at)}`} tone="success" /> : <StatutBadge label="Validée : en attente" tone="neutral" />}
         {comparable && (ecart.identique ? <StatutBadge label="Identique à la soumission" tone="info" /> : <StatutBadge label={`${ajustees} ligne${ajustees > 1 ? 's' : ''} ajustée${ajustees > 1 ? 's' : ''}`} tone="warning" />)}

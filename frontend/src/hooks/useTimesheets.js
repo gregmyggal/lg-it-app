@@ -175,3 +175,8 @@ export function useMesVersions(annee, mois, rafraichir) {
     [annee, mois, rafraichir],
   );
 }
+
+/** TS-05 : la direction ou l'admin soumet le mois d'un professeur en l'état (message obligatoire). */
+export function forcerSoumission(professeurId, payload) {
+  return client.post(`/professeurs/${professeurId}/timesheets-mois/forcer-soumission`, payload).then((res) => res.data);
+}

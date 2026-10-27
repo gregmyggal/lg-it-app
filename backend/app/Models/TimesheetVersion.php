@@ -18,6 +18,10 @@ class TimesheetVersion extends Model
 
     public const TYPE_VALIDEE = 'validee';
 
+    public const ORIGINE_PROFESSEUR = 'professeur';
+
+    public const ORIGINE_DIRECTION = 'direction';
+
     public const STATUT_ACTIVE = 'active';
 
     public const STATUT_REMPLACEE = 'remplacee';
@@ -28,7 +32,7 @@ class TimesheetVersion extends Model
     private const MUTABLES = ['statut', 'actif_cle'];
 
     protected $fillable = [
-        'professeur_id', 'annee', 'mois', 'type', 'numero', 'statut', 'actif_cle', 'format', 'lignes',
+        'professeur_id', 'annee', 'mois', 'type', 'origine', 'numero', 'statut', 'actif_cle', 'format', 'lignes',
         'total_heures', 'total_eur', 'content_hash', 'auteur_id',
     ];
 

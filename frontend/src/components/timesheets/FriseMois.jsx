@@ -3,7 +3,7 @@ import { formatDateCourte, formatDateHeure } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 
-const ACTIONS_AUDIT = ['adaptation', 'lissage', 'remise_brouillon', 'contestation', 'reponse_contestation', 'classe_supprimee'];
+const ACTIONS_AUDIT = ['soumission_forcee', 'adaptation', 'lissage', 'remise_brouillon', 'contestation', 'reponse_contestation', 'classe_supprimee'];
 
 /**
  * TS-04 : frise chronologique d'un mois — soumissions, adaptations, remises en brouillon, validations, signature et
@@ -31,7 +31,17 @@ export default function FriseMois({ professeurId, annee, mois, historique, signa
     date: v.created_at, cle: `v${v.numero}`,
     titre: `Validée · v${v.numero}`, detail: `${formatEuros(v.total_eur)} · ${formatHeures(v.total_heures)}${v.statut === 'remplacee' ? ' · remplacée' : ''}`,
   }));
-  historique.filter((h) => ACTIONS_AUDIT.includes(h.action)).forEach((h) => evenements.push({
+  // Une soumission forcée laisse une trace par saisie : un seul événement dans la frise.
+  const vus = new Set();
+  historique.filter((h) => ACTIONS_AUDIT.includes(h.action)).filter((h) => {
+    if (h.action !== 'soumission_forcee') return true;
+    if (vus.has(h.created_at)) return false;
+    vus.add(h.created_at);
+    return true;
+  }).forEach((h) => evenements.push(h.action === 'soumission_forcee' ? {
+    date: h.created_at, cle: `a${h.id}`,
+    titre: 'Soumis par la direction', detail: `${h.auteur || 'Direction'} — « ${h.motif} »`,
+  } : {
     date: h.created_at, cle: `a${h.id}`,
     titre: `${h.auteur || 'Système'} · saisie du ${formatDateCourte(h.date_prestation)}`, detail: `${texteAudit(h)} — « ${h.motif} »`,
   }));

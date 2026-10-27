@@ -44,6 +44,7 @@ use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\TimesheetMoisController;
+use App\Http\Controllers\TimesheetSoumissionForceeController;
 use App\Http\Controllers\TimesheetValidationController;
 use App\Http\Controllers\TimesheetVersionController;
 use App\Http\Controllers\TypeFormationController;
@@ -224,6 +225,8 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     // TS-04 : versions soumise / validée d'un mois (lecture seule).
     Route::get('/professeurs/{professeur}/timesheets-mois/versions', [TimesheetVersionController::class, 'show']);
     Route::get('/timesheets/mes-versions', [TimesheetVersionController::class, 'moi']);
+    // TS-05 : soumission du mois d'un professeur par la direction ou l'admin.
+    Route::post('/professeurs/{professeur}/timesheets-mois/forcer-soumission', [TimesheetSoumissionForceeController::class, 'store']);
     Route::post('/professeurs/{professeur}/timesheets-mois/lissage/apercu', [TimesheetLissageController::class, 'apercu']);
     Route::post('/professeurs/{professeur}/timesheets-mois/lissage', [TimesheetLissageController::class, 'appliquer']);
     Route::post('/professeurs/{professeur}/timesheet-pdfs', [TimesheetPdfController::class, 'generer']);

@@ -55,7 +55,7 @@
 |---|---|---|---|---|
 | AC-1 | un mois avec des heures en brouillon et aucune saisie soumise | direction/admin forcent avec un message | toutes les lignes passent « soumis » en une transaction, version soumise créée (`origine = direction`, auteur) | Feature |
 | AC-2 | idem | message vide ou de moins de 3 caractères | 422 : motif obligatoire, rien n'est modifié | Feature |
-| AC-3 | un mois déjà soumis (ou plus avancé) | on force | 422 (409 en cas de concurrence), rien n'est modifié | Feature |
+| AC-3 | un mois déjà soumis (ou plus avancé), y compris soumis entre-temps par le professeur | on force | 409, rien n'est modifié | Feature |
 | AC-4 | un mois sans heure en brouillon | on force | 422 « aucune heure à soumettre » | Feature |
 | AC-5 | un professeur | il appelle l'endpoint | 403 | Feature |
 | AC-6 | une soumission forcée réussie | après la transaction | le professeur reçoit une notification et un e-mail (message, total, lignes) ; la direction n'est pas notifiée de sa propre action | Feature |

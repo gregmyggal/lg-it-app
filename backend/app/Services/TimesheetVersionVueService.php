@@ -53,6 +53,7 @@ class TimesheetVersionVueService
     private function version(TimesheetVersion $v, bool $staff, Collection $sessions): array
     {
         return $this->resume($v) + [
+            'origine' => $v->type === TimesheetVersion::TYPE_SOUMISE ? $v->origine : null,
             'detail_efface' => $v->lignes === null,
             'lignes' => $v->lignes === null ? [] : $this->lignes($v, $sessions),
         ] + ($staff ? ['auteur' => $v->auteur?->name, 'empreinte' => $v->content_hash] : []);

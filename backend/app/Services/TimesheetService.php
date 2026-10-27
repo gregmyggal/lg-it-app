@@ -7,6 +7,8 @@ use App\Models\CourseSession;
 use App\Models\Professeur;
 use App\Models\SessionProfesseur;
 use App\Models\Timesheet;
+use App\Models\TimesheetAudit;
+use App\Models\TimesheetVersion;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -207,28 +209,61 @@ class TimesheetService
      */
     public function soumettreMois(User $user, int $annee, int $mois): array
     {
-        $professeur = $user->professeur;
-        [$debut, $fin] = TimesheetVersionService::bornes($annee, $mois);
+        return $this->passerEnSoumis($user->professeur, $annee, $mois, $user, TimesheetVersion::ORIGINE_PROFESSEUR);
+    }
 
-        return DB::transaction(function () use ($user, $professeur, $annee, $mois, $debut, $fin) {
+    /**
+     * TS-05 : la direction ou l'admin soumet le mois en l'état, à la place du professeur (message obligatoire, une trace
+     * d'audit par saisie). Même transaction et même version « soumise » que la soumission du professeur, origine « direction ».
+     *
+     * @return array{soumises: int, lignes: int, heures: float, total_eur: float}
+     *
+     * @throws RegleMetierException 409 mois déjà soumis, 422 aucune heure en brouillon
+     */
+    public function forcerSoumission(Professeur $professeur, int $annee, int $mois, User $auteur, string $motif): array
+    {
+        return $this->passerEnSoumis($professeur, $annee, $mois, $auteur, TimesheetVersion::ORIGINE_DIRECTION, $motif);
+    }
+
+    /** @return array{soumises: int, lignes: int, heures: float, total_eur: float} */
+    private function passerEnSoumis(Professeur $professeur, int $annee, int $mois, User $auteur, string $origine, ?string $motif = null): array
+    {
+        [$debut, $fin] = TimesheetVersionService::bornes($annee, $mois);
+        $forcee = $origine === TimesheetVersion::ORIGINE_DIRECTION;
+
+        return DB::transaction(function () use ($auteur, $professeur, $annee, $mois, $debut, $fin, $origine, $forcee, $motif) {
             // TS-04 : verrou sur le mois avant le contrôle « déjà soumis » (deux soumissions simultanées : une seule réussit).
             $lignes = Timesheet::where('professeur_id', $professeur->id)->whereBetween('date_prestation', [$debut, $fin])->lockForUpdate()->get();
             if ($lignes->contains(fn (Timesheet $t) => $t->statut_validation !== Timesheet::STATUT_BROUILLON)) {
-                throw RegleMetierException::invalide('Ce mois est déjà soumis : il ne peut être soumis qu\'une fois.', ['mois' => ['Mois déjà soumis.']]);
+                $message = 'Ce mois est déjà soumis : il ne peut être soumis qu\'une fois.';
+                throw $forcee ? RegleMetierException::conflit($message) : RegleMetierException::invalide($message, ['mois' => ['Mois déjà soumis.']]);
             }
 
-            $soumises = Timesheet::where('professeur_id', $professeur->id)
-                ->where('statut_validation', Timesheet::STATUT_BROUILLON)
-                ->whereBetween('date_prestation', [$debut, $fin])
-                ->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
-
-            if ($soumises === 0) {
+            $brouillons = $lignes->where('statut_validation', Timesheet::STATUT_BROUILLON);
+            if ($brouillons->isEmpty()) {
                 throw RegleMetierException::invalide('Aucune heure encodée à soumettre pour ce mois.', ['mois' => ['Aucune heure à soumettre.']]);
             }
 
-            $this->versions->figerSoumise($professeur, $annee, $mois, $user);
+            Timesheet::whereIn('id', $brouillons->pluck('id'))->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
 
-            return ['soumises' => $soumises];
+            if ($forcee) {
+                foreach ($brouillons as $t) {
+                    TimesheetAudit::create([
+                        'timesheet_id' => $t->id, 'professeur_id' => $professeur->id, 'user_id' => $auteur->id,
+                        'action' => TimesheetAudit::ACTION_SOUMISSION_FORCEE,
+                        'avant' => ['statut' => Timesheet::STATUT_BROUILLON], 'apres' => ['statut' => Timesheet::STATUT_SOUMIS], 'motif' => $motif,
+                    ]);
+                }
+            }
+
+            $version = $this->versions->figerSoumise($professeur, $annee, $mois, $auteur, $origine);
+
+            return [
+                'soumises' => $brouillons->count(),
+                'lignes' => $brouillons->count(),
+                'heures' => round((float) $brouillons->where('type_activite', '!=', self::TYPE_DEPLACEMENT)->sum('nombre_heures'), 2),
+                'total_eur' => $version->total_eur,
+            ];
         });
     }
 }

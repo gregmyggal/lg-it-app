@@ -22,6 +22,9 @@ class TimesheetAudit extends Model
 
     public const ACTION_DEVERROUILLAGE = 'deverrouillage';
 
+    /** TS-05 : mois soumis par la direction à la place du professeur (une trace par saisie). */
+    public const ACTION_SOUMISSION_FORCEE = 'soumission_forcee';
+
     /** CLS-08 : heure détachée de sa séance lors de la suppression forcée de la classe. */
     public const ACTION_CLASSE_SUPPRIMEE = 'classe_supprimee';
 

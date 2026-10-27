@@ -24,9 +24,9 @@ class TimesheetVersionService
 {
     public function __construct(private readonly TarifResolver $tarifs, private readonly FicheDefraiementLignes $fiche) {}
 
-    public function figerSoumise(Professeur $prof, int $annee, int $mois, ?User $auteur): TimesheetVersion
+    public function figerSoumise(Professeur $prof, int $annee, int $mois, ?User $auteur, string $origine = TimesheetVersion::ORIGINE_PROFESSEUR): TimesheetVersion
     {
-        return $this->figer(TimesheetVersion::TYPE_SOUMISE, $prof, $annee, $mois, $auteur);
+        return $this->figer(TimesheetVersion::TYPE_SOUMISE, $prof, $annee, $mois, $auteur, $origine);
     }
 
     public function figerValidee(Professeur $prof, int $annee, int $mois, ?User $auteur): TimesheetVersion
@@ -93,9 +93,9 @@ class TimesheetVersionService
         return ['lignes' => $texte, 'hash' => hash('sha256', $texte)];
     }
 
-    private function figer(string $type, Professeur $prof, int $annee, int $mois, ?User $auteur): TimesheetVersion
+    private function figer(string $type, Professeur $prof, int $annee, int $mois, ?User $auteur, string $origine = TimesheetVersion::ORIGINE_PROFESSEUR): TimesheetVersion
     {
-        return DB::transaction(function () use ($type, $prof, $annee, $mois, $auteur) {
+        return DB::transaction(function () use ($type, $prof, $annee, $mois, $auteur, $origine) {
             // Verrou de numérotation : une seule allocation à la fois par professeur (pas de verrou de gap sur la table).
             Professeur::whereKey($prof->id)->lockForUpdate()->firstOrFail();
 
@@ -109,7 +109,7 @@ class TimesheetVersionService
             $numero = (int) TimesheetVersion::where(['professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'type' => $type])->max('numero') + 1;
 
             return TimesheetVersion::create([
-                'professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'type' => $type, 'numero' => $numero,
+                'professeur_id' => $prof->id, 'annee' => $annee, 'mois' => $mois, 'type' => $type, 'origine' => $origine, 'numero' => $numero,
                 'statut' => TimesheetVersion::STATUT_ACTIVE,
                 'actif_cle' => TimesheetVersion::cleActive($prof->id, $annee, $mois, $type),
                 'format' => TimesheetVersion::FORMAT,

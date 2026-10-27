@@ -19,6 +19,8 @@ class NotificationTimesheet extends Notification
 
     public const MOIS_SOUMIS = 'mois_soumis';
 
+    public const SOUMISSION_FORCEE = 'soumission_forcee';
+
     public const MOIS_SIGNE = 'mois_signe';
 
     public const HEURES_TRAITEES = 'heures_traitees';

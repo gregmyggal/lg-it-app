@@ -9,13 +9,14 @@ import LisserMoisModal from './LisserMoisModal';
 import ValiderLotModal from './ValiderLotModal';
 import VersionsMois from './VersionsMois';
 import FriseMois from './FriseMois';
+import SoumettreALaPlaceModal from './SoumettreALaPlaceModal';
 import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
 import DefinirEmployeurModal from '../employeurs/DefinirEmployeurModal';
 import EmployeurMoisSection from '../employeurs/EmployeurMoisSection';
 import { AdminFormField, AdminTextarea } from '../AdminFormField';
-import { apercuPdf, deverrouillerMois, genererPdf, remettreMoisEnBrouillon, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
+import { apercuPdf, deverrouillerMois, forcerSoumission, genererPdf, remettreMoisEnBrouillon, telechargerPdf, traiterContestation, useDetailMois } from '../../hooks/useTimesheets';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage } from '../../api/errors';
 import { useAuth } from '../../auth/AuthContext';
@@ -29,6 +30,7 @@ import { libelleSession } from '../../utils/classes';
 const LIBELLE_CHAMP = { nombre_heures: 'Heures', date_prestation: 'Date', type_activite: 'Type' };
 
 function texteAudit(h) {
+  if (h.action === 'soumission_forcee') return 'Mois soumis par la direction à la place du professeur';
   if (h.action === 'remise_brouillon') return 'Remise en brouillon par la direction';
   if (h.action === 'contestation') return 'Contestation du professeur';
   if (h.action === 'reponse_contestation') return 'Réponse de la direction à la contestation';
@@ -98,6 +100,9 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
   const [brouillon, setBrouillon] = useState(null); // null = fermé, sinon motif
   const [envoiBrouillon, setEnvoiBrouillon] = useState(false);
   const [erreurBrouillon, setErreurBrouillon] = useState(null);
+  const [forcer, setForcer] = useState(false);
+  const [envoiForcer, setEnvoiForcer] = useState(false);
+  const [erreurForcer, setErreurForcer] = useState(null);
   const [employeurModal, setEmployeurModal] = useState(false);
   const [confirmationPdf, setConfirmationPdf] = useState(false);
   const [envoiReponse, setEnvoiReponse] = useState(false);
@@ -109,6 +114,7 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
   const nbDepassements = d?.jours.filter((j) => j.depasse).length || 0;
   const totaux = useMemo(() => (d?.lignes || []).reduce((a, t) => ({ h: a.h + Number(t.nombre_heures), e: a.e + (Number(t.montant_brut) || 0) }), { h: 0, e: 0 }), [d]);
 
+  const sf = d?.soumission_forcee;
   const contestation = useMemo(() => (d?.resume?.statut_mois === 'conteste' ? (d.historique || []).find((h) => h.action === 'contestation') : null), [d]);
 
   async function envoyerReponse() {
@@ -136,6 +142,26 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
       setErreurBrouillon(getErrorMessage(err));
     } finally {
       setEnvoiBrouillon(false);
+    }
+  }
+
+  async function envoyerSoumissionForcee(message) {
+    setEnvoiForcer(true);
+    setErreurForcer(null);
+    try {
+      await forcerSoumission(professeurId, { annee, mois: moisNum, motif: message });
+      setForcer(false);
+      recharger(`Mois soumis pour ${d.professeur.nom} : à valider.`);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setForcer(false);
+        recharger();
+        toast.error('Ce mois vient d\'être soumis par le professeur. Le détail a été rechargé.');
+      } else {
+        setErreurForcer(getErrorMessage(err));
+      }
+    } finally {
+      setEnvoiForcer(false);
     }
   }
 
@@ -202,7 +228,17 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               <SignaturePreuve signature={d.signature} />
             </div>
             <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap' }}>
-              <AdminButton onClick={() => setValider(true)} disabled={soumises.length === 0}>Valider le mois ({soumises.length})</AdminButton>
+              {sf?.possible && (
+                <AdminButton onClick={() => { setErreurForcer(null); setForcer(true); }}>Soumettre à la place du professeur…</AdminButton>
+              )}
+              <AdminButton
+                variant={sf?.possible ? 'secondary' : undefined}
+                onClick={() => setValider(true)}
+                disabled={soumises.length === 0}
+                title={soumises.length === 0 ? 'Aucune saisie soumise' : undefined}
+              >
+                Valider le mois ({soumises.length})
+              </AdminButton>
               <AdminButton variant="secondary" disabled={pdfEnCours || d.lignes.length === 0} onClick={() => actionPdf(() => apercuPdf(professeurId, annee, moisNum).then(ouvrirPdf))}>Aperçu PDF</AdminButton>
               <AdminButton
                 disabled={pdfEnCours || d.pdf.bloquants.length > 0}
@@ -239,7 +275,15 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               <strong>Le professeur conteste ses heures :</strong> « {contestation.motif} ». Adaptez les saisies si besoin, puis répondez pour les remettre en revue.
             </Banner>
           )}
-          {d.resume?.alertes.filter((a) => a.code !== 'depassement').map((a) => <Banner key={a.code} tone="warning">{a.libelle}</Banner>)}
+          {sf?.possible && (
+            <Banner tone="warning" actions={<AdminButton size="sm" onClick={() => { setErreurForcer(null); setForcer(true); }}>Soumettre à sa place…</AdminButton>}>
+              <strong>{formatHeures(sf.heures)} en brouillon, non soumises.</strong> Le professeur n'a pas soumis son mois. Vous pouvez le soumettre en l'état pour lancer la validation.
+            </Banner>
+          )}
+          {sf && !sf.possible && sf.raison_impossible === 'aucune_heure' && (
+            <p style={{ color: 'var(--c-text-2)', fontSize: 13 }}>Aucune heure encodée : rien à soumettre.</p>
+          )}
+          {d.resume?.alertes.filter((a) => !['depassement', 'brouillon_non_soumis'].includes(a.code)).map((a) => <Banner key={a.code} tone="warning">{a.libelle}</Banner>)}
           {nbDepassements > 0 && (
             <Banner
               tone="warning"
@@ -411,6 +455,18 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                 <AdminTextarea id="reponse-contestation" rows={3} value={reponse} onChange={(e) => setReponse(e.target.value)} />
               </AdminFormField>
             </AdminModal>
+          )}
+          {forcer && (
+            <SoumettreALaPlaceModal
+              nom={d.professeur.nom}
+              prenom={d.professeur.nom.split(' ')[0]}
+              titreMois={new Date(annee, moisNum - 1, 1).toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' })}
+              etat={sf}
+              envoi={envoiForcer}
+              erreur={erreurForcer}
+              onConfirmer={envoyerSoumissionForcee}
+              onClose={() => setForcer(false)}
+            />
           )}
           {adapter && <AdapterSaisieModal saisie={adapter} onClose={() => setAdapter(null)} onDone={recharger} />}
           {lisser !== undefined && (

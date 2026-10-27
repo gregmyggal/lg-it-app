@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\TimesheetResource;
 use App\Models\CourseSession;
 use App\Models\Timesheet;
+use App\Models\TimesheetAudit;
 use App\Services\EmployeurMoisService;
 use App\Services\TimesheetLissingService;
 use App\Services\TimesheetNotifier;
@@ -93,6 +94,11 @@ class TimesheetMoisController extends Controller
                 'depassements' => $lissage['depassements'],
                 'nb_brouillons' => $saisies->where('statut_validation', Timesheet::STATUT_BROUILLON)->count(),
             ],
+            // TS-05 : le mois a été soumis par la direction à la place du professeur (bandeau dans « Mon mois »).
+            'soumis_par_direction' => ($f = TimesheetAudit::with('auteur:id,name')->where('professeur_id', $professeur->id)->where('action', TimesheetAudit::ACTION_SOUMISSION_FORCEE)
+                ->whereIn('timesheet_id', $saisies->pluck('id'))->latest('id')->first())
+                ? ['date' => $f->created_at, 'auteur' => $f->auteur?->name, 'message' => $f->motif, 'lignes' => $saisies->count(), 'heures' => round((float) $saisies->where('type_activite', '!=', TimesheetService::TYPE_DEPLACEMENT)->sum('nombre_heures'), 2)]
+                : null,
             // Un mois ne se soumet qu'une fois : au-delà, le front n'offre plus de saisie ni de soumission.
             'mois_soumis' => $saisies->where('statut_validation', '!=', Timesheet::STATUT_BROUILLON)->isNotEmpty(),
             'peut_signer' => (new TimesheetSignatureService)->canSignMonth($professeur->id, $v['annee'], $v['mois'])['can_sign'],

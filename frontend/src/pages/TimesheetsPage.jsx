@@ -115,7 +115,16 @@ function MonMois({ user }) {
               <strong>{erreur}</strong>
             </Banner>
           )}
-          {data?.mois_soumis && (
+          {data?.soumis_par_direction && (
+            <Banner tone="info" role="status">
+              <strong>Votre mois a été soumis par la direction le {formatDateCourte(data.soumis_par_direction.date.slice(0, 10))}.</strong>{' '}
+              Vos {formatHeures(data.soumis_par_direction.heures)} encodées en brouillon ont été envoyées en l'état.
+              {data.soumis_par_direction.message && <> Message{data.soumis_par_direction.auteur ? ` de ${data.soumis_par_direction.auteur}` : ''} : « {data.soumis_par_direction.message} »</>}
+              <br />
+              Vous ne pouvez plus modifier ce mois. Si quelque chose est faux, contactez la direction ; vous pourrez aussi contester à la validation. Vous serez prévenu(e) à la validation.
+            </Banner>
+          )}
+          {data?.mois_soumis && !data?.soumis_par_direction && (
             <Banner tone="info" role="status">
               <strong>Ce mois est soumis à la direction.</strong> Vos heures ne sont plus modifiables. Une correction passe par la direction (remise en brouillon du mois).
             </Banner>

@@ -127,6 +127,23 @@ class TimesheetNotifier
         ), dedoublonner: false);
     }
 
+    /** TS-05 : la direction a soumis le mois à la place du professeur (pas de dédoublonnage : chaque message est distinct). */
+    public function soumissionForcee(Professeur $prof, int $annee, int $mois, User $auteur, array $resume, string $message): void
+    {
+        if (! $prof->user) {
+            return;
+        }
+        $libelle = $this->libelle($annee, $mois);
+        $this->envoyer($prof->user, new NotificationTimesheet(
+            NotificationTimesheet::SOUMISSION_FORCEE,
+            ucfirst($libelle).' : vos heures ont été soumises par la direction',
+            $auteur->name.' a soumis vos heures de '.$libelle.' en l\'état : '.$resume['lignes'].' ligne(s), '.str_replace('.', ',', (string) $resume['heures']).' h, '
+                .number_format($resume['total_eur'], 2, ',', ' ').' €. Son message : « '.$message.' ». Vous serez prévenu quand le mois aura été validé ; en cas d\'erreur, contactez la direction.',
+            '/timesheets',
+            $prof->id, $annee, $mois,
+        ), dedoublonner: false);
+    }
+
     private function envoyer(User $destinataire, NotificationTimesheet $notification, bool $dedoublonner = true): void
     {
         $doublon = $dedoublonner && $destinataire->unreadNotifications()

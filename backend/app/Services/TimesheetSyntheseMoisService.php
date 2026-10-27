@@ -78,6 +78,10 @@ class TimesheetSyntheseMoisService
             if ($joursDepassement > 0) {
                 $alertes[] = ['code' => 'depassement', 'nombre' => $joursDepassement, 'libelle' => "{$joursDepassement} jour(s) au-delà de ".number_format($plafondJour, 2, ',', ' ').' €'];
             }
+            if ($lignes->isNotEmpty() && $lignes->every(fn (Timesheet $t) => $t->statut_validation === Timesheet::STATUT_BROUILLON)) {
+                $hBrouillon = round((float) $lignes->where('type_activite', '!=', TimesheetService::TYPE_DEPLACEMENT)->sum('nombre_heures'), 2);
+                $alertes[] = ['code' => 'brouillon_non_soumis', 'nombre' => $lignes->count(), 'libelle' => 'Brouillon non soumis · '.str_replace('.', ',', (string) $hBrouillon).' h'];
+            }
             $nbSans = $sansHeures->get($id, 0);
             if ($nbSans > 0) {
                 $alertes[] = ['code' => 'sessions_sans_heures', 'nombre' => $nbSans, 'libelle' => "{$nbSans} session(s) sans heures"];
