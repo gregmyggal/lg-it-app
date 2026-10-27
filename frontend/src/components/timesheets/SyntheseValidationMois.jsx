@@ -38,8 +38,8 @@ function exporterCsv(lignes, annee, mois) {
 
 /**
  * Validation du mois (TS-01 T2) : un professeur par ligne, statut du mois calculé par le serveur, totaux et alertes.
- * « Valider la sélection » réutilise la validation en lot existante (avec lissage) sur les saisies soumises des
- * professeurs cochés. Le serveur reste l'autorité (droits, statuts, atomicité).
+ * « Valider le mois » valide le mois entier (saisies soumises, avec lissage) des professeurs cochés : jamais de
+ * validation partielle (TS-04). Le serveur reste l'autorité (droits, statuts, atomicité).
  *
  * @param {object} props
  * @param {string} props.mois `YYYY-MM`
@@ -199,7 +199,7 @@ export default function SyntheseValidationMois({ mois, onMoisChange, onOuvrir, o
                 {pdfEnCours ? 'Génération…' : `Générer les PDF (zip)${pdfPossible ? ` (${choisis.length})` : ''}`}
               </AdminButton>
               <AdminButton onClick={() => setLot(true)} disabled={saisiesChoisies.length === 0}>
-                Valider la sélection ({saisiesChoisies.length > 0 ? selection.size : 0})
+                Valider le mois ({saisiesChoisies.length > 0 ? selection.size : 0})
               </AdminButton>
             </div>
           </div>

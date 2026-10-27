@@ -253,7 +253,6 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::delete('/timesheets/{timesheet}', [TimesheetController::class, 'destroy']);
     Route::post('/timesheets/{timesheet}/adapter', [TimesheetController::class, 'adapter']);
     Route::get('/timesheets/{timesheet}/historique', [TimesheetController::class, 'historique']);
-    Route::post('/timesheets/{timesheet}/validate', [TimesheetController::class, 'validateEntry']);
 
     // Phase 1B: Lissage, Signature, Aperçu PDF
     Route::get('/timesheets/{timesheet}/propose-lissage', [TimesheetController::class, 'proposeLissage']);

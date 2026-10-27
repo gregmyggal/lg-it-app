@@ -150,54 +150,6 @@ class TimesheetLissingService
     }
 
     /**
-     * Effectue le lissage: déplace des heures d'un jour à l'autre
-     */
-    public function executeLissage(
-        int $timesheetId,
-        string $dateFrom,
-        string $dateTo,
-        float $montantADeplacer
-    ): bool {
-        $timesheet = Timesheet::findOrFail($timesheetId);
-
-        // Calcule combien d'heures correspondent au montant à déplacer
-        $tarif = ProfesseurTarif::effectiveAt(
-            $timesheet->professeur_id,
-            Carbon::parse($dateFrom)
-        );
-
-        if (! $tarif) {
-            return false;
-        }
-
-        // heures = montant / tarif
-        $heuresToMove = round($montantADeplacer / $tarif->tarif_horaire_eur, 2);
-
-        if ($heuresToMove > $timesheet->nombre_heures) {
-            return false;
-        }
-
-        // Crée une nouvelle entrée pour le jour cible
-        $newTimesheet = Timesheet::create([
-            'professeur_id' => $timesheet->professeur_id,
-            'date_prestation' => $dateTo,
-            'nombre_heures' => $heuresToMove,
-            'type_activite' => $timesheet->type_activite,
-            'cours_id' => $timesheet->cours_id,
-            'commentaire' => 'Lissé depuis '.Carbon::parse($dateFrom)->format('Y-m-d'),
-            'statut_validation' => 'confirme',
-            'lissage_applique' => true,
-        ]);
-
-        // Réduit les heures du jour original
-        $timesheet->nombre_heures -= $heuresToMove;
-        $timesheet->lissage_applique = true;
-        $timesheet->save();
-
-        return true;
-    }
-
-    /**
      * Cherche un jour (±5j autour du jour en dépassement) avec capacité disponible
      */
     private function findCapacitableDay(int $professeurId, Carbon $referenceDate, int $month, float $capacityNeeded): ?Carbon

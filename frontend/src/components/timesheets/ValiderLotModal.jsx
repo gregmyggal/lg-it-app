@@ -10,12 +10,14 @@ import { formatDateCourte } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 
 /**
- * Validation en lot avec lissage (mock-up 03, Q21) : récapitulatif, puis, pour chaque jour qui dépasse le plafond,
+ * Validation du mois entier de chaque professeur concerné, avec lissage (mock-up 03, Q21 ; TS-04) : récapitulatif par
+ * professeur, puis, pour chaque jour qui dépasse le plafond,
  * l'aperçu du lissage proposé (montant et date cible modifiables) ; « Lisser puis valider » ou « Valider sans lisser ».
  * Aucune saisie n'est exclue du lot : le lissage fait partie du même flux et de la même transaction côté serveur.
  *
  * @param {object} props
- * @param {object[]} props.selection saisies soumises sélectionnées (`TimesheetResource`)
+ * @param {object[]} props.selection toutes les saisies soumises du mois des professeurs concernés (`TimesheetResource`) :
+ *   le serveur refuse toute validation partielle d'un mois
  * @param {object[]} props.toutesLesSaisies saisies du mois (pour détecter les dépassements par professeur et par jour)
  * @param {number} props.annee
  * @param {number} props.mois
@@ -86,7 +88,7 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
           : {}),
       });
       onDone(
-        `${r.validees} saisie${r.validees > 1 ? 's' : ''} validée${r.validees > 1 ? 's' : ''}${r.lissages_appliques ? `, ${r.lissages_appliques} lissage${r.lissages_appliques > 1 ? 's' : ''} appliqué${r.lissages_appliques > 1 ? 's' : ''}` : ''}.`,
+        `${r.mois_valides} mois validé${r.mois_valides > 1 ? 's' : ''} (${r.validees} saisie${r.validees > 1 ? 's' : ''})${r.lissages_appliques ? `, ${r.lissages_appliques} lissage${r.lissages_appliques > 1 ? 's' : ''} appliqué${r.lissages_appliques > 1 ? 's' : ''}` : ''}.`,
       );
     } catch (err) {
       setErreur(getErrorMessage(err));
@@ -98,10 +100,23 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
 
   const peutLisser = lissagesActifs.length > 0;
 
+  // Récapitulatif par professeur : la validation porte sur son mois entier.
+  const parProfesseur = useMemo(() => {
+    const m = new Map();
+    selection.forEach((t) => {
+      const e = m.get(t.professeur_id) || { nom: t.professeur ? `${t.professeur.prenom} ${t.professeur.nom}` : `Professeur ${t.professeur_id}`, saisies: 0, heures: 0, montant: 0 };
+      e.saisies += 1;
+      e.heures += Number(t.nombre_heures);
+      e.montant += Number(t.montant_brut) || 0;
+      m.set(t.professeur_id, e);
+    });
+    return [...m.values()];
+  }, [selection]);
+
   return (
     <AdminModal
       isOpen
-      title="Valider les heures sélectionnées"
+      title="Valider le mois entier"
       onClose={onClose}
       closeOnBackdrop={false}
       footer={
@@ -115,7 +130,7 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
             </AdminButton>
           )}
           <AdminButton onClick={() => valider(true)} loading={envoi} disabled={envoi || propositions === null}>
-            {peutLisser ? 'Lisser puis valider' : 'Valider les heures'}
+            {peutLisser ? 'Lisser puis valider' : parProfesseur.length > 1 ? 'Valider les mois' : 'Valider le mois'}
           </AdminButton>
         </>
       }
@@ -134,12 +149,20 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
           )}
         </Banner>
       )}
+      <Banner tone="info">La validation porte toujours sur le mois entier de chaque professeur : il n'est pas possible de valider des saisies isolées.</Banner>
       <p style={{ marginTop: 0 }}>
         <strong>
-          {selection.length} saisie{selection.length > 1 ? 's' : ''}
+          {parProfesseur.length} professeur{parProfesseur.length > 1 ? 's' : ''}
         </strong>{' '}
-        · {formatHeures(totalHeures)} · {formatEuros(totalMontant)}
+        · {selection.length} saisie{selection.length > 1 ? 's' : ''} · {formatHeures(totalHeures)} · {formatEuros(totalMontant)}
       </p>
+      <ul style={{ margin: `0 0 ${ADMIN_SPACING.lg}`, paddingLeft: '20px', fontSize: '13px' }}>
+        {parProfesseur.map((p) => (
+          <li key={p.nom}>
+            {p.nom} : {p.saisies} saisie{p.saisies > 1 ? 's' : ''} · {formatHeures(p.heures)} · {formatEuros(p.montant)}
+          </li>
+        ))}
+      </ul>
 
       {depassements.length === 0 && <p style={{ color: ADMIN_COLORS.textSecondary }}>Aucun jour ne dépasse le plafond journalier de {formatEuros(PLAFOND_JOURNALIER)} : aucun lissage nécessaire.</p>}
       {depassements.length > 0 && propositions === null && <p>Calcul des lissages proposés…</p>}

@@ -20,7 +20,8 @@ const dernierJour = (annee, mois) => new Date(annee, mois, 0).getDate();
 
 /**
  * Vue directeur « par session » (mock-up 03) : sessions passées sans heures, heures du mois rattachées aux sessions
- * (ou hors séance) et validation en lot avec lissage.
+ * (ou hors séance) et validation du mois entier des professeurs choisis, avec lissage (TS-04 : jamais de validation
+ * partielle ; cocher une heure choisit le mois du professeur, quel que soit le filtre de classe).
  *
  * @param {object} props
  * @param {string} props.mois `YYYY-MM`
@@ -34,7 +35,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
   const saisies = useListeSaisies(dates);
   const sansHeures = useSessionsSansHeures(dates);
   const [classeId, setClasseId] = useState('');
-  const [selection, setSelection] = useState(new Set());
+  const [selection, setSelection] = useState(new Set()); // identifiants de professeurs
   const [lot, setLot] = useState(false);
 
   const classes = useMemo(() => {
@@ -45,8 +46,11 @@ export default function TimesheetsParSession({ mois, onChange }) {
   }, [saisies.data, sansHeures.data]);
 
   const visibles = (saisies.data || []).filter((t) => !classeId || String(t.session?.classe_id) === classeId);
-  const validables = visibles.filter((t) => t.can?.validate && t.statut_validation === 'soumis');
-  const choisies = visibles.filter((t) => selection.has(t.id));
+  const validable = (t) => t.can?.validate && t.statut_validation === 'soumis';
+  const validables = visibles.filter(validable);
+  const professeursValidables = [...new Set(validables.map((t) => t.professeur_id))];
+  // Toutes les saisies soumises du mois des professeurs choisis (le filtre de classe ne les restreint pas).
+  const choisies = (saisies.data || []).filter((t) => selection.has(t.professeur_id) && validable(t));
 
   function basculer(id) {
     setSelection((prev) => {
@@ -121,16 +125,16 @@ export default function TimesheetsParSession({ mois, onChange }) {
 
       <Section
         title="Heures du mois"
-        subtitle="Les heures de chaque professeur, rattachées à leur session ou encodées librement. Les saisies soumises peuvent être validées en lot, avec lissage."
+        subtitle="Les heures de chaque professeur, rattachées à leur session ou encodées librement. Valider un professeur valide son mois entier (toutes ses heures soumises), avec lissage si besoin."
         bodyPadding={false}
         actions={
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <AdminSelect aria-label="Filtrer par classe" value={classeId} placeholder="Toutes les classes" options={classes} onChange={(e) => setClasseId(e.target.value)} />
-            <AdminButton size="sm" variant="secondary" onClick={() => setSelection(new Set(validables.map((t) => t.id)))} disabled={validables.length === 0}>
-              Tout sélectionner ({validables.length})
+            <AdminButton size="sm" variant="secondary" onClick={() => setSelection(new Set(professeursValidables))} disabled={professeursValidables.length === 0}>
+              Tout sélectionner ({professeursValidables.length} professeur{professeursValidables.length > 1 ? 's' : ''})
             </AdminButton>
             <AdminButton size="sm" onClick={() => setLot(true)} disabled={choisies.length === 0}>
-              Valider la sélection ({choisies.length})
+              Valider le mois ({selection.size} professeur{selection.size > 1 ? 's' : ''})
             </AdminButton>
           </div>
         }
@@ -158,7 +162,7 @@ export default function TimesheetsParSession({ mois, onChange }) {
             </thead>
             <tbody>
               {visibles.map((t) => {
-                const valid = t.can?.validate && t.statut_validation === 'soumis';
+                const valid = validable(t);
                 return (
                   <Tr key={t.id}>
                     <Td label="Sélection">
@@ -166,9 +170,9 @@ export default function TimesheetsParSession({ mois, onChange }) {
                         <AdminCheckbox
                           id={`sel-${t.id}`}
                           label=""
-                          aria-label={`Sélectionner les heures de ${t.professeur?.prenom} ${t.professeur?.nom} du ${formatDateCourte(t.date_prestation.slice(0, 10))}`}
-                          checked={selection.has(t.id)}
-                          onChange={() => basculer(t.id)}
+                          aria-label={`Sélectionner le mois entier de ${t.professeur?.prenom} ${t.professeur?.nom}`}
+                          checked={selection.has(t.professeur_id)}
+                          onChange={() => basculer(t.professeur_id)}
                         />
                       )}
                     </Td>

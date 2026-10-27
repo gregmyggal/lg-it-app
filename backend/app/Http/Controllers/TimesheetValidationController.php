@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Exceptions\RegleMetierException;
 use App\Models\CourseSession;
 use App\Models\Timesheet;
-use App\Services\TimesheetLissingService;
+use App\Services\TimesheetLissageMoisService;
+use App\Services\TimesheetVersionService;
 use App\Services\TimesheetNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,10 +68,12 @@ class TimesheetValidationController extends Controller
     }
 
     /**
-     * R-T3-12 : applique les lissages demandés puis confirme les saisies, en UNE transaction. Aucune saisie n'est
-     * exclue pour cause de lissage ; si une saisie n'est pas validable, rien n'est modifié (422 + liste).
+     * R-T3-12 + TS-04 : valide des mois ENTIERS, professeur par professeur, en UNE transaction : lissages demandés
+     * (service du mois), confirmation de toutes les saisies soumises du mois, puis version « validée » figée.
+     * La validation partielle est refusée : toute saisie soumise d'un mois concerné doit figurer dans le lot. Si un mois
+     * n'est pas validable, rien n'est modifié (422 + liste des saisies fautives).
      */
-    public function validerLot(Request $request, TimesheetNotifier $notifier): JsonResponse
+    public function validerLot(Request $request, TimesheetNotifier $notifier, TimesheetLissageMoisService $lissageService, TimesheetVersionService $versions): JsonResponse
     {
         $v = $request->validate([
             'ids' => ['required', 'array', 'min:1', 'max:200'],
@@ -83,8 +86,18 @@ class TimesheetValidationController extends Controller
         $user = $request->user();
         $lissages = $v['lissages'] ?? [];
 
-        $reponse = DB::transaction(function () use ($v, $user, $lissages) {
+        $reponse = DB::transaction(function () use ($v, $user, $lissages, $lissageService, $versions) {
             $saisies = Timesheet::whereIn('id', $v['ids'])->lockForUpdate()->get()->keyBy('id');
+            $cle = fn (Timesheet $t) => $t->professeur_id.'|'.$t->date_prestation->format('Y-m');
+            $groupes = $saisies->groupBy($cle);
+
+            // Toutes les lignes de chaque mois concerné sont verrouillées avant de contrôler la complétude.
+            $moisLignes = $groupes->map(function ($lignes) {
+                $premiere = $lignes->first();
+                [$debut, $fin] = TimesheetVersionService::bornes((int) $premiere->date_prestation->format('Y'), (int) $premiere->date_prestation->format('n'));
+
+                return Timesheet::where('professeur_id', $premiere->professeur_id)->whereBetween('date_prestation', [$debut, $fin])->lockForUpdate()->get();
+            });
 
             $invalides = [];
             foreach ($saisies as $t) {
@@ -92,6 +105,15 @@ class TimesheetValidationController extends Controller
                     $invalides[] = ['id' => $t->id, 'raison' => 'Vous ne pouvez pas valider cette saisie.'];
                 } elseif ($t->statut_validation !== Timesheet::STATUT_SOUMIS) {
                     $invalides[] = ['id' => $t->id, 'raison' => 'Seules les saisies soumises peuvent être validées.'];
+                }
+            }
+            foreach ($moisLignes as $lignes) {
+                foreach ($lignes as $t) {
+                    if ($t->statut_validation === Timesheet::STATUT_SOUMIS && ! $saisies->has($t->id)) {
+                        $invalides[] = ['id' => $t->id, 'raison' => 'La validation porte sur le mois entier : cette saisie soumise du mois n\'est pas dans le lot.'];
+                    } elseif ($t->statut_validation === Timesheet::STATUT_CONTESTE) {
+                        $invalides[] = ['id' => $t->id, 'raison' => 'Une contestation est en cours sur ce mois : traitez-la avant de valider.'];
+                    }
                 }
             }
             foreach ($lissages as $l) {
@@ -107,25 +129,29 @@ class TimesheetValidationController extends Controller
                 );
             }
 
-            $service = new TimesheetLissingService;
-            foreach ($lissages as $l) {
-                $origine = $saisies[$l['timesheet_id']];
-                if (! $service->executeLissage($origine->id, $origine->date_prestation->toDateString(), $l['date_to'], (float) $l['montant_to_move'])) {
-                    throw RegleMetierException::invalide('Lissage impossible pour la saisie #'.$origine->id.' (tarif absent ou montant supérieur à la saisie). Rien n\'a été modifié.', ['lissages' => ['Lissage impossible.']]);
+            foreach ($groupes as $groupe => $lignes) {
+                $premiere = $lignes->first();
+                $annee = (int) $premiere->date_prestation->format('Y');
+                $mois = (int) $premiere->date_prestation->format('n');
+                $prof = $premiere->professeur;
+
+                $deplacements = collect($lissages)
+                    ->filter(fn ($l) => $cle($saisies[$l['timesheet_id']]) === $groupe)
+                    ->map(fn ($l) => ['timesheet_id' => $l['timesheet_id'], 'date_to' => $l['date_to'], 'montant' => $l['montant_to_move']])->values()->all();
+                if ($deplacements !== []) {
+                    $lissageService->appliquer($prof, $annee, $mois, $deplacements, 'Lissage appliqué à la validation du mois', $user);
                 }
+
+                // Le lissage a pu créer des lignes : on confirme toutes les saisies soumises du mois, pas seulement le lot.
+                [$debut, $fin] = TimesheetVersionService::bornes($annee, $mois);
+                Timesheet::where('professeur_id', $prof->id)->whereBetween('date_prestation', [$debut, $fin])
+                    ->where('statut_validation', Timesheet::STATUT_SOUMIS)
+                    ->update(['statut_validation' => Timesheet::STATUT_CONFIRME, 'validated_at' => now(), 'validated_by' => $user->id]);
+
+                $versions->figerValidee($prof, $annee, $mois, $user);
             }
 
-            $lisses = collect($lissages)->pluck('timesheet_id')->unique();
-            foreach ($saisies as $t) {
-                $t->refresh()->update([
-                    'statut_validation' => Timesheet::STATUT_CONFIRME,
-                    'validated_at' => now(),
-                    'validated_by' => $user->id,
-                    'lissage_applique' => $t->lissage_applique || $lisses->contains($t->id),
-                ]);
-            }
-
-            return response()->json(['validees' => $saisies->count(), 'lissages_appliques' => count($lissages)]);
+            return response()->json(['validees' => $saisies->count(), 'mois_valides' => $groupes->count(), 'lissages_appliques' => count($lissages)]);
         });
 
         // Après validation : prévient chaque professeur dont le mois attend désormais sa signature.

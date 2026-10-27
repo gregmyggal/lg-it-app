@@ -199,7 +199,7 @@ class TimesheetValidationTest extends TestCase
         $a = $this->soumise($this->alice, 1, 2.0);
         $this->actingAsRole('directeur');
 
-        $this->postJson("/api/timesheets/{$a->id}/validate")->assertOk();
+        $this->postJson('/api/timesheets/valider-lot', ['ids' => [$a->id]])->assertOk();
         $this->assertSame('confirme', $a->fresh()->statut_validation);
         $this->assertTrue($a->fresh()->isLocked());
 

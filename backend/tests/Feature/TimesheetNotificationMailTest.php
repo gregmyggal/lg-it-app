@@ -107,15 +107,26 @@ class TimesheetNotificationMailTest extends TestCase
         }
     }
 
-    public function test_une_validation_partielle_previent_quand_meme_le_professeur(): void
+    public function test_une_validation_partielle_est_refusee_et_ne_previent_pas_le_professeur(): void
     {
         $a = $this->ligne('soumis');
         $this->ligne('soumis', '2026-10-11');
         Sanctum::actingAs($this->directeur);
 
-        $this->postJson('/api/timesheets/valider-lot', ['ids' => [$a->id]])->assertOk();
+        $this->postJson('/api/timesheets/valider-lot', ['ids' => [$a->id]])->assertStatus(422);
 
-        $this->assertSame([NotificationTimesheet::HEURES_TRAITEES], $this->codes($this->prof->user));
+        $this->assertSame([], $this->codes($this->prof->user));
+    }
+
+    public function test_la_validation_du_mois_entier_previent_le_professeur_qu_il_doit_signer(): void
+    {
+        $a = $this->ligne('soumis');
+        $b = $this->ligne('soumis', '2026-10-11');
+        Sanctum::actingAs($this->directeur);
+
+        $this->postJson('/api/timesheets/valider-lot', ['ids' => [$a->id, $b->id]])->assertOk();
+
+        $this->assertSame([NotificationTimesheet::MOIS_A_CONFIRMER], $this->codes($this->prof->user));
     }
 
     public function test_la_generation_du_pdf_previent_le_professeur(): void

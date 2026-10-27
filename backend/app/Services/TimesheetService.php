@@ -29,6 +29,8 @@ class TimesheetService
 
     public const TYPES = [self::TYPE_ANIMATION, self::TYPE_COURS, self::TYPE_PREPARATION, self::TYPE_DEPLACEMENT];
 
+    public function __construct(private readonly TimesheetVersionService $versions) {}
+
     /**
      * Crée une saisie pour le professeur connecté.
      *
@@ -205,21 +207,26 @@ class TimesheetService
      */
     public function soumettreMois(User $user, int $annee, int $mois): array
     {
-        $professeurId = $user->professeur->id;
-        if ($this->moisSoumis($professeurId, $annee, $mois)) {
-            throw RegleMetierException::invalide('Ce mois est déjà soumis : il ne peut être soumis qu\'une fois.', ['mois' => ['Mois déjà soumis.']]);
-        }
+        $professeur = $user->professeur;
+        [$debut, $fin] = TimesheetVersionService::bornes($annee, $mois);
 
-        return DB::transaction(function () use ($professeurId, $annee, $mois) {
-            $soumises = Timesheet::where('professeur_id', $professeurId)
+        return DB::transaction(function () use ($user, $professeur, $annee, $mois, $debut, $fin) {
+            // TS-04 : verrou sur le mois avant le contrôle « déjà soumis » (deux soumissions simultanées : une seule réussit).
+            $lignes = Timesheet::where('professeur_id', $professeur->id)->whereBetween('date_prestation', [$debut, $fin])->lockForUpdate()->get();
+            if ($lignes->contains(fn (Timesheet $t) => $t->statut_validation !== Timesheet::STATUT_BROUILLON)) {
+                throw RegleMetierException::invalide('Ce mois est déjà soumis : il ne peut être soumis qu\'une fois.', ['mois' => ['Mois déjà soumis.']]);
+            }
+
+            $soumises = Timesheet::where('professeur_id', $professeur->id)
                 ->where('statut_validation', Timesheet::STATUT_BROUILLON)
-                ->whereYear('date_prestation', $annee)
-                ->whereMonth('date_prestation', $mois)
+                ->whereBetween('date_prestation', [$debut, $fin])
                 ->update(['statut_validation' => Timesheet::STATUT_SOUMIS]);
 
             if ($soumises === 0) {
                 throw RegleMetierException::invalide('Aucune heure encodée à soumettre pour ce mois.', ['mois' => ['Aucune heure à soumettre.']]);
             }
+
+            $this->versions->figerSoumise($professeur, $annee, $mois, $user);
 
             return ['soumises' => $soumises];
         });

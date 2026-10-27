@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\RegleMetierException;
 use App\Http\Requests\StoreTimesheetRequest;
 use App\Http\Resources\TimesheetResource;
 use App\Models\Professeur;
@@ -9,6 +10,7 @@ use App\Models\Timesheet;
 use App\Models\TimesheetAudit;
 use App\Services\SignatureNumeriqueService;
 use App\Services\TimesheetAdaptationService;
+use App\Services\TimesheetLissageMoisService;
 use App\Services\TimesheetLissingService;
 use App\Services\TimesheetNotifier;
 use App\Services\TimesheetService;
@@ -144,26 +146,6 @@ class TimesheetController extends Controller
         return response()->json(['data' => $lignes]);
     }
 
-    // Transition soumis → confirmé (US-311), réservée au directeur/admin.
-    public function validateEntry(Request $request, Timesheet $timesheet, TimesheetNotifier $notifier)
-    {
-        Gate::authorize('validateEntry', $timesheet);
-
-        $data = $request->validate([
-            'lissage_applique' => ['sometimes', 'boolean'],
-        ]);
-
-        $timesheet->update([
-            'statut_validation' => 'confirme',
-            'validated_at' => now(),
-            'validated_by' => $request->user()->id,
-            'lissage_applique' => $data['lissage_applique'] ?? false,
-        ]);
-        $notifier->siMoisAConfirmer($timesheet->professeur, (int) $timesheet->date_prestation->format('Y'), (int) $timesheet->date_prestation->format('n'));
-
-        return $timesheet;
-    }
-
     // Récupère la suggestion de lissage pour un jour en dépassement
     public function proposeLissage(Request $request, Timesheet $timesheet)
     {
@@ -185,26 +167,28 @@ class TimesheetController extends Controller
         return response()->json($proposal);
     }
 
-    // Effectue un lissage: déplace des heures d'un jour à l'autre
-    public function applyLissage(Request $request, Timesheet $timesheet)
+    // Lissage d'une saisie : passe par le service du mois (statut contrôlé, plafond, audit, lien vers la ligne d'origine).
+    public function applyLissage(Request $request, Timesheet $timesheet, TimesheetLissageMoisService $lissage)
     {
         Gate::authorize('validateEntry', $timesheet);
 
         $data = $request->validate([
-            'date_to' => ['required', 'date'],
+            'date_to' => ['required', 'date_format:Y-m-d'],
             'montant_to_move' => ['required', 'numeric', 'min:0.01'],
+            'motif' => ['sometimes', 'string', 'min:3', 'max:1000'],
         ]);
 
-        $service = new TimesheetLissingService;
-        $success = $service->executeLissage(
-            $timesheet->id,
-            $timesheet->date_prestation->format('Y-m-d'),
-            $data['date_to'],
-            $data['montant_to_move']
-        );
-
-        if (! $success) {
-            return response()->json(['error' => 'Lissage impossible'], 422);
+        try {
+            $lissage->appliquer(
+                $timesheet->professeur,
+                (int) $timesheet->date_prestation->format('Y'),
+                (int) $timesheet->date_prestation->format('n'),
+                [['timesheet_id' => $timesheet->id, 'date_to' => $data['date_to'], 'montant' => $data['montant_to_move']]],
+                $data['motif'] ?? 'Lissage du plafond journalier',
+                $request->user(),
+            );
+        } catch (RegleMetierException $e) {
+            return response()->json(['error' => $e->getMessage(), 'message' => $e->getMessage(), 'errors' => (object) $e->errors], $e->status);
         }
 
         return response()->json([
