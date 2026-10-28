@@ -1030,7 +1030,8 @@ button[type='submit']:hover {
   min-width: 0;
 }
 
-.portal-main :focus-visible {
+.portal-main :focus-visible,
+.adm-modal :focus-visible {
   outline: 3px solid #2563eb;
   outline-offset: 2px;
 }

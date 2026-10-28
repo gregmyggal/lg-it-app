@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 const SEUIL_MOBILE = '(max-width: 640px)';
 const SEUIL_FERMETURE = 100;
@@ -108,7 +109,8 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
     xl: '1000px',
   };
 
-  return (
+  // Portail : sous `.portal-main` (view-transition-name), l'overlay restait dans son contexte d'empilement, sous la barre d'onglets mobile.
+  return createPortal(
     <div
       className="adm-modal-overlay"
       style={{
