@@ -193,3 +193,16 @@ export function useApercuSoumissionLot(annee, mois, professeurIds) {
 export function forcerSoumissionLot(payload) {
   return client.post('/timesheets-mois/forcer-soumission-lot', payload).then((res) => res.data);
 }
+
+/** TS-06 : notes internes (direction et admin) — une note par mois (`timesheetId` nul) ou par saisie. */
+export function enregistrerNote(professeurId, { annee, mois, timesheetId = null, texte }) {
+  return client.put(`/professeurs/${professeurId}/timesheets-mois/notes`, { annee, mois, timesheet_id: timesheetId, texte }).then((res) => res.data);
+}
+
+export function supprimerNote(professeurId, { annee, mois, timesheetId = null }) {
+  return client.delete(`/professeurs/${professeurId}/timesheets-mois/notes`, { params: { annee, mois, ...(timesheetId ? { timesheet_id: timesheetId } : {}) } }).then((res) => res.data);
+}
+
+export function historiqueNote(professeurId, noteId) {
+  return client.get(`/professeurs/${professeurId}/timesheets-mois/notes/${noteId}/historique`).then((res) => res.data.data);
+}

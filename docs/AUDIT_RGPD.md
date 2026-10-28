@@ -97,6 +97,8 @@ Gravité : 🔴 critique · 🟠 élevée · 🟡 moyenne · 🔵 conformité/do
 
 - 🔵 **TS-04 (2026-10-27)** : le détail des versions « soumise » et « validée » d'un mois (lignes d'heures, montants) est effacé 24 mois après la fin du mois (`timesheets:purger-versions`) ; totaux, empreinte et dates sont conservés. Les fiches PDF et signatures sont conservées 84 mois minimum, sans purge automatique. L'écart relevé ci-dessus sur l'IP et l'appareil des signatures (7 ans au lieu de 12–24 mois) subsiste : à trancher (question Q5 du Canvas TS-04).
 
+- 🔵 **TS-06 (2026-10-28)** : les notes internes de la direction et de l'admin (mois et lignes) sont des données personnelles sur le professeur, visibles du seul staff, conservées 24 mois après la fin du mois (`timesheets:purger-notes`). Leur communication au professeur dans le cadre d'un droit d'accès (art. 15) est à définir avec le juriste (question Q1 du Canvas TS-06).
+
 ### 3.7 Droits des personnes (art. 12–22)
 - 🟠 Aucun mécanisme d'**accès/portabilité** (export des données d'un professeur), de **rectification en self-service** (le professeur ne peut pas corriger lui-même téléphone/IBAN ?), ni de **limitation/opposition**.
 - 🔵 Pas de procédure de réponse sous 1 mois, ni de journal des demandes.

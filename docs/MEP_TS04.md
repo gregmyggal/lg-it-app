@@ -17,6 +17,8 @@ Commits : T1a `2f92a2c`, T1b `f45dfb3`, T1c `976f352`, T2 `28f5c46`, T3 `f76c98d
 - [ ] **Prévenir les directeurs** : la validation se fait désormais sur le **mois entier**, professeur par professeur (plus de validation par saisie ni par séance isolée). Un lot incomplet est refusé avec la liste des saisies manquantes.
 - [ ] Choisir le moment : de préférence hors période de validation active (des validations en cours pendant la bascule resteront sans version « soumise »).
 
+> TS-06 (notes internes) ajoute 2 tables (`2026_10_28_110000_create_timesheet_notes_tables`, voir `docs/API_TS06.md`) et une tâche planifiée `timesheets:purger-notes` (04:15).
+>
 > TS-05 (soumission forcée) ajoute une 3e migration, `2026_10_28_100000_add_origine_to_timesheet_versions` (voir `docs/API_TS05.md`) ; elle part avec le même déploiement si TS-05 est livré en même temps.
 
 ## 2. Migrations (2 pour TS-04, additives, réversibles)

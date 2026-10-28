@@ -14,12 +14,14 @@ const ACTIONS_AUDIT = ['soumission_forcee', 'adaptation', 'lissage', 'remise_bro
  * @param {number} props.annee
  * @param {number} props.mois
  * @param {object[]} props.historique traces d'audit du mois (détail du mois)
+ * @param {object|null} props.notes notes internes du mois (direction/admin) : seul le fait d'en avoir ajouté une est affiché
+ * @param {object[]} [props.lignes] saisies du mois (libellé de la ligne d'une note)
  * @param {object|null} props.signature signature en vigueur (détail du mois)
  * @param {{id: number, version: number, total_eur: number, generated_at: string}[]} props.pdfs fiches PDF générées
  * @param {(h: object) => string} props.texteAudit libellé d'une trace d'audit
  * @param {*} props.rafraichir change à chaque rechargement du détail du mois
  */
-export default function FriseMois({ professeurId, annee, mois, historique, signature, pdfs, texteAudit, rafraichir }) {
+export default function FriseMois({ professeurId, annee, mois, historique, signature, pdfs, notes, lignes = [], texteAudit, rafraichir }) {
   const versions = useVersionsMois(professeurId, annee, mois, { rafraichir });
   const evenements = [];
 
@@ -45,6 +47,15 @@ export default function FriseMois({ professeurId, annee, mois, historique, signa
     date: h.created_at, cle: `a${h.id}`,
     titre: `${h.auteur || 'Système'} · saisie du ${formatDateCourte(h.date_prestation)}`, detail: `${texteAudit(h)} — « ${h.motif} »`,
   }));
+  // TS-06 : une note interne ajoutée apparaît dans la frise (écran direction/admin uniquement), sans son texte.
+  const notesListe = [...(notes?.mois ? [notes.mois] : []), ...Object.entries(notes?.lignes || {}).map(([id, n]) => ({ ...n, ligneId: Number(id) }))];
+  notesListe.forEach((n) => {
+    const ligne = n.ligneId ? lignes.find((l) => l.id === n.ligneId) : null;
+    evenements.push({
+      date: n.created_at, cle: `n${n.id}`,
+      titre: '🔒 Note interne ajoutée', detail: `${n.auteur?.nom || 'Direction'}${ligne ? ` — ligne du ${formatDateCourte(ligne.date_prestation)}` : ' — mois'}`,
+    });
+  });
   if (signature?.signed_at) evenements.push({ date: signature.signed_at, cle: 'sig', titre: 'Signée par le professeur', detail: signature.perimee ? 'signature périmée : le contenu a changé depuis' : null });
   (pdfs || []).forEach((p) => evenements.push({ date: p.generated_at, cle: `p${p.id}`, titre: `Fiche PDF v${p.version} générée`, detail: formatEuros(p.total_eur) }));
 

@@ -81,6 +81,8 @@ class TimesheetDetailMoisController extends Controller
             'lignes' => TimesheetResource::collection($lignes)->resolve($request),
             'jours' => $jours,
             'historique' => $historique,
+            // TS-06 : notes internes, jamais renvoyées hors de cet écran staff.
+            'notes_internes' => app(\App\Services\TimesheetNoteService::class)->pourMois($professeur, (int) $v['annee'], (int) $v['mois'], $request->user()),
             'soumission_forcee' => app(\App\Services\TimesheetSoumissionForceeService::class)->etat($professeur, (int) $v['annee'], (int) $v['mois']),
             'remise_brouillon' => app(\App\Services\TimesheetConfirmationService::class)->etatRemiseBrouillon($professeur, (int) $v['annee'], (int) $v['mois']),
             'signature' => ($sig = $signatures->derniere($professeur, (int) $v['annee'], (int) $v['mois'])) ? $signatures->preuve($sig, $request->user()) : null,

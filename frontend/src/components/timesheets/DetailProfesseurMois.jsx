@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import AdminButton from '../AdminButton';
 import Banner from '../ui/Banner';
 import StatutBadge from '../ui/StatutBadge';
@@ -10,6 +10,8 @@ import ValiderLotModal from './ValiderLotModal';
 import VersionsMois from './VersionsMois';
 import FriseMois from './FriseMois';
 import SoumettreALaPlaceModal from './SoumettreALaPlaceModal';
+import NoteInterne, { NoteInterneMois } from './NotesInternes';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import AdminModal from '../AdminModal';
 import SignaturePreuve from '../signature/SignaturePreuve';
 import EmployeurBadge from '../employeurs/EmployeurBadge';
@@ -101,6 +103,8 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
   const [envoiBrouillon, setEnvoiBrouillon] = useState(false);
   const [erreurBrouillon, setErreurBrouillon] = useState(null);
   const [forcer, setForcer] = useState(false);
+  const [noteLigne, setNoteLigne] = useState(null); // id de la saisie dont la note interne est ouverte
+  const mobile = useMediaQuery('(max-width: 860px)');
   const [envoiForcer, setEnvoiForcer] = useState(false);
   const [erreurForcer, setErreurForcer] = useState(null);
   const [employeurModal, setEmployeurModal] = useState(false);
@@ -293,6 +297,8 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             </Banner>
           )}
 
+          <NoteInterneMois professeurId={professeurId} annee={annee} mois={moisNum} note={d.notes_internes?.mois} onChange={detail.reload} />
+
           {d.lignes.some((t) => t.statut_validation !== 'brouillon') && (
             <VersionsMois professeurId={professeurId} annee={annee} mois={moisNum} rafraichir={d} />
           )}
@@ -304,7 +310,8 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                 <tbody>
                   {d.lignes.length === 0 && <Tr><Td colSpan={7}>Aucune saisie ce mois-ci.</Td></Tr>}
                   {d.lignes.map((t) => (
-                    <Tr key={t.id} fond={modifiees.has(t.id) ? 'var(--tone-warning-bg)' : undefined}>
+                    <Fragment key={t.id}>
+                    <Tr fond={modifiees.has(t.id) ? 'var(--tone-warning-bg)' : undefined}>
                       <Td label="Date">{formatDateCourte(t.date_prestation)}</Td>
                       <Td label="Session / cours">{(t.session ? libelleSession(t.session) : 'Heures libres')}</Td>
                       <Td label="Type">{TYPES_ACTIVITE[t.type_activite]?.label || t.type_activite}</Td>
@@ -315,14 +322,49 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                         {modifiees.has(t.id) && <span title="Adaptée ou lissée" style={{ display: 'block', marginTop: 2, fontSize: 12 }}>✎ modifiée</span>}
                       </Td>
                       <Td label="Actions">
-                        {t.can?.adapt && (
-                          <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
-                            <AdminButton variant="secondary" size="sm" onClick={() => setAdapter(t)}>Adapter</AdminButton>
-                            <AdminButton variant="secondary" size="sm" onClick={() => setLisser(t)}>Lisser</AdminButton>
-                          </span>
-                        )}
+                        <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 6 }}>
+                          {t.can?.adapt && (
+                            <>
+                              <AdminButton variant="secondary" size="sm" onClick={() => setAdapter(t)}>Adapter</AdminButton>
+                              <AdminButton variant="secondary" size="sm" onClick={() => setLisser(t)}>Lisser</AdminButton>
+                            </>
+                          )}
+                          {(() => {
+                            const note = d.notes_internes?.lignes?.[t.id];
+                            const date = formatDateCourte(t.date_prestation);
+                            return (
+                              <button
+                                type="button"
+                                aria-label={`Note interne de la ligne du ${date} — ${note ? 'présente' : 'vide'}`}
+                                title={note ? `Note interne : « ${note.texte.slice(0, 80)}${note.texte.length > 80 ? '…' : ''} »` : 'Ajouter une note interne'}
+                                onClick={() => setNoteLigne(noteLigne === t.id ? null : t.id)}
+                                style={{ minWidth: 36, minHeight: 36, padding: '2px 8px', borderRadius: 7, cursor: 'pointer', border: `1px solid ${note ? '#e0b64a' : 'var(--c-border)'}`, background: note ? '#fff7e0' : '#fff', opacity: note ? 1 : 0.6 }}
+                              >
+                                <span aria-hidden="true">🔒{note ? '●' : '✎'}</span>
+                              </button>
+                            );
+                          })()}
+                        </span>
                       </Td>
                     </Tr>
+                    {noteLigne === t.id && !mobile && (
+                      <Tr>
+                        <Td colSpan={7} style={{ background: '#fffdf5' }}>
+                          <NoteInterne
+                            professeurId={professeurId}
+                            annee={annee}
+                            mois={moisNum}
+                            timesheetId={t.id}
+                            note={d.notes_internes?.lignes?.[t.id]}
+                            libelle={`ligne du ${formatDateCourte(t.date_prestation)}`}
+                            ouvertEnEdition
+                            onChange={detail.reload}
+                            onFerme={() => setNoteLigne(null)}
+                          />
+                        </Td>
+                      </Tr>
+                    )}
+                    </Fragment>
                   ))}
                 </tbody>
               </Table>
@@ -347,6 +389,8 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                 mois={moisNum}
                 historique={d.historique}
                 signature={d.signature}
+                notes={d.notes_internes}
+                lignes={d.lignes}
                 pdfs={d.pdf.versions}
                 texteAudit={texteAudit}
                 rafraichir={d}
@@ -456,6 +500,24 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               </AdminFormField>
             </AdminModal>
           )}
+          {noteLigne !== null && mobile && (() => {
+            const t = d.lignes.find((x) => x.id === noteLigne);
+            return t ? (
+              <AdminModal isOpen title={`Note interne de la ligne du ${formatDateCourte(t.date_prestation)}`} size="sm" onClose={() => setNoteLigne(null)}>
+                <NoteInterne
+                  professeurId={professeurId}
+                  annee={annee}
+                  mois={moisNum}
+                  timesheetId={t.id}
+                  note={d.notes_internes?.lignes?.[t.id]}
+                  libelle={`ligne du ${formatDateCourte(t.date_prestation)}`}
+                  ouvertEnEdition
+                  onChange={detail.reload}
+                  onFerme={() => setNoteLigne(null)}
+                />
+              </AdminModal>
+            ) : null;
+          })()}
           {forcer && (
             <SoumettreALaPlaceModal
               nom={d.professeur.nom}

@@ -33,6 +33,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TimesheetConfirmationController;
 use App\Http\Controllers\TimesheetDetailMoisController;
 use App\Http\Controllers\TimesheetLissageController;
+use App\Http\Controllers\TimesheetNoteController;
 use App\Http\Controllers\TimesheetParametreController;
 use App\Http\Controllers\TimesheetPdfController;
 use App\Http\Controllers\TimesheetSyntheseMoisController;
@@ -225,6 +226,10 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     // TS-04 : versions soumise / validée d'un mois (lecture seule).
     Route::get('/professeurs/{professeur}/timesheets-mois/versions', [TimesheetVersionController::class, 'show']);
     Route::get('/timesheets/mes-versions', [TimesheetVersionController::class, 'moi']);
+    // TS-06 : notes internes (direction et admin uniquement).
+    Route::put('/professeurs/{professeur}/timesheets-mois/notes', [TimesheetNoteController::class, 'enregistrer']);
+    Route::delete('/professeurs/{professeur}/timesheets-mois/notes', [TimesheetNoteController::class, 'supprimer']);
+    Route::get('/professeurs/{professeur}/timesheets-mois/notes/{note}/historique', [TimesheetNoteController::class, 'historique']);
     // TS-05 : soumission du mois d'un professeur par la direction ou l'admin.
     Route::post('/professeurs/{professeur}/timesheets-mois/forcer-soumission', [TimesheetSoumissionForceeController::class, 'store']);
     Route::post('/timesheets-mois/forcer-soumission-lot/apercu', [TimesheetSoumissionForceeController::class, 'apercuLot']);
