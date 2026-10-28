@@ -86,7 +86,9 @@ class TimesheetSignatureService
     /**
      * Vérifie si un mois peut être signé par le professeur : toutes ses saisies sont confirmées (ou déjà générées), au
      * moins une attend sa signature (une saisie ajustée après signature la perd ; les autres restent signées) ou le
-     * contenu signé a changé (SIG-01), aucune contestation en cours et aucun dépassement du plafond journalier.
+    
+     * contenu signé a changé (SIG-01) et aucune contestation en cours. Le plafond journalier ne conditionne PAS la
+     * signature : un mois validé par la direction est toujours signable, lissé ou non.
      * La signature elle-même : SignatureNumeriqueService::signer().
      */
     public function canSignMonth(int $professeurId, int $year, int $month): array
@@ -101,9 +103,6 @@ class TimesheetSignatureService
         $nonConfirmees = $timesheets->whereNotIn('statut_validation', ['confirme', 'genere']);
         $aSigner = $timesheets->where('statut_validation', 'confirme')->whereNull('signature_professeur');
 
-        $lissingService = new TimesheetLissingService;
-        $monthData = $lissingService->calculateMonthlyMontants($professeurId, $year, $month);
-
         // SIG-01 : tout est signé mais le contenu signé a changé depuis (ex. compte bancaire) → nouvelle signature.
         $aResigner = $nonConfirmees->isEmpty() && $aSigner->isEmpty() && $timesheets->isNotEmpty()
             && ($prof = Professeur::find($professeurId)) && app(SignatureNumeriqueService::class)->aResigner($prof, $year, $month);
@@ -117,13 +116,12 @@ class TimesheetSignatureService
             : ['ok' => true, 'erreur' => null];
 
         return [
-            'can_sign' => $nonConfirmees->isEmpty() && $aSigner->isNotEmpty() && empty($monthData['depassements']) && $garde['ok'],
+            'can_sign' => $nonConfirmees->isEmpty() && $aSigner->isNotEmpty() && $garde['ok'],
             'errors' => array_values(array_filter([
                 $garde['erreur'],
                 $contestees->isNotEmpty() ? 'Contestation en cours : en attente de la direction' : null,
                 $nonConfirmees->count() > $contestees->count() ? ($nonConfirmees->count() - $contestees->count()).' entrée(s) non confirmées' : null,
                 $nonConfirmees->isEmpty() && $aSigner->isEmpty() && $timesheets->isNotEmpty() ? 'Mois déjà signé' : null,
-                count($monthData['depassements']) > 0 ? 'Dépassements détectés' : null,
             ])),
             'warnings' => [],
         ];

@@ -37,6 +37,7 @@ Règle (ADR-0002, RG-11) : un mois qui a au moins une version **validée** ne se
 - **Signature** (`POST /timesheets/sign-month`) : `canSignMonth` renvoie `can_sign: false` avec l'erreur ci-dessus (visible dans `erreurs_signature` de `GET /timesheets/ma-confirmation`). La signature enregistre `version_id` et `version_hash` ; son payload scellé passe en `version: 2` avec `version_timesheet_id` et `version_hash`. `contenu_sha256` reste lu par la vérification du sceau.
 - **Périmée** : une signature liée à une version est périmée dès que cette version n'est plus la validée active (adaptation, lissage, revalidation). Une nouvelle signature du professeur est alors requise ; l'ancienne passe `remplacee`.
 - **PDF** (`POST /professeurs/{id}/timesheet-pdfs`) : le contrôle est ajouté aux `bloquants` (aperçu, lot et génération). Le PDF enregistre `version_id`.
+- **Plafond journalier** : il ne conditionne pas la signature. Un mois validé par la direction est toujours signable, avec ou sans lissage (le dépassement reste visible côté direction, à la validation). L'ancienne erreur « Dépassements détectés » n'existe plus.
 - **Mois antérieurs à TS-04** (aucune validée) : non concernés, signature et PDF comme avant, `version_id` nul.
 - **Drapeau de déploiement** : `config('logiscool.garde_versions')`, variable `TIMESHEET_GARDE_VERSIONS` (défaut `true`). À `false`, la garde est inactive.
 

@@ -150,4 +150,32 @@ class TimesheetVersionGardeTest extends TestCase
 
         $this->assertNull(TimesheetSignature::where('public_id', $sig)->first()->version_id);
     }
+
+    public function test_un_mois_valide_sans_lissage_malgre_un_depassement_du_plafond_reste_signable(): void
+    {
+        $this->b->update(['nombre_heures' => 3.0]); // 3 h × 20 € = 60 € le même jour : au-dessus du plafond journalier de 44,02 €
+        $this->soumettreEtValider(); // validation SANS lissage
+
+        Sanctum::actingAs($this->prof->user);
+        $etat = $this->getJson('/api/timesheets/ma-confirmation?annee=2026&mois=10')->assertOk();
+        $this->assertTrue($etat->json('peut_signer'));
+        $this->assertSame([], $etat->json('erreurs_signature'));
+
+        $this->signer()->assertOk();
+        $this->genererPdf()->assertCreated();
+    }
+
+    public function test_un_mois_valide_avec_lissage_reste_signable(): void
+    {
+        $this->b->update(['nombre_heures' => 3.0]);
+        Sanctum::actingAs($this->prof->user);
+        $this->postJson('/api/timesheets/soumettre-mois', ['annee' => 2026, 'mois' => 10])->assertOk();
+        $this->actingAsRole('directeur');
+        $this->postJson('/api/timesheets/valider-lot', [
+            'ids' => [$this->a->id, $this->b->id],
+            'lissages' => [['timesheet_id' => $this->b->id, 'date_to' => '2026-10-08', 'montant_to_move' => 15.98]],
+        ])->assertOk();
+
+        $this->signer()->assertOk();
+    }
 }
