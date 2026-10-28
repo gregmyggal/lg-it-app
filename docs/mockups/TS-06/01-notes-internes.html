@@ -1,0 +1,94 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Notes internes — Maquette TS-06</title>
+<style>
+:root{--primary:#2563eb;--primary-l:#dbeafe;--ok-d:#047857;--ok-l:#d1fae5;--warn-d:#92400e;--warn-l:#fef3c7;--note:#fff7e0;--note-b:#e0b64a;--err-d:#b91c1c;--err-l:#fee2e2;--sub-l:#f3f4f6;--t1:#111827;--t2:#374151;--t3:#6b7280;--bd:#e5e7eb;--bg:#f9fafb;--card:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--t1);background:var(--bg)}
+h2,h3,p{margin:0}button{font:inherit;cursor:pointer}
+.mockbar{position:sticky;top:0;z-index:9;background:#1f2937;color:#fff;padding:8px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+.mockbar strong{color:#fbbf24}.mockbar button{background:#374151;color:#fff;border:1px solid #4b5563;border-radius:6px;padding:4px 10px}.mockbar button[aria-pressed=true]{background:#fff;color:#111827;font-weight:700}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}.screen{display:none}.screen.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sp{justify-content:space-between}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:13px;vertical-align:top}th{color:var(--t3);font-weight:600;font-size:12px}.num{text-align:right}
+.b{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}.b.g{background:var(--sub-l);color:var(--t2)}.b.v{background:var(--ok-l);color:var(--ok-d)}.b.n{background:var(--note);color:var(--warn-d);border:1px solid var(--note-b)}
+.btn{border:1px solid var(--bd);background:#fff;border-radius:7px;padding:6px 12px;min-height:36px}.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}.btn.sm{padding:3px 9px;min-height:28px;font-size:12px}
+.ico{border:1px solid var(--bd);background:#fff;border-radius:7px;min-width:36px;min-height:36px;padding:2px 8px}.ico.has{background:var(--note);border-color:var(--note-b)}.ico.vide{opacity:.55}
+.note{background:var(--note);border:1px solid var(--note-b);border-radius:8px;padding:10px 12px}.note .meta{font-size:12px;color:var(--t3);margin-top:6px}
+.priv{display:flex;gap:8px;align-items:center;background:var(--note);border:1px dashed var(--note-b);color:var(--warn-d);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;margin-bottom:8px}
+.alert{padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px}.alert.i{background:var(--primary-l);color:#1e3a8a}.alert.e{background:var(--err-l);color:var(--err-d)}
+.small{font-size:12px;color:var(--t3);margin-top:6px}
+textarea{width:100%;border:1px solid var(--note-b);background:#fffdf5;border-radius:6px;padding:6px 8px;font:inherit}
+.ov{background:rgba(17,24,39,.45);padding:24px 12px;border-radius:10px}.dlg{background:#fff;border-radius:10px;max-width:600px;margin:0 auto;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.phone{width:375px;max-width:100%;margin:0 auto;border:10px solid #1f2937;border-radius:30px;background:#6b7280;padding:0;min-height:520px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.sheet{background:#fff;border-radius:16px 16px 0 0;padding:14px}
+.toast{background:#1f2937;color:#fff;border-radius:8px;padding:8px 12px;display:inline-flex;gap:12px;align-items:center;font-size:13px}.toast button{background:none;border:0;color:#93c5fd;text-decoration:underline}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+</style></head><body>
+<div class="mockbar"><strong>MAQUETTE TS-06</strong><span>Notes internes (direction et admin uniquement) — Bruno Leroy, octobre 2026</span>
+<span class="row" style="gap:6px"><button data-s="a" aria-pressed="true">A. Détail du mois</button><button data-s="b" aria-pressed="false">B. Validation (un professeur)</button><button data-s="c" aria-pressed="false">C. Validation en lot</button><button data-s="d" aria-pressed="false">D. Smartphone</button><button data-s="e" aria-pressed="false">E. États</button></span></div>
+<main>
+
+<section class="screen on" id="a">
+<div class="card"><h2>Bruno Leroy — Octobre 2026</h2><div class="row" style="margin-top:8px"><span class="b g">À valider</span><span>Total <b>186,00 €</b> · 8,5 h</span></div></div>
+
+<div class="card"><div class="row sp"><h3><span role="img" aria-label="Privé">🔒</span> Note interne du mois</h3><button class="btn sm">Modifier</button></div>
+<div class="priv" style="margin-top:8px"><span role="img" aria-label="Cadenas">🔒</span> Note interne — visible uniquement par la direction et l'administration</div>
+<div class="note">Heures confirmées par téléphone le 02/11 ; plafond du 24/10 à lisser à la validation.<div class="meta">Par M. Dupont · direction · 03/11 09:12 · modifiée 1 fois — <a href="#" onclick="return false">Voir l'historique</a></div></div>
+<p class="small">Non visible du professeur.</p></div>
+
+<div class="card"><h3 style="margin-bottom:8px">Saisies du mois</h3>
+<table><thead><tr><th>Date</th><th>Session / cours</th><th>Type</th><th class="num">Heures</th><th>Commentaire (professeur)</th><th>Statut</th><th>Actions</th></tr></thead><tbody>
+<tr><td>08/10</td><td>Scratch – Cl. A / S3</td><td>Animation</td><td class="num">3 h</td><td></td><td><span class="b g">Soumis</span></td><td><div class="row" style="gap:6px"><button class="btn sm">Adapter</button><button class="btn sm">Lisser</button><button class="ico vide" aria-label="Note interne de la ligne du 08/10 — vide" title="Ajouter une note interne">🔒✎</button></div></td></tr>
+<tr><td>15/10</td><td>Python – Cl. C / S2</td><td>Animation</td><td class="num">2,5 h</td><td>« Remplacement de Alice »</td><td><span class="b g">Soumis</span></td><td><div class="row" style="gap:6px"><button class="btn sm">Adapter</button><button class="btn sm">Lisser</button><button class="ico has" aria-label="Note interne de la ligne du 15/10 — présente" title="Note interne : « Vérifié avec Alice »">🔒●</button></div></td></tr>
+<tr><td colspan="7" style="background:#fffdf5"><div class="priv"><span role="img" aria-label="Cadenas">🔒</span> Note interne — visible uniquement par la direction et l'administration</div>
+<div class="note">Vérifié avec Alice : le remplacement est confirmé.<div class="meta">Par M. Dupont · direction · 03/11 09:14 — <a href="#" onclick="return false">Modifier</a> · <a href="#" onclick="return false">Supprimer</a></div></div></td></tr>
+<tr><td>24/10</td><td>Heures libres</td><td>Préparation</td><td class="num">3 h</td><td></td><td><span class="b g">Soumis</span></td><td><div class="row" style="gap:6px"><button class="btn sm">Adapter</button><button class="btn sm">Lisser</button><button class="ico vide" aria-label="Note interne de la ligne du 24/10 — vide">🔒✎</button></div></td></tr></tbody></table>
+<p class="small">Une seule icône par ligne, dans la colonne Actions. La colonne « Commentaire (professeur) » garde son libellé : la note interne n'y est jamais mélangée (couleur ambre, cadenas, « Direction uniquement »).</p></div>
+</section>
+
+<section class="screen" id="b">
+<div class="ov"><div class="dlg"><h3>Valider le mois entier</h3>
+<div class="alert i">La validation porte toujours sur le mois entier de chaque professeur : il n'est pas possible de valider des saisies isolées.</div>
+<p><b>1 professeur</b> · 3 saisies · 8,5 h · 186,00 €</p>
+<ul style="font-size:13px"><li>Bruno Leroy : 3 saisies · 8,5 h · 186,00 €</li></ul>
+<details open style="margin-top:10px"><summary><b><span role="img" aria-label="Cadenas">🔒</span> Ajouter une note interne (optionnel)</b></summary>
+<div class="priv" style="margin-top:8px"><span role="img" aria-label="Cadenas">🔒</span> Note interne — visible uniquement par la direction et l'administration</div>
+<label for="n1" style="font-size:12px">Note interne (privée)</label>
+<textarea id="n1" rows="3" maxlength="1000" placeholder="Note pour la direction : rien n'est envoyé au professeur" aria-describedby="n1h">Heures confirmées par téléphone le 02/11.</textarea>
+<p class="small" id="n1h">Non visible du professeur. 41 / 1000 caractères. La note est enregistrée avec la validation ; vous pourrez la modifier ensuite dans le détail du mois.</p></details>
+<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn">Annuler</button><button class="btn pri">Valider le mois</button></div></div></div>
+<p class="small" style="margin-top:8px">Si une note existe déjà, elle s'affiche ici en lecture seule avec un lien « Modifier ». Le champ est facultatif et ne bloque jamais la validation.</p>
+</section>
+
+<section class="screen" id="c">
+<div class="ov"><div class="dlg"><h3>Valider le mois entier</h3>
+<div class="alert i">La validation porte toujours sur le mois entier de chaque professeur : il n'est pas possible de valider des saisies isolées.</div>
+<p><b>3 professeurs</b> · 10 saisies · 24,5 h · 538,00 €</p>
+<ul style="font-size:13px"><li>Bruno Leroy : 3 saisies · 8,5 h · 186,00 €</li><li>Clara Dubois : 5 saisies · 12 h · 264,00 €</li><li>David Renard : 2 saisies · 4 h · 88,00 €</li></ul>
+<div class="note" style="margin-top:10px"><span role="img" aria-label="Cadenas">🔒</span> <b>2 professeurs ont une note interne</b> (Bruno Leroy, David Renard). Aucune saisie de note en lot : ouvrez le détail du mois d'un professeur pour lire ou modifier sa note.</div>
+<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn">Annuler</button><button class="btn pri">Valider les mois</button></div></div></div>
+</section>
+
+<section class="screen" id="d">
+<div class="phone"><div class="sheet"><div class="priv"><span role="img" aria-label="Cadenas">🔒</span> Note interne — visible uniquement par la direction et l'administration</div>
+<b>Note interne de la ligne du 15/10</b>
+<textarea rows="4" maxlength="1000" style="margin-top:8px" aria-label="Note interne (privée)" placeholder="Note pour la direction : rien n'est envoyé au professeur">Vérifié avec Alice : le remplacement est confirmé.</textarea>
+<p class="small">Non visible du professeur. 49 / 1000</p>
+<div class="row" style="margin-top:10px"><button class="btn pri" style="flex:1;min-height:44px">Enregistrer la note interne</button><button class="btn" style="min-height:44px">Fermer</button></div></div></div>
+<p class="small" style="text-align:center;margin-top:8px">Feuille du bas : le champ est plein largeur et la mention de confidentialité reste visible au-dessus du clavier.</p>
+</section>
+
+<section class="screen" id="e">
+<div class="grid2"><div>
+<div class="card"><h3 style="margin-bottom:8px">Aucune note</h3><p class="small">Note interne du mois : « Aucune note interne » + lien « Ajouter une note interne ». Carte repliée par défaut.</p></div>
+<div class="card"><h3 style="margin-bottom:8px">Chargement</h3><p class="small">Squelette dans la carte ; le tableau des saisies n'est pas bloqué.</p></div>
+<div class="card"><h3 style="margin-bottom:8px">Erreur</h3><div class="alert e" role="alert">Note non enregistrée. <button class="btn sm">Réessayer</button> Votre texte est conservé dans le champ.</div></div>
+<div class="card"><h3 style="margin-bottom:8px">Enregistré</h3><p class="small" aria-live="polite">Enregistré à 09:14 (discret, sous le champ).</p></div></div>
+<div>
+<div class="card"><h3 style="margin-bottom:8px">Suppression avec annulation</h3><div class="toast">Note supprimée <button>Annuler</button> <span style="opacity:.7">8 s</span></div><p class="small" style="margin-top:8px">La note n'est réellement supprimée qu'à la fin des 8 secondes.</p></div>
+<div class="card"><h3 style="margin-bottom:8px">Historique (lecture seule)</h3><table><tbody><tr><td>03/11 09:12</td><td>M. Dupont</td><td>Version actuelle</td></tr><tr><td>03/11 08:50</td><td>M. Dupont</td><td>« Heures confirmées par téléphone. »</td></tr></tbody></table><p class="small">Ancienne version affichée à la demande. Auteur et administrateur seuls modifient ou suppriment ; l'admin peut modérer.</p></div>
+<div class="card"><h3 style="margin-bottom:8px">Frise (direction uniquement)</h3><p><b><span role="img" aria-label="Cadenas">🔒</span> Note interne ajoutée</b></p><p class="small">03/11 09:12 · M. Dupont — sans le texte de la note. Jamais présent dans ce que voit le professeur.</p></div>
+</div></div>
+</section>
+</main>
+<script>document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===b.dataset.s))});</script>
+</body></html>
