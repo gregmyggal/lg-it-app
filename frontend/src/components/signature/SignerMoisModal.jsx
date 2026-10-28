@@ -15,7 +15,7 @@ const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 
  * SIG-01 : « Accepter et signer… ». Récapitulatif du mois, signature, certification, puis « Signer ».
  * Sans signature enregistrée, le dialogue commence par la créer (étape 1).
  */
-export default function SignerMoisModal({ professeurId, annee, mois, recapitulatif, nom, onClose, onSigne }) {
+export default function SignerMoisModal({ professeurId, annee, mois, recapitulatif, nom, benevoles = true, onClose, onSigne }) {
   const ma = useMaSignature();
   const [creation, setCreation] = useState(false);
   const [brouillon, setBrouillon] = useState(null);
@@ -108,7 +108,7 @@ export default function SignerMoisModal({ professeurId, annee, mois, recapitulat
           </div>
           <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 12, fontSize: 13 }}>
             <input type="checkbox" checked={certifie} onChange={(e) => setCertifie(e.target.checked)} style={{ marginTop: 3 }} />
-            <span>Je certifie l’exactitude de ces prestations bénévoles.</span>
+            <span>{benevoles ? 'Je certifie l’exactitude de ces prestations bénévoles.' : 'Je certifie l’exactitude de ces prestations.'}</span>
           </label>
           <p style={{ fontSize: 12, color: 'var(--c-text-2)', background: 'var(--c-bg, #f9fafb)', borderRadius: 8, padding: 10, margin: '12px 0 0' }}>
             Signature électronique horodatée par le serveur, liée à votre compte et au contenu exact de ce mois (lignes, montants, compte bancaire). Si une saisie change ensuite, une nouvelle signature vous sera demandée.

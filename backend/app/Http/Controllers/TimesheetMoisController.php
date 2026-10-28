@@ -84,7 +84,7 @@ class TimesheetMoisController extends Controller
             'annee' => (int) $v['annee'],
             'mois' => (int) $v['mois'],
             // EMP-01 (RG-10) : le professeur voit le nom de l'entité de son mois, en lecture seule.
-            'employeur' => ['nom' => $this->employeurs->effectif($professeur, (int) $v['annee'], (int) $v['mois'])->nom],
+            'employeur' => ['nom' => ($e = $this->employeurs->effectif($professeur, (int) $v['annee'], (int) $v['mois']))->nom, 'benevoles' => $e->benevoles],
             'sessions' => $donnees,
             'libres' => TimesheetResource::collection($saisies->whereNull('course_session_id')->values())->resolve($request),
             'synthese' => [

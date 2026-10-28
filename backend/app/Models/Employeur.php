@@ -22,12 +22,13 @@ class Employeur extends Model
     /** Valeur de remplacement tant qu'une coordonnée est inconnue (jamais une coordonnée inventée). */
     public const A_COMPLETER = 'À COMPLÉTER';
 
-    protected $fillable = ['code', 'nom', 'rpm', 'compte_bancaire', 'adresse', 'par_defaut', 'actif', 'couleur_badge'];
+    protected $fillable = ['code', 'nom', 'rpm', 'compte_bancaire', 'adresse', 'par_defaut', 'actif', 'benevoles', 'couleur_badge'];
 
     protected $casts = [
         'compte_bancaire' => 'encrypted',
         'par_defaut' => 'boolean',
         'actif' => 'boolean',
+        'benevoles' => 'boolean',
     ];
 
     public function moisLies(): HasMany
@@ -83,12 +84,12 @@ class Employeur extends Model
     /** Forme légère (sans coordonnées bancaires) embarquée dans les écrans mensuels. */
     public function resume(): array
     {
-        return ['id' => $this->id, 'code' => $this->code, 'nom' => $this->nom, 'couleur_badge' => $this->couleur_badge, 'actif' => $this->actif, 'coordonnees_completes' => $this->coordonneesCompletes()];
+        return ['id' => $this->id, 'code' => $this->code, 'nom' => $this->nom, 'couleur_badge' => $this->couleur_badge, 'actif' => $this->actif, 'benevoles' => $this->benevoles, 'coordonnees_completes' => $this->coordonneesCompletes()];
     }
 
     /** Photo des coordonnées copiée sur la fiche PDF au moment de sa génération (RG-8). */
     public function snapshot(): array
     {
-        return ['code' => $this->code, 'nom' => $this->nom, 'rpm' => $this->rpm, 'compte_bancaire' => $this->compteFormate(), 'adresse' => $this->adresse];
+        return ['code' => $this->code, 'nom' => $this->nom, 'rpm' => $this->rpm, 'compte_bancaire' => $this->compteFormate(), 'adresse' => $this->adresse, 'benevoles' => $this->benevoles];
     }
 }

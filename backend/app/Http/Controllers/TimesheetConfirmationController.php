@@ -29,7 +29,7 @@ class TimesheetConfirmationController extends Controller
         $prof = $request->user()->professeur;
 
         // EMP-01 (RG-10) : le professeur voit le nom de l'entité de son mois, rien d'autre.
-        return response()->json($this->service->etat($prof, $v['annee'], $v['mois']) + ['employeur' => ['nom' => $this->employeurs->effectif($prof, $v['annee'], $v['mois'])->nom]]);
+        return response()->json($this->service->etat($prof, $v['annee'], $v['mois']) + ['employeur' => ($e = $this->employeurs->effectif($prof, $v['annee'], $v['mois'])) ? ['nom' => $e->nom, 'benevoles' => $e->benevoles] : null]);
     }
 
     // Professeur : conteste les saisies confirmées non signées de son mois (motif obligatoire).

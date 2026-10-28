@@ -13,7 +13,7 @@ import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 import { TON_EMPLOYEUR } from '../../utils/employeurs';
 
-const VIDE = { code: '', nom: '', rpm: '', compte_bancaire: '', adresse: '', par_defaut: false, actif: true, couleur_badge: 'gris' };
+const VIDE = { code: '', nom: '', rpm: '', compte_bancaire: '', adresse: '', par_defaut: false, actif: true, benevoles: true, couleur_badge: 'gris' };
 const A_COMPLETER = 'À COMPLÉTER';
 const sansRemplacement = (v) => (String(v || '').includes(A_COMPLETER) ? '' : v || '');
 const COULEURS = Object.keys(TON_EMPLOYEUR).map((c) => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1) }));
@@ -34,7 +34,7 @@ function EntiteModal({ entite, onClose, onDone }) {
     try {
       const payload = {
         nom: form.nom, rpm: form.rpm, compte_bancaire: form.compte_bancaire || null, adresse: form.adresse,
-        par_defaut: form.par_defaut, actif: form.actif, couleur_badge: form.couleur_badge,
+        par_defaut: form.par_defaut, actif: form.actif, benevoles: form.benevoles, couleur_badge: form.couleur_badge,
       };
       if (creation) await creerEmployeur({ ...payload, code: form.code });
       else await modifierEmployeur(entite.id, payload);
@@ -83,6 +83,9 @@ function EntiteModal({ entite, onClose, onDone }) {
       <AdminFormField error={erreurs.par_defaut}>
         <AdminCheckbox id="emp-defaut" label="Entité par défaut (appliquée quand aucun mois antérieur n’est défini)" checked={form.par_defaut} onChange={maj('par_defaut')} />
       </AdminFormField>
+      <AdminFormField error={erreurs.benevoles}>
+        <AdminCheckbox id="emp-benevoles" label="Cette entité emploie des bénévoles (volontaires défrayés). Décochée : ses animateurs sont des employés et les mots « bénévole » et « volontaire » disparaissent des fiches et des signatures." checked={form.benevoles} onChange={maj('benevoles')} />
+      </AdminFormField>
       <AdminFormField error={erreurs.actif}>
         <AdminCheckbox id="emp-actif" label="Active (sélectionnable pour un mois)" checked={form.actif} onChange={maj('actif')} />
       </AdminFormField>
@@ -122,7 +125,7 @@ export default function EmployeursAdminPage() {
         {entites.data && (
           <Table caption="Entités employeurs" minWidth="860px" cards>
             <thead>
-              <tr><Th>Nom</Th><Th>RPM</Th><Th>Compte</Th><Th>Adresse</Th><Th>Mois liés</Th><Th>Statut</Th><Th srOnly>Actions</Th></tr>
+              <tr><Th>Nom</Th><Th>RPM</Th><Th>Compte</Th><Th>Adresse</Th><Th>Animateurs</Th><Th>Mois liés</Th><Th>Statut</Th><Th srOnly>Actions</Th></tr>
             </thead>
             <tbody>
               {entites.data.map((e) => (
@@ -131,6 +134,7 @@ export default function EmployeursAdminPage() {
                   <Td label="RPM">{e.rpm}</Td>
                   <Td label="Compte">{e.compte_bancaire || 'À COMPLÉTER'}</Td>
                   <Td label="Adresse">{e.adresse}</Td>
+                  <Td label="Animateurs">{e.benevoles ? 'Bénévoles' : 'Employés'}</Td>
                   <Td label="Mois liés">{e.mois_lies ?? 0}</Td>
                   <Td label="Statut">
                     {!e.actif ? 'Désactivée' : 'Active'}

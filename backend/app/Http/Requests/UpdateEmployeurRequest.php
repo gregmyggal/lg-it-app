@@ -35,6 +35,7 @@ class UpdateEmployeurRequest extends FormRequest
             'adresse' => ['sometimes', 'required', 'string', 'max:255'],
             'par_defaut' => ['sometimes', 'boolean'],
             'actif' => ['sometimes', 'boolean'],
+            'benevoles' => ['sometimes', 'boolean'],
             'couleur_badge' => ['sometimes', 'nullable', Rule::in(['bleu', 'violet', 'vert', 'orange', 'gris'])],
         ];
     }

@@ -162,6 +162,7 @@ export default function ReconfirmationMois({ professeurId, annee, mois, onChange
           annee={annee}
           mois={mois}
           recapitulatif={d.recapitulatif}
+          benevoles={d.employeur?.benevoles !== false}
           nom={user?.name}
           onClose={() => setSignature(false)}
           onSigne={() => {

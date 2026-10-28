@@ -64,7 +64,7 @@ export default function VerificationSignaturePage() {
         </Resultat>
       )}
       <p style={{ fontSize: 12, color: 'var(--c-text-2)', margin: '16px 0 0' }}>
-        Cette page confirme qu’une fiche de défraiement a été signée électroniquement par le volontaire. Elle n’affiche ni montant, ni compte bancaire, ni donnée de connexion.
+        Cette page confirme qu’une fiche de défraiement a été signée électroniquement par {etat.data?.benevoles === false ? 'l’animateur' : 'le volontaire'}. Elle n’affiche ni montant, ni compte bancaire, ni donnée de connexion.
       </p>
     </div>
   );

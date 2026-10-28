@@ -185,13 +185,13 @@ class TimesheetPdfService
     private function contenu(Professeur $prof, int $annee, int $mois, Collection $saisies, Employeur $employeur): array
     {
         $lignes = $this->fiche->lignes($prof, $saisies);
-        $signature = $this->blocSignature($prof, $annee, $mois, $saisies);
+        $signature = $this->blocSignature($prof, $annee, $mois, $saisies, $employeur);
         $pages = $lignes->chunk(self::LIGNES_PAR_PAGE);
         if ($pages->isEmpty()) {
             $pages = collect([collect()]);
         }
 
-        $html = $pages->map(fn ($page) => $this->htmlPage($prof, $annee, $mois, $page, $signature))->implode('<pagebreak />');
+        $html = $pages->map(fn ($page) => $this->htmlPage($prof, $annee, $mois, $page, $signature, $employeur))->implode('<pagebreak />');
 
         $dir = storage_path('app/mpdf');
         if (! is_dir($dir)) {
@@ -205,8 +205,17 @@ class TimesheetPdfService
         return ['pdf' => $mpdf->Output('', 'S'), 'total' => round((float) $lignes->sum('total'), 2)];
     }
 
-    private function htmlPage(Professeur $prof, int $annee, int $mois, Collection $page, string $signature): string
+    /** Vocabulaire de la fiche selon l'entité : bénévoles (« volontaire ») ou employés (« animateur »). Aucun mot « bénévole/volontaire » pour des employés. */
+    private function termes(Employeur $employeur): array
     {
+        return $employeur->benevoles
+            ? ['titre' => 'FICHE DE DÉFRAIEMENT - VOLONTARIAT', 'nom' => 'Nom et Prénom du volontaire', 'signature' => 'Date et signature du volontaire', 'par' => 'par le volontaire']
+            : ['titre' => 'FICHE DE DÉFRAIEMENT', 'nom' => 'Nom et Prénom de l\'animateur', 'signature' => 'Date et signature de l\'animateur', 'par' => 'par l\'animateur'];
+    }
+
+    private function htmlPage(Professeur $prof, int $annee, int $mois, Collection $page, string $signature, Employeur $employeur): string
+    {
+        $t = $this->termes($employeur);
         $mois = mb_strtoupper(Carbon::create($annee, $mois, 1)->locale('fr')->translatedFormat('F Y'));
         $nom = mb_strtoupper($prof->nom).' '.$prof->prenom;
         $compte = trim(chunk_split((string) $prof->compte_bancaire, 4, ' '));
@@ -224,9 +233,9 @@ class TimesheetPdfService
 
         return <<<HTML
 <div style="text-align:center"><img src="{$logo}" style="height:17mm"></div>
-<h1 style="text-align:center;font-size:17pt;text-decoration:underline;margin:10mm 0 6mm">FICHE DE DÉFRAIEMENT - VOLONTARIAT</h1>
+<h1 style="text-align:center;font-size:17pt;text-decoration:underline;margin:10mm 0 6mm">{$t['titre']}</h1>
 <h2 style="text-align:center;font-size:13pt;margin:0 0 9mm">MOIS DE : {$mois}</h2>
-<p style="margin:0 0 4mm">Nom et Prénom du volontaire : {$nom}</p>
+<p style="margin:0 0 4mm">{$t['nom']} : {$nom}</p>
 <p style="margin:0 0 5mm">Compte bancaire n° : {$compte}</p>
 <table style="width:100%;border-collapse:collapse;font-size:8.5pt" border="1" cellpadding="1.2">
 <thead><tr><th style="width:17%">DATE</th><th style="width:33%">OBJET</th><th style="width:17%">DÉFRAIEMENT</th><th style="width:15%">NOMBRE</th><th style="width:18%">TOTAL</th></tr></thead>
@@ -242,13 +251,14 @@ HTML;
      * figée, mention, identifiant et (si émise avec vérification publique) QR de vérification. Mois signé avant SIG-01 :
      * mention textuelle d'origine. Contenu modifié depuis la signature : rien (la génération est d'ailleurs bloquée).
      */
-    private function blocSignature(Professeur $prof, int $annee, int $mois, Collection $saisies): string
+    private function blocSignature(Professeur $prof, int $annee, int $mois, Collection $saisies, Employeur $employeur): string
     {
+        $t = $this->termes($employeur);
         $sig = $this->signatures->derniere($prof, $annee, $mois);
         if (! $sig) {
             $date = $saisies->whereNotNull('signature_professeur')->max('signature_professeur');
 
-            return '<p style="margin-top:9mm">Date et signature : '.($date ? Carbon::parse($date)->format('d/m/Y').' — signé électroniquement par le volontaire' : '').'</p>';
+            return '<p style="margin-top:9mm">Date et signature : '.($date ? Carbon::parse($date)->format('d/m/Y').' — signé électroniquement '.$t['par'] : '').'</p>';
         }
         if ($this->signatures->estPerimee($sig)) {
             return '<p style="margin-top:9mm">Date et signature : </p>';
@@ -266,7 +276,7 @@ HTML;
 
         return <<<HTML
 <table style="width:100%;margin-top:6mm;border-collapse:collapse" cellpadding="0"><tr>
-<td style="width:72%;vertical-align:bottom">Date et signature du volontaire :<br>
+<td style="width:72%;vertical-align:bottom">{$t['signature']} :<br>
 <div style="height:17mm;width:62mm;border-bottom:0.2mm solid #999"><img src="{$image}" style="max-height:16mm;max-width:60mm"></div>
 <div style="font-size:6.5pt;color:#555;margin-top:1mm">{$mention}</div></td>
 <td style="width:28%;text-align:right;vertical-align:bottom">{$qr}</td></tr></table>

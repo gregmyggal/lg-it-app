@@ -49,3 +49,10 @@ Règle (ADR-0002, RG-11) : un mois qui a au moins une version **validée** ne se
 
 ## Pas encore couvert
 - Rien de prévu pour TS-04 ; question RGPD Q5 (IP des signatures à 12–24 mois) à trancher.
+
+## Paramètre « bénévoles » de l'employeur
+`employeurs.benevoles` (booléen, défaut `true`, modifiable par l'admin à la création et à la modification d'une entité : `POST/PUT /employeurs`). Il décide du vocabulaire :
+- **Fiche PDF** : bénévoles → « FICHE DE DÉFRAIEMENT - VOLONTARIAT », « Nom et Prénom du volontaire », « Date et signature du volontaire » ; employés → « FICHE DE DÉFRAIEMENT », « Nom et Prénom de l'animateur », « Date et signature de l'animateur » (aucun « bénévole » ni « volontaire »). Le paramètre est figé dans le snapshot de l'employeur de la fiche.
+- **Signature** (`mon-mois` et `ma-confirmation` renvoient `employeur: { nom, benevoles }`) : « Je certifie l'exactitude de ces prestations bénévoles. » ou « … de ces prestations. ».
+- **Vérification publique** : `benevoles` dans la réponse (employeur de la signature) ; texte « par le volontaire » ou « par l'animateur ».
+- Aucune contrainte de lissage ni de plafond journalier ne bloque la signature ni la génération du PDF.

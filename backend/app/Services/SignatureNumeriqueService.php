@@ -184,6 +184,7 @@ class SignatureNumeriqueService
             'document' => 'Fiche de défraiement – '.Carbon::create($sig->annee, $sig->mois, 1)->locale('fr')->translatedFormat('F Y'),
             'signataire' => $initiales,
             'signed_at' => $sig->signed_at,
+            'benevoles' => $this->benevolesDe($sig),
             'emetteur' => (json_decode((string) $sig->payload, true)['emetteur'] ?? null)
                 ?? $this->employeurs->effectif($p, $sig->annee, $sig->mois)->nom,
         ];
@@ -195,6 +196,15 @@ class SignatureNumeriqueService
         return TimesheetSignature::whereNull('anonymisee_at')
             ->where('signed_at', '<', now()->subYears((int) config('signature.retention_annees')))
             ->update(['ip' => null, 'user_agent' => null, 'payload' => null, 'anonymisee_at' => now()]);
+    }
+
+    /** L'employeur de la signature emploie-t-il des bénévoles (vocabulaire de la vérification publique) ? Défaut : oui. */
+    private function benevolesDe(TimesheetSignature $sig): bool
+    {
+        $employeurId = json_decode((string) $sig->payload, true)['employeur_id'] ?? null;
+        $employeur = $employeurId ? \App\Models\Employeur::find($employeurId) : $this->employeurs->effectif($sig->professeur, $sig->annee, $sig->mois);
+
+        return (bool) ($employeur?->benevoles ?? true);
     }
 
     public function empreinte(Professeur $prof, int $annee, int $mois): string

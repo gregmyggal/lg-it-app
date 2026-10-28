@@ -20,6 +20,7 @@ class EmployeurResource extends JsonResource
             'adresse' => $this->adresse,
             'par_defaut' => $this->par_defaut,
             'actif' => $this->actif,
+            'benevoles' => $this->benevoles,
             'couleur_badge' => $this->couleur_badge,
             'coordonnees_completes' => $this->coordonneesCompletes(),
             'mois_lies' => $this->whenCounted('moisLies'),
