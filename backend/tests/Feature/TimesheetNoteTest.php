@@ -255,4 +255,43 @@ class TimesheetNoteTest extends TestCase
 
         $this->assertSame(0, TimesheetNote::count());
     }
+
+    public function test_la_presence_liste_les_notes_des_professeurs_selectionnes(): void
+    {
+        $autre = Professeur::factory()->create();
+        $sans = Professeur::factory()->create();
+        $this->actingAsRole('directeur');
+        $this->ecrire('Note du mois');
+        $this->ecrire('Note de ligne', $this->a->id);
+        $this->putJson("/api/professeurs/{$autre->id}/timesheets-mois/notes", ['annee' => 2026, 'mois' => 10, 'texte' => 'Autre'])->assertOk();
+
+        $r = $this->getJson('/api/timesheets-mois/notes-presence?annee=2026&mois=10&professeur_ids[]='.$this->prof->id.'&professeur_ids[]='.$autre->id.'&professeur_ids[]='.$sans->id)->assertOk();
+
+        $par = collect($r->json('data'))->keyBy('professeur_id');
+        $this->assertSame('Note du mois', $par[$this->prof->id]['mois']['texte']);
+        $this->assertSame(1, $par[$this->prof->id]['lignes']);
+        $this->assertSame('Autre', $par[$autre->id]['mois']['texte']);
+        $this->assertNull($par[$sans->id]['mois']);
+        $this->assertSame(0, $par[$sans->id]['lignes']);
+    }
+
+    public function test_la_presence_est_reservee_au_staff(): void
+    {
+        $this->actingAsRole('directeur');
+        $this->ecrire();
+        Sanctum::actingAs($this->prof->user);
+
+        $this->getJson('/api/timesheets-mois/notes-presence?annee=2026&mois=10&professeur_ids[]='.$this->prof->id)->assertForbidden();
+    }
+
+    public function test_valider_un_mois_puis_noter_ne_depend_pas_de_la_note(): void
+    {
+        $this->actingAsRole('directeur');
+
+        $this->postJson('/api/timesheets/valider-lot', ['ids' => [$this->a->id, $this->b->id]])->assertOk();
+
+        $this->assertSame(0, TimesheetNote::count());
+        $this->ecrire('Heures confirmées par téléphone.')->assertOk();
+        $this->assertSame(1, TimesheetNote::count());
+    }
 }

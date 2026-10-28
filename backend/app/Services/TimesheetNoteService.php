@@ -79,6 +79,31 @@ class TimesheetNoteService
         ];
     }
 
+    /**
+     * Présence de notes pour plusieurs professeurs (modale de validation) : la note du mois (vue complète) et le nombre de
+     * notes de ligne de chacun.
+     *
+     * @param  list<int>  $professeurIds
+     * @return list<array{professeur_id: int, nom: string, mois: ?array, lignes: int}>
+     */
+    public function presence(array $professeurIds, int $annee, int $mois, User $lecteur): array
+    {
+        $notes = TimesheetNote::with('auteur:id,name,role')->withCount('historique')
+            ->whereIn('professeur_id', $professeurIds)->where(['annee' => $annee, 'mois' => $mois])->get()->groupBy('professeur_id');
+
+        return Professeur::whereIn('id', $professeurIds)->orderBy('nom')->orderBy('prenom')->get()->map(function (Professeur $p) use ($notes, $lecteur) {
+            $siennes = $notes->get($p->id, collect());
+            $moisNote = $siennes->firstWhere('timesheet_id', null);
+
+            return [
+                'professeur_id' => $p->id,
+                'nom' => trim($p->prenom.' '.$p->nom),
+                'mois' => $moisNote ? $this->vue($moisNote, $lecteur) : null,
+                'lignes' => $siennes->whereNotNull('timesheet_id')->count(),
+            ];
+        })->values()->all();
+    }
+
     /** Versions remplacées d'une note, de la plus récente à la plus ancienne (lecture seule). @return list<array> */
     public function historique(Professeur $prof, TimesheetNote $note): array
     {

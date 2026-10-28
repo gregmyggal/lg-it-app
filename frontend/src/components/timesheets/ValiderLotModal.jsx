@@ -4,7 +4,9 @@ import AdminButton from '../AdminButton';
 import { AdminCheckbox, AdminInput } from '../AdminFormField';
 import Banner from '../ui/Banner';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
-import { proposerLissage, validerLot } from '../../hooks/useTimesheets';
+import { MentionPrivee } from './NotesInternes';
+import { AdminTextarea } from '../AdminFormField';
+import { enregistrerNote, proposerLissage, usePresenceNotes, validerLot } from '../../hooks/useTimesheets';
 import { getErrorData, getErrorMessage } from '../../api/errors';
 import { formatDateCourte } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
@@ -30,6 +32,7 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [invalides, setInvalides] = useState([]);
+  const [note, setNote] = useState(null); // TS-06 : null = non touchée, sinon texte saisi
 
   // Jours (professeur × date) qui dépassent le plafond, d'après les montants de toutes les saisies du mois.
   const depassements = useMemo(() => {
@@ -87,8 +90,17 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
           ? { lissages: lissagesActifs.map((p) => ({ timesheet_id: p.saisie.id, date_to: p.date, montant_to_move: Number(p.montant) })) }
           : {}),
       });
+      // La note interne ne conditionne jamais la validation : enregistrée après, un échec est signalé sans annuler.
+      let alerte = '';
+      if (unSeul && note !== null && note.trim().length > 0 && note.trim() !== (noteExistante?.texte || '')) {
+        try {
+          await enregistrerNote(professeurIds[0], { annee, mois, texte: note.trim() });
+        } catch {
+          alerte = ' Attention : la note interne n\'a pas pu être enregistrée ; ajoutez-la depuis le détail du mois.';
+        }
+      }
       onDone(
-        `${r.mois_valides} mois validé${r.mois_valides > 1 ? 's' : ''} (${r.validees} saisie${r.validees > 1 ? 's' : ''})${r.lissages_appliques ? `, ${r.lissages_appliques} lissage${r.lissages_appliques > 1 ? 's' : ''} appliqué${r.lissages_appliques > 1 ? 's' : ''}` : ''}.`,
+        `${r.mois_valides} mois validé${r.mois_valides > 1 ? 's' : ''} (${r.validees} saisie${r.validees > 1 ? 's' : ''})${r.lissages_appliques ? `, ${r.lissages_appliques} lissage${r.lissages_appliques > 1 ? 's' : ''} appliqué${r.lissages_appliques > 1 ? 's' : ''}` : ''}.${alerte}`,
       );
     } catch (err) {
       setErreur(getErrorMessage(err));
@@ -99,6 +111,13 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
   }
 
   const peutLisser = lissagesActifs.length > 0;
+
+  // TS-06 : note interne du mois (direction/admin uniquement) — champ pour un seul professeur, simple rappel en lot.
+  const professeurIds = [...new Set(selection.map((t) => t.professeur_id))];
+  const presence = usePresenceNotes(annee, mois, professeurIds);
+  const avecNote = (presence.data || []).filter((p) => p.mois || p.lignes > 0);
+  const unSeul = professeurIds.length === 1;
+  const noteExistante = unSeul ? presence.data?.[0]?.mois : null;
 
   // Récapitulatif par professeur : la validation porte sur son mois entier.
   const parProfesseur = useMemo(() => {
@@ -163,6 +182,45 @@ export default function ValiderLotModal({ selection, toutesLesSaisies, annee, mo
           </li>
         ))}
       </ul>
+
+      {unSeul && (
+        <details open={note !== null} style={{ margin: `0 0 ${ADMIN_SPACING.lg}` }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+            <span role="img" aria-label="Cadenas">🔒</span> {noteExistante ? 'Note interne du mois' : 'Ajouter une note interne (optionnel)'}
+          </summary>
+          <div style={{ marginTop: 8 }}>
+            <MentionPrivee />
+            {noteExistante && note === null ? (
+              <>
+                <p style={{ margin: '0 0 6px', whiteSpace: 'pre-wrap' }}>{noteExistante.texte}</p>
+                {noteExistante.peut_modifier && <AdminButton size="sm" variant="secondary" onClick={() => setNote(noteExistante.texte)}>Modifier</AdminButton>}
+              </>
+            ) : (
+              <>
+                <label htmlFor="validation-note" style={{ display: 'block', fontSize: 12, margin: '0 0 4px' }}>Note interne (privée)</label>
+                <AdminTextarea
+                  id="validation-note"
+                  rows={3}
+                  maxLength={1000}
+                  value={note ?? ''}
+                  placeholder="Note pour la direction : rien n'est envoyé au professeur"
+                  aria-describedby="validation-note-aide"
+                  style={{ background: '#fffdf5', borderColor: '#e0b64a' }}
+                  onChange={(e) => setNote(e.target.value)}
+                />
+                <p id="validation-note-aide" style={{ fontSize: 12, margin: '4px 0 0' }}>
+                  Non visible du professeur. {(note ?? '').length} / 1000 caractères. Enregistrée avec la validation ; modifiable ensuite dans le détail du mois.
+                </p>
+              </>
+            )}
+          </div>
+        </details>
+      )}
+      {!unSeul && avecNote.length > 0 && (
+        <Banner tone="info">
+          <span role="img" aria-label="Cadenas">🔒</span> <strong>{avecNote.length} professeur{avecNote.length > 1 ? 's ont' : ' a'} une note interne</strong> ({avecNote.map((p) => p.nom).join(', ')}). Aucune saisie de note en lot : ouvrez le détail du mois d'un professeur pour la lire ou la modifier.
+        </Banner>
+      )}
 
       {depassements.length === 0 && <p style={{ color: ADMIN_COLORS.textSecondary }}>Aucun jour ne dépasse le plafond journalier de {formatEuros(PLAFOND_JOURNALIER)} : aucun lissage nécessaire.</p>}
       {depassements.length > 0 && propositions === null && <p>Calcul des lissages proposés…</p>}

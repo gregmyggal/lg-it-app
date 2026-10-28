@@ -227,6 +227,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::get('/professeurs/{professeur}/timesheets-mois/versions', [TimesheetVersionController::class, 'show']);
     Route::get('/timesheets/mes-versions', [TimesheetVersionController::class, 'moi']);
     // TS-06 : notes internes (direction et admin uniquement).
+    Route::get('/timesheets-mois/notes-presence', [TimesheetNoteController::class, 'presence']);
     Route::put('/professeurs/{professeur}/timesheets-mois/notes', [TimesheetNoteController::class, 'enregistrer']);
     Route::delete('/professeurs/{professeur}/timesheets-mois/notes', [TimesheetNoteController::class, 'supprimer']);
     Route::get('/professeurs/{professeur}/timesheets-mois/notes/{note}/historique', [TimesheetNoteController::class, 'historique']);

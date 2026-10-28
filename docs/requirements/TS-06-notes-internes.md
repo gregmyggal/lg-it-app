@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **ID / Titre** | TS-06 — Notes internes sur un mois et sur chaque ligne de timesheet, visibles uniquement par la direction et l'admin |
-| **Statut** | ☐ Brouillon ☐ En revue ☑ Validé (DoR, product owner, 2026-10-28) ☑ En dev (T1 codée) ☐ En recette ☐ Livré |
+| **Statut** | ☐ Brouillon ☐ En revue ☑ Validé (DoR, product owner, 2026-10-28) ☑ En dev (T1 et T2 codées) ☐ En recette ☐ Livré |
 | **Analyste** | Analyste (Claude) + product owner | **UX/UI** | Sub-agent UX Expert ; maquette validée par le PO |
 | **Architecte** | À désigner | **Dev back / front** | À désigner |
 | **Date / Version** | 2026-10-28 — v0.1 | **Sprint cible** | À planifier |

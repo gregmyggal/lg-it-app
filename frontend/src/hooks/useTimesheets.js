@@ -206,3 +206,11 @@ export function supprimerNote(professeurId, { annee, mois, timesheetId = null })
 export function historiqueNote(professeurId, noteId) {
   return client.get(`/professeurs/${professeurId}/timesheets-mois/notes/${noteId}/historique`).then((res) => res.data.data);
 }
+
+/** TS-06 : quels professeurs ont déjà une note interne ce mois-ci (modale de validation). */
+export function usePresenceNotes(annee, mois, professeurIds) {
+  return useApiQuery(
+    () => client.get('/timesheets-mois/notes-presence', { params: { annee, mois, professeur_ids: professeurIds } }).then((res) => res.data.data),
+    [annee, mois, professeurIds.join(',')],
+  );
+}

@@ -37,6 +37,20 @@ class TimesheetNoteController extends Controller
         return response()->json($notes->pourMois($professeur, (int) $v['annee'], (int) $v['mois'], $request->user()));
     }
 
+    /** Quels professeurs ont déjà une note interne ce mois-ci (modale de validation). */
+    public function presence(Request $request, TimesheetNoteService $notes): JsonResponse
+    {
+        abort_unless($request->user()->isStaff(), 403, 'Action non autorisée.');
+        $v = $request->validate([
+            'annee' => ['required', 'integer', 'min:2020', 'max:2100'],
+            'mois' => ['required', 'integer', 'between:1,12'],
+            'professeur_ids' => ['required', 'array', 'min:1', 'max:200'],
+            'professeur_ids.*' => ['integer', 'distinct'],
+        ]);
+
+        return response()->json(['data' => $notes->presence($v['professeur_ids'], (int) $v['annee'], (int) $v['mois'], $request->user())]);
+    }
+
     public function historique(Request $request, Professeur $professeur, TimesheetNote $note, TimesheetNoteService $notes): JsonResponse
     {
         abort_unless($request->user()->isStaff(), 403, 'Action non autorisée.');

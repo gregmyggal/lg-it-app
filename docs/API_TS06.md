@@ -1,4 +1,4 @@
-# API — TS-06 Notes internes (tranche T1)
+# API — TS-06 Notes internes (tranches T1 et T2)
 
 Contexte : `docs/requirements/TS-06-notes-internes.md`. **Réservé à la direction et à l'admin** : 403 pour le professeur, 401 sans authentification. Les notes ne sont jamais renvoyées par une route accessible au professeur (testé sur Mon mois, la confirmation, les versions, la liste et le détail des saisies, les notifications et la signature).
 
@@ -27,5 +27,6 @@ notes_internes: {
 ## Interface (écran directeur)
 Carte repliable « Note interne du mois » ; icône cadenas par ligne (colonne Actions) ouvrant la note sous la ligne (feuille modale sur smartphone) ; mention « Note interne — visible uniquement par la direction et l'administration » à chaque zone de note ; suppression annulable pendant 8 secondes ; événement « Note interne ajoutée » dans la frise (sans le texte).
 
-## Pas encore couvert
-- T2 : champ « Ajouter une note interne (optionnel) » dans la modale de validation d'un professeur, rappel « N professeurs ont une note interne » en lot.
+## T2 — modale de validation
+- `GET /api/timesheets-mois/notes-presence?annee=&mois=&professeur_ids[]=…` (staff, 200 professeurs au plus) → `{ data: [{ professeur_id, nom, mois: <note du mois> | null, lignes: <nombre de notes de ligne> }] }`.
+- `ValiderLotModal` : pour **un seul professeur**, champ facultatif replié « Ajouter une note interne (optionnel) » (la note existante s'affiche en lecture seule avec « Modifier »). La note est enregistrée **après** la validation : elle ne conditionne jamais la validation, et un échec d'enregistrement est signalé sans l'annuler. Pour **plusieurs professeurs** : aucun champ, rappel « N professeurs ont une note interne ».
