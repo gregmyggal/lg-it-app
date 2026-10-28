@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -16,6 +17,8 @@ return new class extends Migration
         Schema::table('employeurs', function (Blueprint $table) {
             $table->boolean('benevoles')->default(true)->after('actif');
         });
+        // L-IT Solutions emploie des employés (décision du PO) ; l'ASBL garde les bénévoles.
+        DB::table('employeurs')->where('code', 'lit_solutions')->update(['benevoles' => false]);
     }
 
     public function down(): void

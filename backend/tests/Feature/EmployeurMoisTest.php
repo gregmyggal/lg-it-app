@@ -528,9 +528,9 @@ class EmployeurMoisTest extends TestCase
 
         Sanctum::actingAs($this->prof->user);
         $mon = $this->getJson('/api/timesheets/mon-mois?annee=2026&mois=10')->assertOk();
-        $this->assertSame(['nom' => 'L-IT Solutions', 'benevoles' => true], $mon->json('employeur')); // nom et vocabulaire seulement, aucune coordonnée
+        $this->assertSame(['nom' => 'L-IT Solutions', 'benevoles' => false], $mon->json('employeur')); // nom et vocabulaire seulement, aucune coordonnée
         $conf = $this->getJson('/api/timesheets/ma-confirmation?annee=2026&mois=10')->assertOk();
-        $this->assertSame(['nom' => 'L-IT Solutions', 'benevoles' => true], $conf->json('employeur'));
+        $this->assertSame(['nom' => 'L-IT Solutions', 'benevoles' => false], $conf->json('employeur'));
     }
 
     // ------------------------------------------------------------------ backfill (AC-10)

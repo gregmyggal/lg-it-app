@@ -43,10 +43,10 @@ class EmployeurBenevolesTest extends TestCase
         return $m->invoke(app(TimesheetPdfService::class), $e);
     }
 
-    public function test_les_entites_sont_benevoles_par_defaut(): void
+    public function test_l_asbl_emploie_des_benevoles_et_l_it_solutions_des_employes(): void
     {
         $this->assertTrue(Employeur::where('code', 'asbl')->firstOrFail()->benevoles);
-        $this->assertTrue(Employeur::where('code', 'lit_solutions')->firstOrFail()->benevoles);
+        $this->assertFalse(Employeur::where('code', 'lit_solutions')->firstOrFail()->benevoles);
     }
 
     public function test_l_admin_regle_le_parametre_a_la_creation_et_a_la_modification(): void

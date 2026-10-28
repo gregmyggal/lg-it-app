@@ -49,7 +49,9 @@ class Employeur extends Model
     {
         $asbl = config('logiscool.association');
         $lit = config('logiscool.lit_solutions');
-        $creer = fn (string $code, array $c, bool $defaut, string $couleur) => self::firstOrCreate(['code' => $code], [
+        // La colonne `benevoles` n'existe pas encore quand la migration d'amorçage d'origine appelle cette méthode.
+        $aBenevoles = \Illuminate\Support\Facades\Schema::hasColumn('employeurs', 'benevoles');
+        $creer = fn (string $code, array $c, bool $defaut, string $couleur, bool $benevoles) => self::firstOrCreate(['code' => $code], [
             'nom' => $c['nom'],
             'rpm' => $c['rpm'] ?: self::A_COMPLETER,
             'compte_bancaire' => Iban::normaliser($c['banque'] ?? null),
@@ -57,9 +59,9 @@ class Employeur extends Model
             'par_defaut' => $defaut,
             'actif' => true,
             'couleur_badge' => $couleur,
-        ]);
-        $creer(self::CODE_ASBL, $asbl, true, 'bleu');
-        $creer(self::CODE_LIT, $lit, false, 'violet');
+        ] + ($aBenevoles ? ['benevoles' => $benevoles] : []));
+        $creer(self::CODE_ASBL, $asbl, true, 'bleu', true); // l'ASBL emploie des bénévoles
+        $creer(self::CODE_LIT, $lit, false, 'violet', false); // L-IT Solutions emploie des employés
     }
 
     /** Coordonnées complètes (RPM et adresse renseignés, IBAN valide) : condition pour émettre une fiche. */

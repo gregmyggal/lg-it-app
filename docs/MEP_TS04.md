@@ -17,7 +17,7 @@ Commits : T1a `2f92a2c`, T1b `f45dfb3`, T1c `976f352`, T2 `28f5c46`, T3 `f76c98d
 - [ ] **Prévenir les directeurs** : la validation se fait désormais sur le **mois entier**, professeur par professeur (plus de validation par saisie ni par séance isolée). Un lot incomplet est refusé avec la liste des saisies manquantes.
 - [ ] Choisir le moment : de préférence hors période de validation active (des validations en cours pendant la bascule resteront sans version « soumise »).
 
-> Paramètre « bénévoles » des employeurs : migration `2026_10_28_120000_add_benevoles_to_employeurs` (défaut `true`) ; **l'admin doit décocher « bénévoles » sur les entités dont les animateurs sont employés** (Admin > Entités employeurs) pour que les fiches n'emploient plus « volontaire ».
+> Paramètre « bénévoles » des employeurs : migration `2026_10_28_120000_add_benevoles_to_employeurs` (défaut `true`) ; la migration passe **L-IT Solutions en « employés »** (l'ASBL reste « bénévoles ») ; l'admin peut ajuster chaque entité dans Admin > Entités employeurs. Un mois dont la fiche est déjà générée garde son vocabulaire d'origine.
 >
 > TS-06 (notes internes) ajoute 2 tables (`2026_10_28_110000_create_timesheet_notes_tables`, voir `docs/API_TS06.md`) et une tâche planifiée `timesheets:purger-notes` (04:15).
 >
