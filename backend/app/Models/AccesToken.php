@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SansUpdatedAt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** ADMIN-02 : lien à usage unique (seul le hash du token est stocké). */
 class AccesToken extends Model
 {
+    use SansUpdatedAt;
+
     public const UPDATED_AT = null;
 
     protected $fillable = ['user_id', 'type', 'token_hash', 'expire_le'];

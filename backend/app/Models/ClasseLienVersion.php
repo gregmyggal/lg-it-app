@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SansUpdatedAt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Version d'un lien de cours (historique append-only, conservée 6 mois). */
 class ClasseLienVersion extends Model
 {
+    use SansUpdatedAt;
+
     public const UPDATED_AT = null;
 
     public const ACTION_CREATION = 'creation';

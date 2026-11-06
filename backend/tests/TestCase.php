@@ -13,7 +13,18 @@ abstract class TestCase extends BaseTestCase
      */
     protected function refreshApplication(): void
     {
-        parent::refreshApplication();
+        // Laravel 11 charge sa config de base (PDO::MYSQL_ATTR_SSL_CA, déprécié en PHP 8.5) avant son propre
+        // gestionnaire d'erreurs : on écarte uniquement cette dépréciation du framework, pas les autres.
+        set_error_handler(
+            fn (int $level, string $message): bool => str_contains($message, 'PDO::MYSQL_ATTR_SSL_CA'),
+            E_DEPRECATED,
+        );
+
+        try {
+            parent::refreshApplication();
+        } finally {
+            restore_error_handler();
+        }
 
         $this->assertSafeTestDatabase();
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SansUpdatedAt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
@@ -12,6 +13,8 @@ use LogicException;
  */
 class TimesheetVersion extends Model
 {
+    use SansUpdatedAt;
+
     public const UPDATED_AT = null;
 
     public const TYPE_SOUMISE = 'soumise';

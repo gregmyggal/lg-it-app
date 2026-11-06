@@ -38,7 +38,6 @@ class EmployeurBenevolesTest extends TestCase
     private function termes(Employeur $e): array
     {
         $m = new ReflectionMethod(TimesheetPdfService::class, 'termes');
-        $m->setAccessible(true);
 
         return $m->invoke(app(TimesheetPdfService::class), $e);
     }

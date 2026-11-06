@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SansUpdatedAt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Ligne de traçabilité d'un changement de cours (RG-5b). */
 class ClassePeriodeCoursHistorique extends Model
 {
+    use SansUpdatedAt;
+
     public const UPDATED_AT = null;
 
     protected $table = 'classe_periode_cours_historique';

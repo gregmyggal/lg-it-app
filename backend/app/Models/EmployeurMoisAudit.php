@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SansUpdatedAt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** EMP-01 (RG-9) : journal append-only des changements d'employeur d'un mois. */
 class EmployeurMoisAudit extends Model
 {
+    use SansUpdatedAt;
+
     public const UPDATED_AT = null;
 
     protected $fillable = ['professeur_id', 'annee', 'mois', 'employeur_avant_id', 'employeur_apres_id', 'motif', 'user_id'];
