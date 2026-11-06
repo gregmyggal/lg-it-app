@@ -59,8 +59,8 @@ Les commandes suivantes s'exécutent **sur le serveur**.
 php -v && git --version
 ```
 
-Si `php -v` affiche une version inférieure à 8.2, repère le binaire versionné
-(`ls /usr/local/php8.*/bin/php` ou `which php8.3`) et mets ce chemin dans
+Si `php -v` affiche une version inférieure à 8.5, repère le binaire versionné
+(`ls /usr/local/php8.*/bin/php` ou `which php8.5`) et mets ce chemin dans
 `PHP_BIN` de `.env.deploy.prod`.
 
 ### 3. Installer Composer
@@ -163,7 +163,7 @@ racine, qui s'appliquerait à tous. Créer le fichier dans le dossier racine du
 site (il est ignoré par git) :
 
 ```bash
-printf 'app.engine=php\napp.engine.version=8.3\nhttp.firewall=none\nenvironment=production\ncontainer.image=stable64\n' > ~/lg-it-app/backend/public/.ovhconfig
+printf 'app.engine=php\napp.engine.version=8.5\nhttp.firewall=none\nenvironment=production\ncontainer.image=stable64\n' > ~/lg-it-app/backend/public/.ovhconfig
 ```
 
 La page `/install` affiche la version PHP réellement utilisée par le site web,
@@ -220,7 +220,7 @@ ce qui permet de vérifier que le réglage a pris.
 
 Ouvrir le lien obtenu en C.3. L'assistant :
 
-1. vérifie les prérequis : PHP ≥ 8.2, extensions, droits d'écriture, build React
+1. vérifie les prérequis : PHP ≥ 8.5, extensions, droits d'écriture, build React
    présent, HTTPS ;
 2. demande la base de données (hôte `.mysql.db`, préfixe `lgit_`), avec un bouton
    pour tester la connexion ;

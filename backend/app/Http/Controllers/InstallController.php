@@ -376,7 +376,7 @@ class InstallController extends Controller
             $checks[] = compact('label', 'ok', 'level', 'detail');
         };
 
-        $add('PHP ≥ 8.2', version_compare(PHP_VERSION, '8.2.0', '>='),
+        $add('PHP ≥ 8.5', version_compare(PHP_VERSION, '8.5.0', '>='),
             'Version '.PHP_VERSION.'. Sur OVH, réglez « app.engine.version » dans .ovhconfig.');
 
         $missing = array_values(array_filter(self::REQUIRED_EXTENSIONS, fn ($ext) => ! extension_loaded($ext)));
