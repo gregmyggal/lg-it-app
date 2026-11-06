@@ -1,6 +1,6 @@
 # Déploiement sur OVH mutualisé (offre Pro)
 
-Mise en ligne de lg-it-app (Laravel 11 + React) sur un hébergement OVH mutualisé
+Mise en ligne de lg-it-app (Laravel 12 + React) sur un hébergement OVH mutualisé
 **Pro** ou **Performance** (l'offre Perso n'a pas d'accès SSH).
 
 Principe :

@@ -1,6 +1,6 @@
 # Logiscool Pays Vert
 
-Backend Laravel 11 (Sanctum) dans `backend/`, frontend React 19 + Vite dans `frontend/`. Rôles : `admin` > `staff` (directeur) > `professeur`.
+Backend Laravel 12 (Sanctum) dans `backend/`, frontend React 19 + Vite dans `frontend/`. Rôles : `admin` > `staff` (directeur) > `professeur`.
 
 ## Règles obligatoires pour toute évolution
 
