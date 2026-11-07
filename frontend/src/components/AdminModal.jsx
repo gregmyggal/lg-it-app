@@ -239,6 +239,7 @@ function ModalContent({ title, onClose, children, footer, size = 'md', closeOnBa
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
   );
 }
