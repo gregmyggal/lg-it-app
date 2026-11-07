@@ -140,8 +140,8 @@ class TimesheetService
     }
 
     /**
-     * Heures proposées pour une session : les heures DÉFRAYABLES (cours + préparation), distinctes de la durée du
-     * calendrier. Résolution : valeur du cours (DEF-01 T2) puis défaut global de l'année de la séance (DEF-01 T1).
+     * Heures proposées pour une session : les heures DÉFRAYABLES. Séance normale : durée de la séance + temps de
+     * préparation (cours, sinon défaut de l'année de la séance) ; séance bis : durée seule, sans préparation (DEF-02).
      * N'affecte jamais une saisie déjà encodée : seules les séances non encodées sont proposées avec cette valeur.
      */
     public function dureeParDefaut(CourseSession $session): float
@@ -149,12 +149,21 @@ class TimesheetService
         return $this->heuresDefrayables($session)['valeur'];
     }
 
-    /** @return array{valeur: float, source: string} heures défrayables de la séance et origine de la valeur */
+    /**
+     * @return array{valeur: float, duree: float, preparation: float, bis: bool, source: string} heures défrayables de la
+     *                                                                                          séance, sa décomposition et l'origine de la préparation (cours | defaut | bis)
+     */
     public function heuresDefrayables(CourseSession $session): array
     {
-        $cours = $session->loadMissing('classePeriode.cours')->classePeriode?->cours;
+        $duree = $this->dureeSeance($session);
+        if ($session->bis_rang > 0) {
+            return ['valeur' => $duree, 'duree' => $duree, 'preparation' => 0.0, 'bis' => true, 'source' => 'bis'];
+        }
 
-        return app(TimesheetParametreService::class)->heuresDefrayablesPour($cours, (int) $session->date->format('Y'));
+        $cours = $session->loadMissing('classePeriode.cours')->classePeriode?->cours;
+        $prep = app(TimesheetParametreService::class)->tempsPreparationPour($cours, (int) $session->date->format('Y'));
+
+        return ['valeur' => $duree + $prep['valeur'], 'duree' => $duree, 'preparation' => $prep['valeur'], 'bis' => false, 'source' => $prep['source']];
     }
 
     /** Durée de la séance au calendrier, en heures (arrondie au quart d'heure, bornée à 0,5 – 24 h) : information seulement. */

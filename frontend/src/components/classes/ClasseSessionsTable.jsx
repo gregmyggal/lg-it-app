@@ -98,8 +98,13 @@ export default function ClasseSessionsTable({ sessions: toutes, onAjuster, onPro
                 {barree || !s.heures_defrayables ? (
                   <span style={{ color: ADMIN_COLORS.textSecondary }}>—</span>
                 ) : (
-                  <span title={s.heures_defrayables.source === 'cours' ? 'Valeur définie sur le cours' : 'Défaut global'}>
+                  <span title={s.heures_defrayables.bis ? 'Séance bis : sans préparation' : s.heures_defrayables.source === 'cours' ? 'Préparation définie sur le cours' : 'Préparation par défaut'}>
                     <StatutBadge label={formatDuree(s.heures_defrayables.valeur)} tone="primary" />
+                    <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>
+                      {s.heures_defrayables.bis
+                        ? 'Bis · sans préparation'
+                        : `${formatDuree(s.heures_defrayables.duree)} + ${formatDuree(s.heures_defrayables.preparation)} prépa`}
+                    </div>
                   </span>
                 )}
               </Td>

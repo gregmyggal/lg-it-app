@@ -41,7 +41,7 @@ export default function TimesheetParametresPage() {
       setAnnuel(String(res.data.data.plafond_annuel_eur));
       setDeplacement(String(res.data.data.frais_deplacement_eur));
       setSeance(String(res.data.data.duree_seance_defaut));
-      setDefrayables(String(res.data.data.heures_defrayables));
+      setDefrayables(String(res.data.data.temps_preparation));
       setErreurGlobale(null);
     } catch (err) {
       setErreurGlobale(getErrorMessage(err, 'Impossible de charger les paramètres'));
@@ -63,7 +63,7 @@ export default function TimesheetParametresPage() {
         plafond_annuel_eur: annuel.replace(',', '.'),
         frais_deplacement_eur: deplacement.replace(',', '.'),
         duree_seance_defaut: seance.replace(',', '.'),
-        heures_defrayables: defrayables.replace(',', '.'),
+        temps_preparation: defrayables.replace(',', '.'),
       });
       toast.success(`Paramètres ${annee} enregistrés. Ils s’appliquent aux séances non encore encodées.`);
       charger(annee);
@@ -80,7 +80,7 @@ export default function TimesheetParametresPage() {
       <AdminPageHeader
         icon="⚙️"
         title="Paramètres des timesheets"
-        description="Heures défrayables, plafonds de défraiement et signature électronique des fiches"
+        description="Temps de préparation, plafonds de défraiement et signature électronique des fiches"
       />
       <AdminPageContent>
         {erreurGlobale && <Banner tone="error" role="alert">{erreurGlobale}</Banner>}
@@ -104,7 +104,7 @@ export default function TimesheetParametresPage() {
                     Aucun paramétrage pour {annee} : les valeurs de l’année précédente s’appliquent. Enregistrez pour les fixer.
                   </Banner>
                 )}
-                <h3 style={{ margin: '4px 0 8px' }}>Heures de séance et heures défrayables</h3>
+                <h3 style={{ margin: '4px 0 8px' }}>Durée de séance et temps de préparation</h3>
                 <AdminFormField
                   label="Durée d’une séance (heures)"
                   htmlFor="param-seance"
@@ -114,20 +114,18 @@ export default function TimesheetParametresPage() {
                   <AdminInput id="param-seance" inputMode="decimal" value={seance} onChange={(e) => setSeance(e.target.value)} />
                 </AdminFormField>
                 <AdminFormField
-                  label="Heures défrayables par séance (heures)"
+                  label="Temps de préparation par séance normale (heures)"
                   htmlFor="param-defrayables"
-                  error={erreurs.heures_defrayables}
-                  description={`= ${formatDuree(defrayables)}. Durée payée au professeur : cours + préparation. Entre 0,5 et 8 h, par pas de 15 min.`}
+                  error={erreurs.temps_preparation}
+                  description={`= ${formatDuree(defrayables)}. Ajouté à la durée de chaque séance normale. Entre 0 et 4 h, par pas de 15 min.`}
                 >
                   <AdminInput id="param-defrayables" inputMode="decimal" value={defrayables} onChange={(e) => setDefrayables(e.target.value)} />
                 </AdminFormField>
-                {Number(defrayables.replace(',', '.')) > Number(seance.replace(',', '.')) ? (
-                  <Banner tone="info">
-                    {formatDuree(seance)} de séance + {formatDuree(Number(defrayables.replace(',', '.')) - Number(seance.replace(',', '.')))} de préparation = <strong>{formatDuree(defrayables)} défrayées</strong>.
-                  </Banner>
-                ) : (
-                  <Banner tone="warning">Les heures défrayables sont inférieures à la durée d’une séance : le professeur serait défrayé moins que la durée du cours.</Banner>
-                )}
+                <Banner tone="info">
+                  Séance normale : {formatDuree(seance)} de séance + {formatDuree(defrayables)} de préparation = <strong>{formatDuree(Number(seance.replace(',', '.')) + Number(defrayables.replace(',', '.')))} défrayées</strong>.
+                  <br />
+                  Séance bis : durée de la séance seule, sans préparation.
+                </Banner>
                 <ImpactDefrayage annee={annee} portee="global" heures={defrayables} />
                 <p style={{ fontSize: 12, color: 'var(--c-text-2)' }}>
                   S’applique aux séances non encore encodées. Les heures déjà encodées (brouillons compris) ne changent pas.
@@ -164,7 +162,7 @@ export default function TimesheetParametresPage() {
               <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
                 {historique.map((h) => (
                   <li key={h.id}>
-                    {formatDateHeure(h.created_at)} — {h.auteur || 'Système'} : journalier {h.plafond_journalier_avant} → {h.plafond_journalier_apres} €, annuel {h.plafond_annuel_avant} → {h.plafond_annuel_apres} €{h.heures_defrayables_apres != null && ` · défrayé ${formatDuree(h.heures_defrayables_avant)} → ${formatDuree(h.heures_defrayables_apres)}, séance ${formatDuree(h.duree_seance_avant)} → ${formatDuree(h.duree_seance_apres)}`}
+                    {formatDateHeure(h.created_at)} — {h.auteur || 'Système'} : journalier {h.plafond_journalier_avant} → {h.plafond_journalier_apres} €, annuel {h.plafond_annuel_avant} → {h.plafond_annuel_apres} €{h.temps_preparation_apres != null && ` · préparation ${formatDuree(h.temps_preparation_avant)} → ${formatDuree(h.temps_preparation_apres)}, séance ${formatDuree(h.duree_seance_avant)} → ${formatDuree(h.duree_seance_apres)}`}
                   </li>
                 ))}
               </ul>

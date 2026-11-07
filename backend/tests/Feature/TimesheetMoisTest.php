@@ -71,7 +71,7 @@ class TimesheetMoisTest extends TestCase
         $this->assertSame(['a_encoder', 'a_encoder', 'a_encoder', 'a_encoder'], $sessions->pluck('encodage')->all());
         $this->assertSame([false, true, true, true], $sessions->pluck('est_a_venir')->all());
         $this->assertTrue($sessions[1]['peut_encoder']); // à venir : encodable à l'avance
-        $this->assertEquals(2, $sessions[0]['duree_par_defaut']); // heures défrayables (séance de 3 h au calendrier)
+        $this->assertEquals(3.5, $sessions[0]['duree_par_defaut']); // séance de 3 h + 30 min de préparation
         $this->assertSame(0, $r->json('synthese.nb_brouillons'));
     }
 
@@ -87,8 +87,8 @@ class TimesheetMoisTest extends TestCase
         $this->assertSame('brouillon', collect($r->json('sessions'))->firstWhere('seance_numero', 1)['encodage']);
         $this->assertSame('a_encoder', collect($r->json('sessions'))->firstWhere('seance_numero', 2)['encodage']);
         $this->assertCount(1, $r->json('libres'));
-        $this->assertEquals(4.0, $r->json('synthese.heures')); // séance 1 : 2 h défrayables + 2 h de préparation
-        $this->assertEquals(40.0, $r->json('synthese.montant')); // Q22 : ses euros (4 h × 10 €)
+        $this->assertEquals(5.5, $r->json('synthese.heures')); // séance 1 : 3 h + 30 min de préparation, + 2 h de préparation libre
+        $this->assertEquals(55.0, $r->json('synthese.montant')); // Q22 : ses euros (5,5 h × 10 €)
         $this->assertSame(2, $r->json('synthese.jours'));
         $this->assertSame(2, $r->json('synthese.nb_brouillons'));
         $this->assertFalse($r->json('peut_signer'));
@@ -205,6 +205,6 @@ class TimesheetMoisTest extends TestCase
         $this->assertTrue($sessions[2]['peut_encoder']);
         $this->assertTrue($sessions[5]['peut_encoder']); // TS-03 : une séance à venir est encodable
         $this->assertTrue($sessions[5]['est_a_venir']);
-        $this->assertEquals(2, $sessions[2]['duree_par_defaut']);
+        $this->assertEquals(3.5, $sessions[2]['duree_par_defaut']);
     }
 }

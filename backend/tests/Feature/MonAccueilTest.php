@@ -67,7 +67,7 @@ class MonAccueilTest extends TestCase
         $ids = collect($r->json('a_encoder'))->pluck('id')->all();
         $this->assertSame([$this->seance(2)->id, $this->seance(1)->id], array_slice($ids, 0, 2));
         $this->assertNotContains($this->seance(3)->id, $ids); // pas encore commencée
-        $this->assertEquals(2, $r->json('a_encoder.0.duree_par_defaut')); // heures défrayables, pas la durée du calendrier
+        $this->assertEquals(3.5, $r->json('a_encoder.0.duree_par_defaut')); // durée du calendrier + préparation
         $this->assertFalse($r->json('mois_soumis'));
     }
 

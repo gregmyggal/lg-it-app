@@ -9,7 +9,7 @@ use App\Services\TimesheetParametreService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/** DEF-01 T3 : durée de séance et heures défrayables applicables à un cours pour une année (création de classe). Staff uniquement. */
+/** DEF-01 T3 : durée de séance et temps de préparation applicable à un cours pour une année (création de classe). Staff uniquement. */
 class HeuresDefrayablesController extends Controller
 {
     public function show(Request $request, TimesheetParametreService $parametres): JsonResponse
@@ -24,7 +24,7 @@ class HeuresDefrayablesController extends Controller
 
         return response()->json(['data' => [
             'duree_seance_defaut' => $parametres->dureeSeanceDefaut((int) $v['annee']),
-        ] + $parametres->heuresDefrayablesPour($cours, (int) $v['annee'])]);
+        ] + $parametres->tempsPreparationPour($cours, (int) $v['annee'])]);
     }
 
     // Simulation avant enregistrement : combien de jours dépasseraient le plafond journalier avec cette valeur ? (information, jamais bloquant)
@@ -36,7 +36,7 @@ class HeuresDefrayablesController extends Controller
             'annee' => ['required', 'integer', 'min:2020', 'max:2100'],
             'portee' => ['required', 'in:global,cours'],
             'cours_id' => ['required_if:portee,cours', 'nullable', 'integer', 'exists:cours,id'],
-            'heures' => ['required', 'numeric', 'between:0.5,8', new PasDeQuinzeMinutes],
+            'heures' => ['required', 'numeric', 'between:0,4', new PasDeQuinzeMinutes],
         ]);
 
         return response()->json(['data' => $impact->simuler((int) $v['annee'], $v['portee'], isset($v['cours_id']) ? (int) $v['cours_id'] : null, (float) $v['heures'])]);

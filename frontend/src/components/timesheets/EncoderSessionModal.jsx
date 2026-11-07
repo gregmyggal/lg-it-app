@@ -84,7 +84,11 @@ export default function EncoderSessionModal({ session, classeLibelle, onClose, o
         htmlFor="enc-duree"
         required
         error={erreurs.nombre_heures}
-        description={`Préremplies avec les heures défrayables${session.duree_seance != null ? ` (${formatDuree(session.duree_seance)} de séance + préparation)` : ''} ; modifiables (0,5 à 24 h).${Number(heures) !== Number(session.duree_par_defaut) ? ` Valeur standard : ${formatDuree(session.duree_par_defaut)}.` : ''}`}
+        description={`${
+          session.bis_rang > 0
+            ? `Bis · sans préparation : ${formatDuree(session.duree_par_defaut)} de séance`
+            : `${formatDuree(session.duree_seance)} de séance + ${formatDuree(Number(session.duree_par_defaut) - Number(session.duree_seance))} de préparation = ${formatDuree(session.duree_par_defaut)}`
+        }. Modifiable (0,5 à 24 h).${Number(heures) !== Number(session.duree_par_defaut) ? ` Valeur proposée : ${formatDuree(session.duree_par_defaut)}.` : ''}`}
       >
         <HeuresStepper id="enc-duree" aria-label="Heures défrayées" value={heures} onChange={setHeures} />
       </AdminFormField>

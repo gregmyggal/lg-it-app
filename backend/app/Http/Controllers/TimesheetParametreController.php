@@ -43,7 +43,7 @@ class TimesheetParametreController extends Controller
             'plafond_journalier_eur' => ['required', 'numeric', 'min:0.01', 'max:9999.99'],
             'plafond_annuel_eur' => ['required', 'numeric', 'min:0.01', 'max:99999999.99', 'gte:plafond_journalier_eur'],
             'frais_deplacement_eur' => ['sometimes', 'numeric', 'min:0', 'max:9999.99'],
-            'heures_defrayables' => ['sometimes', 'numeric', 'between:0.5,8', new PasDeQuinzeMinutes],
+            'temps_preparation' => ['sometimes', 'numeric', 'between:0,4', new PasDeQuinzeMinutes],
             'duree_seance_defaut' => ['sometimes', 'numeric', 'between:0.5,8', new PasDeQuinzeMinutes],
         ]);
 

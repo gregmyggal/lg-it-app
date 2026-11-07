@@ -13,7 +13,7 @@ const emptyForm = {
   slug: '',
   contenu: '',
   extrait: '',
-  heures_defrayables: '', // vide = défaut global de l'année
+  temps_preparation: '', // vide = défaut global de l'année
   statut: 'draft',
 };
 
@@ -28,13 +28,13 @@ export default function CoursAdminPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-  const [defautGlobal, setDefautGlobal] = useState(null); // heures défrayables par défaut (année courante)
+  const [defautGlobal, setDefautGlobal] = useState(null); // temps de préparation par défaut (année courante)
 
   useEffect(() => {
     client.get('/cours').then((res) => setCours(res.data));
     client
       .get(`/timesheet-parametres/${new Date().getFullYear()}`)
-      .then((res) => setDefautGlobal(res.data.data.heures_defrayables))
+      .then((res) => setDefautGlobal(res.data.data.temps_preparation))
       .catch(() => setDefautGlobal(null));
   }, []);
 
@@ -53,7 +53,7 @@ export default function CoursAdminPage() {
       slug: c.slug,
       contenu: c.contenu || '',
       extrait: c.extrait || '',
-      heures_defrayables: c.heures_defrayables != null ? String(c.heures_defrayables) : '',
+      temps_preparation: c.temps_preparation != null ? String(c.temps_preparation) : '',
       statut: c.statut,
     });
     setFieldErrors({});
@@ -74,8 +74,8 @@ export default function CoursAdminPage() {
     setFieldErrors({});
     setIsSubmitting(true);
 
-    // Heures défrayables : vide = défaut global (null côté serveur) ; virgule décimale acceptée.
-    const payload = { ...form, heures_defrayables: String(form.heures_defrayables).trim() === '' ? null : String(form.heures_defrayables).replace(',', '.') };
+    // Temps de préparation : vide = défaut global (null côté serveur) ; virgule décimale acceptée.
+    const payload = { ...form, temps_preparation: String(form.temps_preparation).trim() === '' ? null : String(form.temps_preparation).replace(',', '.') };
 
     try {
       if (editingId) {
@@ -91,7 +91,7 @@ export default function CoursAdminPage() {
       setTimeout(() => setSuccess(null), 2500);
     } catch (err) {
       setFieldErrors(getFieldErrors(err));
-      setError('Formulaire invalide (slug déjà utilisé ? heures défrayables entre 0,5 et 8 h ?).');
+      setError('Formulaire invalide (slug déjà utilisé ? temps de préparation entre 0 et 4 h ?).');
     } finally {
       setIsSubmitting(false);
     }
@@ -235,22 +235,22 @@ export default function CoursAdminPage() {
           </AdminFormField>
 
           <AdminFormField
-            label="Heures défrayables par séance"
-            htmlFor="cours-heures-defrayables"
-            error={fieldErrors.heures_defrayables}
+            label="Temps de préparation (séance normale)"
+            htmlFor="cours-temps-preparation"
+            error={fieldErrors.temps_preparation}
             description={
-              form.heures_defrayables === ''
-                ? `Laissez vide pour utiliser le défaut global${defautGlobal != null ? ` (${formatDuree(defautGlobal)})` : ''}. Durée payée au professeur par séance de ce cours : cours + préparation.`
-                : `= ${formatDuree(form.heures_defrayables)} par séance. S'applique aux séances non encore encodées ; entre 0,5 h et 8 h, par pas de 15 min.`
+              form.temps_preparation === ''
+                ? `Laissez vide pour utiliser le défaut global${defautGlobal != null ? ` (${formatDuree(defautGlobal)})` : ''}. Défrayé par séance normale : durée de la séance + préparation. Une séance bis est défrayée sans préparation.`
+                : `= ${formatDuree(form.temps_preparation)} de préparation par séance normale (pas pour les bis). S'applique aux séances non encore encodées ; entre 0 et 4 h, par pas de 15 min.`
             }
           >
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ flex: '0 1 180px' }}>
                 <AdminInput
-                  id="cours-heures-defrayables"
+                  id="cours-temps-preparation"
                   inputMode="decimal"
-                  value={form.heures_defrayables}
-                  onChange={(e) => setForm({ ...form, heures_defrayables: e.target.value })}
+                  value={form.temps_preparation}
+                  onChange={(e) => setForm({ ...form, temps_preparation: e.target.value })}
                   placeholder={defautGlobal != null ? `Défaut : ${formatDuree(defautGlobal)}` : 'Défaut global'}
                 />
               </div>
@@ -260,14 +260,14 @@ export default function CoursAdminPage() {
                   fontWeight: 600,
                   padding: '2px 9px',
                   borderRadius: '99px',
-                  background: form.heures_defrayables === '' ? 'var(--tone-neutral-bg)' : 'var(--tone-primary-bg)',
-                  color: form.heures_defrayables === '' ? 'var(--tone-neutral-fg)' : 'var(--tone-primary-fg)',
+                  background: form.temps_preparation === '' ? 'var(--tone-neutral-bg)' : 'var(--tone-primary-bg)',
+                  color: form.temps_preparation === '' ? 'var(--tone-neutral-fg)' : 'var(--tone-primary-fg)',
                 }}
               >
-                {form.heures_defrayables === '' ? 'Hérité du défaut' : 'Personnalisé'}
+                {form.temps_preparation === '' ? 'Hérité du défaut' : 'Personnalisé'}
               </span>
-              {form.heures_defrayables !== '' && (
-                <AdminButton type="button" variant="secondary" size="sm" onClick={() => setForm({ ...form, heures_defrayables: '' })}>
+              {form.temps_preparation !== '' && (
+                <AdminButton type="button" variant="secondary" size="sm" onClick={() => setForm({ ...form, temps_preparation: '' })}>
                   Revenir au défaut
                 </AdminButton>
               )}
@@ -275,7 +275,7 @@ export default function CoursAdminPage() {
             </div>
           </AdminFormField>
 
-          {editingId && <ImpactDefrayage annee={new Date().getFullYear()} portee="cours" coursId={editingId} heures={form.heures_defrayables} />}
+          {editingId && <ImpactDefrayage annee={new Date().getFullYear()} portee="cours" coursId={editingId} heures={form.temps_preparation} />}
 
           <AdminFormField label="Statut">
             <AdminSelect
@@ -361,8 +361,8 @@ function CourseCard({ course, onEdit, onDelete, onNavigateContent, onNavigateLie
     >
       <div style={{ marginBottom: '16px' }}>
         <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 600, color: 'var(--c-text)' }}>{course.titre}</h3>
-        {course.heures_defrayables != null && (
-          <p style={{ margin: '0 0 6px 0', fontSize: '12px', fontWeight: 600, color: 'var(--tone-primary-fg)' }}>Défrayé {formatDuree(course.heures_defrayables)} par séance</p>
+        {course.temps_preparation != null && (
+          <p style={{ margin: '0 0 6px 0', fontSize: '12px', fontWeight: 600, color: 'var(--tone-primary-fg)' }}>Préparation {formatDuree(course.temps_preparation)} par séance normale</p>
         )}
         <p style={{ margin: 0, fontSize: '13px', color: 'var(--c-text-2)' }}>Slug: <code style={{ background: 'var(--c-hover)', padding: '2px 6px', borderRadius: '4px' }}>{course.slug}</code></p>
       </div>

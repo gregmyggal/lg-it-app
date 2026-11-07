@@ -8,11 +8,11 @@ use App\Models\ProfesseurTarif;
 use Illuminate\Support\Collection;
 
 /**
- * DEF-01 T4 : simule l'effet d'une valeur d'heures défrayables sur le plafond journalier, AVANT enregistrement.
+ * DEF-01 T4 : simule l'effet d'un temps de préparation (DEF-02) sur le plafond journalier, AVANT enregistrement.
  * Information seulement (jamais bloquant) : le lissage permet de régler un dépassement.
  *
  * On ne regarde que les séances à venir ou non encore encodées de l'année (les saisies existantes ne changent pas) :
- * pour chaque (professeur, jour), montant = Σ heures défrayables des séances × tarif horaire du professeur ce jour-là.
+ * pour chaque (professeur, jour), montant = Σ (durée + préparation) des séances × tarif horaire du professeur ce jour-là.
  */
 class HeuresDefrayablesImpactService
 {
@@ -41,12 +41,17 @@ class HeuresDefrayablesImpactService
         $jours = [];
         foreach ($sessions as $s) {
             $cours = $s->classePeriode?->cours;
-            $actuelle = $this->parametres->heuresDefrayablesPour($cours, $annee)['valeur'];
-            $nouvelle = match (true) {
+            // Une bis n'a pas de préparation : elle ne dépend pas du paramètre simulé.
+            $duree = TimesheetService::dureeEntre($s->heure_debut, $s->heure_fin);
+            $prepActuelle = $s->bis_rang > 0 ? 0.0 : $this->parametres->tempsPreparationPour($cours, $annee)['valeur'];
+            $prepNouvelle = match (true) {
+                $s->bis_rang > 0 => 0.0,
                 $portee === 'cours' && $cours?->id === $coursId => $heures,
-                $portee === 'global' && $cours?->heures_defrayables === null => $heures,
-                default => $actuelle,
+                $portee === 'global' && $cours?->temps_preparation === null => $heures,
+                default => $prepActuelle,
             };
+            $actuelle = $duree + $prepActuelle;
+            $nouvelle = $duree + $prepNouvelle;
             $jour = $s->date->toDateString();
             $dejaEncodees = $s->timesheets->pluck('professeur_id')->all();
             foreach ($s->sessionProfesseurs as $lien) {

@@ -102,8 +102,8 @@ class ClasseResource extends JsonResource
             'nb_sessions' => (int) ($p->getAttributes()['sessions_actives_count'] ?? 0),
             'nb_changements_cours' => (int) ($p->getAttributes()['historique_cours_count'] ?? 0),
             'nb_hors_periode' => (int) ($p->getAttributes()['nb_hors_periode'] ?? 0),
-            'heures_defrayables' => $p->cours ? app(TimesheetParametreService::class)
-                ->heuresDefrayablesPour($p->cours, (int) $p->date_premiere_session->format('Y')) : null,
+            'temps_preparation' => $p->cours ? app(TimesheetParametreService::class)
+                ->tempsPreparationPour($p->cours, (int) $p->date_premiere_session->format('Y')) : null,
         ];
     }
 

@@ -596,10 +596,11 @@ export default function ClasseCreatePage() {
               {defrayage && (
                 <Banner tone="info">
                   <strong>
-                    Séance {formatDuree(heuresEntre(form.heure_debut, form.heure_fin))} · Défrayé {formatDuree(defrayage.valeur)}
+                    Séance {formatDuree(heuresEntre(form.heure_debut, form.heure_fin))} + préparation {formatDuree(defrayage.valeur)} ={' '}
+                    {formatDuree(heuresEntre(form.heure_debut, form.heure_fin) + defrayage.valeur)} défrayées
                   </strong>{' '}
-                  ({defrayage.source === 'cours' ? 'valeur définie sur le cours' : 'défaut global'}). Les professeurs sont défrayés pour ces heures
-                  (cours + préparation) : 14 séances × {formatDuree(defrayage.valeur)} = {formatDuree(14 * defrayage.valeur)} défrayables par période.
+                  (préparation : {defrayage.source === 'cours' ? 'valeur définie sur le cours' : 'défaut global'}). 14 séances × {formatDuree(heuresEntre(form.heure_debut, form.heure_fin) + defrayage.valeur)} ={' '}
+                  {formatDuree(14 * (heuresEntre(form.heure_debut, form.heure_fin) + defrayage.valeur))} défrayables par période. Une séance bis est défrayée sans préparation.
                 </Banner>
               )}
             </Section>

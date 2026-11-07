@@ -19,7 +19,7 @@ const DELAI_MS = 500;
 export default function ImpactDefrayage({ annee, portee, coursId, heures }) {
   const [impact, setImpact] = useState(null);
   const valeur = Number(String(heures).replace(',', '.'));
-  const valide = String(heures).trim() !== '' && Number.isFinite(valeur) && valeur >= 0.5 && valeur <= 8 && (portee === 'global' || Boolean(coursId));
+  const valide = String(heures).trim() !== '' && Number.isFinite(valeur) && valeur >= 0 && valeur <= 4 && (portee === 'global' || Boolean(coursId));
 
   useEffect(() => {
     if (!valide) {
