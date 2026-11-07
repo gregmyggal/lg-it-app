@@ -31,6 +31,12 @@ function LigneSaisie({ saisie, verrouille, onModifier, onSupprimer }) {
         <span className="mm-montant">{formatEuros(saisie.montant_brut)}</span>
         <StatutBadge table={STATUTS_TIMESHEET} valeur={saisie.statut_validation} />
       </div>
+      {saisie.ajoute_par && (
+        <div className="mm-note">
+          <StatutBadge label="Ajoutée par la direction" tone="info" /> {saisie.ajoute_par.nom}
+          {saisie.commentaire && <> — « {saisie.commentaire} »</>}
+        </div>
+      )}
       <ActionsSaisie saisie={saisie} verrouille={verrouille} onModifier={onModifier} onSupprimer={onSupprimer} />
     </div>
   );

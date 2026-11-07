@@ -45,6 +45,7 @@ use App\Http\Controllers\StageController;
 use App\Http\Controllers\StageDateController;
 use App\Http\Controllers\TimesheetController;
 use App\Http\Controllers\TimesheetMoisController;
+use App\Http\Controllers\TimesheetAjoutDirectionController;
 use App\Http\Controllers\TimesheetSoumissionForceeController;
 use App\Http\Controllers\TimesheetValidationController;
 use App\Http\Controllers\TimesheetVersionController;
@@ -232,6 +233,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::delete('/professeurs/{professeur}/timesheets-mois/notes', [TimesheetNoteController::class, 'supprimer']);
     Route::get('/professeurs/{professeur}/timesheets-mois/notes/{note}/historique', [TimesheetNoteController::class, 'historique']);
     // TS-05 : soumission du mois d'un professeur par la direction ou l'admin.
+    Route::post('/professeurs/{professeur}/timesheets-mois/ajouter-heures', [TimesheetAjoutDirectionController::class, 'store']);
     Route::post('/professeurs/{professeur}/timesheets-mois/forcer-soumission', [TimesheetSoumissionForceeController::class, 'store']);
     Route::post('/timesheets-mois/forcer-soumission-lot/apercu', [TimesheetSoumissionForceeController::class, 'apercuLot']);
     Route::post('/timesheets-mois/forcer-soumission-lot', [TimesheetSoumissionForceeController::class, 'lot']);

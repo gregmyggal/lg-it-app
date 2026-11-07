@@ -3,7 +3,7 @@ import { formatDateCourte, formatDateHeure } from '../../utils/dates';
 import { formatEuros, formatHeures } from '../../utils/format';
 import { ADMIN_COLORS } from '../../styles/AdminDesignSystem';
 
-const ACTIONS_AUDIT = ['soumission_forcee', 'adaptation', 'lissage', 'remise_brouillon', 'contestation', 'reponse_contestation', 'classe_supprimee'];
+const ACTIONS_AUDIT = ['soumission_forcee', 'adaptation', 'lissage', 'remise_brouillon', 'contestation', 'reponse_contestation', 'classe_supprimee', 'ajout_direction'];
 
 /**
  * TS-04 : frise chronologique d'un mois — soumissions, adaptations, remises en brouillon, validations, signature et

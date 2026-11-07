@@ -5,6 +5,7 @@ import StatutBadge from '../ui/StatutBadge';
 import { Table, Th, Td, Tr } from '../ui/Table';
 import { LoadingBlock, ErrorBlock } from '../ui/DataStates';
 import AdapterSaisieModal from './AdapterSaisieModal';
+import AjouterHeuresDirectionModal from './AjouterHeuresDirectionModal';
 import LisserMoisModal from './LisserMoisModal';
 import ValiderLotModal from './ValiderLotModal';
 import VersionsMois from './VersionsMois';
@@ -29,9 +30,11 @@ import { formatEuros, formatHeures } from '../../utils/format';
 import { ADMIN_COLORS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
 import { libelleSession } from '../../utils/classes';
 
+const LIBELLE_TYPE = { animation: 'Animation', cours: 'Cours', preparation: 'Préparation' };
 const LIBELLE_CHAMP = { nombre_heures: 'Heures', date_prestation: 'Date', type_activite: 'Type' };
 
 function texteAudit(h) {
+  if (h.action === 'ajout_direction') return `Heures ajoutées par la direction : ${LIBELLE_TYPE[h.apres.type_activite] || h.apres.type_activite} ${formatHeures(h.apres.nombre_heures)}`;
   if (h.action === 'soumission_forcee') return 'Mois soumis par la direction à la place du professeur';
   if (h.action === 'remise_brouillon') return 'Remise en brouillon par la direction';
   if (h.action === 'contestation') return 'Contestation du professeur';
@@ -108,6 +111,7 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
   const [envoiForcer, setEnvoiForcer] = useState(false);
   const [erreurForcer, setErreurForcer] = useState(null);
   const [employeurModal, setEmployeurModal] = useState(false);
+  const [ajoutHeures, setAjoutHeures] = useState(false);
   const [confirmationPdf, setConfirmationPdf] = useState(false);
   const [envoiReponse, setEnvoiReponse] = useState(false);
   const [erreurReponse, setErreurReponse] = useState(null);
@@ -197,6 +201,7 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
     setAdapter(null);
     setLisser(undefined);
     setValider(false);
+    setAjoutHeures(false);
     if (message) toast.success(message);
     detail.reload();
     onChange?.();
@@ -232,6 +237,15 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
               <SignaturePreuve signature={d.signature} />
             </div>
             <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap' }}>
+              <AdminButton
+                variant="secondary"
+                disabled={!d.ajout_heures?.possible}
+                title={d.ajout_heures?.possible ? undefined : 'Mois soumis : utilisez « Adapter » sur les lignes existantes.'}
+                onClick={() => setAjoutHeures(true)}
+              >
+                Ajouter des heures…
+              </AdminButton>
+              {!d.ajout_heures?.possible && <span style={{ fontSize: 12, alignSelf: 'center' }}>Mois soumis : utilisez « Adapter ».</span>}
               {sf?.possible && (
                 <AdminButton onClick={() => { setErreurForcer(null); setForcer(true); }}>Soumettre à la place du professeur…</AdminButton>
               )}
@@ -313,7 +327,15 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
                     <Fragment key={t.id}>
                     <Tr fond={modifiees.has(t.id) ? 'var(--tone-warning-bg)' : undefined}>
                       <Td label="Date">{formatDateCourte(t.date_prestation)}</Td>
-                      <Td label="Session / cours">{(t.session ? libelleSession(t.session) : 'Heures libres')}</Td>
+                      <Td label="Session / cours">
+                        {(t.session ? libelleSession(t.session) : 'Heures libres')}
+                        {t.ajoute_par && (
+                          <span style={{ display: 'block', marginTop: 2, fontSize: 12 }}>
+                            <StatutBadge label="Ajoutée par la direction" tone="info" /> {t.ajoute_par.nom}
+                          </span>
+                        )}
+                        {t.ajoute_par && t.commentaire && <span style={{ display: 'block', fontSize: 12 }}>« {t.commentaire} »</span>}
+                      </Td>
                       <Td label="Type">{TYPES_ACTIVITE[t.type_activite]?.label || t.type_activite}</Td>
                       <Td label="Heures">{formatHeures(t.nombre_heures)}</Td>
                       <Td label="Montant">{formatEuros(t.montant_brut)}</Td>
@@ -403,6 +425,17 @@ export default function DetailProfesseurMois({ professeurId, mois, onRetour, onC
             <EmployeurMoisSection professeurId={professeurId} professeurNom={d.professeur.nom} anneeInitiale={annee} onChange={() => { detail.reload(); onChange?.(); }} />
           </div>
 
+          {ajoutHeures && (
+            <AjouterHeuresDirectionModal
+              professeurId={professeurId}
+              prenom={d.professeur.nom.split(' ')[0]}
+              annee={annee}
+              mois={moisNum}
+              lignesExistantes={d.lignes}
+              onClose={() => setAjoutHeures(false)}
+              onDone={recharger}
+            />
+          )}
           {employeurModal && (
             <DefinirEmployeurModal
               annee={annee}

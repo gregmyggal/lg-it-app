@@ -88,6 +88,9 @@ export default function AjouterHeuresModal({ dateParDefaut, cours = [], seances 
       }
     >
       <form id="form-heures" onSubmit={soumettre} noValidate>
+        {edition && saisie.ajoute_par && (
+          <Banner tone="warning">Cette ligne a été ajoutée par la direction ({saisie.ajoute_par.nom}). Modifiez-la seulement si elle est inexacte.</Banner>
+        )}
         {message && (
           <Banner tone="error" role="alert">
             <strong>{message}</strong>

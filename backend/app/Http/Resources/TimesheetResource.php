@@ -35,6 +35,7 @@ class TimesheetResource extends JsonResource
                 'periode_numero' => $session->relationLoaded('classePeriode') && $session->classePeriode->relationLoaded('periode') ? $session->classePeriode->periode->numero : null,
                 'libelle_complet' => $session->relationLoaded('classePeriode') ? $session->libelleComplet() : $session->libelle(),
             ] : null,
+            'ajoute_par' => $this->ajoute_par_user_id ? ['id' => $this->ajoute_par_user_id, 'nom' => $this->ajoutePar?->name] : null,
             'montant_brut' => $this->montant($request),
             'can' => [
                 'update' => (bool) $user?->can('update', $this->resource),

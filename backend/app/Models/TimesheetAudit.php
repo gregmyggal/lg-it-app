@@ -28,6 +28,9 @@ class TimesheetAudit extends Model
     /** TS-05 : mois soumis par la direction à la place du professeur (une trace par saisie). */
     public const ACTION_SOUMISSION_FORCEE = 'soumission_forcee';
 
+    /** TS-07 : heures ajoutées par la direction/admin au mois en brouillon d'un professeur (motif = commentaire de la ligne). */
+    public const ACTION_AJOUT_DIRECTION = 'ajout_direction';
+
     /** CLS-08 : heure détachée de sa séance lors de la suppression forcée de la classe. */
     public const ACTION_CLASSE_SUPPRIMEE = 'classe_supprimee';
 

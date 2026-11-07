@@ -89,6 +89,7 @@ function MonMois({ user }) {
   const titreMois = `${MOIS_LONGS[periode.mois - 1][0].toUpperCase()}${MOIS_LONGS[periode.mois - 1].slice(1)} ${periode.annee}`;
   const data = mon.data;
   const vide = data && data.sessions.length === 0 && data.libres.length === 0;
+  const nbAjoutees = [...(data?.libres || []), ...(data?.sessions || []).flatMap((s) => s.mes_timesheets || [])].filter((t) => t.ajoute_par && t.statut_validation === 'brouillon').length;
   const semaines = data ? grouperParSemaine(data.sessions, data.libres) : [];
   const seances = (data?.sessions || [])
     .filter((s) => s.peut_encoder && s.encodage === 'a_encoder')
@@ -156,6 +157,11 @@ function MonMois({ user }) {
 
           {data && !vide && (
             <>
+              {nbAjoutees > 0 && (
+                <Banner tone="info">
+                  <strong>{nbAjoutees} ligne{nbAjoutees > 1 ? 's' : ''} ajoutée{nbAjoutees > 1 ? 's' : ''} par la direction.</strong> Vérifiez-{nbAjoutees > 1 ? 'les' : 'la'} (commentaire visible sur chaque ligne) avant de soumettre votre mois.
+                </Banner>
+              )}
               <SyntheseMois synthese={data.synthese} />
 
               <div className="mm-tete">
@@ -267,6 +273,7 @@ function MonMois({ user }) {
         >
           <p style={{ margin: 0 }}>
             {formatHeures(suppression.nombre_heures)} du {formatDateCourte(suppression.date_prestation.slice(0, 10))} seront supprimées. Seuls les brouillons peuvent l'être.
+            {suppression.ajoute_par && <strong> Cette ligne a été ajoutée par la direction ({suppression.ajoute_par.nom}) : confirmez-vous la suppression ?</strong>}
           </p>
         </AdminModal>
       )}

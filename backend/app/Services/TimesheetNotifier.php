@@ -144,6 +144,22 @@ class TimesheetNotifier
         ), dedoublonner: false);
     }
 
+    /** TS-07 : la direction a ajouté des heures au mois en brouillon du professeur (pas de dédoublonnage : chaque ajout est distinct). */
+    public function heuresAjoutees(Professeur $prof, int $annee, int $mois, User $auteur, int $nbLignes, float $heures): void
+    {
+        if (! $prof->user) {
+            return;
+        }
+        $libelle = $this->libelle($annee, $mois);
+        $this->envoyer($prof->user, new NotificationTimesheet(
+            NotificationTimesheet::HEURES_AJOUTEES,
+            'Des heures ont été ajoutées à votre mois',
+            $auteur->name.' a ajouté '.$nbLignes.' ligne(s), '.str_replace('.', ',', (string) $heures).' h, à vos heures de '.$libelle.'. Vérifiez-les (commentaire visible sur chaque ligne) avant de soumettre votre mois.',
+            '/timesheets',
+            $prof->id, $annee, $mois,
+        ), dedoublonner: false);
+    }
+
     private function envoyer(User $destinataire, NotificationTimesheet $notification, bool $dedoublonner = true): void
     {
         $doublon = $dedoublonner && $destinataire->unreadNotifications()

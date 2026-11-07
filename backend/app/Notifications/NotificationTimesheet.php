@@ -25,6 +25,8 @@ class NotificationTimesheet extends Notification
 
     public const HEURES_TRAITEES = 'heures_traitees';
 
+    public const HEURES_AJOUTEES = 'heures_ajoutees';
+
     public const PDF_GENERE = 'pdf_genere';
 
     public function __construct(

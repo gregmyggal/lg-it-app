@@ -214,3 +214,8 @@ export function usePresenceNotes(annee, mois, professeurIds) {
     [annee, mois, professeurIds.join(',')],
   );
 }
+
+/** TS-07 : la direction ou l'admin ajoute des heures (un commentaire obligatoire par ligne) au mois en brouillon d'un professeur. */
+export function ajouterHeuresDirection(professeurId, payload) {
+  return client.post(`/professeurs/${professeurId}/timesheets-mois/ajouter-heures`, payload).then((res) => res.data);
+}

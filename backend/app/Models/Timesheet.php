@@ -15,6 +15,7 @@ class Timesheet extends Model
         'cours_id',
         'course_session_id',
         'commentaire',
+        'ajoute_par_user_id',
         'statut_validation',
         'lissage_applique',
         'validated_at',
@@ -43,6 +44,11 @@ class Timesheet extends Model
     public function session(): BelongsTo
     {
         return $this->belongsTo(CourseSession::class, 'course_session_id');
+    }
+
+    public function ajoutePar(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ajoute_par_user_id');
     }
 
     public function validateur(): BelongsTo
