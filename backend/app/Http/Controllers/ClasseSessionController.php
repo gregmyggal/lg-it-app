@@ -31,7 +31,7 @@ class ClasseSessionController extends Controller
             ->when($request->filled('periode_numero'), fn ($q) => $q->whereHas('classePeriode.periode', fn ($p) => $p->where('numero', $request->integer('periode_numero'))))
             ->get()
             ->sortBy([
-                fn (CourseSession $a, CourseSession $b) => $a->classePeriode->periode->numero <=> $b->classePeriode->periode->numero,
+                fn (CourseSession $a, CourseSession $b) => ($a->classePeriode->periode?->numero ?? 0) <=> ($b->classePeriode->periode?->numero ?? 0),
                 ['seance_numero', 'asc'],
                 ['bis_rang', 'asc'],
             ])->values();

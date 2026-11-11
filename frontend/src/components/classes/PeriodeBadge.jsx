@@ -26,7 +26,7 @@ export default function PeriodeBadge({ numero, children }) {
         lineHeight: 1.3,
       }}
     >
-      {children || `P${numero}`}
+      {children || (numero ? `P${numero}` : 'Stage')}
     </span>
   );
 }

@@ -31,7 +31,9 @@ class ClasseResource extends JsonResource
                 'id' => $this->anneeScolaire->id,
                 'libelle' => $this->anneeScolaire->libelle,
             ]),
+            'type' => $this->type,
             'titre' => $this->when($periodes !== null, fn () => $this->titre()),
+            'semaine' => $this->when($this->isStage() && $periodes !== null, fn () => $this->semaineDuStage()),
             'jour_semaine' => $this->jour_semaine,
             'heure_debut' => substr($this->heure_debut, 0, 5),
             'heure_fin' => substr($this->heure_fin, 0, 5),
@@ -105,6 +107,14 @@ class ClasseResource extends JsonResource
             'temps_preparation' => $p->cours ? app(TimesheetParametreService::class)
                 ->tempsPreparationPour($p->cours, (int) $p->date_premiere_session->format('Y')) : null,
         ];
+    }
+
+    /** Lundi → vendredi de la semaine du stage (date de démarrage de sa période de classe). */
+    private function semaineDuStage(): ?array
+    {
+        $debut = $this->periodes->first()?->date_premiere_session?->copy()->startOfWeek();
+
+        return $debut ? ['debut' => $debut->toDateString(), 'fin' => $debut->copy()->addDays(4)->toDateString()] : null;
     }
 
     private function titre(): string

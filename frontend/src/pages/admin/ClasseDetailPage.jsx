@@ -193,13 +193,15 @@ export default function ClasseDetailPage() {
     }
   }
 
+  const estStage = c.type === 'stage';
   const peutModifier = c.can?.update && !estClasseArchivee(c.statut);
-  const boutonCreneau = peutModifier && (
+  // Stage : les horaires se règlent séance par séance (tableau ci-dessous).
+  const boutonCreneau = peutModifier && !estStage && (
     <AdminButton size="sm" onClick={() => setModifierCreneau(true)}>
       Modifier créneau et lieu
     </AdminButton>
   );
-  const boutonDupliquer = c.can?.update && (
+  const boutonDupliquer = c.can?.update && !estStage && (
     <LinkButton
       to={`/admin/classes/nouvelle?source=${c.id}`}
       size="sm"
@@ -210,12 +212,12 @@ export default function ClasseDetailPage() {
   );
   const boutonArchiver = peutModifier && (
     <AdminButton variant="secondary" size="sm" onClick={archiver} loading={enCours}>
-      Archiver la classe (P1 et P2)
+      {estStage ? 'Archiver le stage' : 'Archiver la classe (P1 et P2)'}
     </AdminButton>
   );
   const boutonSupprimer = c.can?.delete && (
     <AdminButton variant="secondary" size="sm" onClick={() => setSuppression({ etape: 'confirmer' })} style={{ color: ADMIN_TONES.error.fg }}>
-      Supprimer la classe
+      {estStage ? 'Supprimer le stage' : 'Supprimer la classe'}
     </AdminButton>
   );
 
@@ -325,7 +327,24 @@ export default function ClasseDetailPage() {
           <ProfesseursClasseSection classe={c} titreClasse={titre} onChange={sessions.reload} />
         </div>
 
-        {[1, 2].map((n) => {
+        {estStage && (c.periodes || [])[0] && (
+          <PeriodeBloc
+            stage
+            periode={c.periodes[0]}
+            annee={anneeClasse}
+            classeId={c.id}
+            sessions={liste}
+            peutModifier={Boolean(c.can?.update) && !estClasseArchivee(c.statut)}
+            peutSupprimer={false}
+            onAjuster={(session, mode) => setAjustement({ session, mode: mode ?? undefined, periodeNumero: null })}
+            onProfesseurs={c.can?.update ? setRemplacement : undefined}
+            onChangerCours={() => setModalePeriode({ type: 'cours', periode: c.periodes[0] })}
+            onSupprimer={() => {}}
+            onHistorique={() => setModalePeriode({ type: 'historique', periode: c.periodes[0] })}
+          />
+        )}
+
+        {!estStage && [1, 2].map((n) => {
           const p = (c.periodes || []).find((x) => x.numero === n);
           if (!p) {
             if (!c.can?.update || estClasseArchivee(c.statut)) return null;
@@ -467,17 +486,17 @@ function PeriodeAbsente({ numero, dejaPresente, onAjouter }) {
 }
 
 /** Bloc d'une période : bandeau (cours, dates, hors période), actions de période, tableau des séances. */
-function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSupprimer, onAjuster, onProfesseurs, onChangerCours, onSupprimer, onHistorique }) {
+function PeriodeBloc({ stage = false, periode, annee, classeId, sessions, peutModifier, peutSupprimer, onAjuster, onProfesseurs, onChangerCours, onSupprimer, onHistorique }) {
   const liens = useLiensCours(periode.cours_id);
   const annulee = periode.statut === 'annulee';
   const peutBis = sessions.some((s) => s.can?.bis);
-  const titre = `Période ${periode.numero} · ${periode.cours?.titre || 'Cours'}`;
+  const titre = stage ? `Séances du stage · ${periode.cours?.titre || 'Cours'}` : `Période ${periode.numero} · ${periode.cours?.titre || 'Cours'}`;
   const dateFin = periode.periode?.date_fin;
   return (
     <Section
       title={
         <span style={{ display: 'inline-flex', gap: ADMIN_SPACING.sm, alignItems: 'center', flexWrap: 'wrap' }}>
-          <PeriodeBadge numero={periode.numero} /> {titre}
+          <PeriodeBadge numero={stage ? null : periode.numero} /> {titre}
         </span>
       }
       subtitle={[
@@ -546,7 +565,7 @@ function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSup
         </div>
       )}
       <div
-        id={`legende-sessions-${periode.numero}`}
+        id={`legende-sessions-${periode.numero ?? 'stage'}`}
         style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -558,16 +577,16 @@ function PeriodeBloc({ periode, annee, classeId, sessions, peutModifier, peutSup
         }}
       >
         <span>🔒 Heures validées : la séance ne peut plus être déplacée ni annulée (une séance passée reste déplaçable)</span>
-        <span>🔢 Le numéro de séance (1 à 14) est fixe dans la période : une session annulée le garde, un bis porte le même numéro</span>
-        <span>⚠ Date en conflit avec le calendrier scolaire ou hors période</span>
+        <span>{stage ? '🔢 Le numéro de séance est fixe : une session annulée le garde, un bis porte le même numéro' : '🔢 Le numéro de séance (1 à 14) est fixe dans la période : une session annulée le garde, un bis porte le même numéro'}</span>
+        <span>{stage ? '⚠ Date en conflit avec le calendrier scolaire' : '⚠ Date en conflit avec le calendrier scolaire ou hors période'}</span>
       </div>
       {sessions.length === 0 ? (
         <p style={{ padding: ADMIN_SPACING.xl, margin: 0 }}>Cette période n'a aucune session.</p>
       ) : (
         <ClasseSessionsTable
           sessions={sessions}
-          caption={`Sessions de la période ${periode.numero}`}
-          legendeId={`legende-sessions-${periode.numero}`}
+          caption={stage ? 'Séances du stage' : `Sessions de la période ${periode.numero}`}
+          legendeId={`legende-sessions-${periode.numero ?? 'stage'}`}
           liens={liens.data?.data}
           onAjuster={onAjuster}
           onProfesseurs={onProfesseurs}

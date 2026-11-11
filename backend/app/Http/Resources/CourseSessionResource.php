@@ -27,7 +27,7 @@ class CourseSessionResource extends JsonResource
             'id' => $this->id,
             'classe_id' => $this->classe_id,
             'classe_periode_id' => $this->classe_periode_id,
-            'periode_numero' => $periodeCharge ? $cp->periode->numero : null,
+            'periode_numero' => $periodeCharge ? $cp->periode?->numero : null,
             'classe' => $this->whenLoaded('classe', fn () => [
                 'id' => $this->classe->id,
                 'jour_semaine' => $this->classe->jour_semaine,

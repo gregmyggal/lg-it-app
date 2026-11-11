@@ -95,3 +95,12 @@ export function useHistoriqueCoursPeriode(classeId, classePeriodeId) {
     [classeId, classePeriodeId],
   );
 }
+
+/** STG-01 : stages d'une semaine (classes de type « stage »). L'aperçu renvoie la grille des 5 jours et les séances. */
+export function apercuStage(payload) {
+  return client.post('/classes/stage/apercu', payload).then((res) => res.data.data);
+}
+
+export function creerStage(payload) {
+  return client.post('/classes/stage', payload).then((res) => res.data.data);
+}

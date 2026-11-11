@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\RegleMetierException;
 use App\Http\Resources\ClasseResource;
 use App\Models\Classe;
 use App\Models\ClassePeriode;
@@ -44,6 +45,9 @@ class ClasseDuplicationService
     /** Formulaire pré-rempli (RG-2, RG-3, RG-7, RG-8). */
     public function proposer(Classe $source, ?int $jour = null, ?string $heureDebut = null, ?string $heureFin = null): array
     {
+        if ($source->isStage()) {
+            throw RegleMetierException::invalide('La duplication d\'un stage n\'est pas encore disponible.');
+        }
         $source->loadMissing('periodes.periode', 'periodes.cours', 'anneeScolaire');
         $jour ??= $source->jour_semaine;
         $archivee = $source->anneeScolaire->isArchivee();

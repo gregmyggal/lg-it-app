@@ -19,6 +19,7 @@ class ListClassesRequest extends FormRequest
             'annee_scolaire_id' => ['sometimes', 'integer'],
             'periode_id' => ['sometimes', 'integer'],
             'cours_id' => ['sometimes', 'integer'],
+            'type' => ['sometimes', Rule::in(Classe::TYPES)],
             'jour_semaine' => ['sometimes', 'integer', 'between:1,7'],
             'statut' => ['sometimes', Rule::in(Classe::STATUTS)],
             'page' => ['sometimes', 'integer', 'min:1'],

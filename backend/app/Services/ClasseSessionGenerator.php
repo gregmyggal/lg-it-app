@@ -274,6 +274,10 @@ class ClasseSessionGenerator
     /** @return array{0: Periode, 1: array<string, mixed>} */
     private function planAjout(Classe $classe, array $data): array
     {
+        if ($classe->isStage()) {
+            $message = "Un stage n'a pas de période : on ne peut pas lui en ajouter.";
+            throw RegleMetierException::invalide($message, ['periode_id' => [$message]]);
+        }
         $this->refuserSiArchivee($classe->annee_scolaire_id, 'periode_id');
         $periode = $this->periodeDeLAnnee($classe->annee_scolaire_id, (int) $data['periode_id'], 'periode_id');
 

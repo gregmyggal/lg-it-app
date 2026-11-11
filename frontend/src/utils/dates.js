@@ -94,8 +94,15 @@ export function nomJour(jourSemaine) {
   return JOURS_LONGS[d] || '';
 }
 
+/** « 12/10 → 16/10/2026 » : semaine d'un stage (`{ debut, fin }`). */
+export function libelleSemaine(semaine) {
+  if (!semaine?.debut) return '';
+  return `${formatDate(semaine.debut).slice(0, 5)} → ${formatDate(semaine.fin)}`;
+}
+
 /** « mercredi 14h–17h » */
 export function libelleCreneau(classe) {
+  if (classe.type === 'stage') return `stage ${libelleSemaine(classe.semaine)}`;
   return `${nomJour(classe.jour_semaine)} ${formatHoraire(classe.heure_debut, classe.heure_fin)}`;
 }
 

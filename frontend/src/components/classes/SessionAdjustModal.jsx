@@ -80,7 +80,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
     () => sessions.filter((s) => (s.periode_numero || 1) > numeroSession && s.statut !== 'annulee').map((s) => s.date).sort()[0],
     [sessions, numeroSession],
   );
-  const decalable = Boolean(session && session.bis_rang === 0 && (suivantes.length > 0 || (premierePeriodeSuivante && date >= premierePeriodeSuivante)));
+  const decalable = Boolean(classe.type !== 'stage' && session && session.bis_rang === 0 && (suivantes.length > 0 || (premierePeriodeSuivante && date >= premierePeriodeSuivante)));
   const [decaler, setDecaler] = useState(true);
   const [datesForcees, setDatesForcees] = useState([]);
   const [apercu, setApercu] = useState({ data: null, loading: false });
@@ -320,7 +320,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               <AdminSelect
                 id="ajust-seance"
                 value={seanceEffective}
-                options={seances.map((x) => ({ value: x.cle, label: `P${x.periode} · Séance ${x.numero}` }))}
+                options={seances.map((x) => ({ value: x.cle, label: `${classe.type === 'stage' ? '' : `P${x.periode} · `}Séance ${x.numero}` }))}
                 onChange={(e) => modifier(setSeance)(e.target.value)}
                 error={erreurs.seance_numero}
               />
@@ -333,7 +333,7 @@ export default function SessionAdjustModal({ classe, sessions, session, modeInit
               heureFin={heureFin}
               setHeureFin={modifier(setHeureFin)}
               labelDate="Date du bis"
-              aide={`Une session ajoutée est toujours rattachée à l'une des séances : « P${periodeBis} · Séance ${numeroBis} bis ». ${aidePeriode}`}
+              aide={`Une session ajoutée est toujours rattachée à l'une des séances : « ${classe.type === 'stage' ? '' : `P${periodeBis} · `}Séance ${numeroBis} bis ». ${aidePeriode}`}
               erreurs={erreurs}
             />
             <AvertissementHorsPeriode actif={horsPeriode} periode={periode} />

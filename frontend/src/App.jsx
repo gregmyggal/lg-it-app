@@ -30,6 +30,7 @@ import AdminCalendarPage from './pages/AdminCalendarPage';
 import ToastProvider from './components/toast/ToastProvider';
 import ClassesAdminPage from './pages/admin/ClassesAdminPage';
 import ClasseCreatePage from './pages/admin/ClasseCreatePage';
+import StageCreatePage from './pages/admin/StageCreatePage';
 import ClasseDetailPage from './pages/admin/ClasseDetailPage';
 import CalendrierScolaireAdminPage from './pages/admin/CalendrierScolaireAdminPage';
 import AnneesScolairesPage from './pages/admin/AnneesScolairesPage';
@@ -186,6 +187,14 @@ export default function App() {
               element={
                 <ProtectedRoute roles={STAFF}>
                   <ClasseCreatePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/classes/nouveau-stage"
+              element={
+                <ProtectedRoute roles={STAFF}>
+                  <StageCreatePage />
                 </ProtectedRoute>
               }
             />

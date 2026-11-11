@@ -44,6 +44,7 @@ export default function ClassesAdminPage() {
     cours_id: params.get('cours_id') || '',
     jour_semaine: params.get('jour_semaine') || '',
     statut: params.get('statut') || '',
+    type: params.get('type') || '',
   };
   const classes = useClasses(filtres, { enabled: Boolean(anneeId) });
 
@@ -72,7 +73,7 @@ export default function ClassesAdminPage() {
     majFiltre('annee_scolaire_id', valeur);
   }
 
-  const filtresActifs = Boolean(filtres.periode_id || filtres.cours_id || filtres.jour_semaine || filtres.statut);
+  const filtresActifs = Boolean(filtres.periode_id || filtres.cours_id || filtres.jour_semaine || filtres.statut || filtres.type);
   const numeroMisEnAvant = annee?.periodes.find((p) => String(p.id) === filtres.periode_id)?.numero || null;
   const periodesAffichees = numeroMisEnAvant ? [numeroMisEnAvant] : [1, 2];
   const aPlanifier = (classes.data || []).filter((c) => c.alerte_periode_2);
@@ -146,7 +147,7 @@ export default function ClassesAdminPage() {
     contenu = (
       <>
         <p style={{ margin: '0 0 12px', fontSize: '13px', color: ADMIN_COLORS.textSecondary }} aria-live="polite">
-          {classes.data.length} classe{classes.data.length > 1 ? 's' : ''}
+          {classes.data.length} classe{classes.data.length > 1 ? 's' : ''} ou stage{classes.data.length > 1 ? 's' : ''}
         </p>
         {aPlanifier.length > 0 && (
           <Banner tone="warning">
@@ -186,18 +187,29 @@ export default function ClassesAdminPage() {
             {classes.data.map((c) => (
               <Tr key={c.id}>
                 <Td label="Classe / créneau">
+                  {c.type === 'stage' && (
+                    <>
+                      <StatutBadge label="Stage" tone="info" />{' '}
+                    </>
+                  )}
                   <strong>{titreClasse(c)}</strong>
                   <div style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>{libelleCreneau(c)}</div>
                 </Td>
-                {periodesAffichees.map((n) => (
-                  <Td label={`Période ${n}`} key={n}>
-                    <CellulePeriode classe={c} numero={n} />
+                {c.type === 'stage' ? (
+                  <Td label="Séances" colSpan={periodesAffichees.length}>
+                    <CelluleStage classe={c} />
                   </Td>
-                ))}
+                ) : (
+                  periodesAffichees.map((n) => (
+                    <Td label={`Période ${n}`} key={n}>
+                      <CellulePeriode classe={c} numero={n} />
+                    </Td>
+                  ))
+                )}
                 <Td label="Lieu">{c.lieu || '—'}</Td>
                 <Td label="Prochaine session">
                   {c.prochaine_session
-                    ? `${c.prochaine_session.libelle} · ${formatDateCourte(c.prochaine_session.date)} · ${formatHeure(c.heure_debut)}`
+                    ? `${c.prochaine_session.libelle} · ${formatDateCourte(c.prochaine_session.date)}${c.type === 'stage' ? '' : ` · ${formatHeure(c.heure_debut)}`}`
                     : '—'}
                 </Td>
                 <Td label="Statut">
@@ -220,15 +232,18 @@ export default function ClassesAdminPage() {
     <>
       <AdminPageHeader
         icon="🏫"
-        title="Classes"
+        title="Classes & stages"
         badge={libelleAnnee || undefined}
-        breadcrumb={<>Scolarité › Classes</>}
-        description="Une classe regroupe jusqu'à 2 périodes (14 séances chacune) sur un même créneau hebdomadaire."
+        breadcrumb={<>Scolarité › Classes & stages</>}
+        description="Une classe regroupe jusqu'à 2 périodes (14 séances chacune) sur un même créneau hebdomadaire ; un stage tient sur une semaine (jusqu'à 5 demi-journées)."
         action={
           anneeId ? (
-            <LinkButton to={`/admin/classes/nouvelle?annee_scolaire_id=${anneeId}`} variant="primary">
-              ＋ Nouvelle classe
-            </LinkButton>
+            <>
+              <LinkButton to={`/admin/classes/nouvelle?annee_scolaire_id=${anneeId}`} variant="primary">
+                ＋ Nouvelle classe
+              </LinkButton>
+              <LinkButton to="/admin/classes/nouveau-stage">＋ Nouveau stage</LinkButton>
+            </>
           ) : undefined
         }
       />
@@ -242,6 +257,17 @@ export default function ClassesAdminPage() {
             onChange={changerAnnee}
             options={optionsAnnee}
             disabled={annees.loading}
+          />
+          <FilterField
+            id="filtre-type"
+            label="Type"
+            value={filtres.type}
+            onChange={(v) => majFiltre('type', v)}
+            placeholder="Classes et stages"
+            options={[
+              { value: 'classe', label: 'Classes' },
+              { value: 'stage', label: 'Stages' },
+            ]}
           />
           <FilterField
             id="filtre-periode"
@@ -311,6 +337,20 @@ function CellulePeriode({ classe, numero }) {
       </div>
       {p.nb_hors_periode > 0 && <StatutBadge label={`⚠ ${p.nb_hors_periode} hors période`} tone="warning" />}{' '}
       {p.statut === 'annulee' && <StatutBadge label="Annulée" tone="neutral" />}
+    </div>
+  );
+}
+
+/** Cellule d'un stage : cours, nombre de séances et semaine. */
+function CelluleStage({ classe }) {
+  const p = (classe.periodes || [])[0];
+  return (
+    <div style={{ fontSize: '13px' }}>
+      <strong>{p?.cours?.titre}</strong>
+      <div style={{ color: ADMIN_COLORS.textSecondary }}>
+        {classe.nb_sessions} séance{classe.nb_sessions > 1 ? 's' : ''}
+        {classe.semaine ? ` · ${formatDateCourte(classe.semaine.debut)} → ${formatDateCourte(classe.semaine.fin)}` : ''}
+      </div>
     </div>
   );
 }

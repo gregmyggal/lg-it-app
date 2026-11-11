@@ -22,10 +22,18 @@ class Classe extends Model
 
     public const STATUTS = [self::STATUT_ACTIVE, self::STATUT_TERMINEE, self::STATUT_ARCHIVEE];
 
+    public const TYPE_CLASSE = 'classe';
+
+    /** STG-01 : stage d'une semaine (1 à 5 séances), sans période scolaire. */
+    public const TYPE_STAGE = 'stage';
+
+    public const TYPES = [self::TYPE_CLASSE, self::TYPE_STAGE];
+
     protected $table = 'classes';
 
     protected $fillable = [
         'annee_scolaire_id',
+        'type',
         'jour_semaine',
         'heure_debut',
         'heure_fin',
@@ -39,6 +47,11 @@ class Classe extends Model
         return [
             'jour_semaine' => 'integer',
         ];
+    }
+
+    public function isStage(): bool
+    {
+        return $this->type === self::TYPE_STAGE;
     }
 
     public function anneeScolaire(): BelongsTo

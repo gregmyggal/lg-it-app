@@ -29,11 +29,12 @@ class ProfesseurClasseResource extends JsonResource
             'classe_id' => $this->classe_id,
             'classe' => $this->whenLoaded('classe', fn () => [
                 'id' => $this->classe->id,
+                'type' => $this->classe->type,
                 'titre' => $this->classe->relationLoaded('periodes') ? ClasseResource::titreDe($this->classe) : null,
                 'periodes' => $this->classe->relationLoaded('periodes') ? $this->classe->periodes->map(fn ($p) => [
                     'id' => $p->id,
                     'periode_id' => $p->periode_id,
-                    'numero' => $p->relationLoaded('periode') ? $p->periode->numero : null,
+                    'numero' => $p->relationLoaded('periode') ? $p->periode?->numero : null,
                     'cours_id' => $p->cours_id,
                     'cours' => $p->relationLoaded('cours') ? ['id' => $p->cours->id, 'titre' => $p->cours->titre] : null,
                     'statut' => $p->statut,

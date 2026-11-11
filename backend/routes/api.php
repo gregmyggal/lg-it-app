@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureCompteActif;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendrierScolaireController;
 use App\Http\Controllers\ClasseController;
+use App\Http\Controllers\ClasseStageController;
 use App\Http\Controllers\ClassePeriodeController;
 use App\Http\Controllers\ClasseLienController;
 use App\Http\Controllers\ClasseProfesseurController;
@@ -174,6 +175,9 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
 
     Route::get('/classes', [ClasseController::class, 'index']);
     Route::post('/classes', [ClasseController::class, 'store']);
+    // STG-01 : stages planifiés d'une semaine (classes de type « stage »).
+    Route::post('/classes/stage/apercu', [ClasseStageController::class, 'apercu']);
+    Route::post('/classes/stage', [ClasseStageController::class, 'store']);
     Route::post('/classes/apercu', [ClasseController::class, 'apercu']);
     Route::get('/classes/{classe}', [ClasseController::class, 'show']);
     Route::post('/classes/{classe}/apercu-modification', [ClasseController::class, 'apercuModification']);

@@ -30,7 +30,7 @@ class ClasseController extends Controller
             ->with(Classe::relationsResource())
             ->withCount('sessionsActives');
 
-        foreach (['annee_scolaire_id', 'jour_semaine', 'statut'] as $champ) {
+        foreach (['annee_scolaire_id', 'type', 'jour_semaine', 'statut'] as $champ) {
             if ($request->filled($champ)) {
                 $query->where($champ, $request->input($champ));
             }
@@ -38,7 +38,10 @@ class ClasseController extends Controller
         // cours_id : P1 ou P2 ; periode_id : classes ayant cette période (CLS-02).
         foreach (['cours_id', 'periode_id'] as $champ) {
             if ($request->filled($champ)) {
-                $query->whereHas('periodes', fn ($q) => $q->where($champ, $request->integer($champ)));
+                $filtre = fn ($q) => $q->where($champ, $request->integer($champ));
+                // STG-01 : un stage n'a pas de période scolaire, il reste visible quel que soit le filtre de période.
+                $query->where(fn ($w) => $w->whereHas('periodes', $filtre)
+                    ->when($champ === 'periode_id', fn ($x) => $x->orWhere('type', Classe::TYPE_STAGE)));
             }
         }
 

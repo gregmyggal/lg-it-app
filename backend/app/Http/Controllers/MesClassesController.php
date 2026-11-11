@@ -69,7 +69,7 @@ class MesClassesController extends Controller
 
         $sessions = $classe->sessions()->visiblePour($request->user())
             ->with(['classePeriode.cours', 'classePeriode.periode', 'sessionProfesseurs.professeur'])->get()
-            ->sortBy([fn (CourseSession $a, CourseSession $b) => $a->classePeriode->periode->numero <=> $b->classePeriode->periode->numero, ['seance_numero', 'asc'], ['bis_rang', 'asc']])->values();
+            ->sortBy([fn (CourseSession $a, CourseSession $b) => ($a->classePeriode->periode?->numero ?? 0) <=> ($b->classePeriode->periode?->numero ?? 0), ['seance_numero', 'asc'], ['bis_rang', 'asc']])->values();
         $sessions->each->setRelation('classe', $classe);
         $this->calendrier->attachAlerts($sessions);
 

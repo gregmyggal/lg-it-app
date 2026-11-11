@@ -57,7 +57,7 @@ class TimesheetValidationController extends Controller
                 'date' => $s->date->toDateString(),
                 'classe_id' => $s->classe_id,
                 'classe_libelle' => $s->classePeriode->cours->titre,
-                'periode_numero' => $s->classePeriode->periode->numero,
+                'periode_numero' => $s->classePeriode->periode?->numero,
                 'libelle_complet' => $s->libelleComplet(),
                 'professeurs_sans_heures' => $sans,
                 'jours_de_retard' => (int) $s->date->startOfDay()->diffInDays($aujourdhui),

@@ -89,6 +89,10 @@ class SessionReplanificationService
 
         $session->loadMissing('classe.anneeScolaire');
         $classe = $session->classe;
+        if ($classe->isStage()) {
+            $message = "Le décalage des séances suivantes n'est pas disponible pour un stage : déplacez chaque séance.";
+            throw RegleMetierException::invalide($message, ['decaler_suivantes' => [$message]]);
+        }
         $date = $data['date'];
         $forcees = $data['dates_forcees'] ?? [];
         $entrees = $this->calendrier->entreesActives($classe->annee_scolaire_id);

@@ -21,6 +21,11 @@ class ClasseService
      */
     public function modifier(Classe $classe, array $data): Classe
     {
+        if ($classe->isStage() && (array_key_exists('heure_debut', $data) || array_key_exists('heure_fin', $data))) {
+            $message = "Les horaires d'un stage se règlent séance par séance.";
+            throw RegleMetierException::invalide($message, ['heure_debut' => [$message]]);
+        }
+
         return DB::transaction(function () use ($classe, $data) {
             $avant = $classe->only(['heure_debut', 'heure_fin', 'lieu']);
             $classe->update($data);

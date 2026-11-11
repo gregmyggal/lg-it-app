@@ -160,6 +160,11 @@ class CourseSessionService
     {
         $periodes = $classe->periodes()->with('periode')->get();
 
+        if ($classe->isStage()) {
+            // STG-01 : un stage n'a qu'une ligne de période de classe, sans numéro de période.
+            return $periodes->first();
+        }
+
         if (! empty($data['classe_periode_id'])) {
             $cible = $periodes->firstWhere('id', (int) $data['classe_periode_id']);
         } elseif (! empty($data['periode_numero'])) {
