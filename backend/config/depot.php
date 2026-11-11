@@ -23,5 +23,19 @@ return [
         'zip' => ['application/zip', 'application/x-zip-compressed'],
         'sb3' => ['application/zip', 'application/x-zip-compressed'],
         'sb2' => ['application/zip', 'application/x-zip-compressed'],
+        // Roblox Studio : lieux (.rbxl/.rbxlx) et modèles (.rbxm/.rbxmx). Le type MIME détecté est générique (binaire ou XML) :
+        // la vraie vérification est la signature ci-dessous.
+        'rbxl' => ['application/octet-stream'],
+        'rbxm' => ['application/octet-stream'],
+        'rbxlx' => ['text/xml', 'application/xml', 'text/plain', 'application/octet-stream'],
+        'rbxmx' => ['text/xml', 'application/xml', 'text/plain', 'application/octet-stream'],
+    ],
+
+    // Extension => début obligatoire du contenu (cherché dans les 512 premiers octets pour le XML, au tout début pour le binaire).
+    'signatures' => [
+        'rbxl' => ['debut' => '<roblox!'],
+        'rbxm' => ['debut' => '<roblox!'],
+        'rbxlx' => ['contient' => '<roblox'],
+        'rbxmx' => ['contient' => '<roblox'],
     ],
 ];

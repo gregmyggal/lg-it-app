@@ -95,11 +95,30 @@ class DepotService
         if (! in_array($fichier->getMimeType(), $types[$extension], true)) {
             return 'Le contenu du fichier ne correspond pas à son extension.';
         }
+        if (! $this->signatureValide($fichier, $extension)) {
+            return 'Le contenu du fichier ne correspond pas à son extension.';
+        }
         if ($utilise + $fichier->getSize() > config('depot.quota_espace_octets')) {
             return 'Espace plein ('.round(config('depot.quota_espace_octets') / 1048576).' Mo). Supprimez des fichiers pour en déposer d\'autres.';
         }
 
         return null;
+    }
+
+    /** Formats sans type MIME fiable (Roblox) : le début du contenu doit correspondre au format annoncé par l'extension. */
+    private function signatureValide(UploadedFile $fichier, string $extension): bool
+    {
+        $regle = config('depot.signatures.'.$extension);
+        if ($regle === null) {
+            return true;
+        }
+
+        $debut = (string) file_get_contents($fichier->getRealPath(), false, null, 0, 512);
+        if (isset($regle['debut'])) {
+            return str_starts_with($debut, $regle['debut']);
+        }
+
+        return str_contains($debut, $regle['contient']);
     }
 
     /** Nom d'origine nettoyé (sans chemin ni caractère de contrôle), tronqué à 255 caractères. */

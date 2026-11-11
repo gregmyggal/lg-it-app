@@ -215,4 +215,24 @@ class DepotFichiersApiTest extends TestCase
         Storage::disk('local')->assertMissing($chemin);
         $this->assertSame(0, DepotFichier::count());
     }
+
+    public function test_fichiers_roblox_studio_acceptes_seulement_avec_la_bonne_signature(): void
+    {
+        $reponse = $this->postJson($this->url('/fichiers'), [
+            'fichiers' => [
+                UploadedFile::fake()->createWithContent('monde.rbxl', "<roblox!\x89\xff\r\n\x1a\n\x00\x00donnees"),
+                UploadedFile::fake()->createWithContent('modele.rbxm', "<roblox!\x89\xff\r\n\x1a\n\x00\x00donnees"),
+                UploadedFile::fake()->createWithContent('monde.rbxlx', '<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" version="4"><Item class="Workspace"/></roblox>'),
+                UploadedFile::fake()->createWithContent('modele.rbxmx', '<roblox version="4"></roblox>'),
+                // Mauvais contenu sous une extension Roblox : refusés.
+                UploadedFile::fake()->createWithContent('faux.rbxl', '<html><script>alert(1)</script></html>'),
+                UploadedFile::fake()->createWithContent('faux.rbxlx', '<html>pas roblox</html>'),
+                UploadedFile::fake()->create('vide.rbxm', 10, 'application/octet-stream'),
+            ],
+        ])->assertCreated()->assertJsonCount(4, 'data')->assertJsonCount(3, 'refuses');
+
+        $this->assertSame(['faux.rbxl', 'faux.rbxlx', 'vide.rbxm'], array_column($reponse->json('refuses'), 'nom'));
+        $this->assertSame(4, DepotFichier::count());
+        $this->getJson($this->url())->assertOk()->assertJsonPath('meta.extensions', fn ($ext) => array_diff(['rbxl', 'rbxm', 'rbxlx', 'rbxmx'], $ext) === []);
+    }
 }

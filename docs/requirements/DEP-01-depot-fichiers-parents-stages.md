@@ -133,7 +133,7 @@ R1 professeur dépose 5 fichiers sur une séance · R2 crée un partage de 2 fic
 | Q2 | Un stage de plusieurs séances : le partage peut-il mélanger des fichiers de l'espace du stage et de plusieurs séances ? | UX | |
 | Q3 | Conservation de l'adresse e-mail du parent | DoR | **Tranché 2026-11-11** : jamais en clair, version masquée seulement (RG-7) |
 | Q4 | Durée de conservation des fichiers après expiration | DoR | **Tranché 2026-11-11** : 60 jours (RG-6) |
-| Q5 | Types de fichiers autorisés, limite par fichier et quota par espace ? | dev | **Valeurs par défaut en place (`config/depot.php`)** : png, jpg, gif, webp, pdf, txt, zip, sb3, sb2 ; 10 Mo par fichier ; 200 Mo par espace. À confirmer / ajuster. |
+| Q5 | Types de fichiers autorisés, limite par fichier et quota par espace ? | dev | **Valeurs par défaut en place (`config/depot.php`)** : png, jpg, gif, webp, pdf, txt, zip, sb3, sb2 et **Roblox Studio (rbxl, rbxm, rbxlx, rbxmx, ajoutés le 2026-11-11, contrôle de signature `<roblox`)** ; 10 Mo par fichier ; 200 Mo par espace. À confirmer / ajuster. |
 | Q6 | Texte d'information RGPD/consentement parental et validation juridique ? | recette | |
 | Q7 | Photos d'enfants | DoR | **Tranché 2026-11-11** : interdites, uniquement des réalisations (RG-10) |
 | Q8 | Les « cours » (classes ordinaires) sont-ils aussi concernés ? Le message initial parlait de « stages ou cours » ; le Canvas ne couvre que les stages (v1). | DoR | **Tranché 2026-11-11** : stages seulement |
