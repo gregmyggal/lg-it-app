@@ -16,6 +16,8 @@ use App\Http\Controllers\ClasseSessionController;
 use App\Http\Controllers\ClasseSettingController;
 use App\Http\Controllers\CoursController;
 use App\Http\Controllers\DepotFichierController;
+use App\Http\Controllers\DepotPartageController;
+use App\Http\Controllers\DepotPublicController;
 use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\CoursLienController;
 use App\Http\Controllers\CoursRessourceController;
@@ -66,6 +68,10 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:lo
 
 // SIG-01 : vérification publique d'une signature imprimée sur une fiche (identifiant aléatoire, données minimales).
 Route::get('/signatures/{publicId}/verification', [SignatureController::class, 'verifier'])->middleware('throttle:30,1');
+
+// DEP-01 T2 : page parent (publique) — le token fait office d'autorisation.
+Route::get('/public/depot/{token}', [DepotPublicController::class, 'show'])->middleware('throttle:60,1');
+Route::get('/public/depot/{token}/fichiers/{fichier}', [DepotPublicController::class, 'telecharger'])->middleware('throttle:60,1');
 
 // ADMIN-02 : « Mot de passe oublié » et définition du mot de passe via un lien (publics, tous rôles).
 Route::post('/mot-de-passe/oublie', [AccesController::class, 'oubli'])->middleware('throttle:acces-oubli');
@@ -162,6 +168,12 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/classes/{classe}/depot/fichiers', [DepotFichierController::class, 'store']);
     Route::delete('/classes/{classe}/depot/fichiers/{fichier}', [DepotFichierController::class, 'destroy']);
     Route::get('/classes/{classe}/depot/fichiers/{fichier}/telecharger', [DepotFichierController::class, 'telecharger']);
+    // DEP-01 T2 : liens parents (sélection de fichiers, 7 jours, régénérables, révocables).
+    Route::get('/classes/{classe}/depot/partages', [DepotPartageController::class, 'index']);
+    Route::post('/classes/{classe}/depot/partages', [DepotPartageController::class, 'store']);
+    Route::post('/classes/{classe}/depot/partages/{partage}/regenerer', [DepotPartageController::class, 'regenerer']);
+    Route::post('/classes/{classe}/depot/partages/{partage}/revoquer', [DepotPartageController::class, 'revoquer']);
+    Route::get('/classes/{classe}/depot/partages/{partage}/lien', [DepotPartageController::class, 'lien']);
 
     // CLS-01 T1 : années scolaires, calendrier scolaire, classes, sessions (admin/directeur).
     Route::get('/annees-scolaires', [AnneeScolaireController::class, 'index']);

@@ -18,6 +18,13 @@ export const STATUTS_CLASSE = {
   archivee: { label: 'Archivée', tone: 'neutral', archive: true },
 };
 
+/** DEP-01 : état d'un lien parent (calculé côté serveur). */
+export const STATUTS_PARTAGE = {
+  actif: { label: 'Actif', tone: 'success' },
+  expire: { label: 'Expiré', tone: 'neutral' },
+  revoque: { label: 'Révoqué', tone: 'error' },
+};
+
 export const STATUTS_ANNEE = {
   brouillon: { label: 'Brouillon', tone: 'neutral' },
   active: { label: 'Active', tone: 'success', discret: true },

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { PartagerModal, PartagesTab } from './PartagesStage';
 import AdminButton from '../AdminButton';
 import AdminModal from '../AdminModal';
 import Banner from '../ui/Banner';
@@ -32,6 +33,9 @@ export default function FichiersStage({ classeId }) {
   const [ouvert, setOuvert] = useState(false);
   const [aSupprimer, setASupprimer] = useState(null);
   const [enCours, setEnCours] = useState(false);
+  const [onglet, setOnglet] = useState('fichiers'); // 'fichiers' | 'partages'
+  const [selection, setSelection] = useState(() => new Set());
+  const [aPartager, setAPartager] = useState(null); // fichiers de la sélection à partager
 
   const fichiers = useMemo(() => depot.data?.data || [], [depot.data]);
   const seances = depot.data?.meta?.seances || [];
@@ -57,6 +61,16 @@ export default function FichiersStage({ classeId }) {
     return [...parLibelle.entries()].sort(([a], [b]) => (a === SANS_LIBELLE) - (b === SANS_LIBELLE) || a.localeCompare(b, 'fr'));
   }, [visibles]);
 
+  function basculer(ids, coche) {
+    setSelection((prev) => {
+      const suivant = new Set(prev);
+      ids.forEach((id) => (coche ? suivant.add(id) : suivant.delete(id)));
+      return suivant;
+    });
+  }
+
+  const partager = (liste) => setAPartager(liste);
+
   async function telecharger(f) {
     try {
       await telechargerFichier(classeId, f);
@@ -71,6 +85,11 @@ export default function FichiersStage({ classeId }) {
       await supprimerFichier(classeId, aSupprimer.id);
       toast.success('Fichier supprimé.');
       setASupprimer(null);
+      setSelection((prev) => {
+        const suivant = new Set(prev);
+        suivant.delete(aSupprimer.id);
+        return suivant;
+      });
       depot.reload();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -91,16 +110,27 @@ export default function FichiersStage({ classeId }) {
       subtitle={depot.data ? `${fichiers.length} fichier${fichiers.length > 1 ? 's' : ''}` : undefined}
       actions={<AdminButton size="sm" onClick={() => setOuvert(true)}>Déposer des fichiers</AdminButton>}
     >
-      {depot.loading && <LoadingBlock message="Chargement des fichiers…" lignes={3} />}
-      {depot.error && <ErrorBlock message={depot.error} onRetry={depot.reload} />}
+      <div role="group" aria-label="Section" style={{ display: 'flex', gap: ADMIN_SPACING.sm, marginBottom: ADMIN_SPACING.lg }}>
+        <AdminButton size="sm" variant={onglet === 'fichiers' ? 'primary' : 'secondary'} aria-pressed={onglet === 'fichiers'} onClick={() => setOnglet('fichiers')}>
+          Fichiers
+        </AdminButton>
+        <AdminButton size="sm" variant={onglet === 'partages' ? 'primary' : 'secondary'} aria-pressed={onglet === 'partages'} onClick={() => setOnglet('partages')}>
+          Partages
+        </AdminButton>
+      </div>
 
-      {depot.data && fichiers.length === 0 && (
+      {onglet === 'partages' && <PartagesTab classeId={classeId} />}
+
+      {onglet === 'fichiers' && depot.loading && <LoadingBlock message="Chargement des fichiers…" lignes={3} />}
+      {onglet === 'fichiers' && depot.error && <ErrorBlock message={depot.error} onRetry={depot.reload} />}
+
+      {onglet === 'fichiers' && depot.data && fichiers.length === 0 && (
         <EmptyBlock icon="📁" title="Aucun fichier pour l'instant">
           Déposez ici les réalisations des enfants (projets, créations). Les parents pourront les recevoir par lien plus tard.
         </EmptyBlock>
       )}
 
-      {fichiers.length > 0 && (
+      {onglet === 'fichiers' && fichiers.length > 0 && (
         <>
           <div role="group" aria-label="Filtrer par espace" style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap', marginBottom: ADMIN_SPACING.lg }}>
             {filtres.map((f) => (
@@ -114,9 +144,20 @@ export default function FichiersStage({ classeId }) {
           <div style={{ display: 'grid', gap: ADMIN_SPACING.lg }}>
             {groupes.map(([libelle, liste]) => (
               <div key={libelle}>
-                <h3 style={{ fontSize: '14px', margin: `0 0 ${ADMIN_SPACING.sm}` }}>
-                  {libelle} <span style={{ color: ADMIN_COLORS.textSecondary, fontWeight: 400 }}>· {liste.length} fichier{liste.length > 1 ? 's' : ''}</span>
-                </h3>
+                <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: ADMIN_SPACING.sm }}>
+                  <label style={{ display: 'flex', gap: ADMIN_SPACING.sm, alignItems: 'center', fontSize: '14px', fontWeight: 700 }}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Sélectionner tous les fichiers de ${libelle}`}
+                      checked={liste.every((f) => selection.has(f.id))}
+                      onChange={(e) => basculer(liste.map((f) => f.id), e.target.checked)}
+                    />
+                    <span>
+                      {libelle} <span style={{ color: ADMIN_COLORS.textSecondary, fontWeight: 400 }}>· {liste.length} fichier{liste.length > 1 ? 's' : ''}</span>
+                    </span>
+                  </label>
+                  <AdminButton size="sm" onClick={() => partager(liste)}>Partager</AdminButton>
+                </div>
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: ADMIN_SPACING.sm }}>
                   {liste.map((f) => (
                     <li
@@ -133,6 +174,12 @@ export default function FichiersStage({ classeId }) {
                         background: ADMIN_COLORS.cardBg,
                       }}
                     >
+                      <input
+                        type="checkbox"
+                        aria-label={`Sélectionner ${f.nom}`}
+                        checked={selection.has(f.id)}
+                        onChange={(e) => basculer([f.id], e.target.checked)}
+                      />
                       <div style={{ minWidth: 0, flex: '1 1 180px' }}>
                         <div style={{ fontWeight: 600, overflowWrap: 'anywhere' }}>{f.nom}</div>
                         <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>
@@ -155,6 +202,30 @@ export default function FichiersStage({ classeId }) {
             ))}
           </div>
         </>
+      )}
+
+      {onglet === 'fichiers' && selection.size > 0 && (
+        <div
+          role="status"
+          style={{ position: 'sticky', bottom: ADMIN_SPACING.md, marginTop: ADMIN_SPACING.lg, display: 'flex', gap: ADMIN_SPACING.md, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', padding: ADMIN_SPACING.md, borderRadius: ADMIN_RADIUS.md, border: `1px solid ${ADMIN_COLORS.border}`, background: ADMIN_COLORS.cardBg }}
+        >
+          <span>{selection.size} fichier{selection.size > 1 ? 's' : ''} sélectionné{selection.size > 1 ? 's' : ''}</span>
+          <span style={{ display: 'flex', gap: ADMIN_SPACING.sm }}>
+            <AdminButton size="sm" variant="secondary" onClick={() => setSelection(new Set())}>Vider</AdminButton>
+            <AdminButton size="sm" onClick={() => partager(fichiers.filter((f) => selection.has(f.id)))}>Partager à un parent</AdminButton>
+          </span>
+        </div>
+      )}
+
+      {aPartager && (
+        <PartagerModal
+          classeId={classeId}
+          fichiers={aPartager}
+          onClose={() => {
+            setAPartager(null);
+            setSelection(new Set());
+          }}
+        />
       )}
 
       {ouvert && (

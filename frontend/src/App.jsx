@@ -40,6 +40,7 @@ import StagesAdminPage from './pages/admin/StagesAdminPage';
 import TypesFormationAdminPage from './pages/admin/TypesFormationAdminPage';
 import SharePage from './pages/SharePage';
 import VerificationSignaturePage from './pages/VerificationSignaturePage';
+import DepotParentPage from './pages/DepotParentPage';
 import StaffAdminPage from './pages/admin/StaffAdminPage';
 import TimesheetParametresPage from './pages/admin/TimesheetParametresPage';
 import EmployeursAdminPage from './pages/admin/EmployeursAdminPage';
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/definir-mot-de-passe" element={<DefinirMotDePassePage />} />
           <Route path="/share/:code" element={<SharePage />} />
           <Route path="/verif/:id" element={<VerificationSignaturePage />} />
+          <Route path="/depot/:token" element={<DepotParentPage />} />
           <Route
             path="/mot-de-passe"
             element={
