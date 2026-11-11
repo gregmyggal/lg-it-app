@@ -54,7 +54,11 @@ class DepotLienMail extends Mailable
 
         $d = \Illuminate\Support\Carbon::parse($debut)->locale('fr');
         $f = \Illuminate\Support\Carbon::parse($fin)->locale('fr');
-        $dates = $d->isSameDay($f) ? $d->isoFormat('D MMMM YYYY') : 'du '.$d->isoFormat('D MMMM').' au '.$f->isoFormat('D MMMM YYYY');
+        $dates = match (true) {
+            $d->isSameDay($f) => $d->isoFormat('D MMMM YYYY'),
+            $d->isSameMonth($f) => 'du '.$d->isoFormat('D').' au '.$f->isoFormat('D MMMM YYYY'),
+            default => 'du '.$d->isoFormat('D MMMM').' au '.$f->isoFormat('D MMMM YYYY'),
+        };
 
         return $cours ? "$cours, $dates" : $dates;
     }

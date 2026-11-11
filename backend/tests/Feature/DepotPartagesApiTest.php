@@ -232,6 +232,7 @@ class DepotPartagesApiTest extends TestCase
         $html = view('mail.depot.lien', get_object_vars($mail))->render();
         $this->assertStringContainsString($token, $html);
         $this->assertStringContainsString('Voir et télécharger les fichiers', $html);
+        $this->assertStringContainsString('du 12 au 16 octobre 2026', $html); // stage de 5 matinées, même mois
 
         // « Envoyer à un autre parent » : même lien, une trace de plus.
         $this->postJson($this->url("/partages/{$data['id']}/envoyer"), ['email' => 'papa@example.be'])->assertOk()->assertJsonPath('data.nb_envois', 2);
