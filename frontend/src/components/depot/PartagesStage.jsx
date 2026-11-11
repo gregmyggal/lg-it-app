@@ -4,9 +4,9 @@ import AdminModal from '../AdminModal';
 import Banner from '../ui/Banner';
 import StatutBadge from '../ui/StatutBadge';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '../ui/DataStates';
-import { creerPartage, lienPartage, regenererPartage, revoquerPartage, usePartages } from '../../hooks/useDepot';
+import { creerPartage, envoyerLien, lienPartage, regenererPartage, revoquerPartage, usePartages } from '../../hooks/useDepot';
 import { useToast } from '../../hooks/useToast';
-import { getErrorMessage } from '../../api/errors';
+import { getErrorData, getErrorMessage, getFieldErrors } from '../../api/errors';
 import { STATUTS_PARTAGE } from '../../utils/statuts';
 import { formatDate, formatDateHeure } from '../../utils/dates';
 import { ADMIN_COLORS, ADMIN_RADIUS, ADMIN_SPACING } from '../../styles/AdminDesignSystem';
@@ -46,11 +46,87 @@ function LienCopiable({ lien, expireLe }) {
   );
 }
 
+/**
+ * Mock-up 02 : envoi du lien à un parent. L'adresse est saisie ici et n'est pas conservée (seule une version masquée est tracée).
+ * `partage` : { id, nb_fichiers, expire_le }.
+ */
+export function EnvoyerModal({ classeId, partage, onClose, onDone }) {
+  const toast = useToast();
+  const [email, setEmail] = useState('');
+  const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState(null);
+  const [erreurChamp, setErreurChamp] = useState(null);
+
+  async function envoyer() {
+    setEnCours(true);
+    setErreur(null);
+    setErreurChamp(null);
+    try {
+      const maj = await envoyerLien(classeId, partage.id, email.trim());
+      const dernier = maj.envois?.[0]?.destinataire;
+      toast.success(`E-mail envoyé${dernier ? ` à ${dernier}` : ''}. Le lien reste valable jusqu'au ${formatDateHeure(partage.expire_le)}.`);
+      onDone?.();
+      onClose();
+    } catch (err) {
+      const champs = getFieldErrors(err);
+      if (champs.email) setErreurChamp(champs.email);
+      else setErreur(getErrorData(err)?.message || getErrorMessage(err));
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  return (
+    <AdminModal
+      isOpen
+      title="Envoyer le lien à un parent"
+      size="sm"
+      onClose={onClose}
+      closeOnBackdrop={!enCours}
+      footer={
+        <>
+          <AdminButton variant="secondary" onClick={onClose} disabled={enCours}>Annuler</AdminButton>
+          <AdminButton onClick={envoyer} loading={enCours} disabled={email.trim() === ''}>Envoyer l'e-mail</AdminButton>
+        </>
+      }
+    >
+      <div style={{ display: 'grid', gap: ADMIN_SPACING.lg }}>
+        <div>
+          <label htmlFor="depot-email" style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: ADMIN_SPACING.xs }}>
+            Adresse e-mail du parent
+          </label>
+          <input
+            id="depot-email"
+            type="email"
+            inputMode="email"
+            autoComplete="off"
+            value={email}
+            maxLength={190}
+            aria-invalid={Boolean(erreurChamp)}
+            aria-describedby={erreurChamp ? 'depot-email-erreur' : undefined}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: '100%', boxSizing: 'border-box', padding: ADMIN_SPACING.sm, minHeight: '44px' }}
+          />
+          {erreurChamp && <div id="depot-email-erreur" role="alert" style={{ fontSize: '12px', color: ADMIN_COLORS.error, marginTop: ADMIN_SPACING.xs }}>{erreurChamp}</div>}
+          <div style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginTop: ADMIN_SPACING.xs }}>
+            L'adresse n'est pas conservée : pour renvoyer le lien, il faudra la saisir à nouveau.
+          </div>
+        </div>
+        <p style={{ margin: 0, fontSize: '13px' }}>
+          Toute personne qui possède ce lien peut télécharger les {partage.nb_fichiers} fichier{partage.nb_fichiers > 1 ? 's' : ''} jusqu'au {formatDateHeure(partage.expire_le)}.
+        </p>
+        {erreur && <Banner tone="error">{erreur}</Banner>}
+      </div>
+    </AdminModal>
+  );
+}
+
 /** Mock-up 02 : créer le lien d'une sélection de fichiers (rien n'est envoyé à cette étape). */
 export function PartagerModal({ classeId, fichiers, onClose }) {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [resultat, setResultat] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
   const libelles = [...new Set(fichiers.map((f) => f.libelle || 'Sans libellé'))];
 
   async function creer() {
@@ -108,8 +184,15 @@ export function PartagerModal({ classeId, fichiers, onClose }) {
         <div style={{ display: 'grid', gap: ADMIN_SPACING.lg }}>
           <Banner tone="success">Lien créé. Rien n'a encore été envoyé.</Banner>
           <LienCopiable lien={resultat.lien} expireLe={resultat.data.expire_le} />
+          <div>
+            <AdminButton variant="secondary" onClick={() => setEnvoi(true)}>Envoyer le lien par e-mail</AdminButton>
+            <span style={{ fontSize: '12px', color: ADMIN_COLORS.textSecondary, marginLeft: ADMIN_SPACING.sm }}>
+              ou plus tard, depuis l'onglet « Partages ».
+            </span>
+          </div>
         </div>
       )}
+      {envoi && <EnvoyerModal classeId={classeId} partage={resultat.data} onClose={() => setEnvoi(false)} />}
     </AdminModal>
   );
 }
@@ -120,6 +203,7 @@ export function PartagesTab({ classeId, recharge }) {
   const toast = useToast();
   const [action, setAction] = useState(null); // { type: 'regenerer' | 'revoquer', partage }
   const [enCours, setEnCours] = useState(false);
+  const [envoyer, setEnvoyer] = useState(null); // partage à envoyer
   const [regenere, setRegenere] = useState(null); // { lien, data } affiché après régénération
 
   async function copierLien(p) {
@@ -178,6 +262,7 @@ export function PartagesTab({ classeId, recharge }) {
             <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap', alignItems: 'center' }}>
               <strong>{p.libelle || 'Sélection mixte'}</strong>
               <StatutBadge table={STATUTS_PARTAGE} valeur={p.statut} />
+              {p.statut === 'actif' && <StatutBadge label={p.nb_envois > 0 ? 'Envoyé' : 'Non envoyé'} tone={p.nb_envois > 0 ? 'success' : 'warning'} />}
               <span style={{ fontSize: '13px', color: ADMIN_COLORS.textSecondary }}>
                 {p.nb_fichiers} fichier{p.nb_fichiers > 1 ? 's' : ''}
               </span>
@@ -189,9 +274,23 @@ export function PartagesTab({ classeId, recharge }) {
               {` · créé par ${p.cree_par || '—'} · ouvert ${p.nb_ouvertures} fois`}
               {p.derniere_ouverture_le ? ` (dernière : ${formatDateHeure(p.derniere_ouverture_le)})` : ''}
             </div>
+            {p.envois?.length > 0 && (
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: ADMIN_COLORS.textSecondary }}>
+                {p.envois.map((e) => (
+                  <li key={`${e.destinataire}-${e.envoye_le}`}>
+                    Envoyé à {e.destinataire} le {formatDateHeure(e.envoye_le)}{e.envoye_par ? ` par ${e.envoye_par}` : ''}
+                  </li>
+                ))}
+              </ul>
+            )}
             <div style={{ display: 'flex', gap: ADMIN_SPACING.sm, flexWrap: 'wrap', marginTop: ADMIN_SPACING.xs }}>
               {p.statut === 'actif' && (
-                <AdminButton size="sm" onClick={() => copierLien(p)}>Copier le lien</AdminButton>
+                <AdminButton size="sm" onClick={() => setEnvoyer(p)}>
+                  {p.nb_envois > 0 ? 'Envoyer à un autre parent' : 'Envoyer le lien'}
+                </AdminButton>
+              )}
+              {p.statut === 'actif' && (
+                <AdminButton size="sm" variant="secondary" onClick={() => copierLien(p)}>Copier le lien</AdminButton>
               )}
               <AdminButton size="sm" variant="secondary" onClick={() => setAction({ type: 'regenerer', partage: p })}>
                 Régénérer le lien
@@ -205,6 +304,8 @@ export function PartagesTab({ classeId, recharge }) {
           </li>
         ))}
       </ul>
+
+      {envoyer && <EnvoyerModal classeId={classeId} partage={envoyer} onClose={() => setEnvoyer(null)} onDone={partages.reload} />}
 
       <AdminModal
         isOpen={Boolean(action)}

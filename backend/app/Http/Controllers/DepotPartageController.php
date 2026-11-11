@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\EnvoyerDepotLienRequest;
 use App\Http\Requests\StoreDepotPartageRequest;
 use App\Http\Resources\DepotPartageResource;
 use App\Models\Classe;
@@ -19,7 +20,7 @@ class DepotPartageController extends Controller
     {
         $this->autoriser($classe);
 
-        $liste = DepotPartage::where('classe_id', $classe->id)->withCount('fichiers')->with('createur:id,name')
+        $liste = DepotPartage::where('classe_id', $classe->id)->withCount(['fichiers', 'envois'])->with(['createur:id,name', 'envois.expediteur:id,name'])
             ->orderByDesc('created_at')->orderByDesc('id')->get();
 
         return DepotPartageResource::collection($liste)->response();
@@ -47,6 +48,19 @@ class DepotPartageController extends Controller
         return $this->reponse($this->partages->revoquer($partage), 200, false);
     }
 
+    public function envoyer(EnvoyerDepotLienRequest $request, Classe $classe, DepotPartage $partage): JsonResponse
+    {
+        $this->autoriser($classe, $partage);
+
+        try {
+            $this->partages->envoyer($partage, $request->validated('email'), $request->user());
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return $this->reponse($partage, 200, false);
+    }
+
     public function lien(Classe $classe, DepotPartage $partage): JsonResponse
     {
         $this->autoriser($classe, $partage);
@@ -58,7 +72,7 @@ class DepotPartageController extends Controller
 
     private function reponse(DepotPartage $partage, int $statut = 200, bool $avecLien = true): JsonResponse
     {
-        $partage->load('createur:id,name')->loadCount('fichiers');
+        $partage->load(['createur:id,name', 'envois.expediteur:id,name'])->loadCount(['fichiers', 'envois']);
         $corps = ['data' => new DepotPartageResource($partage)];
         if ($avecLien) {
             $corps['lien'] = $this->partages->lien($partage);

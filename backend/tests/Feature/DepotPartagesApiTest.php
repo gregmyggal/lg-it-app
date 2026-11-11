@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Mail\DepotLienMail;
 use App\Models\Classe;
 use App\Models\Cours;
+use App\Models\DepotEnvoi;
 use App\Models\DepotFichier;
 use App\Models\DepotPartage;
 use App\Models\Professeur;
@@ -11,6 +13,9 @@ use App\Services\ClasseProfesseurAssignmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\Concerns\PrepareScolarite;
@@ -210,5 +215,113 @@ class DepotPartagesApiTest extends TestCase
         Sanctum::actingAs($prof->user);
 
         $this->postJson($this->url('/partages'), ['fichier_ids' => [$this->fichiers['lea']->id]])->assertCreated();
+    }
+
+    public function test_envoi_du_lien_par_email_trace_une_adresse_masquee(): void
+    {
+        Mail::fake();
+        [$data, $token] = $this->partager('lea');
+
+        $rep = $this->postJson($this->url("/partages/{$data['id']}/envoyer"), ['email' => 'marie.dupont@example.be'])
+            ->assertOk()->assertJsonPath('data.nb_envois', 1)->assertJsonPath('data.envois.0.destinataire', 'm***@example.be');
+        $this->assertStringNotContainsString('marie', $rep->getContent());
+
+        Mail::assertSent(DepotLienMail::class, fn (DepotLienMail $m) => $m->hasTo('marie.dupont@example.be') && str_ends_with($m->lien, $token));
+        $mail = Mail::sent(DepotLienMail::class)->first();
+        $this->assertStringNotContainsString('Léa', $mail->objet);
+        $html = view('mail.depot.lien', get_object_vars($mail))->render();
+        $this->assertStringContainsString($token, $html);
+        $this->assertStringContainsString('Voir et télécharger les fichiers', $html);
+
+        // « Envoyer à un autre parent » : même lien, une trace de plus.
+        $this->postJson($this->url("/partages/{$data['id']}/envoyer"), ['email' => 'papa@example.be'])->assertOk()->assertJsonPath('data.nb_envois', 2);
+        $this->assertSame(['m***@example.be', 'p***@example.be'], DepotEnvoi::orderBy('id')->pluck('destinataire_masque')->all());
+
+        // L'adresse en clair n'est stockée nulle part dans la base de dépôt.
+        $this->assertStringNotContainsString('marie', json_encode(DB::table('depot_envois')->get()));
+        $this->getJson($this->url('/partages'))->assertOk()->assertJsonPath('data.0.nb_envois', 2)->assertJsonCount(2, 'data.0.envois');
+    }
+
+    public function test_envoi_refuse_si_lien_revoque_adresse_invalide_ou_droits_manquants(): void
+    {
+        Mail::fake();
+        [$data] = $this->partager('lea');
+        $id = $data['id'];
+
+        $this->postJson($this->url("/partages/$id/envoyer"), ['email' => 'pas-une-adresse'])->assertStatus(422)->assertJsonValidationErrors('email');
+        $this->postJson($this->url("/partages/$id/envoyer"), [])->assertStatus(422)->assertJsonValidationErrors('email');
+
+        $this->postJson($this->url("/partages/$id/revoquer"))->assertOk();
+        $this->postJson($this->url("/partages/$id/envoyer"), ['email' => 'a@example.be'])->assertStatus(422);
+
+        $this->actingAsRole('professeur');
+        $this->postJson($this->url("/partages/$id/envoyer"), ['email' => 'a@example.be'])->assertForbidden();
+
+        Mail::assertNothingSent();
+        $this->assertSame(0, DepotEnvoi::count());
+    }
+
+    public function test_echec_du_serveur_de_mail_ne_laisse_ni_trace_ni_adresse_dans_les_logs(): void
+    {
+        [$data] = $this->partager('lea');
+        Log::spy();
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('connexion refusée pour secret.parent@example.be'));
+
+        $this->postJson($this->url("/partages/{$data['id']}/envoyer"), ['email' => 'secret.parent@example.be'])
+            ->assertStatus(422)->assertJsonPath('message', fn ($m) => str_contains($m, 'n\'a pas pu être envoyé') && ! str_contains($m, 'secret'));
+
+        $this->assertSame(0, DepotEnvoi::count());
+        Log::shouldHaveReceived('warning')->withArgs(fn ($m, $contexte) => ! str_contains(json_encode($contexte), 'secret'))->once();
+    }
+
+    public function test_purge_60_jours_apres_expiration_et_effacement_des_tokens_echus(): void
+    {
+        [$partageB] = $this->partager('lea'); // fichier B, lien qui expirera il y a 61 jours
+        $this->postJson($this->url('/fichiers'), ['fichiers' => [UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')], 'libelle' => 'A'])->assertCreated();
+        $this->postJson($this->url('/fichiers'), ['fichiers' => [UploadedFile::fake()->create('d.pdf', 10, 'application/pdf')], 'libelle' => 'D'])->assertCreated();
+        $a = DepotFichier::where('libelle', 'A')->firstOrFail(); // jamais partagé, déposé il y a 61 jours
+        $d = DepotFichier::where('libelle', 'D')->firstOrFail(); // jamais partagé, récent
+        $b = $this->fichiers['lea'];
+        $c = $this->fichiers['tom']; // dans un lien encore actif
+
+        [$partageC] = $this->partager('tom');
+        [$partageD] = $this->partager('lea', 'tom'); // lien récemment expiré (5 jours) : protège lea et tom ? non, voir ci-dessous
+        DepotPartage::whereKey($partageD['id'])->delete(); // on retire ce lien : il ne sert qu'à vérifier l'unicité des tokens
+
+        DepotPartage::whereKey($partageB['id'])->update(['expire_le' => now()->subDays(61)]);
+        DepotFichier::whereIn('id', [$a->id, $b->id, $c->id])->update(['created_at' => now()->subDays(100)]);
+        DepotFichier::whereKey($a->id)->update(['created_at' => now()->subDays(61)]);
+
+        // Un lien expiré depuis 5 jours : son token chiffré doit disparaître, mais le lien et son fichier restent.
+        [$partageRecent] = $this->partager('lea');
+        DepotPartage::whereKey($partageRecent['id'])->update(['expire_le' => now()->subDays(5)]);
+
+        $this->artisan('depots:purger', ['--simulation' => true])->assertSuccessful();
+        $this->assertSame(4, DepotFichier::count()); // simulation : rien de supprimé
+
+        $this->artisan('depots:purger')->assertSuccessful();
+
+        // A (jamais partagé, 61 j) est supprimé ; B (lien expiré il y a 61 j) est protégé par le lien récent (expiré il y a 5 j).
+        Storage::disk('local')->assertMissing($a->chemin);
+        Storage::disk('local')->assertExists($b->chemin);
+        Storage::disk('local')->assertExists($c->chemin);
+        Storage::disk('local')->assertExists($d->chemin);
+        $this->assertSame(3, DepotFichier::count());
+        $this->assertNull(DepotPartage::findOrFail($partageRecent['id'])->token_chiffre);
+        $this->assertNotNull(DepotPartage::findOrFail($partageC['id'])->token_chiffre); // lien actif : intact
+        $this->assertSame('actif', DepotPartage::findOrFail($partageC['id'])->statut());
+    }
+
+    public function test_purge_supprime_fichier_et_lien_vide_quand_le_dernier_lien_a_61_jours(): void
+    {
+        [$partage] = $this->partager('lea');
+        DepotPartage::whereKey($partage['id'])->update(['expire_le' => now()->subDays(61)]);
+        DepotFichier::whereKey($this->fichiers['lea']->id)->update(['created_at' => now()->subDays(100)]);
+
+        $this->artisan('depots:purger')->assertSuccessful();
+
+        Storage::disk('local')->assertMissing($this->fichiers['lea']->chemin);
+        $this->assertSame(0, DepotPartage::count()); // lien vidé, échu depuis plus de 60 jours : supprimé avec son journal
+        $this->assertSame(1, DepotFichier::count()); // tom, récent et jamais partagé
     }
 }

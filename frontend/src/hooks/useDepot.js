@@ -77,3 +77,8 @@ export async function telechargerFichierParent(token, fichier) {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+/** Envoie le lien par e-mail (l'adresse n'est pas conservée). 422 avec `message` si l'envoi échoue ou si le lien n'est plus actif. */
+export function envoyerLien(classeId, partageId, email) {
+  return client.post(`/classes/${classeId}/depot/partages/${partageId}/envoyer`, { email }).then((res) => res.data.data);
+}

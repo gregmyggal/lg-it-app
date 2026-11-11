@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /** DEP-01 : fichier déposé (réalisation d'un enfant). Le contenu vit sur le disque privé, jamais servi tel quel. */
 class DepotFichier extends Model
@@ -20,6 +21,11 @@ class DepotFichier extends Model
     public function espace(): BelongsTo
     {
         return $this->belongsTo(DepotEspace::class, 'depot_espace_id');
+    }
+
+    public function partages(): BelongsToMany
+    {
+        return $this->belongsToMany(DepotPartage::class, 'depot_partage_fichiers', 'fichier_id', 'partage_id');
     }
 
     public function deposePar(): BelongsTo

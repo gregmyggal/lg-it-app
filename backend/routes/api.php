@@ -173,6 +173,7 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
     Route::post('/classes/{classe}/depot/partages', [DepotPartageController::class, 'store']);
     Route::post('/classes/{classe}/depot/partages/{partage}/regenerer', [DepotPartageController::class, 'regenerer']);
     Route::post('/classes/{classe}/depot/partages/{partage}/revoquer', [DepotPartageController::class, 'revoquer']);
+    Route::post('/classes/{classe}/depot/partages/{partage}/envoyer', [DepotPartageController::class, 'envoyer'])->middleware('throttle:20,1');
     Route::get('/classes/{classe}/depot/partages/{partage}/lien', [DepotPartageController::class, 'lien']);
 
     // CLS-01 T1 : années scolaires, calendrier scolaire, classes, sessions (admin/directeur).

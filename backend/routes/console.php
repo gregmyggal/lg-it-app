@@ -22,3 +22,6 @@ Schedule::command('timesheets:purger-notes')->dailyAt('04:15');
 
 // RGPD-01 : journal des accès à l'IBAN et aux fiches conservé 12 mois.
 Schedule::command('acces:purger-journal')->dailyAt('03:15');
+
+// DEP-01 : fichiers déposés supprimés 60 jours après l'expiration du dernier lien (ou après le dépôt s'ils n'ont jamais été partagés).
+Schedule::command('depots:purger')->dailyAt('05:00'); // heure pile : cron OVH horaire

@@ -1,6 +1,6 @@
 # DEP-01 — Dépôt de fichiers d'enfants et partage aux parents par lien temporaire (stages) — Canvas de requirements
 
-> Copie remplie de `docs/REQUIREMENTS_CANVAS.md`. **v0.3 — mock-ups validés par le directeur le 2026-11-11 ; tranches T1 (dépôt, liste, téléchargement, suppression) et T2 (partage par sélection, lien copiable, page parent, expiration, régénération, révocation) livrées** (backend + frontend, ADR `docs/adr/0003-depot-fichiers-et-partage-par-token.md`). T3 (envoi par e-mail en second temps, journal, commande `depots:purger` à 60 jours qui efface aussi `token_chiffre` des partages expirés) à faire. Recette navigateur à faire après `php artisan migrate`.
+> Copie remplie de `docs/REQUIREMENTS_CANVAS.md`. **v1.0 — mock-ups validés par le directeur le 2026-11-11 ; tranches T1 (dépôt), T2 (partage par sélection, page parent, régénération, révocation) et T3 (envoi par e-mail, journal, purge à 60 jours) livrées** (backend + frontend, ADR `docs/adr/0003-depot-fichiers-et-partage-par-token.md`). Reste avant la production : Q6 (texte RGPD / consentement parental), confirmation de Q5, recette navigateur après `php artisan migrate`, limites PHP d'OVH (`upload_max_filesize`, `post_max_size`).
 
 | | |
 |---|---|

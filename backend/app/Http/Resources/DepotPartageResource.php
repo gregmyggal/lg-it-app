@@ -21,6 +21,12 @@ class DepotPartageResource extends JsonResource
             'derniere_ouverture_le' => $this->derniere_ouverture_le?->toIso8601String(),
             'cree_par' => $this->createur?->name,
             'cree_le' => $this->created_at?->toIso8601String(),
+            'nb_envois' => $this->envois_count ?? $this->envois()->count(),
+            'envois' => $this->whenLoaded('envois', fn () => $this->envois->map(fn ($e) => [
+                'destinataire' => $e->destinataire_masque,
+                'envoye_par' => $e->expediteur?->name,
+                'envoye_le' => $e->envoye_le->toIso8601String(),
+            ])->values()),
         ];
     }
 }
