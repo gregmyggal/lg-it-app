@@ -12,6 +12,7 @@ import { formatDuree } from '../../utils/format';
 import ClasseSessionsTable from '../../components/classes/ClasseSessionsTable';
 import SessionAdjustModal from '../../components/classes/SessionAdjustModal';
 import ProfesseursClasseSection from '../../components/professeurs/ProfesseursClasseSection';
+import FichiersStage from '../../components/depot/FichiersStage';
 import ProfesseursSessionModal from '../../components/professeurs/ProfesseursSessionModal';
 import { useProfesseursListe } from '../../hooks/useProfesseursClasses';
 import { useLiensCours } from '../../hooks/useLiens';
@@ -326,6 +327,8 @@ export default function ClasseDetailPage() {
         <div id="professeurs" style={{ scrollMarginTop: '16px' }}>
           <ProfesseursClasseSection classe={c} titreClasse={titre} onChange={sessions.reload} />
         </div>
+
+        {estStage && <FichiersStage classeId={c.id} />}
 
         {estStage && (c.periodes || [])[0] && (
           <PeriodeBloc

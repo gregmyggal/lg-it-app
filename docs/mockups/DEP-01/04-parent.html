@@ -1,0 +1,106 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>DEP-01 · Écran 4 — Page publique parent (sans connexion, mobile)</title><style>:root{--p:#2563eb;--pl:#dbeafe;--ok:#10b981;--okbg:#d1fae5;--okfg:#065f46;--wa:#f59e0b;--wabg:#fef3c7;--wafg:#92400e;--er:#ef4444;--erbg:#fee2e2;--erfg:#991b1b;--bg:#f9fafb;--card:#fff;--tx:#111827;--tx2:#4b5563;--bd:#e5e7eb;--focus:#93c5fd}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--tx);background:#e5e7eb;padding:16px}
+h1.doc{font-size:18px;margin:0 0 4px}p.doc{margin:0 0 16px;color:var(--tx2);font-size:13px;max-width:760px}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.fig{width:375px}.fig>figcaption{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2);margin:0 0 6px}
+.phone{width:375px;min-height:560px;background:var(--bg);border:1px solid #9ca3af;border-radius:18px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.bar{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px}.bar small{color:var(--tx2);font-size:12px}.bar h2{margin:2px 0 0;font-size:17px}
+.body{padding:12px 16px;flex:1}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:0 0 10px}
+h3{font-size:13px;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2)}
+button,.btn{font:inherit;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer}
+.btn-p{background:var(--p);border-color:var(--p);color:#fff;font-weight:600}.btn-d{background:#fff;border-color:var(--er);color:var(--erfg)}.btn-w{width:100%}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f3f4f6;color:var(--tx2)}
+.b-ok{background:var(--okbg);color:var(--okfg)}.b-wa{background:var(--wabg);color:var(--wafg)}.b-er{background:var(--erbg);color:var(--erfg)}.b-p{background:var(--pl);color:#1d4ed8}
+.f{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 0;border-top:1px solid var(--bd)}.f:first-child{border-top:0}
+.f input[type=checkbox]{width:22px;height:22px;flex:none}.f .t{flex:1;min-width:0}.f .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.f .t small{color:var(--tx2);font-size:12px}
+.grp{display:flex;align-items:center;gap:10px;background:#f3f4f6;margin:8px -12px 0;padding:8px 12px;font-weight:700;min-height:44px}.grp input{width:22px;height:22px}.grp .btn{margin-left:auto;min-height:36px;font-size:13px;padding:0 10px}
+.seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}.seg button{min-height:36px;border-radius:99px;white-space:nowrap;font-size:13px}.seg .on{background:var(--p);color:#fff;border-color:var(--p)}
+.note{font-size:13px;border-radius:8px;padding:10px 12px;margin:0 0 10px}.n-i{background:var(--pl);color:#1e3a8a}.n-w{background:var(--wabg);color:var(--wafg)}.n-e{background:var(--erbg);color:var(--erfg)}.n-s{background:var(--okbg);color:var(--okfg)}
+.sk{height:14px;border-radius:6px;background:linear-gradient(90deg,#e5e7eb,#f3f4f6,#e5e7eb);margin:10px 0}
+.empty{text-align:center;padding:36px 12px;color:var(--tx2)}.empty .ic{font-size:34px}.empty b{display:block;color:var(--tx);margin:6px 0}
+.sticky{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px;display:flex;gap:8px;align-items:center}.sticky .btn-p{flex:1}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}.sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:16px;max-height:92%;overflow:auto}
+.sheet h2{margin:0 0 4px;font-size:17px}label{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}input[type=text],input[type=email]{width:100%;min-height:44px;padding:0 12px;border:1px solid #9ca3af;border-radius:8px;font:inherit}
+.hint{font-size:12px;color:var(--tx2);margin-top:3px}.prog{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}.prog i{display:block;height:100%;background:var(--p)}
+.tok{font-family:ui-monospace,monospace;font-size:12px;background:#f3f4f6;border-radius:6px;padding:8px;word-break:break-all}
+.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#065f46;color:#fff;border-radius:8px;padding:10px 12px;font-size:13px}
+.legend{font-size:12px;color:var(--tx2);margin-top:6px}
+.pub{background:#fff}.pub .bar{background:#0b3550;color:#fff;border:0}.pub .bar small{color:#bfdbfe}
+@media(max-width:420px){.fig,.phone{width:100%}}
+</style></head><body>
+<h1 class="doc">DEP-01 · Écran 4 — Page publique parent (sans connexion, mobile)</h1>
+<p class="doc">Route publique, <code>noindex</code>, sans cookie. Aucun nom d'enfant ni de classe au-delà du libellé. Une action par fichier, gros boutons. Chaque téléchargement est en pièce jointe.</p>
+<div class="row">
+<figure class="fig"><figcaption>4a · Données</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations de Léa</h2></div><div class="body">
+<div class="note n-i">Stage Scratch · 17–21 août 2026. Ces fichiers sont disponibles jusqu'au <b>26 août 2026</b>. Pensez à les enregistrer.</div>
+<div class="card"><div class="f"><div class="t"><b>jeu-labyrinthe.sb3</b><small>Projet Scratch · 1,2 Mo</small></div><button class="btn-p" aria-label="Télécharger jeu-labyrinthe.sb3">Télécharger</button></div>
+<div class="f"><div class="t"><b>capture.png</b><small>Image · 300 Ko</small></div><button class="btn-p" aria-label="Télécharger capture.png">Télécharger</button></div></div>
+<p class="legend">Un fichier .sb3 s'ouvre avec Scratch (scratch.mit.edu). Ce lien est personnel : ne le partagez pas publiquement.</p>
+<p class="legend">Une question ? Contactez Logiscool Pays Vert.</p></div></div></figure>
+<figure class="fig"><figcaption>4b · Chargement</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations</h2></div><div class="body"><div class="sk" style="height:70px"></div><div class="sk" style="height:70px"></div><p class="legend" role="status">Chargement…</p></div></div></figure>
+<figure class="fig"><figcaption>4c · Vide (tous les fichiers ont été supprimés)</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations</h2></div><div class="body"><div class="empty"><div class="ic">📂</div><b>Aucun fichier disponible</b>Les fichiers de ce lien ont été retirés. Contactez Logiscool Pays Vert si vous en avez besoin.</div></div></div></figure>
+<figure class="fig"><figcaption>4d · Erreur (téléchargement)</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations de Léa</h2></div><div class="body"><div class="note n-e" role="alert"><b>Le téléchargement a échoué.</b> Vérifiez votre connexion puis réessayez.<br><button style="margin-top:6px">Réessayer</button></div><div class="card"><div class="f"><div class="t"><b>capture.png</b></div><button class="btn-p">Télécharger</button></div></div></div></div></figure>
+<figure class="fig"><figcaption>4e · Succès</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations de Léa</h2></div><div class="body"><div class="card"><div class="f"><div class="t"><b>capture.png</b></div><span class="badge b-ok">✓ Téléchargé</span></div></div></div><div class="toast" role="status">capture.png a été enregistré sur votre appareil.</div></div></figure>
+
+<figure class="fig"><figcaption>E-mail au parent (texte exact)</figcaption><div class="phone pub" style="min-height:0"><div class="body" style="font-size:14px">
+<b>Objet :</b> Les créations de votre enfant — Logiscool Pays Vert<hr style="border:0;border-top:1px solid #e5e7eb">
+<p>Bonjour,</p><p>Suite au stage « Scratch » du 17 au 21 août 2026, vous pouvez télécharger les fichiers réalisés par votre enfant :</p>
+<p><a href="#" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Voir et télécharger les fichiers</a></p>
+<p>Ce lien est valable jusqu'au 26 août 2026. Il est personnel : merci de ne pas le diffuser.</p><p>Si le bouton ne fonctionne pas, copiez ce lien : https://app.logiscool-pays-vert.be/d/Xk3…9fQ</p>
+<p>Vous recevez ce message car votre adresse a été saisie par un animateur de Logiscool Pays Vert. Elle n'est pas conservée. Pour toute question : contact@logiscool-paysvert.be</p><p>Logiscool Pays Vert</p></div></div></figure>
+</div></body></html>
+<style>:root{--p:#2563eb;--pl:#dbeafe;--ok:#10b981;--okbg:#d1fae5;--okfg:#065f46;--wa:#f59e0b;--wabg:#fef3c7;--wafg:#92400e;--er:#ef4444;--erbg:#fee2e2;--erfg:#991b1b;--bg:#f9fafb;--card:#fff;--tx:#111827;--tx2:#4b5563;--bd:#e5e7eb;--focus:#93c5fd}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--tx);background:#e5e7eb;padding:16px}
+h1.doc{font-size:18px;margin:0 0 4px}p.doc{margin:0 0 16px;color:var(--tx2);font-size:13px;max-width:760px}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.fig{width:375px}.fig>figcaption{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2);margin:0 0 6px}
+.phone{width:375px;min-height:560px;background:var(--bg);border:1px solid #9ca3af;border-radius:18px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.bar{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px}.bar small{color:var(--tx2);font-size:12px}.bar h2{margin:2px 0 0;font-size:17px}
+.body{padding:12px 16px;flex:1}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:0 0 10px}
+h3{font-size:13px;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2)}
+button,.btn{font:inherit;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer}
+.btn-p{background:var(--p);border-color:var(--p);color:#fff;font-weight:600}.btn-d{background:#fff;border-color:var(--er);color:var(--erfg)}.btn-w{width:100%}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f3f4f6;color:var(--tx2)}
+.b-ok{background:var(--okbg);color:var(--okfg)}.b-wa{background:var(--wabg);color:var(--wafg)}.b-er{background:var(--erbg);color:var(--erfg)}.b-p{background:var(--pl);color:#1d4ed8}
+.f{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 0;border-top:1px solid var(--bd)}.f:first-child{border-top:0}
+.f input[type=checkbox]{width:22px;height:22px;flex:none}.f .t{flex:1;min-width:0}.f .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.f .t small{color:var(--tx2);font-size:12px}
+.grp{display:flex;align-items:center;gap:10px;background:#f3f4f6;margin:8px -12px 0;padding:8px 12px;font-weight:700;min-height:44px}.grp input{width:22px;height:22px}.grp .btn{margin-left:auto;min-height:36px;font-size:13px;padding:0 10px}
+.seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}.seg button{min-height:36px;border-radius:99px;white-space:nowrap;font-size:13px}.seg .on{background:var(--p);color:#fff;border-color:var(--p)}
+.note{font-size:13px;border-radius:8px;padding:10px 12px;margin:0 0 10px}.n-i{background:var(--pl);color:#1e3a8a}.n-w{background:var(--wabg);color:var(--wafg)}.n-e{background:var(--erbg);color:var(--erfg)}.n-s{background:var(--okbg);color:var(--okfg)}
+.sk{height:14px;border-radius:6px;background:linear-gradient(90deg,#e5e7eb,#f3f4f6,#e5e7eb);margin:10px 0}
+.empty{text-align:center;padding:36px 12px;color:var(--tx2)}.empty .ic{font-size:34px}.empty b{display:block;color:var(--tx);margin:6px 0}
+.sticky{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px;display:flex;gap:8px;align-items:center}.sticky .btn-p{flex:1}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}.sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:16px;max-height:92%;overflow:auto}
+.sheet h2{margin:0 0 4px;font-size:17px}label{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}input[type=text],input[type=email]{width:100%;min-height:44px;padding:0 12px;border:1px solid #9ca3af;border-radius:8px;font:inherit}
+.hint{font-size:12px;color:var(--tx2);margin-top:3px}.prog{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}.prog i{display:block;height:100%;background:var(--p)}
+.tok{font-family:ui-monospace,monospace;font-size:12px;background:#f3f4f6;border-radius:6px;padding:8px;word-break:break-all}
+.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#065f46;color:#fff;border-radius:8px;padding:10px 12px;font-size:13px}
+.legend{font-size:12px;color:var(--tx2);margin-top:6px}
+.pub{background:#fff}.pub .bar{background:#0b3550;color:#fff;border:0}.pub .bar small{color:#bfdbfe}
+@media(max-width:420px){.fig,.phone{width:100%}}
+</style></head><body>
+<h1 class="doc">DEP-01 · Écran 4 — Page publique parent (sans connexion, mobile)</h1>
+<p class="doc">Route publique, <code>noindex</code>, sans cookie. Aucun nom d'enfant ni de classe au-delà du libellé. Une action par fichier, gros boutons. Chaque téléchargement est en pièce jointe.</p>
+<div class="row">
+<figure class="fig"><figcaption>4a · Données</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations de Léa</h2></div><div class="body">
+<div class="note n-i">Stage Scratch · 17–21 août 2026. Ces fichiers sont disponibles jusqu'au <b>26 août 2026</b>. Pensez à les enregistrer.</div>
+<div class="card"><div class="f"><div class="t"><b>jeu-labyrinthe.sb3</b><small>Projet Scratch · 1,2 Mo</small></div><button class="btn-p" aria-label="Télécharger jeu-labyrinthe.sb3">Télécharger</button></div>
+<div class="f"><div class="t"><b>capture.png</b><small>Image · 300 Ko</small></div><button class="btn-p" aria-label="Télécharger capture.png">Télécharger</button></div></div>
+<p class="legend">Un fichier .sb3 s'ouvre avec Scratch (scratch.mit.edu). Ce lien est personnel : ne le partagez pas publiquement.</p>
+<p class="legend">Une question ? Contactez Logiscool Pays Vert.</p></div></div></figure>
+<figure class="fig"><figcaption>4b · Chargement</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations</h2></div><div class="body"><div class="sk" style="height:70px"></div><div class="sk" style="height:70px"></div><p class="legend" role="status">Chargement…</p></div></div></figure>
+<figure class="fig"><figcaption>4c · Vide (tous les fichiers ont été supprimés)</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations</h2></div><div class="body"><div class="empty"><div class="ic">📂</div><b>Aucun fichier disponible</b>Les fichiers de ce lien ont été retirés. Contactez Logiscool Pays Vert si vous en avez besoin.</div></div></div></figure>
+<figure class="fig"><figcaption>4d · Erreur (téléchargement)</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations de Léa</h2></div><div class="body"><div class="note n-e" role="alert"><b>Le téléchargement a échoué.</b> Vérifiez votre connexion puis réessayez.<br><button style="margin-top:6px">Réessayer</button></div><div class="card"><div class="f"><div class="t"><b>capture.png</b></div><button class="btn-p">Télécharger</button></div></div></div></div></figure>
+<figure class="fig"><figcaption>4e · Succès</figcaption><div class="phone pub"><div class="bar"><small>Logiscool Pays Vert</small><h2>Les créations de Léa</h2></div><div class="body"><div class="card"><div class="f"><div class="t"><b>capture.png</b></div><span class="badge b-ok">✓ Téléchargé</span></div></div></div><div class="toast" role="status">capture.png a été enregistré sur votre appareil.</div></div></figure>
+
+<figure class="fig"><figcaption>E-mail au parent (texte exact)</figcaption><div class="phone pub" style="min-height:0"><div class="body" style="font-size:14px">
+<b>Objet :</b> Les créations de votre enfant — Logiscool Pays Vert<hr style="border:0;border-top:1px solid #e5e7eb">
+<p>Bonjour,</p><p>Suite au stage « Scratch » du 17 au 21 août 2026, vous pouvez télécharger les fichiers réalisés par votre enfant :</p>
+<p><a href="#" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Voir et télécharger les fichiers</a></p>
+<p>Ce lien est valable jusqu'au 26 août 2026. Il est personnel : merci de ne pas le diffuser.</p><p>Si le bouton ne fonctionne pas, copiez ce lien : https://app.logiscool-pays-vert.be/d/Xk3…9fQ</p>
+<p>Vous recevez ce message car votre adresse a été saisie par un animateur de Logiscool Pays Vert. Elle n'est pas conservée. Pour toute question : contact@logiscool-paysvert.be</p><p>Logiscool Pays Vert</p></div></div></figure>
+</div></body></html>

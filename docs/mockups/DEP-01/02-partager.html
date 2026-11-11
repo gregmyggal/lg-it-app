@@ -1,0 +1,152 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>DEP-01 · Écran 2 — Dialogue « Partager à un parent »</title><style>:root{--p:#2563eb;--pl:#dbeafe;--ok:#10b981;--okbg:#d1fae5;--okfg:#065f46;--wa:#f59e0b;--wabg:#fef3c7;--wafg:#92400e;--er:#ef4444;--erbg:#fee2e2;--erfg:#991b1b;--bg:#f9fafb;--card:#fff;--tx:#111827;--tx2:#4b5563;--bd:#e5e7eb;--focus:#93c5fd}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--tx);background:#e5e7eb;padding:16px}
+h1.doc{font-size:18px;margin:0 0 4px}p.doc{margin:0 0 16px;color:var(--tx2);font-size:13px;max-width:760px}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.fig{width:375px}.fig>figcaption{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2);margin:0 0 6px}
+.phone{width:375px;min-height:560px;background:var(--bg);border:1px solid #9ca3af;border-radius:18px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.bar{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px}.bar small{color:var(--tx2);font-size:12px}.bar h2{margin:2px 0 0;font-size:17px}
+.body{padding:12px 16px;flex:1}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:0 0 10px}
+h3{font-size:13px;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2)}
+button,.btn{font:inherit;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer}
+.btn-p{background:var(--p);border-color:var(--p);color:#fff;font-weight:600}.btn-d{background:#fff;border-color:var(--er);color:var(--erfg)}.btn-w{width:100%}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f3f4f6;color:var(--tx2)}
+.b-ok{background:var(--okbg);color:var(--okfg)}.b-wa{background:var(--wabg);color:var(--wafg)}.b-er{background:var(--erbg);color:var(--erfg)}.b-p{background:var(--pl);color:#1d4ed8}
+.f{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 0;border-top:1px solid var(--bd)}.f:first-child{border-top:0}
+.f input[type=checkbox]{width:22px;height:22px;flex:none}.f .t{flex:1;min-width:0}.f .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.f .t small{color:var(--tx2);font-size:12px}
+.grp{display:flex;align-items:center;gap:10px;background:#f3f4f6;margin:8px -12px 0;padding:8px 12px;font-weight:700;min-height:44px}.grp input{width:22px;height:22px}.grp .btn{margin-left:auto;min-height:36px;font-size:13px;padding:0 10px}
+.seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}.seg button{min-height:36px;border-radius:99px;white-space:nowrap;font-size:13px}.seg .on{background:var(--p);color:#fff;border-color:var(--p)}
+.note{font-size:13px;border-radius:8px;padding:10px 12px;margin:0 0 10px}.n-i{background:var(--pl);color:#1e3a8a}.n-w{background:var(--wabg);color:var(--wafg)}.n-e{background:var(--erbg);color:var(--erfg)}.n-s{background:var(--okbg);color:var(--okfg)}
+.sk{height:14px;border-radius:6px;background:linear-gradient(90deg,#e5e7eb,#f3f4f6,#e5e7eb);margin:10px 0}
+.empty{text-align:center;padding:36px 12px;color:var(--tx2)}.empty .ic{font-size:34px}.empty b{display:block;color:var(--tx);margin:6px 0}
+.sticky{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px;display:flex;gap:8px;align-items:center}.sticky .btn-p{flex:1}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}.sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:16px;max-height:92%;overflow:auto}
+.sheet h2{margin:0 0 4px;font-size:17px}label{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}input[type=text],input[type=email]{width:100%;min-height:44px;padding:0 12px;border:1px solid #9ca3af;border-radius:8px;font:inherit}
+.hint{font-size:12px;color:var(--tx2);margin-top:3px}.prog{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}.prog i{display:block;height:100%;background:var(--p)}
+.tok{font-family:ui-monospace,monospace;font-size:12px;background:#f3f4f6;border-radius:6px;padding:8px;word-break:break-all}
+.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#065f46;color:#fff;border-radius:8px;padding:10px 12px;font-size:13px}
+.legend{font-size:12px;color:var(--tx2);margin-top:6px}
+.pub{background:#fff}.pub .bar{background:#0b3550;color:#fff;border:0}.pub .bar small{color:#bfdbfe}
+@media(max-width:420px){.fig,.phone{width:100%}}
+</style></head><body>
+<h1 class="doc">DEP-01 · Écran 2 — Dialogue « Partager à un parent »</h1>
+<p class="doc">Trois points d'entrée, tous menant à la même feuille : bouton « Partager » d'un groupe (fichiers déjà présélectionnés), barre « Partager à un parent » après sélection, ou « Nouveau partage » dans la liste des partages. Le plus court : <b>Partager (groupe) → Créer le lien → Copier ou Envoyer</b> = 3 clics, 4 avec l'envoi par e-mail.</p>
+<div class="row">
+
+<figure class="fig"><figcaption>2a · Étape unique : contenu du lien (présélectionné)</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div>
+<h2>Partager à un parent</h2><p style="margin:0;color:#4b5563;font-size:13px">Le parent ne verra que les fichiers cochés. Lien valable 7 jours (jusqu'au 26 août 2026).</p>
+<label for="f">Filtrer par libellé</label><input id="f" type="text" placeholder="Ex. Léa">
+<div class="card" style="margin-top:8px;padding-top:0"><div class="grp"><input type="checkbox" checked> Léa · 2/2 <span style="margin-left:auto;font-weight:400;font-size:12px">tout décocher</span></div>
+<div class="f"><input type="checkbox" checked><div class="t"><b>jeu-labyrinthe.sb3</b><small>Séance 1</small></div></div>
+<div class="f"><input type="checkbox" checked><div class="t"><b>capture.png</b><small>Séance 2</small></div></div>
+<div class="grp"><input type="checkbox"> Noah · 0/3</div><div class="grp"><input type="checkbox"> Sans libellé · 0/2</div></div>
+<div class="note n-w">Vérifiez que tous les fichiers cochés concernent le même enfant : le parent pourra tous les télécharger.</div>
+<button class="btn-p btn-w">Créer le lien (2 fichiers)</button>
+<div class="hint">Le bouton est désactivé tant qu'aucun fichier n'est coché.</div>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2b · Lien créé : copier ou envoyer maintenant / plus tard</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div>
+<h2>✓ Lien créé pour Léa</h2><p style="margin:0;color:#4b5563;font-size:13px">2 fichiers · valable jusqu'au 26 août 2026. Rien n'a encore été envoyé.</p>
+<div class="tok" style="margin-top:10px">https://app.logiscool-pays-vert.be/d/Xk3…9fQ</div>
+<button class="btn-w" style="margin-top:8px">📋 Copier le lien</button>
+<label for="em">Envoyer par e-mail au parent</label><input id="em" type="email" placeholder="parent@exemple.be" autocomplete="off">
+<div class="hint">L'adresse n'est pas conservée en clair : seule une version masquée (p***@exemple.be) est gardée dans l'historique.</div>
+<button class="btn-p btn-w" style="margin-top:8px">Envoyer le lien</button>
+<button class="btn-w" style="margin-top:8px;border:0;background:none;color:#1d4ed8">Plus tard — voir dans « Partages »</button>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2c · Envoi : confirmation et conséquence</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div>
+<h2>Envoyer le lien à p***@exemple.be ?</h2><p>Un e-mail contenant le lien sera envoyé maintenant. Toute personne qui possède ce lien peut télécharger les 2 fichiers de Léa jusqu'au 26 août 2026. Vous pourrez le révoquer à tout moment.</p>
+<button class="btn-p btn-w">Envoyer l'e-mail</button><button class="btn-w" style="margin-top:8px">Modifier l'adresse</button>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2d · Chargement (création / envoi)</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div><h2>Création du lien…</h2><div class="sk"></div><button class="btn-p btn-w" disabled>Création en cours…</button><p class="legend" role="status">Ne fermez pas cette fenêtre.</p></div></div></div></figure>
+
+<figure class="fig"><figcaption>2e · Vide (aucun fichier à partager)</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div><h2>Partager à un parent</h2><div class="empty"><div class="ic">📂</div><b>Aucun fichier à partager</b>Déposez d'abord des fichiers dans ce stage.<br><br><button class="btn-p">Déposer des fichiers</button></div></div></div></div></figure>
+
+<figure class="fig"><figcaption>2f · Erreurs</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div><h2>Envoyer le lien</h2>
+<div class="note n-e" role="alert"><b>Adresse e-mail invalide.</b> Vérifiez qu'elle contient un « @ » et un domaine (ex. parent@exemple.be).</div>
+<input type="email" value="parent@exemple" aria-invalid="true" style="border-color:#ef4444">
+<div class="note n-e" role="alert" style="margin-top:10px"><b>L'e-mail n'a pas pu être envoyé.</b> Le lien est créé : copiez-le ou réessayez plus tard depuis « Partages ». <button style="margin-top:6px">Réessayer</button></div>
+<div class="note n-e" role="alert"><b>Création impossible.</b> Un fichier a été supprimé entre-temps. Actualisez la sélection.</div>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2g · Succès</figcaption><div class="phone"><div class="bar"><small>Partages ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="body"><div class="card"><b>Léa · 2 fichiers</b><br><span class="badge b-ok">Actif · expire le 26 août</span> <span class="badge b-ok">Envoyé à p***@exemple.be</span></div></div><div class="toast" role="status">E-mail envoyé à p***@exemple.be. Le lien reste valable jusqu'au 26 août.</div></div></figure>
+</div></body></html>
+<style>:root{--p:#2563eb;--pl:#dbeafe;--ok:#10b981;--okbg:#d1fae5;--okfg:#065f46;--wa:#f59e0b;--wabg:#fef3c7;--wafg:#92400e;--er:#ef4444;--erbg:#fee2e2;--erfg:#991b1b;--bg:#f9fafb;--card:#fff;--tx:#111827;--tx2:#4b5563;--bd:#e5e7eb;--focus:#93c5fd}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--tx);background:#e5e7eb;padding:16px}
+h1.doc{font-size:18px;margin:0 0 4px}p.doc{margin:0 0 16px;color:var(--tx2);font-size:13px;max-width:760px}
+.row{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.fig{width:375px}.fig>figcaption{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2);margin:0 0 6px}
+.phone{width:375px;min-height:560px;background:var(--bg);border:1px solid #9ca3af;border-radius:18px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.bar{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px}.bar small{color:var(--tx2);font-size:12px}.bar h2{margin:2px 0 0;font-size:17px}
+.body{padding:12px 16px;flex:1}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin:0 0 10px}
+h3{font-size:13px;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx2)}
+button,.btn{font:inherit;min-height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer}
+.btn-p{background:var(--p);border-color:var(--p);color:#fff;font-weight:600}.btn-d{background:#fff;border-color:var(--er);color:var(--erfg)}.btn-w{width:100%}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f3f4f6;color:var(--tx2)}
+.b-ok{background:var(--okbg);color:var(--okfg)}.b-wa{background:var(--wabg);color:var(--wafg)}.b-er{background:var(--erbg);color:var(--erfg)}.b-p{background:var(--pl);color:#1d4ed8}
+.f{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 0;border-top:1px solid var(--bd)}.f:first-child{border-top:0}
+.f input[type=checkbox]{width:22px;height:22px;flex:none}.f .t{flex:1;min-width:0}.f .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.f .t small{color:var(--tx2);font-size:12px}
+.grp{display:flex;align-items:center;gap:10px;background:#f3f4f6;margin:8px -12px 0;padding:8px 12px;font-weight:700;min-height:44px}.grp input{width:22px;height:22px}.grp .btn{margin-left:auto;min-height:36px;font-size:13px;padding:0 10px}
+.seg{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}.seg button{min-height:36px;border-radius:99px;white-space:nowrap;font-size:13px}.seg .on{background:var(--p);color:#fff;border-color:var(--p)}
+.note{font-size:13px;border-radius:8px;padding:10px 12px;margin:0 0 10px}.n-i{background:var(--pl);color:#1e3a8a}.n-w{background:var(--wabg);color:var(--wafg)}.n-e{background:var(--erbg);color:var(--erfg)}.n-s{background:var(--okbg);color:var(--okfg)}
+.sk{height:14px;border-radius:6px;background:linear-gradient(90deg,#e5e7eb,#f3f4f6,#e5e7eb);margin:10px 0}
+.empty{text-align:center;padding:36px 12px;color:var(--tx2)}.empty .ic{font-size:34px}.empty b{display:block;color:var(--tx);margin:6px 0}
+.sticky{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px 16px;display:flex;gap:8px;align-items:center}.sticky .btn-p{flex:1}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end}.sheet>div{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:16px;max-height:92%;overflow:auto}
+.sheet h2{margin:0 0 4px;font-size:17px}label{display:block;font-weight:600;font-size:13px;margin:10px 0 4px}input[type=text],input[type=email]{width:100%;min-height:44px;padding:0 12px;border:1px solid #9ca3af;border-radius:8px;font:inherit}
+.hint{font-size:12px;color:var(--tx2);margin-top:3px}.prog{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-top:4px}.prog i{display:block;height:100%;background:var(--p)}
+.tok{font-family:ui-monospace,monospace;font-size:12px;background:#f3f4f6;border-radius:6px;padding:8px;word-break:break-all}
+.toast{position:absolute;left:12px;right:12px;bottom:12px;background:#065f46;color:#fff;border-radius:8px;padding:10px 12px;font-size:13px}
+.legend{font-size:12px;color:var(--tx2);margin-top:6px}
+.pub{background:#fff}.pub .bar{background:#0b3550;color:#fff;border:0}.pub .bar small{color:#bfdbfe}
+@media(max-width:420px){.fig,.phone{width:100%}}
+</style></head><body>
+<h1 class="doc">DEP-01 · Écran 2 — Dialogue « Partager à un parent »</h1>
+<p class="doc">Trois points d'entrée, tous menant à la même feuille : bouton « Partager » d'un groupe (fichiers déjà présélectionnés), barre « Partager à un parent » après sélection, ou « Nouveau partage » dans la liste des partages. Le plus court : <b>Partager (groupe) → Créer le lien → Copier ou Envoyer</b> = 3 clics, 4 avec l'envoi par e-mail.</p>
+<div class="row">
+
+<figure class="fig"><figcaption>2a · Étape unique : contenu du lien (présélectionné)</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div>
+<h2>Partager à un parent</h2><p style="margin:0;color:#4b5563;font-size:13px">Le parent ne verra que les fichiers cochés. Lien valable 7 jours (jusqu'au 26 août 2026).</p>
+<label for="f">Filtrer par libellé</label><input id="f" type="text" placeholder="Ex. Léa">
+<div class="card" style="margin-top:8px;padding-top:0"><div class="grp"><input type="checkbox" checked> Léa · 2/2 <span style="margin-left:auto;font-weight:400;font-size:12px">tout décocher</span></div>
+<div class="f"><input type="checkbox" checked><div class="t"><b>jeu-labyrinthe.sb3</b><small>Séance 1</small></div></div>
+<div class="f"><input type="checkbox" checked><div class="t"><b>capture.png</b><small>Séance 2</small></div></div>
+<div class="grp"><input type="checkbox"> Noah · 0/3</div><div class="grp"><input type="checkbox"> Sans libellé · 0/2</div></div>
+<div class="note n-w">Vérifiez que tous les fichiers cochés concernent le même enfant : le parent pourra tous les télécharger.</div>
+<button class="btn-p btn-w">Créer le lien (2 fichiers)</button>
+<div class="hint">Le bouton est désactivé tant qu'aucun fichier n'est coché.</div>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2b · Lien créé : copier ou envoyer maintenant / plus tard</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div>
+<h2>✓ Lien créé pour Léa</h2><p style="margin:0;color:#4b5563;font-size:13px">2 fichiers · valable jusqu'au 26 août 2026. Rien n'a encore été envoyé.</p>
+<div class="tok" style="margin-top:10px">https://app.logiscool-pays-vert.be/d/Xk3…9fQ</div>
+<button class="btn-w" style="margin-top:8px">📋 Copier le lien</button>
+<label for="em">Envoyer par e-mail au parent</label><input id="em" type="email" placeholder="parent@exemple.be" autocomplete="off">
+<div class="hint">L'adresse n'est pas conservée en clair : seule une version masquée (p***@exemple.be) est gardée dans l'historique.</div>
+<button class="btn-p btn-w" style="margin-top:8px">Envoyer le lien</button>
+<button class="btn-w" style="margin-top:8px;border:0;background:none;color:#1d4ed8">Plus tard — voir dans « Partages »</button>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2c · Envoi : confirmation et conséquence</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div>
+<h2>Envoyer le lien à p***@exemple.be ?</h2><p>Un e-mail contenant le lien sera envoyé maintenant. Toute personne qui possède ce lien peut télécharger les 2 fichiers de Léa jusqu'au 26 août 2026. Vous pourrez le révoquer à tout moment.</p>
+<button class="btn-p btn-w">Envoyer l'e-mail</button><button class="btn-w" style="margin-top:8px">Modifier l'adresse</button>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2d · Chargement (création / envoi)</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div><h2>Création du lien…</h2><div class="sk"></div><button class="btn-p btn-w" disabled>Création en cours…</button><p class="legend" role="status">Ne fermez pas cette fenêtre.</p></div></div></div></figure>
+
+<figure class="fig"><figcaption>2e · Vide (aucun fichier à partager)</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div><h2>Partager à un parent</h2><div class="empty"><div class="ic">📂</div><b>Aucun fichier à partager</b>Déposez d'abord des fichiers dans ce stage.<br><br><button class="btn-p">Déposer des fichiers</button></div></div></div></div></figure>
+
+<figure class="fig"><figcaption>2f · Erreurs</figcaption><div class="phone"><div class="bar"><small>Fichiers ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="sheet"><div><h2>Envoyer le lien</h2>
+<div class="note n-e" role="alert"><b>Adresse e-mail invalide.</b> Vérifiez qu'elle contient un « @ » et un domaine (ex. parent@exemple.be).</div>
+<input type="email" value="parent@exemple" aria-invalid="true" style="border-color:#ef4444">
+<div class="note n-e" role="alert" style="margin-top:10px"><b>L'e-mail n'a pas pu être envoyé.</b> Le lien est créé : copiez-le ou réessayez plus tard depuis « Partages ». <button style="margin-top:6px">Réessayer</button></div>
+<div class="note n-e" role="alert"><b>Création impossible.</b> Un fichier a été supprimé entre-temps. Actualisez la sélection.</div>
+</div></div></div></figure>
+
+<figure class="fig"><figcaption>2g · Succès</figcaption><div class="phone"><div class="bar"><small>Partages ›</small><h2>Scratch — stage 17–21 août</h2></div><div class="body"><div class="card"><b>Léa · 2 fichiers</b><br><span class="badge b-ok">Actif · expire le 26 août</span> <span class="badge b-ok">Envoyé à p***@exemple.be</span></div></div><div class="toast" role="status">E-mail envoyé à p***@exemple.be. Le lien reste valable jusqu'au 26 août.</div></div></figure>
+</div></body></html>

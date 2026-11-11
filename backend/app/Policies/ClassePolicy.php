@@ -28,6 +28,12 @@ class ClassePolicy
         return $user->isStaff();
     }
 
+    /** DEP-01 : déposer, lister, télécharger et supprimer les fichiers d'un stage (staff, ou professeur du stage). */
+    public function deposer(User $user, Classe $model): bool
+    {
+        return $model->isStage() && $this->view($user, $model);
+    }
+
     public function create(User $user): bool
     {
         return $user->isStaff();

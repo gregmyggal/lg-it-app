@@ -7,6 +7,7 @@ import StatutBadge from '../components/ui/StatutBadge';
 import AdminButton from '../components/AdminButton';
 import EncoderSessionModal from '../components/timesheets/EncoderSessionModal';
 import LiensSession from '../components/liens/LiensSession';
+import FichiersStage from '../components/depot/FichiersStage';
 import LinkButton from '../components/ui/LinkButton';
 import { useLiensCours } from '../hooks/useLiens';
 import { useMesSessions } from '../hooks/useProfesseursClasses';
@@ -68,6 +69,7 @@ export default function MesClasseSessionsPage() {
             ))}
           </p>
         )}
+        {classe.data?.type === 'stage' && <FichiersStage classeId={id} />}
         {sessions.data?.length > 0 && (
           <Section title="Sessions" subtitle={`${sessions.data.length} session${sessions.data.length > 1 ? 's' : ''}`}>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: ADMIN_SPACING.md }}>

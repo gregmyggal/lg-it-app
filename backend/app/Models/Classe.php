@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class Classe extends Model
 {
@@ -47,6 +48,12 @@ class Classe extends Model
         return [
             'jour_semaine' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // DEP-01 : les lignes de dépôt partent en cascade, pas les fichiers du disque privé.
+        static::deleted(fn (self $classe) => Storage::disk(config('depot.disque'))->deleteDirectory("depots/{$classe->id}"));
     }
 
     public function isStage(): bool

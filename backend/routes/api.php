@@ -15,6 +15,7 @@ use App\Http\Controllers\ClasseProfesseurController;
 use App\Http\Controllers\ClasseSessionController;
 use App\Http\Controllers\ClasseSettingController;
 use App\Http\Controllers\CoursController;
+use App\Http\Controllers\DepotFichierController;
 use App\Http\Controllers\CourseSessionController;
 use App\Http\Controllers\CoursLienController;
 use App\Http\Controllers\CoursRessourceController;
@@ -155,6 +156,12 @@ Route::middleware(['auth:sanctum', EnsureCompteActif::class])->group(function ()
 
     Route::get('/mes-classes', [MesClassesController::class, 'index']);
     Route::get('/mes-classes/{classe}/sessions', [MesClassesController::class, 'sessions']);
+
+    // DEP-01 : réalisations d'enfants déposées sur un stage (staff et professeurs du stage).
+    Route::get('/classes/{classe}/depot', [DepotFichierController::class, 'index']);
+    Route::post('/classes/{classe}/depot/fichiers', [DepotFichierController::class, 'store']);
+    Route::delete('/classes/{classe}/depot/fichiers/{fichier}', [DepotFichierController::class, 'destroy']);
+    Route::get('/classes/{classe}/depot/fichiers/{fichier}/telecharger', [DepotFichierController::class, 'telecharger']);
 
     // CLS-01 T1 : années scolaires, calendrier scolaire, classes, sessions (admin/directeur).
     Route::get('/annees-scolaires', [AnneeScolaireController::class, 'index']);
