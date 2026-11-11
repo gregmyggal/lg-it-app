@@ -97,7 +97,7 @@ class MonAccueilService
             'libelle' => $s->libelle(),
             'libelle_complet' => $s->libelleComplet(),
             'classe_id' => $s->classe_id,
-            'classe_libelle' => $s->classePeriode->cours->titre,
+            'classe_libelle' => $s->classePeriode->titre(),
             'date' => $s->date->toDateString(),
             'heure_debut' => substr($s->heure_debut, 0, 5),
             'heure_fin' => substr($s->heure_fin, 0, 5),

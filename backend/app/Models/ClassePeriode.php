@@ -18,10 +18,14 @@ class ClassePeriode extends Model
 
     protected $table = 'classe_periodes';
 
+    /** Le thème d'un stage est toujours affiché avec la période. */
+    protected $with = ['stage'];
+
     protected $fillable = [
         'classe_id',
         'periode_id',
         'cours_id',
+        'stage_id',
         'date_premiere_session',
         'statut',
         'motif_annulation',
@@ -45,6 +49,33 @@ class ClassePeriode extends Model
     public function cours(): BelongsTo
     {
         return $this->belongsTo(Cours::class);
+    }
+
+    /** STG-01 : thème d'un stage planifié (fiche `stages`) ; null pour une classe, qui a un cours. */
+    public function stage(): BelongsTo
+    {
+        return $this->belongsTo(Stage::class);
+    }
+
+    /** Titre du cours, ou du thème pour un stage. */
+    public function titre(): ?string
+    {
+        return $this->cours?->titre ?? $this->stage?->titre;
+    }
+
+    /**
+     * Forme « cours » exposée par l'API : le cours, ou le thème d'un stage (sans identifiant de cours : `id` null,
+     * `stage_id` renseigné). Les écrans lisent `cours.titre` sans distinguer les deux.
+     *
+     * @return array{id: ?int, titre: string, slug: ?string, stage_id: ?int}|null
+     */
+    public function coursAffiche(): ?array
+    {
+        if ($this->cours) {
+            return ['id' => $this->cours->id, 'titre' => $this->cours->titre, 'slug' => $this->cours->slug, 'stage_id' => null];
+        }
+
+        return $this->stage ? ['id' => null, 'titre' => $this->stage->titre, 'slug' => $this->stage->slug, 'stage_id' => $this->stage->id] : null;
     }
 
     public function sessions(): HasMany

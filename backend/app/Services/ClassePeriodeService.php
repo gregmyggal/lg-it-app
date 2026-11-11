@@ -23,6 +23,10 @@ class ClassePeriodeService
     /** @throws RegleMetierException 409 si des heures sont déjà encodées sur la période (RG-5) */
     public function changerCours(ClassePeriode $classePeriode, int $coursId, ?int $userId = null): ClassePeriode
     {
+        if ($classePeriode->stage_id !== null) {
+            throw RegleMetierException::invalide("Un stage se choisit par thème : son thème n'a pas de cours à changer.", ['cours_id' => ["Un stage n'a pas de cours."]]);
+        }
+
         $nb = $this->nbSaisies($classePeriode);
         if ($nb > 0) {
             throw RegleMetierException::conflit(

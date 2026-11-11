@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
-/** STG-01 : création d'un stage ; mêmes champs que l'aperçu, avec cours et au moins un jour. */
+/** STG-01 : création d'un stage ; mêmes champs que l'aperçu, avec thème et au moins un jour. */
 class StoreStageRequest extends ApercuStageRequest
 {
-    protected function coursRequis(): bool
+    protected function themeRequis(): bool
     {
         return true;
     }

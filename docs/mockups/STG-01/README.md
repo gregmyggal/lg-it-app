@@ -1,6 +1,7 @@
 # Mock-ups STG-01 — Stages sur une semaine
 
 **Créé :** 2026-11-11 · **Auteur :** sub-agent UX Expert · **Statut :** Brouillon v0.1 — en attente de validation du directeur
+**Mise à jour 2026-11-11 :** le champ « Cours » devient « Thème du stage » (voir Canvas §11).
 **Canvas :** `docs/requirements/STG-01-stages-sur-une-semaine.md`
 
 Données d'exemple : stage « Scratch » du lundi 17 au vendredi 21 août 2026, Salle A. Défauts : Matin 9:00–12:00, Après-midi 13:30–16:30.
@@ -39,7 +40,7 @@ Menu « Contenu » : l'entrée existante devient « Stages (site public) ».
 ┌──────────────────────────────────────────────────────────────┐
 │ Nouveau stage                                                │
 │ 1 · Stage                                                    │
-│   Cours      [ Scratch                ▾]                     │
+│   Thème du stage [ Minecraft Redstone ▾]  (catalogue Stages) │
 │   Semaine    [ 17 au 21 août 2026     ▾]  (ramenée au lundi) │
 │   Lieu       [ Salle A ]  (dernier lieu repris)              │
 │   Créneau par défaut  (•) Matin 9:00–12:00  ( ) Après-midi   │

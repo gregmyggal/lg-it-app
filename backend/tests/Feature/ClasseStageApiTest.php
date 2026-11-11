@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Classe;
-use App\Models\Cours;
 use App\Models\CourseSession;
 use App\Models\Professeur;
+use App\Models\Stage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\Concerns\PrepareScolarite;
@@ -28,10 +28,19 @@ class ClasseStageApiTest extends TestCase
         parent::tearDown();
     }
 
+    /** Fiche du catalogue des thèmes de stage (modèle `Stage`). */
+    private function theme(string $titre = 'Minecraft Redstone'): Stage
+    {
+        return Stage::firstOrCreate(['slug' => str($titre)->slug()->toString()], [
+            'titre' => $titre, 'theme_stage' => 'Minecraft',
+            'tranche_age' => '8-12 ans', 'lieu' => 'Namur', 'prix' => 150, 'statut' => 'publish',
+        ]);
+    }
+
     /** Semaine du 12 au 16 octobre 2026 : aucun jour férié ni congé. */
     private function payload(array $attrs = []): array
     {
-        return $attrs + ['date_debut' => '2026-10-14', 'cours_id' => Cours::factory()->create()->id, 'lieu' => 'Salle B'];
+        return $attrs + ['date_debut' => '2026-10-14', 'stage_id' => $this->theme()->id, 'lieu' => 'Salle B'];
     }
 
     public function test_401_et_403_professeur(): void
@@ -98,7 +107,10 @@ class ClasseStageApiTest extends TestCase
             ->assertJsonPath('data.nb_sessions', 3)
             ->assertJsonPath('data.semaine.debut', '2026-10-12')
             ->assertJsonPath('data.periodes.0.numero', null)
-            ->assertJsonPath('data.periodes.0.cours_id', $payload['cours_id'])
+            ->assertJsonPath('data.titre', 'Minecraft Redstone')
+            ->assertJsonPath('data.periodes.0.cours_id', null)
+            ->assertJsonPath('data.periodes.0.stage_id', $payload['stage_id'])
+            ->assertJsonPath('data.periodes.0.cours.titre', 'Minecraft Redstone')
             ->assertJsonPath('data.prochaine_session.libelle', 'Séance 1');
 
         $classe = Classe::where('type', 'stage')->firstOrFail();
@@ -119,6 +131,19 @@ class ClasseStageApiTest extends TestCase
 
         $this->postJson('/api/classes/stage/apercu', ['date_debut' => '2026-10-12', 'creneaux' => ['matin' => ['heure_debut' => '12:00', 'heure_fin' => '09:00']]])
             ->assertStatus(422)->assertJsonValidationErrors('creneaux.matin.heure_fin');
+    }
+
+    public function test_theme_obligatoire_et_inexistant_refuse_et_pas_de_cours(): void
+    {
+        $this->annee();
+        $this->actingAsRole('directeur');
+        $jours = ['jours' => [['date' => '2026-10-12', 'demi_journee' => 'matin']]];
+
+        $this->postJson('/api/classes/stage', ['date_debut' => '2026-10-12', 'lieu' => 'X'] + $jours)
+            ->assertStatus(422)->assertJsonValidationErrors('stage_id');
+        $this->postJson('/api/classes/stage', ['date_debut' => '2026-10-12', 'stage_id' => 9999] + $jours)
+            ->assertStatus(422)->assertJsonValidationErrors('stage_id');
+        $this->assertSame(0, Classe::count());
     }
 
     public function test_aucun_jour_coche_ou_jour_hors_semaine_refuse(): void
@@ -170,7 +195,9 @@ class ClasseStageApiTest extends TestCase
 
         \Laravel\Sanctum\Sanctum::actingAs($professeur->user);
         $this->getJson('/api/mes-classes')->assertOk()->assertJsonFragment(['id' => $id]);
-        $this->getJson("/api/mes-classes/{$id}/sessions")->assertOk()->assertJsonCount(2, 'data');
+        $this->getJson("/api/mes-classes/{$id}/sessions")->assertOk()->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.cours.titre', 'Minecraft Redstone')
+            ->assertJsonPath('data.0.heures_defrayables.source', 'defaut');
         $this->postJson('/api/classes/stage', $this->payload())->assertStatus(403);
     }
 
@@ -186,6 +213,9 @@ class ClasseStageApiTest extends TestCase
         // Horaires par séance, pas pour le stage ; le lieu reste modifiable.
         $this->putJson("/api/classes/{$id}", ['heure_debut' => '10:00', 'heure_fin' => '11:00'])->assertStatus(422);
         $this->putJson("/api/classes/{$id}", ['lieu' => 'Salle C'])->assertOk();
+        // Le thème ne se change pas comme un cours.
+        $periodeId = \App\Models\ClassePeriode::where('classe_id', $id)->value('id');
+        $this->putJson("/api/classes/{$id}/periodes/{$periodeId}", ['cours_id' => \App\Models\Cours::factory()->create()->id])->assertStatus(422);
         // Pas de période à ajouter, ni de duplication, ni de décalage des suivantes.
         $this->getJson("/api/classes/{$id}/duplication")->assertStatus(422);
         $this->putJson("/api/sessions/{$sessionId}", ['date' => '2026-10-14', 'decaler_suivantes' => true])->assertStatus(422);

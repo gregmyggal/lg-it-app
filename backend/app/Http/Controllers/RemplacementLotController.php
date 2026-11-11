@@ -35,7 +35,7 @@ class RemplacementLotController extends Controller
         return response()->json(['data' => $sessions->map(fn (CourseSession $s) => [
             'id' => $s->id,
             'classe_id' => $s->classe_id,
-            'classe_libelle' => $s->classePeriode->cours->titre ?? '',
+            'classe_libelle' => $s->classePeriode->titre() ?? '',
             'libelle_complet' => $s->libelleComplet(),
             'date' => $s->date->toDateString(),
             'heure_debut' => substr($s->heure_debut, 0, 5),

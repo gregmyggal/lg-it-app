@@ -9,7 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
-/** STG-01 : aperçu d'un stage (le cours est facultatif tant que le formulaire n'est pas complet). */
+/** STG-01 : aperçu d'un stage (le thème est facultatif tant que le formulaire n'est pas complet). */
 class ApercuStageRequest extends FormRequest
 {
     public function authorize(): bool
@@ -23,7 +23,7 @@ class ApercuStageRequest extends FormRequest
 
         return [
             'date_debut' => ['required', 'date_format:Y-m-d'],
-            'cours_id' => [$this->coursRequis() ? 'required' : 'sometimes', 'integer', 'exists:cours,id'],
+            'stage_id' => [$this->themeRequis() ? 'required' : 'sometimes', 'integer', 'exists:stages,id'],
             'lieu' => ['sometimes', 'nullable', 'string', 'max:255'],
             'demi_journee_defaut' => ['sometimes', Rule::in(StageSessionGenerator::DEMI_JOURNEES)],
             'creneaux' => $creneau,
@@ -37,7 +37,7 @@ class ApercuStageRequest extends FormRequest
         ];
     }
 
-    protected function coursRequis(): bool
+    protected function themeRequis(): bool
     {
         return false;
     }

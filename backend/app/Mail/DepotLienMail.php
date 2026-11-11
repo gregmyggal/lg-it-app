@@ -45,7 +45,7 @@ class DepotLienMail extends Mailable
     public static function descriptionStage(DepotPartage $partage): ?string
     {
         $classe = $partage->classe;
-        $cours = $classe->periodes()->with('cours')->first()?->cours?->titre;
+        $cours = $classe->periodes()->with('cours')->first()?->titre();
         $debut = $classe->sessionsActives()->min('date');
         $fin = $classe->sessionsActives()->max('date');
         if ($debut === null) {

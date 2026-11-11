@@ -52,7 +52,7 @@ class AccueilDirectionController extends Controller
         return [
             'id' => $s->id,
             'classe_id' => $s->classe_id,
-            'classe_libelle' => $s->classePeriode->cours->titre ?? '',
+            'classe_libelle' => $s->classePeriode->titre() ?? '',
             'libelle_complet' => $s->libelleComplet(),
             'date' => $date,
             'heure_debut' => substr($s->heure_debut, 0, 5),

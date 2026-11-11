@@ -74,7 +74,7 @@ class ClasseResource extends JsonResource
     /** « Cours P1 → Cours P2 » ; cours seul si une seule période ou si le cours est le même. */
     public static function titreDe(Classe $classe): string
     {
-        $titres = $classe->periodes->map(fn (ClassePeriode $p) => $p->cours?->titre)->filter()->values();
+        $titres = $classe->periodes->map(fn (ClassePeriode $p) => $p->titre())->filter()->values();
 
         return $titres->unique()->count() <= 1 ? (string) $titres->first() : $titres->implode(' → ');
     }
@@ -96,7 +96,8 @@ class ClasseResource extends JsonResource
                 'date_fin' => $periode->date_fin->toDateString(),
             ] : null,
             'cours_id' => $p->cours_id,
-            'cours' => $p->cours ? ['id' => $p->cours->id, 'titre' => $p->cours->titre, 'slug' => $p->cours->slug] : null,
+            'cours' => $p->coursAffiche(),
+            'stage_id' => $p->stage_id,
             'date_premiere_session' => $p->date_premiere_session->toDateString(),
             'date_derniere_session' => $derniere ? substr((string) $derniere, 0, 10) : null,
             'statut' => $p->statut,
@@ -104,8 +105,8 @@ class ClasseResource extends JsonResource
             'nb_sessions' => (int) ($p->getAttributes()['sessions_actives_count'] ?? 0),
             'nb_changements_cours' => (int) ($p->getAttributes()['historique_cours_count'] ?? 0),
             'nb_hors_periode' => (int) ($p->getAttributes()['nb_hors_periode'] ?? 0),
-            'temps_preparation' => $p->cours ? app(TimesheetParametreService::class)
-                ->tempsPreparationPour($p->cours, (int) $p->date_premiere_session->format('Y')) : null,
+            'temps_preparation' => app(TimesheetParametreService::class)
+                ->tempsPreparationPour($p->cours, (int) $p->date_premiere_session->format('Y')),
         ];
     }
 

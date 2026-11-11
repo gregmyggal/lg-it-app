@@ -65,7 +65,7 @@ class TimesheetMoisController extends Controller
                 'statut' => $s->statut,
                 'annulee' => $s->isAnnulee(),
                 'classe_id' => $s->classe_id,
-                'classe_libelle' => $s->classePeriode->cours->titre,
+                'classe_libelle' => $s->classePeriode->titre(),
                 'periode_numero' => $s->classePeriode->periode?->numero,
                 'libelle_complet' => $s->libelleComplet(),
                 'duree_par_defaut' => $this->service->dureeParDefaut($s),

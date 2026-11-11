@@ -148,7 +148,8 @@ class StageSessionGenerator
 
             $classePeriode = $classe->periodes()->create([
                 'periode_id' => null,
-                'cours_id' => $data['cours_id'],
+                'cours_id' => null,
+                'stage_id' => $data['stage_id'],
                 'date_premiere_session' => $premiere['date'],
                 'statut' => ClassePeriode::STATUT_ACTIVE,
             ]);

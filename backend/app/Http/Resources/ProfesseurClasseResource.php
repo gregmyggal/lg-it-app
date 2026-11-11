@@ -36,7 +36,7 @@ class ProfesseurClasseResource extends JsonResource
                     'periode_id' => $p->periode_id,
                     'numero' => $p->relationLoaded('periode') ? $p->periode?->numero : null,
                     'cours_id' => $p->cours_id,
-                    'cours' => $p->relationLoaded('cours') ? ['id' => $p->cours->id, 'titre' => $p->cours->titre] : null,
+                    'cours' => $p->relationLoaded('cours') ? $p->coursAffiche() : null,
                     'statut' => $p->statut,
                 ])->values() : null,
                 'jour_semaine' => $this->classe->jour_semaine,

@@ -21,7 +21,7 @@ class CourseSessionResource extends JsonResource
         $staff = (bool) $user?->can('update', $this->resource);
         $cp = $this->relationLoaded('classePeriode') ? $this->classePeriode : null;
         $periodeCharge = $cp?->relationLoaded('periode') ?? false;
-        $cours = $cp?->relationLoaded('cours') ? $cp->cours : null;
+        $cours = $cp?->relationLoaded('cours') ? $cp->coursAffiche() : null;
 
         return [
             'id' => $this->id,
@@ -32,7 +32,7 @@ class CourseSessionResource extends JsonResource
                 'id' => $this->classe->id,
                 'jour_semaine' => $this->classe->jour_semaine,
             ]),
-            'cours' => $cours ? ['id' => $cours->id, 'titre' => $cours->titre] : null,
+            'cours' => $cours ? ['id' => $cours['id'], 'titre' => $cours['titre']] : null,
             'periode_id' => $cp?->periode_id,
             'seance_numero' => $this->seance_numero,
             'bis_rang' => $this->bis_rang,

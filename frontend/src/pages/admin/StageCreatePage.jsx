@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AdminPageHeader, AdminPageContent } from '../../components/AdminPageLayout';
 import AdminButton from '../../components/AdminButton';
 import { AdminFormField, AdminInput, AdminSelect } from '../../components/AdminFormField';
 import Banner from '../../components/ui/Banner';
 import StatutBadge from '../../components/ui/StatutBadge';
 import { Section } from '../../components/ui/Card';
-import { apercuStage, creerStage } from '../../hooks/useClasses';
-import { useCours } from '../../hooks/useCours';
+import { apercuStage, creerStage, useThemesStage } from '../../hooks/useClasses';
 import { useToast } from '../../hooks/useToast';
 import { getErrorMessage, getFieldErrors } from '../../api/errors';
 import { formatDuree } from '../../utils/format';
@@ -48,8 +47,8 @@ function retenirLieu(lieu) {
 export default function StageCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
-  const cours = useCours();
-  const [form, setForm] = useState({ cours_id: '', date_debut: '', lieu: dernierLieu(), demi_journee_defaut: 'matin' });
+  const themes = useThemesStage();
+  const [form, setForm] = useState({ stage_id: '', date_debut: '', lieu: dernierLieu(), demi_journee_defaut: 'matin' });
   const [creneaux, setCreneaux] = useState(CRENEAUX_DEFAUT);
   const [autreHoraire, setAutreHoraire] = useState(false);
   // null = choix par défaut du serveur ; sinon { [date]: { actif, demi_journee } } dès que l'utilisateur coche ou change un jour.
@@ -61,14 +60,14 @@ export default function StageCreatePage() {
 
   const payload = useMemo(() => {
     const base = { date_debut: form.date_debut, demi_journee_defaut: form.demi_journee_defaut, creneaux };
-    if (form.cours_id) base.cours_id = Number(form.cours_id);
+    if (form.stage_id) base.stage_id = Number(form.stage_id);
     if (selection) {
       base.jours = Object.entries(selection)
         .filter(([, j]) => j.actif)
         .map(([date, j]) => ({ date, demi_journee: j.demi_journee }));
     }
     return base;
-  }, [form.date_debut, form.demi_journee_defaut, form.cours_id, creneaux, selection]);
+  }, [form.date_debut, form.demi_journee_defaut, form.stage_id, creneaux, selection]);
 
   useEffect(() => {
     if (!form.date_debut) {
@@ -106,7 +105,7 @@ export default function StageCreatePage() {
   }
 
   const plan = apercu.data;
-  const peutCreer = Boolean(form.cours_id && form.date_debut && plan && !plan.blocage && plan.nb_seances > 0 && !envoi && !apercu.loading);
+  const peutCreer = Boolean(form.stage_id && form.date_debut && plan && !plan.blocage && plan.nb_seances > 0 && !envoi && !apercu.loading);
 
   async function soumettre(e) {
     e.preventDefault();
@@ -140,14 +139,28 @@ export default function StageCreatePage() {
           {echec?.message && <Banner tone="error">{echec.message}</Banner>}
 
           <Section title="1 · Stage" headingLevel={2}>
-            <AdminFormField label="Cours" htmlFor="stage-cours" required error={erreur('cours_id')}>
+            <AdminFormField
+              label="Thème du stage"
+              htmlFor="stage-theme"
+              required
+              description={
+                themes.error ? (
+                  'Impossible de charger les thèmes de stage.'
+                ) : themes.data?.length === 0 ? (
+                  <>
+                    Aucun thème de stage : créez-en un dans <Link to="/admin/stages">Contenu › Stages</Link>.
+                  </>
+                ) : undefined
+              }
+              error={erreur('stage_id')}
+            >
               <AdminSelect
-                id="stage-cours"
-                value={form.cours_id}
-                onChange={(e) => maj('cours_id', e.target.value)}
-                placeholder="Choisir un cours"
-                options={(cours.data || []).map((c) => ({ value: String(c.id), label: c.titre }))}
-                error={Boolean(erreur('cours_id'))}
+                id="stage-theme"
+                value={form.stage_id}
+                onChange={(e) => maj('stage_id', e.target.value)}
+                placeholder="Choisir un thème"
+                options={(themes.data || []).map((t) => ({ value: String(t.id), label: `${t.titre}${t.statut === 'draft' ? ' (brouillon)' : ''}` }))}
+                error={Boolean(erreur('stage_id'))}
               />
             </AdminFormField>
             <AdminFormField

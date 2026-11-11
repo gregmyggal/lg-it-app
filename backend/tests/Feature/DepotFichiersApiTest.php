@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Classe;
-use App\Models\Cours;
 use App\Models\DepotFichier;
 use App\Models\Professeur;
 use App\Services\ClasseProfesseurAssignmentService;
@@ -47,7 +46,7 @@ class DepotFichiersApiTest extends TestCase
         $jours = collect(range(0, 4))->map(fn ($i) => ['date' => Carbon::parse($lundi)->addDays($i)->toDateString(), 'demi_journee' => 'matin'])->all();
 
         return $this->postJson('/api/classes/stage', [
-            'date_debut' => $lundi, 'cours_id' => Cours::factory()->create()->id, 'lieu' => $lieu, 'jours' => $jours,
+            'date_debut' => $lundi, 'stage_id' => \App\Models\Stage::firstOrCreate(['slug' => 'scratch'], ['titre' => 'Scratch', 'theme_stage' => 'Scratch', 'tranche_age' => '8-12 ans', 'lieu' => 'Namur', 'prix' => 150, 'statut' => 'publish'])->id, 'lieu' => $lieu, 'jours' => $jours,
         ])->assertCreated()->json('data.id');
     }
 

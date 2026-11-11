@@ -135,9 +135,11 @@ function AujourdhuiProfesseur({ user }) {
               {data.prochaine_seance.remplace && <p className="auj-hero__note">Vous remplacez {data.prochaine_seance.remplace}</p>}
               {data.prochaine_seance.co_professeurs.length > 0 && <p className="auj-hero__note">Avec {data.prochaine_seance.co_professeurs.join(', ')}</p>}
               <div className="auj-hero__actions">
-                <Link to={`/mes-ressources/${data.prochaine_seance.cours_id}`} className="auj-btn auj-btn--cta">
-                  Liens du cours
-                </Link>
+                {data.prochaine_seance.cours_id && (
+                  <Link to={`/mes-ressources/${data.prochaine_seance.cours_id}`} className="auj-btn auj-btn--cta">
+                    Liens du cours
+                  </Link>
+                )}
                 <Link to={`/mes-classes/${data.prochaine_seance.classe_id}`} className="auj-btn auj-btn--ghost">
                   La classe
                 </Link>

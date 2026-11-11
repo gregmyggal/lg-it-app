@@ -104,3 +104,8 @@ export function apercuStage(payload) {
 export function creerStage(payload) {
   return client.post('/classes/stage', payload).then((res) => res.data.data);
 }
+
+/** STG-01 : thèmes de stage proposés à la création (catalogue des fiches « Stages », ordre du menu). */
+export function useThemesStage() {
+  return useApiQuery(() => client.get('/stages').then((res) => res.data), []);
+}

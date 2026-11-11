@@ -49,7 +49,7 @@ class TimesheetResource extends JsonResource
     private function libelleClasse($session): ?string
     {
         $cp = $session->classePeriode;
-        $titre = $cp->relationLoaded('cours') ? $cp->cours?->titre : null;
+        $titre = $cp->relationLoaded('cours') ? $cp->titre() : null;
 
         return $titre ? $titre.' — séance '.$session->seance_numero : null;
     }

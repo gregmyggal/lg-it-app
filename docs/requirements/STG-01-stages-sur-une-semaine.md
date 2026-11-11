@@ -1,5 +1,7 @@
 # STG-01 — Stages planifiés sur une semaine (jusqu'à 5 demi-journées) — Canvas de requirements
 
+> **v0.3 (2026-11-11) :** un stage se choisit par **thème** (fiche du catalogue « Stages », modèle `Stage`) et non par cours — voir §11.
+
 > Copie remplie de `docs/REQUIREMENTS_CANVAS.md`. **v0.2 — mock-ups validés par le directeur le 2026-11-11, backend + frontend livrés** (`docs/mockups/STG-01/README.md`). Recette navigateur à faire après `php artisan migrate`.
 
 | | |
@@ -86,3 +88,12 @@ Points à lever avant le code : `cours_id` vit sur `classe_periodes` (`periode_i
 - « Décaler les séances suivantes » indisponible pour un stage (422) ; déplacer une séance seule reste possible.
 - Le filtre « Période » de la liste n'exclut jamais les stages.
 - Menu « Contenu > Stages » (fiches site public) : renommage en « Stages (site public) » non fait.
+
+## 11. Évolution v0.3 — thème de stage au lieu du cours (2026-11-11)
+
+Demande du directeur : « il faut choisir le **thème d'un stage** et non d'un cours ». Le sélecteur « Cours » de l'écran de création devient « Thème du stage » et liste les fiches du catalogue `stages` (titre ; « (brouillon) » si non publiée).
+- **Données** : migration `2026_11_11_300000_add_stage_id_to_classe_periodes` (`classe_periodes.stage_id` → `stages`, `cours_id` nullable). Un stage porte `stage_id` et pas de `cours_id`.
+- **API** : `POST /classes/stage[/apercu]` prend `stage_id` (obligatoire à la création) au lieu de `cours_id`. Les réponses exposent `periodes[].stage_id` et `periodes[].cours = { id: null, titre: <thème>, stage_id }` : les écrans lisent `cours.titre` sans distinction.
+- **Défraiement** : pas de cours → temps de préparation par défaut de l'année (`source: defaut`).
+- **Pas de changement de thème** après création (422 sur « changer le cours » d'un stage) ; « Changer le cours » et « Liens du cours » masqués pour un stage.
+- **Non fait** : gestion des liens par thème (`ClasseLien` sur `stages` existe déjà côté API, aucun écran dans cette tranche) ; réglage du temps de préparation par thème.

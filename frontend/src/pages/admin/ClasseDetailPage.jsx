@@ -493,7 +493,7 @@ function PeriodeBloc({ stage = false, periode, annee, classeId, sessions, peutMo
   const liens = useLiensCours(periode.cours_id);
   const annulee = periode.statut === 'annulee';
   const peutBis = sessions.some((s) => s.can?.bis);
-  const titre = stage ? `Séances du stage · ${periode.cours?.titre || 'Cours'}` : `Période ${periode.numero} · ${periode.cours?.titre || 'Cours'}`;
+  const titre = stage ? `Séances du stage · ${periode.cours?.titre || 'Thème'}` : `Période ${periode.numero} · ${periode.cours?.titre || 'Cours'}`;
   const dateFin = periode.periode?.date_fin;
   return (
     <Section
@@ -524,7 +524,7 @@ function PeriodeBloc({ stage = false, periode, annee, classeId, sessions, peutMo
               {periode.nb_changements_cours} changement{periode.nb_changements_cours > 1 ? 's' : ''} de cours
             </AdminButton>
           )}
-          {peutModifier && !annulee && (
+          {peutModifier && !annulee && !stage && (
             <AdminButton size="sm" variant="secondary" onClick={onChangerCours}>
               Changer le cours
             </AdminButton>
